@@ -23,33 +23,40 @@ import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 
+import static com.google.auto.common.MoreElements.asType;
+import static com.google.auto.common.MoreTypes.asDeclared;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.*;
 
-final class BuilderGenerator extends SourceFileGenerator<BuilderInfo> {
+final class BuilderGenerator extends SourceFileGenerator<ExecutableElement> {
 
   BuilderGenerator(Filer filer, Elements elements) {
     super(filer, elements);
   }
 
   @Override
-  ClassName nameGeneratedType(BuilderInfo input) {
-    ClassName className = ClassName.get(input.sourceType());
+  ClassName nameGeneratedType(ExecutableElement method) {
+    DeclaredType returnType = asDeclared(method.getReturnType());
+    TypeElement typeElement = asType(returnType.asElement());
+    ClassName className = ClassName.get(typeElement);
     String name = Joiner.on('_').join(className.simpleNames()) + "Builder";
     return className.topLevelClassName().peerClass(name);
   }
 
   @Override
-  Optional<? extends Element> getElementForErrorReporting(BuilderInfo input) {
+  Optional<? extends Element> getElementForErrorReporting(ExecutableElement input) {
     return Optional.absent();
   }
 
   @Override
   Optional<TypeSpec.Builder> write(
-      ClassName generatedTypeName, BuilderInfo input) {
+      ClassName generatedTypeName, ExecutableElement input) {
     TypeSpec.Builder mapKeyCreatorBuilder =
         classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL);
     mapKeyCreatorBuilder.addMethod(constructorBuilder().addModifiers(PRIVATE).build());

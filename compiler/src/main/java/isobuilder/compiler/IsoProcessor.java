@@ -5,6 +5,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.util.Elements;
@@ -22,7 +23,8 @@ public class IsoProcessor extends BasicAnnotationProcessor {
     Filer filer = processingEnv.getFiler();
     Elements elements = processingEnv.getElementUtils();
     BuilderGenerator factoryGenerator = new BuilderGenerator(filer, elements);
-    return ImmutableList.of(new BuilderStep(factoryGenerator));
+    Messager messager = processingEnv.getMessager();
+    return ImmutableList.of(new BuilderStep(factoryGenerator, messager));
   }
 
 }
