@@ -22,6 +22,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Filer;
+import javax.inject.Inject;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -36,6 +37,7 @@ import static javax.lang.model.element.Modifier.*;
 
 final class BuilderGenerator extends SourceFileGenerator<ExecutableElement> {
 
+  @Inject
   BuilderGenerator(Filer filer, Elements elements) {
     super(filer, elements);
   }
