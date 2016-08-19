@@ -10,7 +10,7 @@ import static com.google.testing.compile.JavaFileObjects.forSourceLines;
 import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
 import static isobuilder.compiler.GeneratedLines.GENERATED_ANNOTATION;
 
-public class FactoryGeneratorTest {
+public class BuilderGeneratorTest {
 
   @Test
   public void simpleCube() {
@@ -41,7 +41,7 @@ public class FactoryGeneratorTest {
             "",
             "}");
     assertAbout(javaSources()).that(ImmutableList.of(cubeFile))
-        .processedWith(new JbobProcessor())
+        .processedWith(new IsoProcessor())
         .compilesWithoutError()
         .and().generatesSources(builderFile);
   }

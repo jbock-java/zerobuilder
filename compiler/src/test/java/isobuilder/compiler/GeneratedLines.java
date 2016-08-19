@@ -25,7 +25,7 @@ public final class GeneratedLines {
   public static final String GENERATED_ANNOTATION =
       "@Generated("
           + "value = \""
-          + isobuilder.compiler.JbobProcessor.class.getName()
+          + IsoProcessor.class.getName()
           + "\", "
           + "comments = \""
           + GENERATED_COMMENTS

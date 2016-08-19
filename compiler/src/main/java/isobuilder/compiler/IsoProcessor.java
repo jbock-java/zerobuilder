@@ -10,7 +10,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.util.Elements;
 
 @AutoService(Processor.class)
-public class JbobProcessor extends BasicAnnotationProcessor {
+public class IsoProcessor extends BasicAnnotationProcessor {
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
@@ -21,8 +21,8 @@ public class JbobProcessor extends BasicAnnotationProcessor {
   protected Iterable<? extends ProcessingStep> initSteps() {
     Filer filer = processingEnv.getFiler();
     Elements elements = processingEnv.getElementUtils();
-    FactoryGenerator factoryGenerator = new FactoryGenerator(filer, elements);
-    return ImmutableList.of(new FactoryStep(factoryGenerator));
+    BuilderGenerator factoryGenerator = new BuilderGenerator(filer, elements);
+    return ImmutableList.of(new BuilderStep(factoryGenerator));
   }
 
 }

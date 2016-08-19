@@ -14,14 +14,14 @@ import java.util.Set;
 
 import static com.google.auto.common.MoreElements.asType;
 import static com.google.common.base.Preconditions.checkState;
-import static isobuilder.compiler.FactoryInfo.factoryInfo;
+import static isobuilder.compiler.BuilderInfo.factoryInfo;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-public class FactoryStep implements BasicAnnotationProcessor.ProcessingStep {
+public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
 
-  private final FactoryGenerator factoryGenerator;
+  private final BuilderGenerator factoryGenerator;
 
-  FactoryStep(FactoryGenerator factoryGenerator) {
+  BuilderStep(BuilderGenerator factoryGenerator) {
     this.factoryGenerator = factoryGenerator;
   }
 

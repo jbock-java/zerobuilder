@@ -29,27 +29,27 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.*;
 
-final class FactoryGenerator extends SourceFileGenerator<FactoryInfo> {
+final class BuilderGenerator extends SourceFileGenerator<BuilderInfo> {
 
-  FactoryGenerator(Filer filer, Elements elements) {
+  BuilderGenerator(Filer filer, Elements elements) {
     super(filer, elements);
   }
 
   @Override
-  ClassName nameGeneratedType(FactoryInfo input) {
+  ClassName nameGeneratedType(BuilderInfo input) {
     ClassName className = ClassName.get(input.sourceType());
     String name = Joiner.on('_').join(className.simpleNames()) + "Builder";
     return className.topLevelClassName().peerClass(name);
   }
 
   @Override
-  Optional<? extends Element> getElementForErrorReporting(FactoryInfo input) {
+  Optional<? extends Element> getElementForErrorReporting(BuilderInfo input) {
     return Optional.absent();
   }
 
   @Override
   Optional<TypeSpec.Builder> write(
-      ClassName generatedTypeName, FactoryInfo input) {
+      ClassName generatedTypeName, BuilderInfo input) {
     TypeSpec.Builder mapKeyCreatorBuilder =
         classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL);
     mapKeyCreatorBuilder.addMethod(constructorBuilder().addModifiers(PRIVATE).build());
