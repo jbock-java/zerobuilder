@@ -58,11 +58,11 @@ final class BuilderGenerator extends SourceFileGenerator<ExecutableElement> {
 
   @Override
   Optional<TypeSpec.Builder> write(
-      ClassName generatedTypeName, ExecutableElement input) {
-    TypeSpec.Builder mapKeyCreatorBuilder =
+      ClassName generatedTypeName, ExecutableElement method) {
+    TypeSpec.Builder builderBuilder =
         classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL);
-    mapKeyCreatorBuilder.addMethod(constructorBuilder().addModifiers(PRIVATE).build());
-    return Optional.of(mapKeyCreatorBuilder);
+    builderBuilder.addMethod(constructorBuilder().addModifiers(PRIVATE).build());
+    return Optional.of(builderBuilder);
   }
 
 }

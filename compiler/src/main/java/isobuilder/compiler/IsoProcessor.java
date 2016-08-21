@@ -4,11 +4,17 @@ import com.google.auto.common.BasicAnnotationProcessor;
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
 import dagger.Component;
+import dagger.Module;
+import dagger.Provides;
 
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.util.Elements;
 
 import static isobuilder.compiler.DaggerIsoProcessor_IsoContext.builder;
 
@@ -27,15 +33,17 @@ public class IsoProcessor extends BasicAnnotationProcessor {
   }
 
   static class Steps {
+    private final ContractStep contractStep;
     private final BuilderStep builderStep;
 
     @Inject
-    Steps(BuilderStep builderStep) {
+    Steps(ContractStep contractStep, BuilderStep builderStep) {
+      this.contractStep = contractStep;
       this.builderStep = builderStep;
     }
 
     ImmutableList<? extends ProcessingStep> getSteps() {
-      return ImmutableList.of(builderStep);
+      return ImmutableList.of(contractStep, builderStep);
     }
   }
 
@@ -46,4 +54,32 @@ public class IsoProcessor extends BasicAnnotationProcessor {
     return context.getSteps().getSteps();
   }
 
+  @Module
+  static class IsoModule {
+
+    private final ProcessingEnvironment processingEnv;
+
+    IsoModule(ProcessingEnvironment processingEnv) {
+      this.processingEnv = processingEnv;
+    }
+
+    @Provides
+    @Singleton
+    public Filer provideFiler() {
+      return processingEnv.getFiler();
+    }
+
+    @Provides
+    @Singleton
+    public Elements provideElements() {
+      return processingEnv.getElementUtils();
+    }
+
+    @Provides
+    @Singleton
+    public Messager provideMessager() {
+      return processingEnv.getMessager();
+    }
+
+  }
 }

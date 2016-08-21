@@ -15,13 +15,13 @@ import java.util.Set;
 import static com.google.common.collect.Iterables.getFirst;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
+public class ContractStep implements BasicAnnotationProcessor.ProcessingStep {
 
-  private final BuilderGenerator generator;
+  private final ContractGenerator generator;
   private final Messager messager;
 
   @Inject
-  BuilderStep(BuilderGenerator generator, Messager messager) {
+  ContractStep(ContractGenerator generator, Messager messager) {
     this.generator = generator;
     this.messager = messager;
   }

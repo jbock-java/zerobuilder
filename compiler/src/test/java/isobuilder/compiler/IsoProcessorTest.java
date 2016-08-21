@@ -10,7 +10,7 @@ import static com.google.testing.compile.JavaFileObjects.forSourceLines;
 import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
 import static isobuilder.compiler.GeneratedLines.GENERATED_ANNOTATION;
 
-public class BuilderGeneratorTest {
+public class IsoProcessorTest {
 
   @Test
   public void simpleCube() {
@@ -36,14 +36,33 @@ public class BuilderGeneratorTest {
             GENERATED_ANNOTATION,
             "public final class CubeBuilder {",
             "",
-            "  private HelloWorld() {",
+            "  private CubeBuilder() {",
+            "  }",
+            "",
+            "}");
+    JavaFileObject contractFile =
+        forSourceLines("test.CubeBuilderContract",
+            "package test;",
+            "",
+            "import javax.annotation.Generated;",
+            "",
+            GENERATED_ANNOTATION,
+            "public final class CubeBuilderContract {",
+            "",
+            "  private CubeBuilderContract() {",
+            "  }",
+            "",
+            "  interface CubeUpdater {",
+            "    CubeUpdater updateHeight(double height);",
+            "    CubeUpdater updateLength(double length);",
+            "    CubeUpdater updateWidth(double width);",
             "  }",
             "",
             "}");
     assertAbout(javaSources()).that(ImmutableList.of(cubeFile))
         .processedWith(new IsoProcessor())
         .compilesWithoutError()
-        .and().generatesSources(builderFile);
+        .and().generatesSources(builderFile, contractFile);
   }
 
 }

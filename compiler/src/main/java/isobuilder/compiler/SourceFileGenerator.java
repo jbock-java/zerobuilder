@@ -126,7 +126,5 @@ abstract class SourceFileGenerator<T> {
    * Returns a {@link TypeSpec.Builder type} to be generated for {@code T}, or {@link
    * Optional#absent()} if no file should be generated.
    */
-  // TODO(ronshapiro): write() makes more sense in JavaWriter where all writers are mutable.
-  // consider renaming to something like typeBuilder() which conveys the mutability of the result
   abstract Optional<TypeSpec.Builder> write(ClassName generatedTypeName, T input);
 }

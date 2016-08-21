@@ -15,6 +15,7 @@
 
     <properties>
         <revision>0-SNAPSHOT</revision>
+        <dagger.version>2.6</dagger.version>
     </properties>
 
     <dependencies>
@@ -62,8 +63,12 @@
         <dependency>
             <groupId>com.google.dagger</groupId>
             <artifactId>dagger-compiler</artifactId>
-            <version>2.6</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
         </dependency>
 
         <dependency>
