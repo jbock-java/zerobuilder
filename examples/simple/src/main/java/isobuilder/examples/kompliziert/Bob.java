@@ -1,5 +1,7 @@
 package isobuilder.examples.kompliziert;
 
+import isobuilder.Builder;
+
 public class Bob {
 
     private final String kevin;
@@ -12,7 +14,7 @@ public class Bob {
         this.justin = justin;
     }
 
-//    @Builder
+    @Builder
     static Bob createBob(String kevin, String chantal, String justin) {
         return new Bob(kevin, chantal, justin);
     }

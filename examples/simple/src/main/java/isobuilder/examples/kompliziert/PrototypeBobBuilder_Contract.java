@@ -2,8 +2,8 @@ package isobuilder.examples.kompliziert;
 
 import javax.annotation.Generated;
 
-@Generated("von Hand")
-public class BobBuilder_Contract {
+@Generated("prototype")
+public class PrototypeBobBuilder_Contract {
     interface KevinStep {
         ChantalStep kevin(String kevin);
     }

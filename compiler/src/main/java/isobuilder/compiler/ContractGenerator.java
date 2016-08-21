@@ -16,23 +16,20 @@
 
 package isobuilder.compiler;
 
-import com.google.auto.common.MoreElements;
-import com.google.auto.common.MoreTypes;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.TypeSpec.Builder;
 
 import javax.annotation.processing.Filer;
 import javax.inject.Inject;
-import javax.lang.model.element.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
-
 import java.util.List;
 
 import static com.google.auto.common.MoreElements.asType;
@@ -71,38 +68,42 @@ final class ContractGenerator extends SourceFileGenerator<ExecutableElement> {
   }
 
   @Override
-  Optional<Builder> write(
+  Optional<TypeSpec.Builder> write(
       ClassName generatedTypeName, ExecutableElement exe) {
-    Builder contract = classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL);
-    contract.addType(updaterSpec(generatedTypeName, exe));
-
-//    List<? extends VariableElement> args = method.getParameters();
-//    for (int i = 0; i < args.size(); i++) {
-//      VariableElement arg = args.get(i);
-//      Builder step = interfaceBuilder(arg.getSimpleName() + "Step");
-//      MethodSpec.Builder stepMethod = methodBuilder(arg.getSimpleName().toString());
-//      step.addMethod(stepMethod.build());
-//      TypeSpec stepSpec = step.build();
-//      stepMethod.returns(TypeName.get(stepSpec))
-//      contract.addType(stepSpec);
-//    }
+    TypeSpec.Builder contract = classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL);
+    TypeSpec spec = updaterSpec(generatedTypeName, exe);
+    contract.addType(spec);
+    List<? extends VariableElement> args = exe.getParameters();
+    for (int i = args.size() - 1; i >= 0; i--) {
+      spec = stepSpec(generatedTypeName, args.get(i), spec);
+      contract.addType(spec);
+    }
 
     contract.addMethod(constructorBuilder().addModifiers(PRIVATE).build());
     return Optional.of(contract);
   }
 
+  private TypeSpec stepSpec(ClassName generatedTypeName, VariableElement arg, TypeSpec returnType) {
+    String stepSimpleName = LOWER_CAMEL.to(UPPER_CAMEL, arg.getSimpleName() + "Step");
+    return interfaceBuilder(stepSimpleName)
+        .addMethod(methodBuilder(arg.getSimpleName().toString())
+            .returns(generatedTypeName.nestedClass(returnType.name))
+            .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())
+            .addModifiers(PUBLIC, ABSTRACT)
+            .build())
+        .build();
+  }
+
 
   private TypeSpec updaterSpec(ClassName generatedTypeName, ExecutableElement exe) {
     String updaterSimpleName = returnTypeName(exe).simpleName() + "Updater";
-    Builder updater = interfaceBuilder(updaterSimpleName);
+    TypeSpec.Builder updater = interfaceBuilder(updaterSimpleName);
     for (VariableElement arg : exe.getParameters()) {
-      String name = "update" + LOWER_CAMEL.to(UPPER_CAMEL, arg.toString());
-      MethodSpec method = methodBuilder(name)
+      updater.addMethod(methodBuilder("update" + LOWER_CAMEL.to(UPPER_CAMEL, arg.getSimpleName().toString()))
           .returns(generatedTypeName.nestedClass(updaterSimpleName))
           .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())
           .addModifiers(PUBLIC, ABSTRACT)
-          .build();
-      updater.addMethod(method);
+          .build());
     }
     return updater.build();
   }

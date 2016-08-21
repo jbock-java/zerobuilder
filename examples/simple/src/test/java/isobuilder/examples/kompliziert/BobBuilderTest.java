@@ -6,7 +6,7 @@ public class BobBuilderTest {
 
   @Test
   public void kevin() {
-    Bob bob = BobBuilder.builder()
+    Bob bob = PrototypeBobBuilder.builder()
         .kevin("kevin")
         .chantal("chantal")
         .justin("justin")

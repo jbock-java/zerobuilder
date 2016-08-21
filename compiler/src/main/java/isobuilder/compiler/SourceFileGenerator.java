@@ -46,7 +46,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @param <T> The input type from which source is to be generated.
  */
 abstract class SourceFileGenerator<T> {
-  static final String GENERATED_COMMENTS = "https://search.maven.org";
+  static final String GENERATED_COMMENTS = "https://github.com/h908714124/isobuilder";
 
   private static final AnnotationSpec GENERATED =
       AnnotationSpec.builder(Generated.class)

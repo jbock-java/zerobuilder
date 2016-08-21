@@ -58,6 +58,18 @@ public class IsoProcessorTest {
             "    CubeUpdater updateWidth(double width);",
             "  }",
             "",
+            "  interface WidthStep {",
+            "    CubeUpdater width(double width);",
+            "  }",
+            "",
+            "  interface LengthStep {",
+            "    WidthStep length(double length);",
+            "  }",
+            "",
+            "  interface HeightStep {",
+            "    LengthStep height(double height);",
+            "  }",
+            "",
             "}");
     assertAbout(javaSources()).that(ImmutableList.of(cubeFile))
         .processedWith(new IsoProcessor())
