@@ -70,6 +70,9 @@ public class IsoProcessorTest {
             "    LengthStep height(double height);",
             "  }",
             "",
+            "  interface CubeContract extends CubeUpdater, WidthStep, LengthStep, HeightStep {",
+            "  }",
+            "",
             "}");
     assertAbout(javaSources()).that(ImmutableList.of(cubeFile))
         .processedWith(new IsoProcessor())

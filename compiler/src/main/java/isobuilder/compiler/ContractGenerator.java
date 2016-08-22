@@ -31,6 +31,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import java.util.List;
+import java.util.Stack;
 
 import static com.google.auto.common.MoreElements.asType;
 import static com.google.auto.common.MoreTypes.asDeclared;
@@ -71,14 +72,18 @@ final class ContractGenerator extends SourceFileGenerator<ExecutableElement> {
   Optional<TypeSpec.Builder> write(
       ClassName generatedTypeName, ExecutableElement exe) {
     TypeSpec.Builder contract = classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL);
-    TypeSpec spec = updaterSpec(generatedTypeName, exe);
-    contract.addType(spec);
     List<? extends VariableElement> args = exe.getParameters();
+    Stack<TypeSpec> specs = new Stack<>();
+    specs.push(updaterSpec(generatedTypeName, exe));
     for (int i = args.size() - 1; i >= 0; i--) {
-      spec = stepSpec(generatedTypeName, args.get(i), spec);
-      contract.addType(spec);
+      specs.push(stepSpec(generatedTypeName, args.get(i), specs.peek()));
     }
-
+    TypeSpec.Builder contractBuilder = interfaceBuilder(LOWER_CAMEL.to(UPPER_CAMEL, returnTypeName(exe).simpleName() + "Contract"));
+    for (TypeSpec spec : specs) {
+      contract.addType(spec);
+      contractBuilder.addSuperinterface(generatedTypeName.nestedClass(spec.name));
+    }
+    contract.addType(contractBuilder.build());
     contract.addMethod(constructorBuilder().addModifiers(PRIVATE).build());
     return Optional.of(contract);
   }
