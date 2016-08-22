@@ -17,6 +17,7 @@
 package isobuilder.compiler;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -46,9 +47,8 @@ final class ContractGenerator extends SourceFileGenerator<Target> {
 
   @Override
   ClassName nameGeneratedType(Target target) {
-    return target.nameGeneratedType("BuilderContract");
+    return target.contractName();
   }
-
 
   @Override
   Optional<? extends Element> getElementForErrorReporting(Target input) {
@@ -57,29 +57,34 @@ final class ContractGenerator extends SourceFileGenerator<Target> {
 
   @Override
   Optional<TypeSpec.Builder> write(
-      ClassName generatedTypeName, Target exe) {
-    TypeSpec.Builder contract = classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL);
-    List<? extends VariableElement> args = exe.getExecutableElement().getParameters();
+      ClassName gen, Target target) {
+    List<? extends VariableElement> args = target.getExecutableElement().getParameters();
     Stack<TypeSpec> specs = new Stack<>();
-    specs.push(updaterSpec(generatedTypeName, exe));
-    for (int i = args.size() - 1; i >= 0; i--) {
-      specs.push(stepSpec(generatedTypeName, args.get(i), specs.peek()));
+    ClassName updaterName = gen.nestedClass(target.returnTypeName().simpleName() + "Updater");
+    specs.push(updaterSpec(updaterName, target));
+    ImmutableList<StepSpec> stepSpecs = target.stepSpecs();
+    for (int i = stepSpecs.size() - 1; i >= 0; i--) {
+      ClassName stepName = stepSpecs.get(i).getStepName();
+      VariableElement argument = stepSpecs.get(i).getArgument();
+      TypeSpec stepSpec = stepSpec(stepName, argument, gen.nestedClass(specs.peek().name));
+      specs.push(stepSpec);
     }
-    TypeSpec.Builder contractBuilder = interfaceBuilder(LOWER_CAMEL.to(UPPER_CAMEL, exe.returnTypeName().simpleName() + "Contract"));
+    ClassName contractName = gen.nestedClass(upcase(target.returnTypeName().simpleName() + "Contract"));
+    TypeSpec.Builder contractBuilder = interfaceBuilder(contractName);
     for (TypeSpec spec : specs) {
-      contract.addType(spec);
-      contractBuilder.addSuperinterface(generatedTypeName.nestedClass(spec.name));
+      contractBuilder.addSuperinterface(gen.nestedClass(spec.name));
     }
-    contract.addType(contractBuilder.build());
-    contract.addMethod(constructorBuilder().addModifiers(PRIVATE).build());
-    return Optional.of(contract);
+    return Optional.of(classBuilder(gen)
+        .addModifiers(PUBLIC, FINAL)
+        .addTypes(specs)
+        .addType(contractBuilder.build())
+        .addMethod(constructorBuilder().addModifiers(PRIVATE).build()));
   }
 
-  private TypeSpec stepSpec(ClassName generatedTypeName, VariableElement arg, TypeSpec returnType) {
-    String stepSimpleName = LOWER_CAMEL.to(UPPER_CAMEL, arg.getSimpleName() + "Step");
-    return interfaceBuilder(stepSimpleName)
+  private TypeSpec stepSpec(ClassName stepName, VariableElement arg, ClassName returnType) {
+    return interfaceBuilder(stepName)
         .addMethod(methodBuilder(arg.getSimpleName().toString())
-            .returns(generatedTypeName.nestedClass(returnType.name))
+            .returns(returnType)
             .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())
             .addModifiers(PUBLIC, ABSTRACT)
             .build())
@@ -87,17 +92,20 @@ final class ContractGenerator extends SourceFileGenerator<Target> {
   }
 
 
-  private TypeSpec updaterSpec(ClassName generatedTypeName, Target exe) {
-    String updaterSimpleName = exe.returnTypeName().simpleName() + "Updater";
-    TypeSpec.Builder updater = interfaceBuilder(updaterSimpleName);
-    for (VariableElement arg : exe.getExecutableElement().getParameters()) {
-      updater.addMethod(methodBuilder("update" + LOWER_CAMEL.to(UPPER_CAMEL, arg.getSimpleName().toString()))
-          .returns(generatedTypeName.nestedClass(updaterSimpleName))
+  private TypeSpec updaterSpec(ClassName updaterClassName, Target target) {
+    TypeSpec.Builder updater = interfaceBuilder(updaterClassName);
+    for (VariableElement arg : target.getExecutableElement().getParameters()) {
+      updater.addMethod(methodBuilder("update" + upcase(arg.getSimpleName().toString()))
+          .returns(updaterClassName)
           .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())
           .addModifiers(PUBLIC, ABSTRACT)
           .build());
     }
     return updater.build();
+  }
+
+  static String upcase(String s) {
+    return LOWER_CAMEL.to(UPPER_CAMEL, s);
   }
 
 }

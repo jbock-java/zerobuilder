@@ -38,7 +38,7 @@ final class BuilderGenerator extends SourceFileGenerator<Target> {
 
   @Override
   ClassName nameGeneratedType(Target target) {
-    return target.nameGeneratedType("Builder");
+    return Target.nameGeneratedType(target.getExecutableElement(), "Builder");
   }
 
   @Override
@@ -48,7 +48,7 @@ final class BuilderGenerator extends SourceFileGenerator<Target> {
 
   @Override
   Optional<TypeSpec.Builder> write(
-      ClassName generatedTypeName, Target method) {
+      ClassName generatedTypeName, Target target) {
     TypeSpec.Builder builderBuilder =
         classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL)
             .addMethod(constructorBuilder().addModifiers(PRIVATE).build());

@@ -7,7 +7,7 @@ import static isobuilder.compiler.ErrorMessages.PRIVATE_METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 
-public final class BuilderValidator {
+public final class MethodValidator {
 
   ValidationReport<ExecutableElement> validateMethod(ExecutableElement method) {
     ValidationReport.Builder<ExecutableElement> builder = ValidationReport.about(method);

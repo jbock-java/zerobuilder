@@ -8,6 +8,9 @@ final class ErrorMessages {
   static final String PRIVATE_METHOD =
       "Target method may not be private.";
 
+  static final String DUPLICATE =
+      "Duplicate builder name.";
+
   private ErrorMessages() {
   }
 

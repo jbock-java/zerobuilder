@@ -12,18 +12,21 @@ import javax.lang.model.element.ExecutableElement;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import static com.google.common.collect.Iterables.getFirst;
 import static isobuilder.compiler.Target.target;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
 
-  private final BuilderGenerator generator;
+  private final BuilderGenerator builderGenerator;
+  private final ContractGenerator contractGenerator;
   private final Messager messager;
+  private final MethodValidator methodValidator = new MethodValidator();
+  private final DuplicateValidator duplicateValidator = new DuplicateValidator();
 
   @Inject
-  BuilderStep(BuilderGenerator generator, Messager messager) {
-    this.generator = generator;
+  BuilderStep(BuilderGenerator builderGenerator, ContractGenerator contractGenerator, Messager messager) {
+    this.builderGenerator = builderGenerator;
+    this.contractGenerator = contractGenerator;
     this.messager = messager;
   }
 
@@ -36,11 +39,20 @@ public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
   public Set<Element> process(SetMultimap<Class<? extends Annotation>, Element> elementsByAnnotation) {
     Set<Element> elements = elementsByAnnotation.get(Builder.class);
     Set<ExecutableElement> methods = methodsIn(elements);
-    ExecutableElement method = getFirst(methods, null);
-    try {
-      generator.generate(target(method));
-    } catch (SourceFileGenerationException e) {
-      e.printMessageTo(messager);
+    for (ExecutableElement method : methods) {
+      Target target = target(method);
+      ValidationReport<ExecutableElement> methodReport = methodValidator.validateMethod(method);
+      ValidationReport<ExecutableElement> duplicateReport = duplicateValidator.validateClassname(target);
+      methodReport.printMessagesTo(messager);
+      duplicateReport.printMessagesTo(messager);
+      if (methodReport.isClean() && duplicateReport.isClean()) {
+        try {
+          contractGenerator.generate(target);
+          builderGenerator.generate(target);
+        } catch (SourceFileGenerationException e) {
+          e.printMessageTo(messager);
+        }
+      }
     }
     return ImmutableSet.of();
   }

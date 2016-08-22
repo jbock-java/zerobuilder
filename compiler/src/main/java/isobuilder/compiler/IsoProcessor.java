@@ -33,17 +33,15 @@ public class IsoProcessor extends BasicAnnotationProcessor {
   }
 
   static class Steps {
-    private final ContractStep contractStep;
     private final BuilderStep builderStep;
 
     @Inject
-    Steps(ContractStep contractStep, BuilderStep builderStep) {
-      this.contractStep = contractStep;
+    Steps(BuilderStep builderStep) {
       this.builderStep = builderStep;
     }
 
     ImmutableList<? extends ProcessingStep> getSteps() {
-      return ImmutableList.of(contractStep, builderStep);
+      return ImmutableList.of(builderStep);
     }
   }
 
