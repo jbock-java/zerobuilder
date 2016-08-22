@@ -81,5 +81,6 @@ final class CodeBlocks {
         }
       };
 
-  private CodeBlocks() {}
+  private CodeBlocks() {
+  }
 }

@@ -16,7 +16,6 @@
 
 package isobuilder.compiler;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
@@ -25,16 +24,11 @@ import com.squareup.javapoet.TypeSpec;
 import javax.annotation.processing.Filer;
 import javax.inject.Inject;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import java.util.List;
 import java.util.Stack;
 
-import static com.google.auto.common.MoreElements.asType;
-import static com.google.auto.common.MoreTypes.asDeclared;
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
@@ -43,7 +37,7 @@ import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.*;
 
-final class ContractGenerator extends SourceFileGenerator<ExecutableElement> {
+final class ContractGenerator extends SourceFileGenerator<Target> {
 
   @Inject
   ContractGenerator(Filer filer, Elements elements) {
@@ -51,34 +45,27 @@ final class ContractGenerator extends SourceFileGenerator<ExecutableElement> {
   }
 
   @Override
-  ClassName nameGeneratedType(ExecutableElement method) {
-    ClassName className = returnTypeName(method);
-    String name = Joiner.on('_').join(className.simpleNames()) + "BuilderContract";
-    return className.topLevelClassName().peerClass(name);
+  ClassName nameGeneratedType(Target target) {
+    return target.nameGeneratedType("BuilderContract");
   }
 
-  private ClassName returnTypeName(ExecutableElement method) {
-    DeclaredType returnType = asDeclared(method.getReturnType());
-    TypeElement typeElement = asType(returnType.asElement());
-    return ClassName.get(typeElement);
-  }
 
   @Override
-  Optional<? extends Element> getElementForErrorReporting(ExecutableElement input) {
+  Optional<? extends Element> getElementForErrorReporting(Target input) {
     return Optional.absent();
   }
 
   @Override
   Optional<TypeSpec.Builder> write(
-      ClassName generatedTypeName, ExecutableElement exe) {
+      ClassName generatedTypeName, Target exe) {
     TypeSpec.Builder contract = classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL);
-    List<? extends VariableElement> args = exe.getParameters();
+    List<? extends VariableElement> args = exe.getExecutableElement().getParameters();
     Stack<TypeSpec> specs = new Stack<>();
     specs.push(updaterSpec(generatedTypeName, exe));
     for (int i = args.size() - 1; i >= 0; i--) {
       specs.push(stepSpec(generatedTypeName, args.get(i), specs.peek()));
     }
-    TypeSpec.Builder contractBuilder = interfaceBuilder(LOWER_CAMEL.to(UPPER_CAMEL, returnTypeName(exe).simpleName() + "Contract"));
+    TypeSpec.Builder contractBuilder = interfaceBuilder(LOWER_CAMEL.to(UPPER_CAMEL, exe.returnTypeName().simpleName() + "Contract"));
     for (TypeSpec spec : specs) {
       contract.addType(spec);
       contractBuilder.addSuperinterface(generatedTypeName.nestedClass(spec.name));
@@ -100,10 +87,10 @@ final class ContractGenerator extends SourceFileGenerator<ExecutableElement> {
   }
 
 
-  private TypeSpec updaterSpec(ClassName generatedTypeName, ExecutableElement exe) {
-    String updaterSimpleName = returnTypeName(exe).simpleName() + "Updater";
+  private TypeSpec updaterSpec(ClassName generatedTypeName, Target exe) {
+    String updaterSimpleName = exe.returnTypeName().simpleName() + "Updater";
     TypeSpec.Builder updater = interfaceBuilder(updaterSimpleName);
-    for (VariableElement arg : exe.getParameters()) {
+    for (VariableElement arg : exe.getExecutableElement().getParameters()) {
       updater.addMethod(methodBuilder("update" + LOWER_CAMEL.to(UPPER_CAMEL, arg.getSimpleName().toString()))
           .returns(generatedTypeName.nestedClass(updaterSimpleName))
           .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())

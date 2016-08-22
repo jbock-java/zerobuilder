@@ -14,12 +14,20 @@ public class IsoProcessorTest {
 
   @Test
   public void simpleCube() {
-    JavaFileObject cubeFile = forSourceLines("test.Cube",
-        "package test;",
+    JavaFileObject cube = forSourceLines("test.Cube",
+        "package cube;",
         "",
         "import isobuilder.Builder;",
         "",
-        "class Cube {",
+        "public class Cube {",
+        "}");
+    JavaFileObject cubeFactory = forSourceLines("test.CubeFactory",
+        "package test;",
+        "",
+        "import isobuilder.Builder;",
+        "import cube.Cube;",
+        "",
+        "class CubeFactory {",
         "",
         "  @Builder",
         "  static Cube create(double height, double length, double width) {",
@@ -74,7 +82,7 @@ public class IsoProcessorTest {
             "  }",
             "",
             "}");
-    assertAbout(javaSources()).that(ImmutableList.of(cubeFile))
+    assertAbout(javaSources()).that(ImmutableList.of(cube, cubeFactory))
         .processedWith(new IsoProcessor())
         .compilesWithoutError()
         .and().generatesSources(builderFile, contractFile);

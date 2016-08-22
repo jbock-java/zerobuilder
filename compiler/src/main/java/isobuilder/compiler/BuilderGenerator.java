@@ -16,7 +16,6 @@
 
 package isobuilder.compiler;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
@@ -24,18 +23,13 @@ import com.squareup.javapoet.TypeSpec;
 import javax.annotation.processing.Filer;
 import javax.inject.Inject;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 
-import static com.google.auto.common.MoreElements.asType;
-import static com.google.auto.common.MoreTypes.asDeclared;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.*;
 
-final class BuilderGenerator extends SourceFileGenerator<ExecutableElement> {
+final class BuilderGenerator extends SourceFileGenerator<Target> {
 
   @Inject
   BuilderGenerator(Filer filer, Elements elements) {
@@ -43,25 +37,21 @@ final class BuilderGenerator extends SourceFileGenerator<ExecutableElement> {
   }
 
   @Override
-  ClassName nameGeneratedType(ExecutableElement method) {
-    DeclaredType returnType = asDeclared(method.getReturnType());
-    TypeElement typeElement = asType(returnType.asElement());
-    ClassName className = ClassName.get(typeElement);
-    String name = Joiner.on('_').join(className.simpleNames()) + "Builder";
-    return className.topLevelClassName().peerClass(name);
+  ClassName nameGeneratedType(Target target) {
+    return target.nameGeneratedType("Builder");
   }
 
   @Override
-  Optional<? extends Element> getElementForErrorReporting(ExecutableElement input) {
+  Optional<? extends Element> getElementForErrorReporting(Target input) {
     return Optional.absent();
   }
 
   @Override
   Optional<TypeSpec.Builder> write(
-      ClassName generatedTypeName, ExecutableElement method) {
+      ClassName generatedTypeName, Target method) {
     TypeSpec.Builder builderBuilder =
-        classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL);
-    builderBuilder.addMethod(constructorBuilder().addModifiers(PRIVATE).build());
+        classBuilder(generatedTypeName).addModifiers(PUBLIC, FINAL)
+            .addMethod(constructorBuilder().addModifiers(PRIVATE).build());
     return Optional.of(builderBuilder);
   }
 

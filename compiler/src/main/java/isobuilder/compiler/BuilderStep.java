@@ -13,6 +13,7 @@ import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import static com.google.common.collect.Iterables.getFirst;
+import static isobuilder.compiler.Target.target;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
@@ -37,7 +38,7 @@ public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
     Set<ExecutableElement> methods = methodsIn(elements);
     ExecutableElement method = getFirst(methods, null);
     try {
-      generator.generate(method);
+      generator.generate(target(method));
     } catch (SourceFileGenerationException e) {
       e.printMessageTo(messager);
     }

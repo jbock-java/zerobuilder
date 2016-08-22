@@ -27,7 +27,7 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 
 /**
  * An exception thrown to indicate that a source file could not be generated.
- *
+ * <p>
  * <p>This exception <b>should not</b> be used to report detectable, logical errors as it may mask
  * other errors that might have been caught upon further processing.  Use a {@link ValidationReport}
  * for that.

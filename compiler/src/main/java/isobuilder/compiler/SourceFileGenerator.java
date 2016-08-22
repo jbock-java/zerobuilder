@@ -62,7 +62,9 @@ abstract class SourceFileGenerator<T> {
     generatedAnnotationAvailable = elements.getTypeElement("javax.annotation.Generated") != null;
   }
 
-  /** Generates a source file to be compiled for {@code T}. */
+  /**
+   * Generates a source file to be compiled for {@code T}.
+   */
   void generate(T input) throws SourceFileGenerationException {
     ClassName generatedTypeName = nameGeneratedType(input);
     try {
@@ -79,7 +81,8 @@ abstract class SourceFileGenerator<T> {
         new Formatter().formatSource(
             CharSource.wrap(javaFile.toString()),
             new CharSink() {
-              @Override public Writer openStream() throws IOException {
+              @Override
+              public Writer openStream() throws IOException {
                 return sourceFile.openWriter();
               }
             });

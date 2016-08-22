@@ -8,6 +8,7 @@ final class ErrorMessages {
   static final String PRIVATE_METHOD =
       "Target method may not be private.";
 
-  private ErrorMessages() {}
+  private ErrorMessages() {
+  }
 
 }
