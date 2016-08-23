@@ -17,15 +17,13 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 
 public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
 
-  private final BuilderGenerator builderGenerator;
   private final ContractGenerator contractGenerator;
   private final Messager messager;
   private final MethodValidator methodValidator = new MethodValidator();
   private final DuplicateValidator duplicateValidator = new DuplicateValidator();
 
   @Inject
-  BuilderStep(BuilderGenerator builderGenerator, ContractGenerator contractGenerator, Messager messager) {
-    this.builderGenerator = builderGenerator;
+  BuilderStep(ContractGenerator contractGenerator, Messager messager) {
     this.contractGenerator = contractGenerator;
     this.messager = messager;
   }
@@ -48,7 +46,6 @@ public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
       if (methodReport.isClean() && duplicateReport.isClean()) {
         try {
           contractGenerator.generate(target);
-          builderGenerator.generate(target);
         } catch (SourceFileGenerationException e) {
           e.printMessageTo(messager);
         }

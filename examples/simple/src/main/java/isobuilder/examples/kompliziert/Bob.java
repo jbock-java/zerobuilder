@@ -1,30 +1,23 @@
 package isobuilder.examples.kompliziert;
 
+import com.google.auto.value.AutoValue;
 import isobuilder.Builder;
+import isobuilder.examples.kompliziert.Bob_Isobuilder.PrototypeBobBuilderContract.BobKevin;
 
-public class Bob {
+@AutoValue
+abstract class Bob {
 
-    private final String kevin;
-    private final String chantal;
-    private final String justin;
+  abstract String kevin();
+  abstract String chantal();
+  abstract String justin();
 
-    private Bob(String kevin, String chantal, String justin) {
-        this.kevin = kevin;
-        this.chantal = chantal;
-        this.justin = justin;
-    }
+  @Builder
+  static Bob createBob(String kevin, String chantal, String justin) {
+    return new AutoValue_Bob(kevin, chantal, justin);
+  }
 
-    @Builder
-    static Bob createBob(String kevin, String chantal, String justin) {
-        return new Bob(kevin, chantal, justin);
-    }
+  static BobKevin builder() {
+    return Bob_Isobuilder.builder();
+  }
 
-    @Override
-    public String toString() {
-        return "Bob{" +
-                "kevin='" + kevin + '\'' +
-                ", chantal='" + chantal + '\'' +
-                ", justin='" + justin + '\'' +
-                '}';
-    }
 }

@@ -8,12 +8,12 @@ import java.util.Set;
 
 import static isobuilder.compiler.ErrorMessages.DUPLICATE;
 
-public final class DuplicateValidator {
+final class DuplicateValidator {
 
   private final Set<ClassName> contractNames = new HashSet<>();
 
   ValidationReport<ExecutableElement> validateClassname(Target target) {
-    ValidationReport.Builder<ExecutableElement> builder = ValidationReport.about(target.getExecutableElement());
+    ValidationReport.Builder<ExecutableElement> builder = ValidationReport.about(target.executableElement());
     if (!contractNames.add(target.contractName())) {
       builder.addError(DUPLICATE);
     }

@@ -1,5 +1,6 @@
 package isobuilder.compiler;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
@@ -11,33 +12,33 @@ import javax.lang.model.type.DeclaredType;
 
 import static com.google.auto.common.MoreElements.asType;
 import static com.google.auto.common.MoreTypes.asDeclared;
-import static isobuilder.compiler.ContractGenerator.upcase;
+import static isobuilder.compiler.Util.upcase;
 
-final class Target {
+@AutoValue
+abstract class Target {
 
-  private final ExecutableElement executableElement;
-  private final ImmutableList<StepSpec> stepSpecs;
-  private final ClassName contractName;
-
-  Target(ExecutableElement executableElement, ImmutableList<StepSpec> stepSpecs, ClassName contractName) {
-    this.executableElement = executableElement;
-    this.stepSpecs = stepSpecs;
-    this.contractName = contractName;
-  }
+  abstract ExecutableElement executableElement();
+  abstract ImmutableList<StepSpec> stepSpecs();
+  abstract ClassName generatedClassName();
+  abstract ClassName contractName();
+  abstract ClassName updaterName();
 
   static Target target(ExecutableElement executableElement) {
     ImmutableList.Builder<StepSpec> stepSpecsBuilder = ImmutableList.builder();
-    ClassName contractName = nameGeneratedType(executableElement, "BuilderContract");
-    for (VariableElement arg: executableElement.getParameters()) {
-      ClassName stepName = contractName.nestedClass(upcase(arg.getSimpleName() + "Step"));
+    ClassName generatedClassName = generatedClassName(executableElement);
+    ClassName contractName = generatedClassName.nestedClass("Contract");
+    String simpleReturnTypeName = returnTypeName(executableElement).simpleName();
+    ClassName updaterName = contractName.nestedClass(simpleReturnTypeName + "Updater");
+    for (VariableElement arg : executableElement.getParameters()) {
+      ClassName stepName = contractName.nestedClass(simpleReturnTypeName + upcase(arg.getSimpleName().toString()));
       stepSpecsBuilder.add(new StepSpec(stepName, arg));
     }
-    return new Target(executableElement, stepSpecsBuilder.build(), contractName);
+    return new AutoValue_Target(executableElement, stepSpecsBuilder.build(), generatedClassName, contractName, updaterName);
   }
 
-  static ClassName nameGeneratedType(ExecutableElement executableElement, String suffix) {
+  private static ClassName generatedClassName(ExecutableElement executableElement) {
     ClassName enclosingClass = ClassName.get(asType(executableElement.getEnclosingElement()));
-    String returnTypeSimpleName = Joiner.on('_').join(returnTypeName(executableElement).simpleNames()) + suffix;
+    String returnTypeSimpleName = Joiner.on('_').join(enclosingClass.simpleNames()) + "_IsoBuilder";
     return enclosingClass.topLevelClassName().peerClass(returnTypeSimpleName);
   }
 
@@ -47,20 +48,13 @@ final class Target {
     return ClassName.get(typeElement);
   }
 
-  ClassName returnTypeName() {
-    return returnTypeName(executableElement);
+  final ClassName returnTypeName() {
+    return returnTypeName(executableElement());
   }
 
-  ImmutableList<StepSpec> stepSpecs() {
-    return stepSpecs;
+  final StepSpec stepSpec(int i) {
+    return stepSpecs().get(i);
   }
 
-  ClassName contractName() {
-    return contractName;
-  }
-
-  ExecutableElement getExecutableElement() {
-    return executableElement;
-  }
 
 }

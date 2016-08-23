@@ -17,8 +17,8 @@
 package isobuilder.compiler;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
@@ -30,12 +30,11 @@ import javax.lang.model.util.Elements;
 import java.util.List;
 import java.util.Stack;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
+import static isobuilder.compiler.Util.upcase;
 import static javax.lang.model.element.Modifier.*;
 
 final class ContractGenerator extends SourceFileGenerator<Target> {
@@ -47,7 +46,7 @@ final class ContractGenerator extends SourceFileGenerator<Target> {
 
   @Override
   ClassName nameGeneratedType(Target target) {
-    return target.contractName();
+    return target.generatedClassName();
   }
 
   @Override
@@ -57,44 +56,48 @@ final class ContractGenerator extends SourceFileGenerator<Target> {
 
   @Override
   Optional<TypeSpec.Builder> write(
-      ClassName gen, Target target) {
-    List<? extends VariableElement> args = target.getExecutableElement().getParameters();
-    Stack<TypeSpec> specs = new Stack<>();
-    ClassName updaterName = gen.nestedClass(target.returnTypeName().simpleName() + "Updater");
-    specs.push(updaterSpec(updaterName, target));
-    ImmutableList<StepSpec> stepSpecs = target.stepSpecs();
-    for (int i = stepSpecs.size() - 1; i >= 0; i--) {
-      ClassName stepName = stepSpecs.get(i).getStepName();
-      VariableElement argument = stepSpecs.get(i).getArgument();
-      TypeSpec stepSpec = stepSpec(stepName, argument, gen.nestedClass(specs.peek().name));
-      specs.push(stepSpec);
-    }
-    ClassName contractName = gen.nestedClass(upcase(target.returnTypeName().simpleName() + "Contract"));
-    TypeSpec.Builder contractBuilder = interfaceBuilder(contractName);
-    for (TypeSpec spec : specs) {
-      contractBuilder.addSuperinterface(gen.nestedClass(spec.name));
-    }
-    return Optional.of(classBuilder(gen)
+      ClassName generatedClassName, Target target) {
+    return Optional.of(classBuilder(generatedClassName)
+        .addType(buildContract(target))
         .addModifiers(PUBLIC, FINAL)
-        .addTypes(specs)
-        .addType(contractBuilder.build())
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build()));
   }
 
-  private TypeSpec stepSpec(ClassName stepName, VariableElement arg, ClassName returnType) {
-    return interfaceBuilder(stepName)
-        .addMethod(methodBuilder(arg.getSimpleName().toString())
-            .returns(returnType)
-            .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())
-            .addModifiers(PUBLIC, ABSTRACT)
-            .build())
+  private static TypeSpec buildContract(Target target) {
+    return classBuilder(target.contractName())
+        .addTypes(contractInterfaces(target))
+        .addModifiers(PUBLIC, FINAL, STATIC)
+        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
   }
 
+  private static List<TypeSpec> contractInterfaces(Target target) {
+    Stack<TypeSpec> specs = new Stack<>();
+    ClassName updaterName = target.contractName().nestedClass(target.returnTypeName().simpleName() + "Updater");
+    specs.push(updaterSpec(updaterName, target));
+    for (int i = target.stepSpecs().size() - 1; i >= 0; i--) {
+      ClassName stepName = target.stepSpec(i).getStepName();
+      VariableElement argument = target.stepSpec(i).getArgument();
+      TypeSpec stepSpec = stepSpec(stepName, argument, target.contractName().nestedClass(specs.peek().name));
+      specs.push(stepSpec);
+    }
+    return specs;
+  }
 
-  private TypeSpec updaterSpec(ClassName updaterClassName, Target target) {
+  private static TypeSpec stepSpec(ClassName stepName, VariableElement arg, ClassName returnType) {
+    MethodSpec methodSpec = methodBuilder(arg.getSimpleName().toString())
+        .returns(returnType)
+        .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())
+        .addModifiers(PUBLIC, ABSTRACT)
+        .build();
+    return interfaceBuilder(stepName)
+        .addMethod(methodSpec)
+        .build();
+  }
+
+  private static TypeSpec updaterSpec(ClassName updaterClassName, Target target) {
     TypeSpec.Builder updater = interfaceBuilder(updaterClassName);
-    for (VariableElement arg : target.getExecutableElement().getParameters()) {
+    for (VariableElement arg : target.executableElement().getParameters()) {
       updater.addMethod(methodBuilder("update" + upcase(arg.getSimpleName().toString()))
           .returns(updaterClassName)
           .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())
@@ -102,10 +105,6 @@ final class ContractGenerator extends SourceFileGenerator<Target> {
           .build());
     }
     return updater.build();
-  }
-
-  static String upcase(String s) {
-    return LOWER_CAMEL.to(UPPER_CAMEL, s);
   }
 
 }

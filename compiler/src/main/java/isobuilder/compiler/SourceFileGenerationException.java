@@ -36,7 +36,6 @@ import static javax.tools.Diagnostic.Kind.ERROR;
  * @since 2.0
  */
 final class SourceFileGenerationException extends Exception {
-  // TODO(ronshapiro): remove these unused values
   private final Optional<? extends Element> associatedElement;
 
   SourceFileGenerationException(
