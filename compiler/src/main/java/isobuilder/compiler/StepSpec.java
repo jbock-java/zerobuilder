@@ -1,25 +1,38 @@
 package isobuilder.compiler;
 
+import com.google.auto.value.AutoValue;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.VariableElement;
 
-final class StepSpec {
+import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
+import static javax.lang.model.element.Modifier.ABSTRACT;
+import static javax.lang.model.element.Modifier.PUBLIC;
 
-  private final ClassName stepName;
-  private final VariableElement argument;
+@AutoValue
+abstract class StepSpec {
 
-  StepSpec(ClassName stepName, VariableElement argument) {
-    this.stepName = stepName;
-    this.argument = argument;
+  abstract ClassName stepName();
+  abstract VariableElement argument();
+  abstract ClassName returnType();
+
+  static StepSpec stepSpec(ClassName stepName, VariableElement argument, ClassName returnType) {
+    return new AutoValue_StepSpec(stepName, argument, returnType);
   }
 
-  ClassName getStepName() {
-    return stepName;
-  }
-
-  VariableElement getArgument() {
-    return argument;
+  final TypeSpec typeSpec() {
+    MethodSpec methodSpec = methodBuilder(argument().getSimpleName().toString())
+        .returns(returnType())
+        .addParameter(TypeName.get(argument().asType()), argument().getSimpleName().toString())
+        .addModifiers(PUBLIC, ABSTRACT)
+        .build();
+    return interfaceBuilder(stepName())
+        .addMethod(methodSpec)
+        .build();
   }
 
 }

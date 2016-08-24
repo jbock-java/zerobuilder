@@ -17,23 +17,21 @@
 package isobuilder.compiler;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Filer;
 import javax.inject.Inject;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
-import java.util.List;
-import java.util.Stack;
 
+import static com.google.auto.common.MoreElements.asType;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
-import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static isobuilder.compiler.Util.upcase;
 import static javax.lang.model.element.Modifier.*;
 
@@ -57,54 +55,70 @@ final class ContractGenerator extends SourceFileGenerator<Target> {
   @Override
   Optional<TypeSpec.Builder> write(
       ClassName generatedClassName, Target target) {
-    return Optional.of(classBuilder(generatedClassName)
+    TypeSpec.Builder builder = classBuilder(generatedClassName);
+    if (!target.stepSpecs().isEmpty()) {
+      builder.addMethod(methodBuilder("builder")
+          .returns(target.stepSpecs().get(0).stepName())
+          .addStatement("return new $T()", target.implName())
+          .addModifiers(PUBLIC, STATIC)
+          .build());
+    }
+    return Optional.of(builder
+        .addType(buildImpl(target))
         .addType(buildContract(target))
         .addModifiers(PUBLIC, FINAL)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build()));
   }
 
+  private static TypeSpec buildImpl(Target target) {
+    TypeSpec.Builder builder = classBuilder(target.implName());
+    for (StepSpec stepSpec : target.stepSpecs()) {
+      String name = stepSpec.argument().getSimpleName().toString();
+      builder.addField(TypeName.get(stepSpec.argument().asType()), name, PRIVATE);
+    }
+    for (StepSpec stepSpec : target.stepSpecs()) {
+      String name = stepSpec.argument().getSimpleName().toString();
+      builder.addMethod(methodBuilder("update" + upcase(name))
+          .addAnnotation(Override.class)
+          .returns(target.updaterName())
+          .addParameter(TypeName.get(stepSpec.argument().asType()), name)
+          .addStatement("this.$N = $N", name, name)
+          .addStatement("return this")
+          .addModifiers(PUBLIC)
+          .build());
+    }
+    for (StepSpec stepSpec : target.stepSpecs()) {
+      String name = stepSpec.argument().getSimpleName().toString();
+      builder.addMethod(methodBuilder(name)
+          .addAnnotation(Override.class)
+          .returns(stepSpec.returnType())
+          .addParameter(TypeName.get(stepSpec.argument().asType()), name)
+          .addStatement("this.$N = $N", name, name)
+          .addStatement("return this")
+          .addModifiers(PUBLIC)
+          .build());
+    }
+    return builder.addSuperinterfaces(target.contractInterfaceNames())
+        .addModifiers(FINAL, STATIC)
+        .addMethod(methodBuilder("build")
+            .addAnnotation(Override.class)
+            .returns(TypeName.get(target.executableElement().getReturnType()))
+//            .addStatement("return null")
+            .addStatement("return $T.$N($L)",
+                ClassName.get(asType(target.executableElement().getEnclosingElement())),
+                target.executableElement().getSimpleName(),
+                target.factoryCallArgs())
+            .addModifiers(PUBLIC)
+            .build())
+        .build();
+  }
+
   private static TypeSpec buildContract(Target target) {
     return classBuilder(target.contractName())
-        .addTypes(contractInterfaces(target))
+        .addTypes(target.contractInterfaces())
         .addModifiers(PUBLIC, FINAL, STATIC)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
-  }
-
-  private static List<TypeSpec> contractInterfaces(Target target) {
-    Stack<TypeSpec> specs = new Stack<>();
-    ClassName updaterName = target.contractName().nestedClass(target.returnTypeName().simpleName() + "Updater");
-    specs.push(updaterSpec(updaterName, target));
-    for (int i = target.stepSpecs().size() - 1; i >= 0; i--) {
-      ClassName stepName = target.stepSpec(i).getStepName();
-      VariableElement argument = target.stepSpec(i).getArgument();
-      TypeSpec stepSpec = stepSpec(stepName, argument, target.contractName().nestedClass(specs.peek().name));
-      specs.push(stepSpec);
-    }
-    return specs;
-  }
-
-  private static TypeSpec stepSpec(ClassName stepName, VariableElement arg, ClassName returnType) {
-    MethodSpec methodSpec = methodBuilder(arg.getSimpleName().toString())
-        .returns(returnType)
-        .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())
-        .addModifiers(PUBLIC, ABSTRACT)
-        .build();
-    return interfaceBuilder(stepName)
-        .addMethod(methodSpec)
-        .build();
-  }
-
-  private static TypeSpec updaterSpec(ClassName updaterClassName, Target target) {
-    TypeSpec.Builder updater = interfaceBuilder(updaterClassName);
-    for (VariableElement arg : target.executableElement().getParameters()) {
-      updater.addMethod(methodBuilder("update" + upcase(arg.getSimpleName().toString()))
-          .returns(updaterClassName)
-          .addParameter(TypeName.get(arg.asType()), arg.getSimpleName().toString())
-          .addModifiers(PUBLIC, ABSTRACT)
-          .build());
-    }
-    return updater.build();
   }
 
 }

@@ -1,6 +1,7 @@
 package isobuilder.compiler;
 
 import com.google.common.collect.ImmutableList;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.tools.JavaFileObject;
@@ -14,7 +15,7 @@ public class IsoProcessorTest {
 
   @Test
   public void simpleCube() {
-    JavaFileObject cube = forSourceLines("test.Cube",
+    JavaFileObject cube = forSourceLines("cube.Cube",
         "package cube;",
         "import isobuilder.Builder;",
         "public class Cube {}");
@@ -31,24 +32,41 @@ public class IsoProcessorTest {
         "",
         "}");
     JavaFileObject expected =
-        forSourceLines("test.CubeFactory_IsoBuilder",
+        forSourceLines("test.IsoBuilder_CubeFactory",
             "package test;",
+            "import cube.Cube;",
             "import javax.annotation.Generated;",
-            GENERATED_ANNOTATION,
             "",
-            "public final class CubeFactory_IsoBuilder {",
-            "  private CubeFactory_IsoBuilder() {}",
+            GENERATED_ANNOTATION,
+            "public final class IsoBuilder_CubeFactory {",
+            "  private IsoBuilder_CubeFactory() {}",
+            "  public static Contract.CubeHeight builder() { return new BuilderImpl(); }",
+            "",
+            "  static final class BuilderImpl implements",
+            "        Contract.CubeUpdater, Contract.CubeHeight, Contract.CubeLength, Contract.CubeWidth {",
+            "    private double height;",
+            "    private double length;",
+            "    private double width;",
+            "    @Override public Contract.CubeUpdater updateHeight(double height) { this.height = height; return this; }",
+            "    @Override public Contract.CubeUpdater updateLength(double length) { this.length = length; return this; }",
+            "    @Override public Contract.CubeUpdater updateWidth(double width) { this.width = width; return this; }",
+            "    @Override public Contract.CubeLength height(double height) { this.height = height; return this; }",
+            "    @Override public Contract.CubeWidth length(double length) { this.length = length; return this; }",
+            "    @Override public Contract.CubeUpdater width(double width) { this.width = width; return this; }",
+            "    @Override public Cube build() { return CubeFactory.create( height, length, width ); }",
+            "  }",
             "",
             "  public static final class Contract {",
             "    private Contract() {}",
             "    interface CubeUpdater {",
+            "      Cube build();",
             "      CubeUpdater updateHeight(double height);",
             "      CubeUpdater updateLength(double length);",
             "      CubeUpdater updateWidth(double width);",
             "    }",
-            "    interface CubeWidth { CubeUpdater width(double width); }",
-            "    interface CubeLength { CubeWidth length(double length); }",
             "    interface CubeHeight { CubeLength height(double height); }",
+            "    interface CubeLength { CubeWidth length(double length); }",
+            "    interface CubeWidth { CubeUpdater width(double width); }",
             "  }",
             "}");
     assertAbout(javaSources()).that(ImmutableList.of(cube, cubeFactory))

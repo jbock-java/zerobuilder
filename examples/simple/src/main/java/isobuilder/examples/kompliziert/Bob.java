@@ -2,7 +2,6 @@ package isobuilder.examples.kompliziert;
 
 import com.google.auto.value.AutoValue;
 import isobuilder.Builder;
-import isobuilder.examples.kompliziert.Bob_Isobuilder.PrototypeBobBuilderContract.BobKevin;
 
 @AutoValue
 abstract class Bob {
@@ -14,10 +13,6 @@ abstract class Bob {
   @Builder
   static Bob createBob(String kevin, String chantal, String justin) {
     return new AutoValue_Bob(kevin, chantal, justin);
-  }
-
-  static BobKevin builder() {
-    return Bob_Isobuilder.builder();
   }
 
 }

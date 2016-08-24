@@ -5,11 +5,11 @@ import org.junit.Test;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-public class BobBuilderTest {
+public class BobTest {
 
   @Test
   public void kevinIsBob() {
-    Bob bob = Bob.builder()
+    Bob bob = StaticBob.builder()
         .kevin("kevin")
         .chantal("chantal")
         .justin("justin")
