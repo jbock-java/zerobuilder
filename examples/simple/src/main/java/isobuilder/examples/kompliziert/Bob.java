@@ -15,4 +15,8 @@ abstract class Bob {
     return new AutoValue_Bob(kevin, chantal, justin);
   }
 
+  static Bob makeBob() {
+    return null;
+  }
+
 }

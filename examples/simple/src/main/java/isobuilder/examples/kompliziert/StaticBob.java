@@ -1,9 +1,10 @@
 package isobuilder.examples.kompliziert;
 
-class StaticBob {
+import com.google.auto.value.AutoValue;
 
-  static IsoBuilder_Bob.Contract.BobKevin builder() {
-    return IsoBuilder_Bob.builder();
-  }
+@AutoValue
+abstract class StaticBob {
+
+  abstract String foo();
 
 }

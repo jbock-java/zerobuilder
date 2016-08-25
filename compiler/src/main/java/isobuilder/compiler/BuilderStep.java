@@ -17,14 +17,14 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 
 public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
 
-  private final ContractGenerator contractGenerator;
+  private final MyGenerator myGenerator;
   private final Messager messager;
   private final MethodValidator methodValidator = new MethodValidator();
   private final DuplicateValidator duplicateValidator = new DuplicateValidator();
 
   @Inject
-  BuilderStep(ContractGenerator contractGenerator, Messager messager) {
-    this.contractGenerator = contractGenerator;
+  BuilderStep(MyGenerator myGenerator, Messager messager) {
+    this.myGenerator = myGenerator;
     this.messager = messager;
   }
 
@@ -38,17 +38,21 @@ public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
     Set<Element> elements = elementsByAnnotation.get(Builder.class);
     Set<ExecutableElement> methods = methodsIn(elements);
     for (ExecutableElement method : methods) {
-      Target target = target(method);
-      ValidationReport<ExecutableElement> methodReport = methodValidator.validateMethod(method);
-      ValidationReport<ExecutableElement> duplicateReport = duplicateValidator.validateClassname(target);
-      methodReport.printMessagesTo(messager);
-      duplicateReport.printMessagesTo(messager);
-      if (methodReport.isClean() && duplicateReport.isClean()) {
-        try {
-          contractGenerator.generate(target);
-        } catch (SourceFileGenerationException e) {
-          e.printMessageTo(messager);
+      try {
+        Target target = target(method);
+        ValidationReport<ExecutableElement> methodReport = methodValidator.validateMethod(method);
+        ValidationReport<ExecutableElement> duplicateReport = duplicateValidator.validateClassname(target);
+        methodReport.printMessagesTo(messager);
+        duplicateReport.printMessagesTo(messager);
+        if (methodReport.isClean() && duplicateReport.isClean()) {
+          try {
+            myGenerator.generate(target);
+          } catch (SourceFileGenerationException e) {
+            e.printMessageTo(messager);
+          }
         }
+      } catch (TypeNotPresentException e) {
+        e.printStackTrace();
       }
     }
     return ImmutableSet.of();

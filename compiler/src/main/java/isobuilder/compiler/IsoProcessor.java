@@ -45,15 +45,8 @@ public class IsoProcessor extends BasicAnnotationProcessor {
     }
   }
 
-  @Override
-  protected Iterable<? extends ProcessingStep> initSteps() {
-    IsoModule module = new IsoModule(processingEnv);
-    IsoContext context = builder().isoModule(module).build();
-    return context.getSteps().getSteps();
-  }
-
   @Module
-  static class IsoModule {
+  static final class IsoModule {
 
     private final ProcessingEnvironment processingEnv;
 
@@ -63,21 +56,29 @@ public class IsoProcessor extends BasicAnnotationProcessor {
 
     @Provides
     @Singleton
-    public Filer provideFiler() {
+    Filer provideFiler() {
       return processingEnv.getFiler();
     }
 
     @Provides
     @Singleton
-    public Elements provideElements() {
+    Elements provideElements() {
       return processingEnv.getElementUtils();
     }
 
     @Provides
     @Singleton
-    public Messager provideMessager() {
+    Messager provideMessager() {
       return processingEnv.getMessager();
     }
 
   }
+
+  @Override
+  protected Iterable<? extends ProcessingStep> initSteps() {
+    IsoModule module = new IsoModule(processingEnv);
+    IsoContext context = builder().isoModule(module).build();
+    return context.getSteps().getSteps();
+  }
+
 }

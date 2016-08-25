@@ -1,10 +1,7 @@
 package isobuilder.compiler;
 
 import com.google.auto.value.AutoValue;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 
 import javax.lang.model.element.VariableElement;
 
@@ -33,6 +30,10 @@ abstract class StepSpec {
     return interfaceBuilder(stepName())
         .addMethod(methodSpec)
         .build();
+  }
+
+  final ParameterSpec asParameter() {
+    return ParameterSpec.builder(TypeName.get(argument().asType()), argument().getSimpleName().toString()).build();
   }
 
 }

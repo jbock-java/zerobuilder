@@ -9,7 +9,7 @@ public class BobTest {
 
   @Test
   public void kevinIsBob() {
-    Bob bob = StaticBob.builder()
+    Bob bob = BobBuilder
         .kevin("kevin")
         .chantal("chantal")
         .justin("justin")
