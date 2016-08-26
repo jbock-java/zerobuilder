@@ -7,10 +7,8 @@ import com.google.common.collect.Sets;
 import isobuilder.Builder;
 
 import javax.annotation.processing.Messager;
-import javax.inject.Inject;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.util.ElementFilter;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -18,14 +16,13 @@ import static isobuilder.compiler.Target.target;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-public class MyStep implements BasicAnnotationProcessor.ProcessingStep {
+final class MyStep implements BasicAnnotationProcessor.ProcessingStep {
 
   private final MyGenerator myGenerator;
   private final Messager messager;
   private final MethodValidator methodValidator = new MethodValidator();
   private final DuplicateValidator duplicateValidator = new DuplicateValidator();
 
-  @Inject
   MyStep(MyGenerator myGenerator, Messager messager) {
     this.myGenerator = myGenerator;
     this.messager = messager;
@@ -42,8 +39,8 @@ public class MyStep implements BasicAnnotationProcessor.ProcessingStep {
     Set<ExecutableElement> methods = Sets.union(methodsIn(elements), constructorsIn(elements));
     for (ExecutableElement method : methods) {
       try {
-        ValidationReport<ExecutableElement> methodReport = methodValidator.validateMethod(method);
-        ValidationReport<ExecutableElement> duplicateReport = duplicateValidator.validateClassname(method);
+        ValidationReport methodReport = methodValidator.validateElement(method);
+        ValidationReport duplicateReport = duplicateValidator.validateClassname(method);
         methodReport.printMessagesTo(messager);
         duplicateReport.printMessagesTo(messager);
         if (methodReport.isClean() && duplicateReport.isClean()) {

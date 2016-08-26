@@ -13,10 +13,10 @@ final class DuplicateValidator {
 
   private final Set<TypeName> annotatedClasses = new HashSet<>();
 
-  ValidationReport<ExecutableElement> validateClassname(ExecutableElement element) {
-    ValidationReport.Builder<ExecutableElement> builder = ValidationReport.about(element);
+  ValidationReport validateClassname(ExecutableElement element) {
+    ValidationReport.Builder builder = ValidationReport.about(element);
     if (!annotatedClasses.add(ClassName.get(element.getEnclosingElement().asType()))) {
-      builder.addError(DUPLICATE);
+      return builder.addError(DUPLICATE);
     }
     return builder.build();
   }
