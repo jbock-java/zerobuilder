@@ -19,7 +19,6 @@ package isobuilder.compiler;
 import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Filer;
@@ -83,8 +82,9 @@ final class MyGenerator extends SourceFileGenerator<Target> {
   }
 
   private static TypeSpec buildContract(Target target) {
+    Target.Contract contract = target.contract();
     return classBuilder(target.contractName())
-        .addTypes(target.contractInterfaces())
+        .addTypes(contract.contractInterfaces())
         .addModifiers(PUBLIC, FINAL, STATIC)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();

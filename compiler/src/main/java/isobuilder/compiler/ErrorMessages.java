@@ -3,13 +3,13 @@ package isobuilder.compiler;
 final class ErrorMessages {
 
   static final String NON_STATIC_METHOD =
-      "Target method must be static.";
+      "The Builder annotation can only be used on static methods or constructors.";
 
   static final String PRIVATE_METHOD =
-      "Target method may not be private.";
+      "The annotated method may not be private.";
 
   static final String DUPLICATE =
-      "Duplicate builder name.";
+      "Only one method per class may have the Builder annotation.";
 
   private ErrorMessages() {
   }

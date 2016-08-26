@@ -6,9 +6,9 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.*;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
 import java.util.Stack;
 
 import static com.google.auto.common.MoreElements.asType;
@@ -18,6 +18,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static isobuilder.compiler.CodeBlocks.makeParametersCodeBlock;
 import static isobuilder.compiler.Util.upcase;
+import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.*;
 
 @AutoValue
@@ -61,18 +62,10 @@ abstract class Target {
   }
 
   private static ClassName returnTypeName(ExecutableElement executableElement) {
-    DeclaredType returnType = asDeclared(executableElement.getReturnType());
-    TypeElement typeElement = asType(returnType.asElement());
-    return ClassName.get(typeElement);
-  }
-
-  final ImmutableList<TypeSpec> contractInterfaces() {
-    ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
-    specs.add(updaterSpec());
-    for (int i = 1; i < stepSpecs().size(); i++) {
-      specs.add(stepSpecs().get(i).typeSpec());
-    }
-    return specs.build();
+    TypeElement type = executableElement.getKind() == CONSTRUCTOR
+        ? asType(executableElement.getEnclosingElement())
+        : asType(asDeclared(executableElement.getReturnType()).asElement());
+    return ClassName.get(type);
   }
 
   final ImmutableList<ClassName> contractInterfaceNames() {
@@ -87,7 +80,9 @@ abstract class Target {
   private final TypeSpec updaterSpec() {
     TypeSpec.Builder updater = interfaceBuilder(updaterName());
     updater.addMethod(methodBuilder("build")
-        .returns(TypeName.get(executableElement().getReturnType()))
+        .returns(executableElement().getKind() == CONSTRUCTOR
+            ? ClassName.get(asType(executableElement().getEnclosingElement()))
+            : TypeName.get(executableElement().getReturnType()))
         .addModifiers(PUBLIC, ABSTRACT)
         .build());
     for (VariableElement arg : executableElement().getParameters()) {
@@ -102,6 +97,21 @@ abstract class Target {
 
   final Impl impl() {
     return new Impl();
+  }
+
+  final Contract contract() {
+    return new Contract();
+  }
+
+  final class Contract {
+    ImmutableList<TypeSpec> contractInterfaces() {
+      ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
+      specs.add(updaterSpec());
+      for (int i = 1; i < stepSpecs().size(); i++) {
+        specs.add(stepSpecs().get(i).typeSpec());
+      }
+      return specs.build();
+    }
   }
 
   final class Impl {
@@ -166,14 +176,17 @@ abstract class Target {
     }
 
     MethodSpec buildMethod() {
-      return methodBuilder("build")
+      ClassName enclosing = ClassName.get(asType(executableElement().getEnclosingElement()));
+      MethodSpec.Builder builder = methodBuilder("build")
           .addAnnotation(Override.class)
-          .returns(TypeName.get(executableElement().getReturnType()))
-          .addStatement("return $T.$N($L)",
-              ClassName.get(asType(executableElement().getEnclosingElement())),
-              executableElement().getSimpleName(),
-              factoryCallArgs())
           .addModifiers(PUBLIC)
+          .returns(executableElement().getKind() == CONSTRUCTOR
+              ? enclosing
+              : TypeName.get(executableElement().getReturnType()));
+      Name simpleName = executableElement().getSimpleName();
+      return (executableElement().getKind() == CONSTRUCTOR
+          ? builder.addStatement("return new $T($L)", enclosing, factoryCallArgs())
+          : builder.addStatement("return $T.$N($L)", enclosing, simpleName, factoryCallArgs()))
           .build();
     }
 

@@ -3,19 +3,22 @@ package isobuilder.compiler;
 import com.google.auto.common.BasicAnnotationProcessor;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import isobuilder.Builder;
 
 import javax.annotation.processing.Messager;
 import javax.inject.Inject;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.util.ElementFilter;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import static isobuilder.compiler.Target.target;
+import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
+public class MyStep implements BasicAnnotationProcessor.ProcessingStep {
 
   private final MyGenerator myGenerator;
   private final Messager messager;
@@ -23,7 +26,7 @@ public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
   private final DuplicateValidator duplicateValidator = new DuplicateValidator();
 
   @Inject
-  BuilderStep(MyGenerator myGenerator, Messager messager) {
+  MyStep(MyGenerator myGenerator, Messager messager) {
     this.myGenerator = myGenerator;
     this.messager = messager;
   }
@@ -36,16 +39,16 @@ public class BuilderStep implements BasicAnnotationProcessor.ProcessingStep {
   @Override
   public Set<Element> process(SetMultimap<Class<? extends Annotation>, Element> elementsByAnnotation) {
     Set<Element> elements = elementsByAnnotation.get(Builder.class);
-    Set<ExecutableElement> methods = methodsIn(elements);
+    Set<ExecutableElement> methods = Sets.union(methodsIn(elements), constructorsIn(elements));
     for (ExecutableElement method : methods) {
       try {
-        Target target = target(method);
         ValidationReport<ExecutableElement> methodReport = methodValidator.validateMethod(method);
-        ValidationReport<ExecutableElement> duplicateReport = duplicateValidator.validateClassname(target);
+        ValidationReport<ExecutableElement> duplicateReport = duplicateValidator.validateClassname(method);
         methodReport.printMessagesTo(messager);
         duplicateReport.printMessagesTo(messager);
         if (methodReport.isClean() && duplicateReport.isClean()) {
           try {
+            Target target = target(method);
             myGenerator.generate(target);
           } catch (SourceFileGenerationException e) {
             e.printMessageTo(messager);
