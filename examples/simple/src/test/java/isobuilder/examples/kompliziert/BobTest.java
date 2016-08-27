@@ -9,13 +9,12 @@ public class BobTest {
 
   @Test
   public void kevinIsBob() {
-    Bob bob = BobBuilder
+    BobBuilder.Contract.BobUpdater updater = BobBuilder
         .kevin("kevin")
         .chantal("chantal")
-        .justin("justin")
-        .updateKevin("bob")
-        .build();
-    assertThat(bob, is(Bob.create("bob", "chantal", "justin")));
+        .justin("justin");
+    assertThat(updater.build(), is(Bob.create("bob", "chantal", "justin")));
+    assertThat(updater.updateKevin("bob").build(), is(Bob.create("bob", "chantal", "justin")));
   }
 
 }

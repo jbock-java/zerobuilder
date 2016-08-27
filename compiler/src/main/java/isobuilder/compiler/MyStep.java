@@ -4,7 +4,7 @@ import com.google.auto.common.BasicAnnotationProcessor;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
-import isobuilder.Builder;
+import com.kaputtjars.isobuilder.Builder;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
