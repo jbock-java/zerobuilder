@@ -48,10 +48,10 @@ final class MyGenerator extends SourceFileGenerator<Target> {
         .addParameter(parameter)
         .addJavadoc(Joiner.on('\n').join(ImmutableList.of(
             "The first step of the builder chain that builds {@link $T}.",
-            "All steps of this builder implementation are mutable.",
+            "All steps of the builder implementation are mutable.",
             "@return A mutable builder.")),
             target.goalType())
-        .addStatement("return new $T($N)", target.implName(), parameter.name)
+        .addStatement("return new $T($N)", target.impl().name(), parameter.name)
         .addModifiers(PUBLIC, STATIC)
         .build();
     return Optional.of(classBuilder(generatedClassName)
@@ -64,8 +64,9 @@ final class MyGenerator extends SourceFileGenerator<Target> {
 
   private static TypeSpec buildImpl(Target target) {
     Target.Impl impl = target.impl();
-    return classBuilder(target.implName())
-        .addSuperinterfaces(target.contractInterfaces())
+    Target.Contract contract = target.contract();
+    return classBuilder(impl.name())
+        .addSuperinterfaces(contract.interfaceNames())
         .addFields(impl.fields())
         .addMethod(impl.constructor())
         .addMethods(impl.updaters())

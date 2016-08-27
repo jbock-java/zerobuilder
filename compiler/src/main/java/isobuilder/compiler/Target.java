@@ -87,21 +87,8 @@ final class Target {
     return generatedClassName().nestedClass(CONTRACT);
   }
 
-  ClassName implName() {
-    return generatedClassName().nestedClass(IMPL);
-  }
-
   ClassName updaterName() {
     return contractName().nestedClass(goalType(executableElement).simpleName() + UPDATER_SUFFIX);
-  }
-
-  ImmutableList<ClassName> contractInterfaces() {
-    ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
-    specs.add(updaterName());
-    for (int i = 1; i < stepSpecs.size(); i++) {
-      specs.add(stepSpecs.get(i).stepName);
-    }
-    return specs.build();
   }
 
   Impl impl() {
@@ -113,6 +100,15 @@ final class Target {
   }
 
   final class Contract {
+
+    ImmutableList<ClassName> interfaceNames() {
+      ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
+      specs.add(updaterName());
+      for (int i = 1; i < stepSpecs.size(); i++) {
+        specs.add(stepSpecs.get(i).stepName);
+      }
+      return specs.build();
+    }
 
     ImmutableList<TypeSpec> interfaces() {
       ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
@@ -152,6 +148,10 @@ final class Target {
   }
 
   final class Impl {
+
+    ClassName name() {
+      return generatedClassName().nestedClass(IMPL);
+    }
 
     private CodeBlock factoryCallArgs() {
       ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
