@@ -4,7 +4,7 @@ import com.google.auto.common.BasicAnnotationProcessor;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
-import com.kaputtjars.isobuilder.Builder;
+import com.kaputtjars.isobuilder.Build;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
@@ -30,12 +30,12 @@ final class MyStep implements BasicAnnotationProcessor.ProcessingStep {
 
   @Override
   public Set<? extends Class<? extends Annotation>> annotations() {
-    return ImmutableSet.of(Builder.class);
+    return ImmutableSet.of(Build.class);
   }
 
   @Override
   public Set<Element> process(SetMultimap<Class<? extends Annotation>, Element> elementsByAnnotation) {
-    Set<Element> elements = elementsByAnnotation.get(Builder.class);
+    Set<Element> elements = elementsByAnnotation.get(Build.class);
     Set<ExecutableElement> methods = Sets.union(methodsIn(elements), constructorsIn(elements));
     for (ExecutableElement method : methods) {
       try {

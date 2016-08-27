@@ -16,7 +16,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 
 import static com.google.auto.common.MoreElements.asType;
-import static com.google.auto.common.MoreTypes.asDeclared;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
@@ -31,26 +30,30 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 final class Target {
 
   private static final String CONTRACT = "Contract";
-  private static final String IMPL = "BuilderImpl";
+  private static final String UPDATER_IMPL = "UpdaterImpl";
+  private static final String STEPS_IMPL = "StepsImpl";
   private static final String UPDATER_SUFFIX = "Updater";
 
+  final TypeElement typeElement;
   final ExecutableElement executableElement;
   final ImmutableList<StepSpec> stepSpecs;
 
-  private Target(ExecutableElement executableElement,
+  private Target(TypeElement typeElement,
+                 ExecutableElement executableElement,
                  ImmutableList<StepSpec> stepSpecs) {
+    this.typeElement = typeElement;
     this.executableElement = executableElement;
     this.stepSpecs = stepSpecs;
   }
 
-  static Target target(ExecutableElement executableElement) {
-    return new Target(executableElement, specs(executableElement));
+  static Target target(TypeElement typeElement, ExecutableElement executableElement) {
+    return new Target(typeElement, executableElement, specs(typeElement, executableElement));
   }
 
-  private static ImmutableList<StepSpec> specs(ExecutableElement executableElement) {
-    ClassName generatedClassName = generatedClassName(executableElement);
+  private static ImmutableList<StepSpec> specs(TypeElement typeElement, ExecutableElement executableElement) {
+    ClassName generatedClassName = generatedClassName(typeElement);
     ClassName contractName = generatedClassName.nestedClass(CONTRACT);
-    ClassName name = contractName.nestedClass(goalType(executableElement).simpleName() + UPDATER_SUFFIX);
+    ClassName name = contractName.nestedClass(ClassName.get(typeElement).simpleName() + UPDATER_SUFFIX);
     ImmutableList.Builder<StepSpec> stepSpecsBuilder = ImmutableList.builder();
     for (int i = executableElement.getParameters().size() - 1; i >= 0; i--) {
       VariableElement arg = executableElement.getParameters().get(i);
@@ -62,33 +65,22 @@ final class Target {
     return stepSpecsBuilder.build().reverse();
   }
 
-  private static ClassName generatedClassName(ExecutableElement executableElement) {
-    ClassName enclosingClass = ClassName.get(asType(executableElement.getEnclosingElement()));
-    String returnTypeSimpleName = Joiner.on('_').join(enclosingClass.simpleNames()) + "Builder";
+  private static ClassName generatedClassName(TypeElement typeElement) {
+    ClassName enclosingClass = ClassName.get(typeElement);
+    String returnTypeSimpleName = Joiner.on('_').join(enclosingClass.simpleNames()) + "Build";
     return enclosingClass.topLevelClassName().peerClass(returnTypeSimpleName);
   }
 
-  private static ClassName goalType(ExecutableElement executableElement) {
-    TypeElement type = executableElement.getKind() == CONSTRUCTOR
-        ? asType(executableElement.getEnclosingElement())
-        : asType(asDeclared(executableElement.getReturnType()).asElement());
-    return ClassName.get(type);
-  }
-
-  ClassName goalType() {
-    return goalType(executableElement);
-  }
-
   ClassName generatedClassName() {
-    return generatedClassName(executableElement);
+    return generatedClassName(typeElement);
   }
 
   ClassName contractName() {
     return generatedClassName().nestedClass(CONTRACT);
   }
 
-  ClassName updaterName() {
-    return contractName().nestedClass(goalType(executableElement).simpleName() + UPDATER_SUFFIX);
+  ClassName contractUpdaterName() {
+    return contractName().nestedClass(ClassName.get(typeElement).simpleName() + UPDATER_SUFFIX);
   }
 
   Impl impl() {
@@ -103,7 +95,7 @@ final class Target {
 
     ImmutableList<ClassName> interfaceNames() {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
-      specs.add(updaterName());
+      specs.add(contractUpdaterName());
       for (int i = 1; i < stepSpecs.size(); i++) {
         specs.add(stepSpecs.get(i).stepName);
       }
@@ -113,8 +105,8 @@ final class Target {
     ImmutableList<TypeSpec> interfaces() {
       ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
       specs.add(updaterInterface());
-      for (int i = 1; i < stepSpecs.size(); i++) {
-        specs.add(stepSpecs.get(i).asInterface());
+      for (StepSpec spec : stepSpecs) {
+        specs.add(spec.asInterface());
       }
       return specs.build();
     }
@@ -126,7 +118,7 @@ final class Target {
               : TypeName.get(executableElement.getReturnType()))
           .addModifiers(PUBLIC, ABSTRACT)
           .build();
-      return interfaceBuilder(updaterName())
+      return interfaceBuilder(contractUpdaterName())
           .addMethod(buildMethod)
           .addMethods(updateMethods())
           .addModifiers(PUBLIC)
@@ -134,13 +126,10 @@ final class Target {
     }
 
     private ImmutableList<MethodSpec> updateMethods() {
+      ClassName updaterName = contractUpdaterName();
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (StepSpec spec : stepSpecs) {
-        builder.add(methodBuilder("update" + upcase(spec.argument.getSimpleName().toString()))
-            .returns(updaterName())
-            .addParameter(spec.asParameter())
-            .addModifiers(PUBLIC, ABSTRACT)
-            .build());
+        builder.add(spec.asUpdaterMethod(updaterName));
       }
       return builder.build();
     }
@@ -185,7 +174,7 @@ final class Target {
         ParameterSpec parameter = stepSpec.asParameter();
         builder.add(methodBuilder("update" + upcase(parameter.name))
             .addAnnotation(Override.class)
-            .returns(updaterName())
+            .returns(contractUpdaterName())
             .addParameter(parameter)
             .addStatement("this.$N = $N", parameter.name, parameter.name)
             .addStatement("return this")

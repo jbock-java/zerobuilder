@@ -6,6 +6,7 @@ import javax.lang.model.element.VariableElement;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
+import static isobuilder.compiler.Util.upcase;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
@@ -40,6 +41,14 @@ final class StepSpec {
   ParameterSpec asParameter() {
     return ParameterSpec
         .builder(TypeName.get(argument.asType()), argument.getSimpleName().toString())
+        .build();
+  }
+
+  MethodSpec asUpdaterMethod(ClassName updaterName) {
+    return methodBuilder(argument.getSimpleName().toString())
+        .returns(updaterName)
+        .addParameter(asParameter())
+        .addModifiers(PUBLIC, ABSTRACT)
         .build();
   }
 

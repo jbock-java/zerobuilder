@@ -9,6 +9,10 @@ final class Util {
     return LOWER_CAMEL.to(UPPER_CAMEL, s);
   }
 
+  static String downcase(String s) {
+    return UPPER_CAMEL.to(LOWER_CAMEL, s);
+  }
+
   private Util() {
   }
 
