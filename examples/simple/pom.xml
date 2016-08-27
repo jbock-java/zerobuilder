@@ -4,12 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>isobuilder.examples</groupId>
-    <version>${revision}</version>
+    <groupId>com.kaputtjars.isobuilder.examples</groupId>
     <artifactId>simple</artifactId>
+    <version>${revision}</version>
 
     <properties>
         <revision>0-SNAPSHOT</revision>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
