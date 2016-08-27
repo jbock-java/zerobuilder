@@ -3,16 +3,17 @@ package isobuilder.compiler;
 import com.google.common.base.Optional;
 
 import javax.annotation.processing.Messager;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 
-final class ValidationReport {
+final class ValidationReport<T extends Element> {
 
   private final Optional<String> message;
-  private final ExecutableElement element;
+  private final T element;
 
-  private ValidationReport(Optional<String> message, ExecutableElement element) {
+  private ValidationReport(Optional<String> message, T element) {
     this.message = message;
     this.element = element;
   }
@@ -27,23 +28,23 @@ final class ValidationReport {
     }
   }
 
-  static Builder about(ExecutableElement element) {
+  static <T extends Element> Builder about(T element) {
     return new Builder(element);
   }
 
-  static final class Builder {
+  static final class Builder<T extends Element> {
 
-    private final ExecutableElement element;
+    private final T element;
 
-    private Builder(ExecutableElement element) {
+    private Builder(T element) {
       this.element = element;
     }
 
-    ValidationReport addError(String message) {
+    ValidationReport error(String message) {
       return new ValidationReport(Optional.of(message), element);
     }
 
-    ValidationReport build() {
+    ValidationReport clean() {
       return new ValidationReport(Optional.<String>absent(), element);
     }
 
