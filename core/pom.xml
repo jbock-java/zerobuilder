@@ -11,17 +11,13 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>isobuilder-core</artifactId>
+    <artifactId>isobuilder</artifactId>
 
     <properties>
         <revision>0-SNAPSHOT</revision>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.google.dagger</groupId>
-            <artifactId>dagger</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>junit</groupId>

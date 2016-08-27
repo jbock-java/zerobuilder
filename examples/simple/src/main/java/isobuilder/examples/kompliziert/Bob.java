@@ -11,12 +11,8 @@ abstract class Bob {
   abstract String justin();
 
   @Builder
-  static Bob createBob(String kevin, String chantal, String justin) {
+  static Bob create(String kevin, String chantal, String justin) {
     return new AutoValue_Bob(kevin, chantal, justin);
-  }
-
-  static Bob makeBob() {
-    return null;
   }
 
 }

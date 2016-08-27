@@ -7,9 +7,9 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
-import isobuilder.Builder;
 
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
 
@@ -23,8 +23,8 @@ import static javax.lang.model.element.Modifier.STATIC;
 
 final class MyGenerator extends SourceFileGenerator<Target> {
 
-  MyGenerator(Filer filer, Elements elements) {
-    super(filer, elements);
+  MyGenerator(Filer filer, Elements elements, Messager messager) {
+    super(filer, elements, messager);
   }
 
   @Override
@@ -47,12 +47,10 @@ final class MyGenerator extends SourceFileGenerator<Target> {
         .returns(secondStep.stepName)
         .addParameter(parameter)
         .addJavadoc(Joiner.on('\n').join(ImmutableList.of(
-            "First step of the builder chain that generates {@link $T}.",
-            "",
-            "<h1>Warning</h1>",
-            "As of Java 8, aliasing this method in the {@link $T} annotated class",
-            "may cause a compile error, due to a limitation of javac annotation processing.")),
-            target.goalType(), Builder.class)
+            "The first step of the builder chain that builds {@link $T}.",
+            "All steps of this builder implementation are mutable.",
+            "@return A mutable builder.")),
+            target.goalType())
         .addStatement("return new $T($N)", target.implName(), parameter.name)
         .addModifiers(PUBLIC, STATIC)
         .build();

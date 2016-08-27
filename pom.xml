@@ -84,11 +84,6 @@
                 <version>${guava.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.google.googlejavaformat</groupId>
-                <artifactId>google-java-format</artifactId>
-                <version>${google.java.format.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.google.auto</groupId>
                 <artifactId>auto-common</artifactId>
                 <version>${auto.common.version}</version>
@@ -97,16 +92,6 @@
                 <groupId>com.google.auto.service</groupId>
                 <artifactId>auto-service</artifactId>
                 <version>${auto.service.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.auto.value</groupId>
-                <artifactId>auto-value</artifactId>
-                <version>${auto.value.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.errorprone</groupId>
-                <artifactId>error_prone_annotations</artifactId>
-                <version>${errorprone.version}</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
@@ -127,16 +112,6 @@
                 <groupId>com.google.truth</groupId>
                 <artifactId>truth</artifactId>
                 <version>${truth.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.dagger</groupId>
-                <artifactId>dagger</artifactId>
-                <version>${dagger.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.dagger</groupId>
-                <artifactId>dagger-compiler</artifactId>
-                <version>${dagger.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

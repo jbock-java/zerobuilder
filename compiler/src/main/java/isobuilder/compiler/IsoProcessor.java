@@ -23,7 +23,7 @@ public final class IsoProcessor extends BasicAnnotationProcessor {
     Filer filer = processingEnv.getFiler();
     Elements elements = processingEnv.getElementUtils();
     Messager messager = processingEnv.getMessager();
-    MyGenerator generator = new MyGenerator(filer, elements);
+    MyGenerator generator = new MyGenerator(filer, elements, messager);
     return ImmutableList.of(new MyStep(generator, messager));
   }
 

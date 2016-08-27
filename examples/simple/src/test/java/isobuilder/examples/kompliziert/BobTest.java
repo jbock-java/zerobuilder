@@ -15,9 +15,7 @@ public class BobTest {
         .justin("justin")
         .updateKevin("bob")
         .build();
-    assertThat(bob.kevin(), is("bob"));
-    assertThat(bob.chantal(), is("chantal"));
-    assertThat(bob.justin(), is("justin"));
+    assertThat(bob, is(Bob.create("bob", "chantal", "justin")));
   }
 
 }
