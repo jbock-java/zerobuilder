@@ -11,6 +11,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <revision>0-SNAPSHOT</revision>
+        <java.target>1.7</java.target>
+        <java.source>1.7</java.source>
         <guava.version>19.0</guava.version>
     </properties>
 

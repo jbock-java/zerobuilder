@@ -10,6 +10,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.target>1.7</java.target>
+        <java.source>1.7</java.source>
         <revision>0-SNAPSHOT</revision>
     </properties>
 

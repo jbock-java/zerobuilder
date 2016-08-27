@@ -7,24 +7,29 @@ import static org.junit.Assert.assertThat;
 
 public class BobTest {
 
-  private static final ThreadLocal<String> UPDATER = new ThreadLocal<String>(){
-    @Override
-    protected String initialValue() {
-      return super.initialValue();
-    }
-  };
-
   @Test
   public void kevinIsBob() {
-    Bob foo = Bob.create("a", "b", "c");
-    System.out.println(foo);
-    UPDATER.get();
-//    BobBuilder.Contract.BobUpdater updater = BobBuilder
-//        .kevin("kevin")
-//        .chantal("chantal")
-//        .justin("justin");
-//    assertThat(updater.build(), is(Bob.create("bob", "chantal", "justin")));
-//    assertThat(updater.updateKevin("bob").build(), is(Bob.create("bob", "chantal", "justin")));
+    Bob bob = BobBuilder.builder()
+        .kevin("kevin")
+        .chantal("chantal")
+        .justin("justin");
+    assertThat(bob, is(Bob.create("kevin", "chantal", "justin")));
+    assertThat(BobBuilder.toBuilder(bob).build(),
+        is(Bob.create("kevin", "chantal", "justin")));
+    assertThat(BobBuilder.toBuilder(bob).kevin("bob").build(),
+        is(Bob.create("bob", "chantal", "justin")));
+    assertThat(BobBuilder.toBuilder(bob).chantal("bob").build(),
+        is(Bob.create("kevin", "bob", "justin")));
+    assertThat(BobBuilder.toBuilder(bob).justin("bob").build(),
+        is(Bob.create("kevin", "chantal", "bob")));
+    assertThat(BobBuilder.toBuilder(bob).kevin("bob").chantal("bob").build(),
+        is(Bob.create("bob", "bob", "justin")));
+    assertThat(BobBuilder.toBuilder(bob).kevin("bob").justin("bob").build(),
+        is(Bob.create("bob", "chantal", "bob")));
+    assertThat(BobBuilder.toBuilder(bob).chantal("bob").justin("bob").build(),
+        is(Bob.create("kevin", "bob", "bob")));
+    assertThat(BobBuilder.toBuilder(bob).kevin("bob").chantal("bob").justin("bob").build(),
+        is(Bob.create("bob", "bob", "bob")));
   }
 
 }
