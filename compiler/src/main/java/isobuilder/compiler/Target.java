@@ -60,9 +60,9 @@ final class Target {
   }
 
   private static ClassName generatedClassName(TypeElement typeElement) {
-    ClassName enclosingClass = ClassName.get(typeElement);
-    String returnTypeSimpleName = Joiner.on('_').join(enclosingClass.simpleNames()) + "Builder";
-    return enclosingClass.topLevelClassName().peerClass(returnTypeSimpleName);
+    ClassName sourceType = ClassName.get(typeElement);
+    String simpleName = Joiner.on('_').join(sourceType.simpleNames()) + "Builder";
+    return sourceType.topLevelClassName().peerClass(simpleName);
   }
 
   ClassName generatedClassName() {

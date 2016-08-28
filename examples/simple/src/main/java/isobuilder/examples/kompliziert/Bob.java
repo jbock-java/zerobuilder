@@ -16,4 +16,8 @@ abstract class Bob {
     return new AutoValue_Bob(kevin, chantal, justin);
   }
 
+  Bob withChantal(String chantal) {
+    return BobBuilder.toBuilder(this).chantal(chantal).build();
+  }
+
 }

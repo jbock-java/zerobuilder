@@ -9,7 +9,6 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.util.Elements;
-import java.util.ServiceLoader;
 
 @AutoService(Processor.class)
 public final class IsoProcessor extends BasicAnnotationProcessor {
@@ -25,7 +24,7 @@ public final class IsoProcessor extends BasicAnnotationProcessor {
     Elements elements = processingEnv.getElementUtils();
     Messager messager = processingEnv.getMessager();
     MyGenerator generator = new MyGenerator(filer, elements, messager);
-    return ImmutableList.of(new MyStep(generator, messager));
+    return ImmutableList.of(new MyStep(generator, messager, elements));
   }
 
 }

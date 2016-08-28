@@ -8,7 +8,7 @@ import javax.lang.model.element.TypeElement;
 import static isobuilder.compiler.ErrorMessages.NON_STATIC_METHOD;
 import static isobuilder.compiler.ErrorMessages.PRIVATE_METHOD;
 import static isobuilder.compiler.ErrorMessages.RETURN_TYPE;
-import static isobuilder.compiler.ErrorMessages.TOO_FEW_PARAMETERS;
+import static isobuilder.compiler.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -29,7 +29,7 @@ final class MethodValidator {
       return builder.error(PRIVATE_METHOD);
     }
     if (element.getParameters().size() < 2) {
-      return builder.error(TOO_FEW_PARAMETERS);
+      return builder.error(NOT_ENOUGH_PARAMETERS);
     }
     return builder.clean();
   }

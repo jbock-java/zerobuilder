@@ -1,8 +1,6 @@
 package isobuilder.compiler;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -20,6 +18,7 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.anonymousClassBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static isobuilder.compiler.ErrorMessages.INFO_BUILDER_JAVADOC;
 import static isobuilder.compiler.Util.downcase;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -29,12 +28,6 @@ import static javax.lang.model.element.Modifier.STATIC;
 final class MyGenerator extends SourceFileGenerator<Target> {
 
   private static final String INSTANCE = "INSTANCE";
-
-  private static final String BUILDER_JAVADOC = Joiner.on('\n').join(ImmutableList.of(
-      "The first step of the builder chain that builds {@link $T}.",
-      "All steps of the builder implementation are mutable.",
-      "It is not recommended to use any of the steps more than once.",
-      "@return A mutable builder without any thread safety guarantees.", ""));
 
   MyGenerator(Filer filer, Elements elements, Messager messager) {
     super(filer, elements, messager);
@@ -112,7 +105,7 @@ final class MyGenerator extends SourceFileGenerator<Target> {
     StepSpec firstStep = target.stepSpecs.get(0);
     return methodBuilder("builder")
         .returns(firstStep.stepName)
-        .addJavadoc(BUILDER_JAVADOC, ClassName.get(target.typeElement))
+        .addJavadoc(INFO_BUILDER_JAVADOC, ClassName.get(target.typeElement))
         .addStatement("return $N.get().steps", INSTANCE)
         .addModifiers(target.methodModifiers(EnumSet.of(STATIC)))
         .build();

@@ -8,7 +8,7 @@ import static org.junit.Assert.assertThat;
 public class BobTest {
 
   @Test
-  public void kevinIsBob() {
+  public void updateEveryCombination() {
     Bob bob = BobBuilder.builder()
         .kevin("kevin")
         .chantal("chantal")
@@ -30,6 +30,13 @@ public class BobTest {
         is(Bob.create("kevin", "bob", "bob")));
     assertThat(BobBuilder.toBuilder(bob).kevin("bob").chantal("bob").justin("bob").build(),
         is(Bob.create("bob", "bob", "bob")));
+  }
+
+  @Test
+  public void wither() {
+    Bob bob = Bob.create("kevin", "chantal", "justin").withChantal("bob");
+    assertThat(BobBuilder.toBuilder(bob).chantal("bob").build(),
+        is(Bob.create("kevin", "bob", "justin")));
   }
 
 }
