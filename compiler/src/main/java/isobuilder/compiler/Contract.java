@@ -7,8 +7,8 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
-import java.util.EnumSet;
 
+import static com.google.common.collect.Iterables.toArray;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
@@ -34,22 +34,22 @@ final class Contract {
   ImmutableList<TypeSpec> stepInterfaces() {
     ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
     for (StepSpec spec : target.stepSpecs) {
-      specs.add(spec.asInterface(target.typeModifiers(EnumSet.noneOf(Modifier.class))));
+      specs.add(spec.asInterface(target.maybeAddPublic()));
     }
     return specs.build();
   }
 
   TypeSpec updaterInterface() {
     MethodSpec buildMethod = methodBuilder("build")
-        .returns(target.executableElement.getKind() == CONSTRUCTOR
-            ? ClassName.get(target.typeElement)
-            : TypeName.get(target.executableElement.getReturnType()))
+        .returns(target.annotatedExecutable.getKind() == CONSTRUCTOR
+            ? ClassName.get(target.annotatedType)
+            : TypeName.get(target.annotatedExecutable.getReturnType()))
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
     return interfaceBuilder(target.contractUpdaterName())
         .addMethod(buildMethod)
         .addMethods(updateMethods())
-        .addModifiers(target.typeModifiers(EnumSet.noneOf(Modifier.class)))
+        .addModifiers(toArray(target.maybeAddPublic(), Modifier.class))
         .build();
   }
 

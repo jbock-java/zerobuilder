@@ -1,6 +1,5 @@
 package isobuilder.compiler;
 
-import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -10,15 +9,16 @@ import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
-import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
-import java.util.EnumSet;
 
+import static com.google.common.collect.Iterables.toArray;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.anonymousClassBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
-import static isobuilder.compiler.ErrorMessages.INFO_BUILDER_JAVADOC;
+import static isobuilder.compiler.Messages.JavadocMessages.JAVADOC_BUILDER;
+import static isobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static isobuilder.compiler.Util.downcase;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -27,42 +27,39 @@ import static javax.lang.model.element.Modifier.STATIC;
 
 final class MyGenerator extends SourceFileGenerator<Target> {
 
-  private static final String INSTANCE = "INSTANCE";
+  private static final String STATIC_FIELD_INSTANCE = "INSTANCE";
+  private static final String FIELD_UPDATER = "updater";
+  private static final String FIELD_STEPS = "steps";
+
+  private final Elements elements;
 
   MyGenerator(Filer filer, Elements elements, Messager messager) {
-    super(filer, elements, messager);
+    super(filer);
+    this.elements = elements;
   }
 
   @Override
-  ClassName nameGeneratedType(Target target) {
-    return target.generatedClassName();
-  }
-
-  @Override
-  Optional<? extends Element> getElementForErrorReporting(Target input) {
-    return Optional.absent();
-  }
-
-  @Override
-  Optional<TypeSpec.Builder> write(
+  TypeSpec write(
       ClassName generatedClassName, Target target) {
-    return Optional.of(classBuilder(generatedClassName)
+    return classBuilder(generatedClassName)
         .addField(target.updaterImpl().name(), "updater", PRIVATE, FINAL)
         .addField(target.stepsImpl().name(), "steps", PRIVATE, FINAL)
         .addMethod(constructor(target))
-        .addField(threadLocalField(target.generatedClassName()))
+        .addField(threadLocalField(target.generatedTypeName()))
         .addMethod(builderMethod(target))
         .addMethod(toBuilderMethod(target))
         .addType(buildUpdaterImpl(target.contractUpdaterName(), target.updaterImpl()))
         .addType(buildStepsImpl(target.contract(), target.stepsImpl()))
         .addType(buildContract(target))
-        .addModifiers(target.typeModifiers(EnumSet.of(FINAL))));
+        .addAnnotations(generatedAnnotations(elements))
+        .addModifiers(toArray(target.maybeAddPublic(FINAL), Modifier.class))
+        .build();
   }
 
   private MethodSpec constructor(Target target) {
     return constructorBuilder()
-        .addStatement("this.$L = new $T()", "updater", target.updaterImpl().name())
-        .addStatement("this.$L = new $T()", "steps", target.stepsImpl().name())
+        .addStatement("this.$L = new $T()", FIELD_UPDATER, target.updaterImpl().name())
+        .addStatement("this.$L = new $T()", FIELD_STEPS, target.stepsImpl().name())
         .addModifiers(PRIVATE)
         .build();
   }
@@ -75,7 +72,7 @@ final class MyGenerator extends SourceFileGenerator<Target> {
         .returns(generatedType)
         .addStatement("return new $T()", generatedType)
         .build();
-    return FieldSpec.builder(threadLocal, INSTANCE)
+    return FieldSpec.builder(threadLocal, STATIC_FIELD_INSTANCE)
         .initializer("$L", anonymousClassBuilder("")
             .addSuperinterface(threadLocal)
             .addMethod(initialValue)
@@ -85,29 +82,29 @@ final class MyGenerator extends SourceFileGenerator<Target> {
   }
 
   private MethodSpec toBuilderMethod(Target target) {
-    String parameterName = downcase(ClassName.get(target.typeElement).simpleName());
+    String parameterName = downcase(ClassName.get(target.annotatedType).simpleName());
     MethodSpec.Builder builder = methodBuilder("toBuilder")
-        .addParameter(ClassName.get(target.typeElement), parameterName);
-    String updater = "updater";
-    builder.addStatement("$T $L = $L.get().updater", target.updaterImpl().name(), updater, INSTANCE);
+        .addParameter(ClassName.get(target.annotatedType), parameterName);
+    String varUpdater = "updater";
+    builder.addStatement("$T $L = $L.get().$N", target.updaterImpl().name(), varUpdater, STATIC_FIELD_INSTANCE, FIELD_UPDATER);
     for (StepSpec stepSpec : target.stepSpecs) {
       // support getters, DFA
-      builder.addStatement("$L.$L($N.$L())", updater, stepSpec.argument.getSimpleName(),
+      builder.addStatement("$L.$L($N.$L())", varUpdater, stepSpec.argument.getSimpleName(),
           parameterName, stepSpec.argument.getSimpleName());
     }
-    builder.addStatement("return $L", updater);
+    builder.addStatement("return $L", varUpdater);
     return builder
         .returns(target.contractUpdaterName())
-        .addModifiers(target.methodModifiers(EnumSet.of(STATIC))).build();
+        .addModifiers(target.maybeAddPublic(STATIC)).build();
   }
 
   private MethodSpec builderMethod(Target target) {
     StepSpec firstStep = target.stepSpecs.get(0);
     return methodBuilder("builder")
         .returns(firstStep.stepName)
-        .addJavadoc(INFO_BUILDER_JAVADOC, ClassName.get(target.typeElement))
-        .addStatement("return $N.get().steps", INSTANCE)
-        .addModifiers(target.methodModifiers(EnumSet.of(STATIC)))
+        .addJavadoc(JAVADOC_BUILDER, ClassName.get(target.annotatedType))
+        .addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE, FIELD_STEPS)
+        .addModifiers(target.maybeAddPublic(STATIC))
         .build();
   }
 
@@ -138,7 +135,7 @@ final class MyGenerator extends SourceFileGenerator<Target> {
     return classBuilder(target.contractName())
         .addType(contract.updaterInterface())
         .addTypes(contract.stepInterfaces())
-        .addModifiers(target.typeModifiers(EnumSet.of(FINAL, STATIC)))
+        .addModifiers(toArray(target.maybeAddPublic(FINAL, STATIC), Modifier.class))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
   }

@@ -11,33 +11,27 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Set;
 
 import static isobuilder.compiler.CodeBlocks.makeParametersCodeBlock;
 import static isobuilder.compiler.StepSpec.stepSpec;
 import static isobuilder.compiler.Util.upcase;
-import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
 
-final class Target {
+final class Target implements GenerationContext {
 
-  private static final String CONTRACT = "Contract";
-  static final String UPDATER_IMPL = "UpdaterImpl";
-  static final String STEPS_IMPL = "StepsImpl";
   private static final String UPDATER_SUFFIX = "Updater";
+  private static final String CONTRACT = "Contract";
 
-  final TypeElement typeElement;
-  final ExecutableElement executableElement;
+  final TypeElement annotatedType;
+  final ExecutableElement annotatedExecutable;
   final ImmutableList<StepSpec> stepSpecs;
 
-  private Target(TypeElement typeElement,
-                 ExecutableElement executableElement,
+  private Target(TypeElement annotatedType,
+                 ExecutableElement annotatedExecutable,
                  ImmutableList<StepSpec> stepSpecs) {
-    this.typeElement = typeElement;
-    this.executableElement = executableElement;
+    this.annotatedType = annotatedType;
+    this.annotatedExecutable = annotatedExecutable;
     this.stepSpecs = stepSpecs;
   }
 
@@ -65,16 +59,17 @@ final class Target {
     return sourceType.topLevelClassName().peerClass(simpleName);
   }
 
-  ClassName generatedClassName() {
-    return generatedClassName(typeElement);
+  @Override
+  public ClassName generatedTypeName() {
+    return generatedClassName(annotatedType);
   }
 
   ClassName contractName() {
-    return generatedClassName().nestedClass(CONTRACT);
+    return generatedTypeName().nestedClass(CONTRACT);
   }
 
   ClassName contractUpdaterName() {
-    return contractName().nestedClass(ClassName.get(typeElement).simpleName() + UPDATER_SUFFIX);
+    return contractName().nestedClass(ClassName.get(annotatedType).simpleName() + UPDATER_SUFFIX);
   }
 
   StepsImpl stepsImpl() {
@@ -91,27 +86,17 @@ final class Target {
 
   CodeBlock factoryCallArgs() {
     ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
-    for (VariableElement arg : executableElement.getParameters()) {
+    for (VariableElement arg : annotatedExecutable.getParameters()) {
       builder.add(CodeBlock.of("$L", arg.getSimpleName()));
     }
     return makeParametersCodeBlock(builder.build());
   }
 
-  Set<Modifier> methodModifiers(Set<Modifier> minimum) {
-    if (typeElement.getModifiers().contains(PUBLIC)) {
+  Set<Modifier> maybeAddPublic(Modifier... minimum) {
+    if (annotatedType.getModifiers().contains(PUBLIC)) {
       return Sets.union(ImmutableSet.copyOf(minimum), ImmutableSet.of(PUBLIC));
     }
     return ImmutableSet.copyOf(minimum);
-  }
-
-  Modifier[] typeModifiers(Set<Modifier> minimum) {
-    if (typeElement.getModifiers().contains(PUBLIC)) {
-      if (!minimum.contains(PUBLIC)) {
-        ImmutableList.Builder<Object> builder = ImmutableList.builder();
-        return builder.addAll(minimum).add(PUBLIC).build().toArray(new Modifier[0]);
-      }
-    }
-    return minimum.toArray(new Modifier[0]);
   }
 
 }

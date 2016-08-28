@@ -13,12 +13,13 @@ import static com.google.auto.common.MoreElements.asType;
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static isobuilder.compiler.Target.STEPS_IMPL;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 final class StepsImpl {
+
+  private static final String STEPS_IMPL = "StepsImpl";
 
   private final Target target;
 
@@ -27,7 +28,7 @@ final class StepsImpl {
   }
 
   ClassName name() {
-    return target.generatedClassName().nestedClass(STEPS_IMPL);
+    return target.generatedTypeName().nestedClass(STEPS_IMPL);
   }
 
   ImmutableList<FieldSpec> fields() {
@@ -63,14 +64,14 @@ final class StepsImpl {
 
   MethodSpec lastStep() {
     StepSpec stepSpec = getLast(target.stepSpecs);
-    ClassName targetType = ClassName.get(asType(target.typeElement));
+    ClassName targetType = ClassName.get(asType(target.annotatedType));
     MethodSpec.Builder builder = methodBuilder(stepSpec.argument.getSimpleName().toString())
         .addAnnotation(Override.class)
         .addParameter(stepSpec.parameter())
         .addModifiers(PUBLIC)
         .returns(targetType);
-    Name simpleName = target.executableElement.getSimpleName();
-    return (target.executableElement.getKind() == CONSTRUCTOR
+    Name simpleName = target.annotatedExecutable.getSimpleName();
+    return (target.annotatedExecutable.getKind() == CONSTRUCTOR
         ? builder.addStatement("return new $T($L)", targetType, target.factoryCallArgs())
         : builder.addStatement("return $T.$N($L)", targetType, simpleName, target.factoryCallArgs()))
         .build();

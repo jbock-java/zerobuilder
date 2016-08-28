@@ -23,7 +23,7 @@ public class IsoProcessorTest {
         "  abstract double height();",
         "  abstract double length();",
         "  abstract double width();",
-        "  @Build.From",
+        "  @Build.Via",
         "  static Cube create(double height, double length, double width) {",
         "    return null;",
         "  }",

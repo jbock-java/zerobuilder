@@ -7,10 +7,10 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import java.util.EnumSet;
 
-import static isobuilder.compiler.ErrorMessages.METHOD_NOT_FOUND;
-import static isobuilder.compiler.ErrorMessages.NESTING_KIND;
-import static isobuilder.compiler.ErrorMessages.PRIVATE_CLASS;
-import static isobuilder.compiler.ErrorMessages.SEVERAL_METHODS;
+import static isobuilder.compiler.Messages.ErrorMessages.METHOD_NOT_FOUND;
+import static isobuilder.compiler.Messages.ErrorMessages.NESTING_KIND;
+import static isobuilder.compiler.Messages.ErrorMessages.PRIVATE_CLASS;
+import static isobuilder.compiler.Messages.ErrorMessages.SEVERAL_METHODS;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.element.NestingKind.MEMBER;

@@ -7,7 +7,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
-import static isobuilder.compiler.ErrorMessages.MATCH_ERROR;
+import static isobuilder.compiler.Messages.ErrorMessages.MATCH_ERROR;
 
 final class MatchValidator {
 

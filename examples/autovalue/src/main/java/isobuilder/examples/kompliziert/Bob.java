@@ -11,7 +11,7 @@ abstract class Bob {
   abstract String chantal();
   abstract String justin();
 
-  @Build.From
+  @Build.Via
   static Bob create(String kevin, String chantal, String justin) {
     return new AutoValue_Bob(kevin, chantal, justin);
   }

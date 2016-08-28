@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.kaputtjars.isobuilder.examples</groupId>
-    <artifactId>isobuilder-examples-parent</artifactId>
+    <groupId>net.zerobuilder.examples</groupId>
+    <artifactId>zerobuilder-examples-parent</artifactId>
     <version>${revision}</version>
 
     <packaging>pom</packaging>
@@ -16,7 +16,7 @@
     </properties>
 
     <modules>
-        <module>simple</module>
+        <module>autovalue</module>
     </modules>
 
 </project>

@@ -16,11 +16,8 @@
 
 package isobuilder.compiler;
 
-import static isobuilder.compiler.SourceFileGenerator.GENERATED_COMMENTS;
+import static isobuilder.compiler.Messages.JavadocMessages.GENERATED_COMMENTS;
 
-/**
- * Common lines outputted during code generation.
- */
 public final class GeneratedLines {
   public static final String GENERATED_ANNOTATION =
       "@Generated("

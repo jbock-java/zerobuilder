@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.kaputtjars.isobuilder</groupId>
-    <artifactId>isobuilder-compiler</artifactId>
+    <groupId>net.zerobuilder</groupId>
+    <artifactId>zerobuilder-compiler</artifactId>
     <version>${revision}</version>
 
     <properties>
@@ -17,7 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>isobuilder</artifactId>
+            <artifactId>zerobuilder</artifactId>
             <version>${revision}</version>
             <scope>provided</scope>
         </dependency>

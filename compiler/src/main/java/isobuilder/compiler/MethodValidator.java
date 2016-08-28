@@ -5,10 +5,10 @@ import com.squareup.javapoet.ClassName;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
-import static isobuilder.compiler.ErrorMessages.NON_STATIC_METHOD;
-import static isobuilder.compiler.ErrorMessages.PRIVATE_METHOD;
-import static isobuilder.compiler.ErrorMessages.RETURN_TYPE;
-import static isobuilder.compiler.ErrorMessages.NOT_ENOUGH_PARAMETERS;
+import static isobuilder.compiler.Messages.ErrorMessages.NON_STATIC_METHOD;
+import static isobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
+import static isobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
+import static isobuilder.compiler.Messages.ErrorMessages.RETURN_TYPE;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;

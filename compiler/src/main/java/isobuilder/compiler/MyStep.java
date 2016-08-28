@@ -46,12 +46,8 @@ final class MyStep {
       // abort processing of this type
       return;
     }
-    try {
-      Target target = target(typeElement, targetMethod);
-      myGenerator.generate(target);
-    } catch (SourceFileGenerationException e) {
-      e.printMessageTo(messager);
-    }
+    Target target = target(typeElement, targetMethod);
+    myGenerator.generate(target);
   }
 
   private boolean allClean(ImmutableList<ValidationReport> reports) {
@@ -67,7 +63,7 @@ final class MyStep {
     List<ExecutableElement> methods = methodsIn(typeElement.getEnclosedElements());
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (ExecutableElement method : methods) {
-      if (method.getAnnotation(Build.From.class) != null) {
+      if (method.getAnnotation(Build.Via.class) != null) {
         builder.add(method);
       }
     }

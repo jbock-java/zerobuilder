@@ -1,10 +1,14 @@
 package isobuilder.compiler;
 
+import com.google.common.collect.Iterables;
 import com.squareup.javapoet.*;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
 
+import java.util.Set;
+
+import static com.google.common.collect.Iterables.toArray;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
@@ -26,7 +30,7 @@ final class StepSpec {
     return new StepSpec(stepName, argument, returnType);
   }
 
-  TypeSpec asInterface(Modifier[] modifiers) {
+  TypeSpec asInterface(Set<Modifier> modifiers) {
     MethodSpec methodSpec = methodBuilder(argument.getSimpleName().toString())
         .returns(returnType)
         .addParameter(parameter())
@@ -34,7 +38,7 @@ final class StepSpec {
         .build();
     return interfaceBuilder(stepName)
         .addMethod(methodSpec)
-        .addModifiers(modifiers)
+        .addModifiers(toArray(modifiers, Modifier.class))
         .build();
   }
 
