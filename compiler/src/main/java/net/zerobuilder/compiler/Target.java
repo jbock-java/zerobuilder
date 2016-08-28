@@ -18,23 +18,31 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 final class Target implements GenerationContext {
 
+  enum AccessType {
+    FIELD, AUTOVALUE, GETTER
+  }
+
   private static final String UPDATER_SUFFIX = "Updater";
   private static final String CONTRACT = "Contract";
 
   final TypeElement annotatedType;
+  final AccessType accessType;
   final ExecutableElement annotatedExecutable;
   final ImmutableList<StepSpec> stepSpecs;
 
   private Target(TypeElement annotatedType,
+                 AccessType accessType,
                  ExecutableElement annotatedExecutable,
                  ImmutableList<StepSpec> stepSpecs) {
     this.annotatedType = annotatedType;
+    this.accessType = accessType;
     this.annotatedExecutable = annotatedExecutable;
     this.stepSpecs = stepSpecs;
   }
 
-  static Target target(TypeElement typeElement, ExecutableElement executableElement) {
-    return new Target(typeElement, executableElement, specs(typeElement, executableElement));
+  static Target target(TypeElement typeElement, ExecutableElement executableElement, AccessType accessType) {
+    ImmutableList<StepSpec> specs = specs(typeElement, executableElement);
+    return new Target(typeElement, accessType, executableElement, specs);
   }
 
   private static ImmutableList<StepSpec> specs(TypeElement typeElement, ExecutableElement executableElement) {

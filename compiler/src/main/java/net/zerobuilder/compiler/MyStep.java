@@ -3,6 +3,7 @@ package net.zerobuilder.compiler;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import net.zerobuilder.Build;
+import net.zerobuilder.compiler.Target.AccessType;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
@@ -31,21 +32,21 @@ final class MyStep {
   public void process(TypeElement typeElement) {
     ImmutableList.Builder<ValidationReport> reports = ImmutableList.builder();
     ImmutableList<ExecutableElement> targetMethods = getTargetMethods(typeElement);
-    ValidationReport report = typeValidator.validateElement(typeElement, targetMethods);
+    ValidationReport<TypeElement, ?> report = typeValidator.validateElement(typeElement, targetMethods);
     report.printMessagesTo(messager);
     reports.add(report);
     ExecutableElement targetMethod = getOnlyElement(targetMethods);
-    report = methodValidator.validateElement(typeElement, targetMethod);
-    report.printMessagesTo(messager);
-    reports.add(report);
-    report = matchValidator.validateElement(typeElement, targetMethod);
-    report.printMessagesTo(messager);
-    reports.add(report);
+    ValidationReport<TypeElement, ?> methodReport = methodValidator.validateElement(typeElement, targetMethod);
+    methodReport.printMessagesTo(messager);
+    reports.add(methodReport);
+    ValidationReport<TypeElement, AccessType> matchReport = matchValidator.validateElement(typeElement, targetMethod);
+    matchReport.printMessagesTo(messager);
+    reports.add(matchReport);
     if (!allClean(reports.build())) {
       // abort processing of this type
       return;
     }
-    Target target = Target.target(typeElement, targetMethod);
+    Target target = Target.target(typeElement, targetMethod, matchReport.payload.get());
     myGenerator.generate(target);
   }
 

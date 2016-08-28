@@ -16,20 +16,20 @@ final class TypeValidator {
 
   private final EnumSet<NestingKind> allowedNestingKinds = EnumSet.of(TOP_LEVEL, MEMBER);
 
-  ValidationReport validateElement(TypeElement enclosingElement, ImmutableList<ExecutableElement> targetMethods) {
-    ValidationReport.Builder<TypeElement> builder = ValidationReport.about(enclosingElement);
+  ValidationReport<TypeElement, ?> validateElement(TypeElement element, ImmutableList<ExecutableElement> targetMethods) {
+    ValidationReport.Builder<TypeElement, ?> builder = ValidationReport.about(element, Object.class);
     if (targetMethods.isEmpty()) {
       return builder.error(Messages.ErrorMessages.METHOD_NOT_FOUND);
     }
     if (targetMethods.size() > 1) {
       return builder.error(Messages.ErrorMessages.SEVERAL_METHODS);
     }
-    if (enclosingElement.getModifiers().contains(PRIVATE)) {
+    if (element.getModifiers().contains(PRIVATE)) {
       return builder.error(Messages.ErrorMessages.PRIVATE_CLASS);
     }
-    if (!allowedNestingKinds.contains(enclosingElement.getNestingKind())
-        || (enclosingElement.getNestingKind() == MEMBER
-        && !enclosingElement.getModifiers().contains(STATIC))) {
+    if (!allowedNestingKinds.contains(element.getNestingKind())
+        || (element.getNestingKind() == MEMBER
+        && !element.getModifiers().contains(STATIC))) {
       return builder.error(Messages.ErrorMessages.NESTING_KIND);
     }
     return builder.clean();

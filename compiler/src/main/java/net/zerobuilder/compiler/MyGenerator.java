@@ -19,11 +19,13 @@ import static com.squareup.javapoet.TypeSpec.anonymousClassBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.JAVADOC_BUILDER;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
+import static net.zerobuilder.compiler.Target.AccessType.AUTOVALUE;
 import static net.zerobuilder.compiler.Util.downcase;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.Util.upcase;
 
 final class MyGenerator extends SourceFileGenerator<Target> {
 
@@ -88,9 +90,21 @@ final class MyGenerator extends SourceFileGenerator<Target> {
     String varUpdater = "updater";
     builder.addStatement("$T $L = $L.get().$N", target.updaterImpl().name(), varUpdater, STATIC_FIELD_INSTANCE, FIELD_UPDATER);
     for (StepSpec stepSpec : target.stepSpecs) {
-      // support getters, DFA
-      builder.addStatement("$L.$L($N.$L())", varUpdater, stepSpec.argument.getSimpleName(),
-          parameterName, stepSpec.argument.getSimpleName());
+      switch (target.accessType) {
+        case AUTOVALUE:
+          builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.argument.getSimpleName(),
+              parameterName, stepSpec.argument.getSimpleName());
+          break;
+        case FIELD:
+          builder.addStatement("$N.$N = $N.$N)", varUpdater, stepSpec.argument.getSimpleName(),
+              parameterName, stepSpec.argument.getSimpleName());
+          break;
+        case GETTER:
+          builder.addStatement("$N.$N = $N.$N())", varUpdater, stepSpec.argument.getSimpleName(),
+              parameterName, "get" + upcase(stepSpec.argument.getSimpleName().toString()));
+          break;
+        default:
+      }
     }
     builder.addStatement("return $L", varUpdater);
     return builder

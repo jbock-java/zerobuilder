@@ -15,8 +15,8 @@ import static javax.lang.model.element.Modifier.STATIC;
 
 final class MethodValidator {
 
-  ValidationReport validateElement(TypeElement typeElement, ExecutableElement element) {
-    ValidationReport.Builder builder = ValidationReport.about(element);
+  ValidationReport<TypeElement, ?> validateElement(TypeElement typeElement, ExecutableElement element) {
+    ValidationReport.Builder<TypeElement, ?> builder = ValidationReport.about(element, Object.class);
     if (element.getKind() == METHOD) {
       if (!element.getModifiers().contains(STATIC)) {
         return builder.error(NON_STATIC_METHOD);

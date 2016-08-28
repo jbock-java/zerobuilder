@@ -7,14 +7,17 @@ import javax.lang.model.element.Element;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 
-final class ValidationReport<T extends Element> {
+final class ValidationReport<T extends Element, P> {
 
   private final Optional<String> message;
   private final T element;
 
-  private ValidationReport(Optional<String> message, T element) {
+  final Optional<P> payload;
+
+  private ValidationReport(Optional<String> message, T element, Optional<P> payload) {
     this.message = message;
     this.element = element;
+    this.payload = payload;
   }
 
   boolean isClean() {
@@ -27,11 +30,12 @@ final class ValidationReport<T extends Element> {
     }
   }
 
-  static <T extends Element> Builder about(T element) {
+  @SuppressWarnings("unused")
+  static <T extends Element, P> Builder about(T element, Class<P> payloadClass) {
     return new Builder(element);
   }
 
-  static final class Builder<T extends Element> {
+  static final class Builder<T extends Element, P> {
 
     private final T element;
 
@@ -40,11 +44,15 @@ final class ValidationReport<T extends Element> {
     }
 
     ValidationReport error(String message) {
-      return new ValidationReport(Optional.of(message), element);
+      return new ValidationReport(Optional.of(message), element, Optional.<P>absent());
     }
 
     ValidationReport clean() {
-      return new ValidationReport(Optional.<String>absent(), element);
+      return new ValidationReport(Optional.<String>absent(), element, Optional.<P>absent());
+    }
+
+    ValidationReport clean(P payload) {
+      return new ValidationReport(Optional.<String>absent(), element, Optional.of(payload));
     }
 
   }
