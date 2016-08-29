@@ -3,7 +3,7 @@ package net.zerobuilder.compiler;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import net.zerobuilder.Build;
-import net.zerobuilder.compiler.Target.AccessType;
+import net.zerobuilder.compiler.MyContext.AccessType;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
@@ -47,8 +47,8 @@ final class MyStep {
       // abort processing of this type
       return;
     }
-    Target target = Target.target(typeElement, targetMethod, matchReport.payload.get());
-    myGenerator.generate(target);
+    MyContext context = MyContext.target(typeElement, targetMethod, matchReport.payload.get());
+    myGenerator.generate(context);
   }
 
   private boolean allClean(ImmutableList<ValidationReport> reports) {

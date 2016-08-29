@@ -13,10 +13,10 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.Set;
 
-import static net.zerobuilder.compiler.CodeBlocks.makeParametersCodeBlock;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.CodeBlocks.makeParametersCodeBlock;
 
-final class Target implements GenerationContext {
+final class MyContext implements GenerationContext {
 
   enum AccessType {
     FIELDS, AUTOVALUE, GETTERS
@@ -30,19 +30,19 @@ final class Target implements GenerationContext {
   final ExecutableElement annotatedExecutable;
   final ImmutableList<StepSpec> stepSpecs;
 
-  private Target(TypeElement annotatedType,
-                 AccessType accessType,
-                 ExecutableElement annotatedExecutable,
-                 ImmutableList<StepSpec> stepSpecs) {
+  private MyContext(TypeElement annotatedType,
+                    AccessType accessType,
+                    ExecutableElement annotatedExecutable,
+                    ImmutableList<StepSpec> stepSpecs) {
     this.annotatedType = annotatedType;
     this.accessType = accessType;
     this.annotatedExecutable = annotatedExecutable;
     this.stepSpecs = stepSpecs;
   }
 
-  static Target target(TypeElement typeElement, ExecutableElement executableElement, AccessType accessType) {
+  static MyContext target(TypeElement typeElement, ExecutableElement executableElement, AccessType accessType) {
     ImmutableList<StepSpec> specs = specs(typeElement, executableElement);
-    return new Target(typeElement, accessType, executableElement, specs);
+    return new MyContext(typeElement, accessType, executableElement, specs);
   }
 
   private static ImmutableList<StepSpec> specs(TypeElement typeElement, ExecutableElement executableElement) {
@@ -78,16 +78,16 @@ final class Target implements GenerationContext {
     return contractName().nestedClass(ClassName.get(annotatedType).simpleName() + UPDATER_SUFFIX);
   }
 
-  StepsImpl stepsImpl() {
-    return new StepsImpl(this);
+  StepsContext stepsContext() {
+    return new StepsContext(this);
   }
 
-  UpdaterImpl updaterImpl() {
-    return new UpdaterImpl(this);
+  UpdaterContext updaterContext() {
+    return new UpdaterContext(this);
   }
 
-  Contract contract() {
-    return new Contract(this);
+  ContractContext contractContext() {
+    return new ContractContext(this);
   }
 
   CodeBlock factoryCallArgs() {

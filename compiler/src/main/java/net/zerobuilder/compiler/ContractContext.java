@@ -15,17 +15,17 @@ import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-final class Contract {
+final class ContractContext {
 
-  private final Target target;
+  private final MyContext context;
 
-  Contract(Target target) {
-    this.target = target;
+  ContractContext(MyContext context) {
+    this.context = context;
   }
 
   ImmutableList<ClassName> stepInterfaceNames() {
     ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
-    for (StepSpec spec : target.stepSpecs) {
+    for (StepSpec spec : context.stepSpecs) {
       specs.add(spec.stepName);
     }
     return specs.build();
@@ -33,30 +33,30 @@ final class Contract {
 
   ImmutableList<TypeSpec> stepInterfaces() {
     ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
-    for (StepSpec spec : target.stepSpecs) {
-      specs.add(spec.asInterface(target.maybeAddPublic()));
+    for (StepSpec spec : context.stepSpecs) {
+      specs.add(spec.asInterface(context.maybeAddPublic()));
     }
     return specs.build();
   }
 
   TypeSpec updaterInterface() {
     MethodSpec buildMethod = methodBuilder("build")
-        .returns(target.annotatedExecutable.getKind() == CONSTRUCTOR
-            ? ClassName.get(target.annotatedType)
-            : TypeName.get(target.annotatedExecutable.getReturnType()))
+        .returns(context.annotatedExecutable.getKind() == CONSTRUCTOR
+            ? ClassName.get(context.annotatedType)
+            : TypeName.get(context.annotatedExecutable.getReturnType()))
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
-    return interfaceBuilder(target.contractUpdaterName())
+    return interfaceBuilder(context.contractUpdaterName())
         .addMethod(buildMethod)
         .addMethods(updateMethods())
-        .addModifiers(toArray(target.maybeAddPublic(), Modifier.class))
+        .addModifiers(toArray(context.maybeAddPublic(), Modifier.class))
         .build();
   }
 
   private ImmutableList<MethodSpec> updateMethods() {
-    ClassName updaterName = target.contractUpdaterName();
+    ClassName updaterName = context.contractUpdaterName();
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (StepSpec spec : target.stepSpecs) {
+    for (StepSpec spec : context.stepSpecs) {
       builder.add(spec.asUpdaterInterfaceMethod(updaterName));
     }
     return builder.build();

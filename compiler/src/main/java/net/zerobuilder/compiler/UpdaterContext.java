@@ -10,30 +10,29 @@ import com.squareup.javapoet.TypeName;
 import javax.lang.model.element.Name;
 
 import static com.google.auto.common.MoreElements.asType;
-import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-final class StepsImpl {
+final class UpdaterContext {
 
-  private static final String STEPS_IMPL = "StepsImpl";
+  private static final String UPDATER_IMPL = "UpdaterImpl";
 
-  private final Target target;
+  private final MyContext context;
 
-  StepsImpl(Target target) {
-    this.target = target;
+  UpdaterContext(MyContext context) {
+    this.context = context;
   }
 
   ClassName name() {
-    return target.generatedTypeName().nestedClass(STEPS_IMPL);
+    return context.generatedTypeName().nestedClass(UPDATER_IMPL);
   }
 
   ImmutableList<FieldSpec> fields() {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    for (StepSpec stepSpec : target.stepSpecs.subList(0, target.stepSpecs.size() - 1)) {
+    for (StepSpec stepSpec : context.stepSpecs) {
       String name = stepSpec.argument.getSimpleName().toString();
       builder.add(FieldSpec.builder(TypeName.get(stepSpec.argument.asType()), name, PRIVATE).build());
     }
@@ -46,13 +45,13 @@ final class StepsImpl {
         .build();
   }
 
-  ImmutableList<MethodSpec> stepsButLast() {
+  ImmutableList<MethodSpec> updaterMethods() {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (StepSpec stepSpec : target.stepSpecs.subList(0, target.stepSpecs.size() - 1)) {
+    for (StepSpec stepSpec : context.stepSpecs) {
       ParameterSpec parameter = stepSpec.parameter();
       builder.add(methodBuilder(parameter.name)
           .addAnnotation(Override.class)
-          .returns(stepSpec.returnType)
+          .returns(context.contractUpdaterName())
           .addParameter(parameter)
           .addStatement("this.$N = $N", parameter.name, parameter.name)
           .addStatement("return this")
@@ -62,18 +61,16 @@ final class StepsImpl {
     return builder.build();
   }
 
-  MethodSpec lastStep() {
-    StepSpec stepSpec = getLast(target.stepSpecs);
-    ClassName targetType = ClassName.get(asType(target.annotatedType));
-    MethodSpec.Builder builder = methodBuilder(stepSpec.argument.getSimpleName().toString())
+  MethodSpec buildMethod() {
+    ClassName targetType = ClassName.get(asType(context.annotatedType));
+    MethodSpec.Builder builder = methodBuilder("build")
         .addAnnotation(Override.class)
-        .addParameter(stepSpec.parameter())
         .addModifiers(PUBLIC)
         .returns(targetType);
-    Name simpleName = target.annotatedExecutable.getSimpleName();
-    return (target.annotatedExecutable.getKind() == CONSTRUCTOR
-        ? builder.addStatement("return new $T($L)", targetType, target.factoryCallArgs())
-        : builder.addStatement("return $T.$N($L)", targetType, simpleName, target.factoryCallArgs()))
+    Name simpleName = context.annotatedExecutable.getSimpleName();
+    return (context.annotatedExecutable.getKind() == CONSTRUCTOR
+        ? builder.addStatement("return new $T($L)", targetType, context.factoryCallArgs())
+        : builder.addStatement("return $T.$N($L)", targetType, simpleName, context.factoryCallArgs()))
         .build();
   }
 

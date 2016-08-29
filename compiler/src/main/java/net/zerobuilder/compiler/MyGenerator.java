@@ -25,7 +25,7 @@ import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotat
 import static net.zerobuilder.compiler.Util.downcase;
 import static net.zerobuilder.compiler.Util.upcase;
 
-final class MyGenerator extends SourceFileGenerator<Target> {
+final class MyGenerator extends SourceFileGenerator<MyContext> {
 
   private static final String STATIC_FIELD_INSTANCE = "INSTANCE";
   private static final String FIELD_UPDATER = "updater";
@@ -40,26 +40,26 @@ final class MyGenerator extends SourceFileGenerator<Target> {
 
   @Override
   TypeSpec write(
-      ClassName generatedClassName, Target target) {
+      ClassName generatedClassName, MyContext context) {
     return classBuilder(generatedClassName)
-        .addField(target.updaterImpl().name(), "updater", PRIVATE, FINAL)
-        .addField(target.stepsImpl().name(), "steps", PRIVATE, FINAL)
-        .addMethod(constructor(target))
-        .addField(threadLocalField(target.generatedTypeName()))
-        .addMethod(builderMethod(target))
-        .addMethod(toBuilderMethod(target))
-        .addType(buildUpdaterImpl(target.contractUpdaterName(), target.updaterImpl()))
-        .addType(buildStepsImpl(target.contract(), target.stepsImpl()))
-        .addType(buildContract(target))
+        .addField(context.updaterContext().name(), "updater", PRIVATE, FINAL)
+        .addField(context.stepsContext().name(), "steps", PRIVATE, FINAL)
+        .addMethod(constructor(context))
+        .addField(threadLocalField(context.generatedTypeName()))
+        .addMethod(builderMethod(context))
+        .addMethod(toBuilderMethod(context))
+        .addType(buildUpdaterImpl(context.contractUpdaterName(), context.updaterContext()))
+        .addType(buildStepsImpl(context.contractContext(), context.stepsContext()))
+        .addType(buildContract(context))
         .addAnnotations(generatedAnnotations(elements))
-        .addModifiers(toArray(target.maybeAddPublic(FINAL), Modifier.class))
+        .addModifiers(toArray(context.maybeAddPublic(FINAL), Modifier.class))
         .build();
   }
 
-  private MethodSpec constructor(Target target) {
+  private MethodSpec constructor(MyContext context) {
     return constructorBuilder()
-        .addStatement("this.$L = new $T()", FIELD_UPDATER, target.updaterImpl().name())
-        .addStatement("this.$L = new $T()", FIELD_STEPS, target.stepsImpl().name())
+        .addStatement("this.$L = new $T()", FIELD_UPDATER, context.updaterContext().name())
+        .addStatement("this.$L = new $T()", FIELD_STEPS, context.stepsContext().name())
         .addModifiers(PRIVATE)
         .build();
   }
@@ -81,14 +81,14 @@ final class MyGenerator extends SourceFileGenerator<Target> {
         .build();
   }
 
-  private MethodSpec toBuilderMethod(Target target) {
-    String parameterName = downcase(ClassName.get(target.annotatedType).simpleName());
+  private MethodSpec toBuilderMethod(MyContext context) {
+    String parameterName = downcase(ClassName.get(context.annotatedType).simpleName());
     MethodSpec.Builder builder = methodBuilder("toBuilder")
-        .addParameter(ClassName.get(target.annotatedType), parameterName);
+        .addParameter(ClassName.get(context.annotatedType), parameterName);
     String varUpdater = "updater";
-    builder.addStatement("$T $L = $L.get().$N", target.updaterImpl().name(), varUpdater, STATIC_FIELD_INSTANCE, FIELD_UPDATER);
-    for (StepSpec stepSpec : target.stepSpecs) {
-      switch (target.accessType) {
+    builder.addStatement("$T $L = $L.get().$N", context.updaterContext().name(), varUpdater, STATIC_FIELD_INSTANCE, FIELD_UPDATER);
+    for (StepSpec stepSpec : context.stepSpecs) {
+      switch (context.accessType) {
         case AUTOVALUE:
           builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.argument.getSimpleName(),
               parameterName, stepSpec.argument.getSimpleName());
@@ -106,21 +106,21 @@ final class MyGenerator extends SourceFileGenerator<Target> {
     }
     builder.addStatement("return $L", varUpdater);
     return builder
-        .returns(target.contractUpdaterName())
-        .addModifiers(target.maybeAddPublic(STATIC)).build();
+        .returns(context.contractUpdaterName())
+        .addModifiers(context.maybeAddPublic(STATIC)).build();
   }
 
-  private MethodSpec builderMethod(Target target) {
-    StepSpec firstStep = target.stepSpecs.get(0);
+  private MethodSpec builderMethod(MyContext context) {
+    StepSpec firstStep = context.stepSpecs.get(0);
     return methodBuilder("builder")
         .returns(firstStep.stepName)
-        .addJavadoc(JAVADOC_BUILDER, ClassName.get(target.annotatedType))
+        .addJavadoc(JAVADOC_BUILDER, ClassName.get(context.annotatedType))
         .addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE, FIELD_STEPS)
-        .addModifiers(target.maybeAddPublic(STATIC))
+        .addModifiers(context.maybeAddPublic(STATIC))
         .build();
   }
 
-  private static TypeSpec buildStepsImpl(Contract contract, StepsImpl impl) {
+  private static TypeSpec buildStepsImpl(ContractContext contract, StepsContext impl) {
     return classBuilder(impl.name())
         .addSuperinterfaces(contract.stepInterfaceNames())
         .addFields(impl.fields())
@@ -131,7 +131,7 @@ final class MyGenerator extends SourceFileGenerator<Target> {
         .build();
   }
 
-  private static TypeSpec buildUpdaterImpl(ClassName updateType, UpdaterImpl impl) {
+  private static TypeSpec buildUpdaterImpl(ClassName updateType, UpdaterContext impl) {
     return classBuilder(impl.name())
         .addSuperinterface(updateType)
         .addFields(impl.fields())
@@ -142,12 +142,12 @@ final class MyGenerator extends SourceFileGenerator<Target> {
         .build();
   }
 
-  private static TypeSpec buildContract(Target target) {
-    Contract contract = target.contract();
-    return classBuilder(target.contractName())
+  private static TypeSpec buildContract(MyContext context) {
+    ContractContext contract = context.contractContext();
+    return classBuilder(context.contractName())
         .addType(contract.updaterInterface())
         .addTypes(contract.stepInterfaces())
-        .addModifiers(toArray(target.maybeAddPublic(FINAL, STATIC), Modifier.class))
+        .addModifiers(toArray(context.maybeAddPublic(FINAL, STATIC), Modifier.class))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
   }

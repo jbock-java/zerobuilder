@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.Target.AccessType;
+import net.zerobuilder.compiler.MyContext.AccessType;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -21,9 +21,9 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.MATCH_ERROR;
-import static net.zerobuilder.compiler.Target.AccessType.AUTOVALUE;
-import static net.zerobuilder.compiler.Target.AccessType.FIELDS;
-import static net.zerobuilder.compiler.Target.AccessType.GETTERS;
+import static net.zerobuilder.compiler.MyContext.AccessType.AUTOVALUE;
+import static net.zerobuilder.compiler.MyContext.AccessType.FIELDS;
+import static net.zerobuilder.compiler.MyContext.AccessType.GETTERS;
 
 final class MatchValidator {
 
@@ -79,10 +79,12 @@ final class MatchValidator {
   }
 
   private Optional<AccessType> checkAutovalue() {
+    // wip
     return Optional.of(AUTOVALUE);
   }
 
   private Optional<AccessType> checkGetters() {
+    // wip
     return Optional.of(GETTERS);
   }
 
