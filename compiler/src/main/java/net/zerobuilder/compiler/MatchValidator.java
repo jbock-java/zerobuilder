@@ -2,14 +2,15 @@ package net.zerobuilder.compiler;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimaps;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.MyContext.AccessType;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
@@ -17,6 +18,8 @@ import java.util.List;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 import static com.google.common.collect.Maps.uniqueIndex;
+import static com.google.common.collect.Sets.immutableEnumSet;
+import static com.google.common.collect.Sets.intersection;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
@@ -24,14 +27,17 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.MATCH_ERROR;
 import static net.zerobuilder.compiler.MyContext.AccessType.AUTOVALUE;
 import static net.zerobuilder.compiler.MyContext.AccessType.FIELDS;
 import static net.zerobuilder.compiler.MyContext.AccessType.GETTERS;
+import static net.zerobuilder.compiler.Util.upcase;
 
 final class MatchValidator {
 
-  private final ImmutableListMultimap<String, ExecutableElement> methodsByName;
+  private final ImmutableMap<String, ExecutableElement> methodsByName;
   private final List<? extends VariableElement> parameters;
   private final TypeElement typeElement;
 
-  private MatchValidator(ImmutableListMultimap<String, ExecutableElement> methodsByName, List<? extends VariableElement> parameters, TypeElement typeElement) {
+  private static final ImmutableSet<Modifier> BAD_MODIFIERS = immutableEnumSet(PRIVATE, STATIC);
+
+  private MatchValidator(ImmutableMap<String, ExecutableElement> methodsByName, List<? extends VariableElement> parameters, TypeElement typeElement) {
     this.methodsByName = methodsByName;
     this.parameters = parameters;
     this.typeElement = typeElement;
@@ -39,13 +45,20 @@ final class MatchValidator {
 
   static MatchValidator create(TypeElement typeElement, ExecutableElement targetMethod, Elements elements) {
     ImmutableSet<ExecutableElement> methods = getLocalAndInheritedMethods(typeElement, elements);
-    ImmutableListMultimap<String, ExecutableElement> m = Multimaps.index(methods, new Function<ExecutableElement, String>() {
-      @Override
-      public String apply(ExecutableElement method) {
-        return method.getSimpleName().toString();
-      }
-    });
-    return new MatchValidator(m, targetMethod.getParameters(), typeElement);
+    ImmutableMap<String, ExecutableElement> map = FluentIterable.from(methods)
+        .filter(new Predicate<ExecutableElement>() {
+          @Override
+          public boolean apply(ExecutableElement method) {
+            return method.getParameters().isEmpty();
+          }
+        })
+        .uniqueIndex(new Function<ExecutableElement, String>() {
+          @Override
+          public String apply(ExecutableElement method) {
+            return method.getSimpleName().toString();
+          }
+        });
+    return new MatchValidator(map, targetMethod.getParameters(), typeElement);
   }
 
   ValidationReport<TypeElement, AccessType> validate() {
@@ -70,8 +83,7 @@ final class MatchValidator {
       VariableElement field = fieldsByName.get(parameter.getSimpleName().toString());
       if (field == null
           || !TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))
-          || field.getModifiers().contains(PRIVATE)
-          || field.getModifiers().contains(STATIC)) {
+          || !intersection(BAD_MODIFIERS, field.getModifiers()).isEmpty()) {
         return Optional.absent();
       }
     }
@@ -79,12 +91,24 @@ final class MatchValidator {
   }
 
   private Optional<AccessType> checkAutovalue() {
-    // wip
+    for (VariableElement parameter : parameters) {
+      ExecutableElement method = methodsByName.get(parameter.getSimpleName().toString());
+      if (method == null
+          || !TypeName.get(method.getReturnType()).equals(TypeName.get(parameter.asType()))
+          || !intersection(BAD_MODIFIERS, method.getModifiers()).isEmpty())
+        return Optional.absent();
+    }
     return Optional.of(AUTOVALUE);
   }
 
   private Optional<AccessType> checkGetters() {
-    // wip
+    for (VariableElement parameter : parameters) {
+      ExecutableElement method = methodsByName.get("get" + upcase(parameter.getSimpleName().toString()));
+      if (method == null
+          || !TypeName.get(method.getReturnType()).equals(TypeName.get(parameter.asType()))
+          || !intersection(BAD_MODIFIERS, method.getModifiers()).isEmpty())
+        return Optional.absent();
+    }
     return Optional.of(GETTERS);
   }
 

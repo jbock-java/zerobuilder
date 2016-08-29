@@ -17,6 +17,7 @@
 
     <modules>
         <module>autovalue</module>
+        <module>basic</module>
     </modules>
 
 </project>

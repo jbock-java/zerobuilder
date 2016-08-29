@@ -94,11 +94,11 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
               parameterName, stepSpec.argument.getSimpleName());
           break;
         case FIELDS:
-          builder.addStatement("$N.$N = $N.$N)", varUpdater, stepSpec.argument.getSimpleName(),
+          builder.addStatement("$N.$N = $N.$N", varUpdater, stepSpec.argument.getSimpleName(),
               parameterName, stepSpec.argument.getSimpleName());
           break;
         case GETTERS:
-          builder.addStatement("$N.$N = $N.$N())", varUpdater, stepSpec.argument.getSimpleName(),
+          builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.argument.getSimpleName(),
               parameterName, "get" + upcase(stepSpec.argument.getSimpleName().toString()));
           break;
         default:

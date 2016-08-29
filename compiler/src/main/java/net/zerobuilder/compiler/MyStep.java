@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import net.zerobuilder.Build;
 import net.zerobuilder.compiler.MyContext.AccessType;
@@ -13,6 +14,7 @@ import java.util.List;
 
 import static com.google.common.collect.Iterables.all;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 final class MyStep {
@@ -61,14 +63,14 @@ final class MyStep {
   }
 
   static ImmutableList<ExecutableElement> getTargetMethods(TypeElement typeElement) {
-    List<ExecutableElement> methods = methodsIn(typeElement.getEnclosedElements());
-    ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
-    for (ExecutableElement method : methods) {
-      if (method.getAnnotation(Build.Via.class) != null) {
-        builder.add(method);
-      }
-    }
-    return builder.build();
+    return FluentIterable.from(methodsIn(typeElement.getEnclosedElements()))
+        .append(constructorsIn(typeElement.getEnclosedElements()))
+        .filter(new Predicate<ExecutableElement>() {
+          @Override
+          public boolean apply(ExecutableElement element) {
+            return element.getAnnotation(Build.Via.class) != null;
+          }
+        }).toList();
   }
 
 }
