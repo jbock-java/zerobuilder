@@ -19,7 +19,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 final class Target implements GenerationContext {
 
   enum AccessType {
-    FIELD, AUTOVALUE, GETTER
+    FIELDS, AUTOVALUE, GETTERS
   }
 
   private static final String UPDATER_SUFFIX = "Updater";

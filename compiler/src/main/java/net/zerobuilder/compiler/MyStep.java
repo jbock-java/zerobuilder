@@ -21,12 +21,12 @@ final class MyStep {
   private final Messager messager;
   private final MethodValidator methodValidator = new MethodValidator();
   private final TypeValidator typeValidator = new TypeValidator();
-  private final MatchValidator matchValidator;
+  private final Elements elements;
 
   MyStep(MyGenerator myGenerator, Messager messager, Elements elements) {
     this.myGenerator = myGenerator;
     this.messager = messager;
-    this.matchValidator = new MatchValidator(elements);
+    this.elements = elements;
   }
 
   public void process(TypeElement typeElement) {
@@ -39,7 +39,8 @@ final class MyStep {
     ValidationReport<TypeElement, ?> methodReport = methodValidator.validateElement(typeElement, targetMethod);
     methodReport.printMessagesTo(messager);
     reports.add(methodReport);
-    ValidationReport<TypeElement, AccessType> matchReport = matchValidator.validateElement(typeElement, targetMethod);
+    MatchValidator matchValidator = MatchValidator.create(typeElement, targetMethod, elements);
+    ValidationReport<TypeElement, AccessType> matchReport = matchValidator.validate();
     matchReport.printMessagesTo(messager);
     reports.add(matchReport);
     if (!allClean(reports.build())) {

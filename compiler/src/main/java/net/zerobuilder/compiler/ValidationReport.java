@@ -43,15 +43,15 @@ final class ValidationReport<T extends Element, P> {
       this.element = element;
     }
 
-    ValidationReport error(String message) {
+    ValidationReport<T, P> error(String message) {
       return new ValidationReport(Optional.of(message), element, Optional.<P>absent());
     }
 
-    ValidationReport clean() {
+    ValidationReport<T, P> clean() {
       return new ValidationReport(Optional.<String>absent(), element, Optional.<P>absent());
     }
 
-    ValidationReport clean(P payload) {
+    ValidationReport<T, P> clean(P payload) {
       return new ValidationReport(Optional.<String>absent(), element, Optional.of(payload));
     }
 
