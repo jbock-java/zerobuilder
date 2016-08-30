@@ -7,6 +7,7 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import java.util.EnumSet;
 
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.element.NestingKind.MEMBER;
@@ -16,8 +17,8 @@ final class TypeValidator {
 
   private final EnumSet<NestingKind> allowedNestingKinds = EnumSet.of(TOP_LEVEL, MEMBER);
 
-  ValidationReport<TypeElement, ?> validateElement(TypeElement element, ImmutableList<ExecutableElement> targetMethods) {
-    ValidationReport.Builder<TypeElement, ?> builder = ValidationReport.about(element, Object.class);
+  ValidationReport<TypeElement, ExecutableElement> validateElement(TypeElement element, ImmutableList<ExecutableElement> targetMethods) {
+    ValidationReport.Builder<TypeElement, ExecutableElement> builder = ValidationReport.about(element, ExecutableElement.class);
     if (targetMethods.isEmpty()) {
       return builder.error(Messages.ErrorMessages.METHOD_NOT_FOUND);
     }
@@ -32,7 +33,7 @@ final class TypeValidator {
         && !element.getModifiers().contains(STATIC))) {
       return builder.error(Messages.ErrorMessages.NESTING_KIND);
     }
-    return builder.clean();
+    return builder.clean(getOnlyElement(targetMethods));
   }
 
 }

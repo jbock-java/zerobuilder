@@ -41,9 +41,9 @@ final class ContractContext {
 
   TypeSpec updaterInterface() {
     MethodSpec buildMethod = methodBuilder("build")
-        .returns(context.annotatedExecutable.getKind() == CONSTRUCTOR
-            ? ClassName.get(context.annotatedType)
-            : TypeName.get(context.annotatedExecutable.getReturnType()))
+        .returns(context.buildVia.getKind() == CONSTRUCTOR
+            ? ClassName.get(context.buildElement)
+            : TypeName.get(context.buildVia.getReturnType()))
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
     return interfaceBuilder(context.contractUpdaterName())

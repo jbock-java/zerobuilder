@@ -82,9 +82,9 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
   }
 
   private MethodSpec toBuilderMethod(MyContext context) {
-    String parameterName = downcase(ClassName.get(context.annotatedType).simpleName());
+    String parameterName = downcase(ClassName.get(context.buildElement).simpleName());
     MethodSpec.Builder builder = methodBuilder("toBuilder")
-        .addParameter(ClassName.get(context.annotatedType), parameterName);
+        .addParameter(ClassName.get(context.buildElement), parameterName);
     String varUpdater = "updater";
     builder.addStatement("$T $L = $L.get().$N", context.updaterContext().name(), varUpdater, STATIC_FIELD_INSTANCE, FIELD_UPDATER);
     for (StepSpec stepSpec : context.stepSpecs) {
@@ -114,7 +114,7 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
     StepSpec firstStep = context.stepSpecs.get(0);
     return methodBuilder("builder")
         .returns(firstStep.stepName)
-        .addJavadoc(JAVADOC_BUILDER, ClassName.get(context.annotatedType))
+        .addJavadoc(JAVADOC_BUILDER, ClassName.get(context.buildElement))
         .addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE, FIELD_STEPS)
         .addModifiers(context.maybeAddPublic(STATIC))
         .build();

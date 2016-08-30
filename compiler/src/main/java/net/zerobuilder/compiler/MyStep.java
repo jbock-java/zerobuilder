@@ -10,10 +10,8 @@ import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import java.util.List;
 
 import static com.google.common.collect.Iterables.all;
-import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
@@ -31,30 +29,27 @@ final class MyStep {
     this.elements = elements;
   }
 
-  public void process(TypeElement typeElement) {
-    ImmutableList.Builder<ValidationReport> reports = ImmutableList.builder();
-    ImmutableList<ExecutableElement> targetMethods = getTargetMethods(typeElement);
-    ValidationReport<TypeElement, ?> report = typeValidator.validateElement(typeElement, targetMethods);
-    report.printMessagesTo(messager);
-    reports.add(report);
-    ExecutableElement targetMethod = getOnlyElement(targetMethods);
-    ValidationReport<TypeElement, ?> methodReport = methodValidator.validateElement(typeElement, targetMethod);
-    methodReport.printMessagesTo(messager);
-    reports.add(methodReport);
-    MatchValidator matchValidator = MatchValidator.create(typeElement, targetMethod, elements);
-    ValidationReport<TypeElement, AccessType> matchReport = matchValidator.validate();
-    matchReport.printMessagesTo(messager);
-    reports.add(matchReport);
-    if (!allClean(reports.build())) {
+  public void process(TypeElement buildElement) {
+    ValidationReport<TypeElement, ExecutableElement> typeReport = typeValidator
+        .validateElement(buildElement, getTargetMethods(buildElement)).printMessagesTo(messager);
+    if (!typeReport.isClean()) {
+      return;
+    }
+    ValidationReport<TypeElement, ?> methodReport = methodValidator
+        .validateElement(buildElement, typeReport.payload.get()).printMessagesTo(messager);
+    ValidationReport<TypeElement, AccessType> matchReport = MatchValidator.builder()
+        .elements(elements).buildViaElement(typeReport.payload.get())
+        .buildElement(buildElement).build().validate().printMessagesTo(messager);
+    if (!allClean(methodReport, matchReport)) {
       // abort processing of this type
       return;
     }
-    MyContext context = MyContext.target(typeElement, targetMethod, matchReport.payload.get());
+    MyContext context = MyContext.target(buildElement, typeReport.payload.get(), matchReport.payload.get());
     myGenerator.generate(context);
   }
 
-  private boolean allClean(ImmutableList<ValidationReport> reports) {
-    return all(reports, new Predicate<ValidationReport>() {
+  private boolean allClean(ValidationReport... reports) {
+    return all(ImmutableList.copyOf(reports), new Predicate<ValidationReport>() {
       @Override
       public boolean apply(ValidationReport report) {
         return report.isClean();

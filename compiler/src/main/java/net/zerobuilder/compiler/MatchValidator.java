@@ -43,7 +43,7 @@ final class MatchValidator {
     this.typeElement = typeElement;
   }
 
-  static MatchValidator create(TypeElement typeElement, ExecutableElement targetMethod, Elements elements) {
+  private static MatchValidator createMatchValidator(TypeElement typeElement, ExecutableElement targetMethod, Elements elements) {
     ImmutableSet<ExecutableElement> methods = getLocalAndInheritedMethods(typeElement, elements);
     ImmutableMap<String, ExecutableElement> map = FluentIterable.from(methods)
         .filter(new Predicate<ExecutableElement>() {
@@ -110,6 +110,31 @@ final class MatchValidator {
         return Optional.absent();
     }
     return Optional.of(GETTERS);
+  }
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  static class Builder {
+    private TypeElement typeElement;
+    private ExecutableElement targetMethod;
+    private Elements elements;
+    Builder buildElement(TypeElement typeElement) {
+      this.typeElement = typeElement;
+      return this;
+    }
+    Builder buildViaElement(ExecutableElement targetMethod) {
+      this.targetMethod = targetMethod;
+      return this;
+    }
+    Builder elements(Elements elements) {
+      this.elements = elements;
+      return this;
+    }
+    MatchValidator build() {
+      return MatchValidator.createMatchValidator(typeElement, targetMethod, elements);
+    }
   }
 
 }

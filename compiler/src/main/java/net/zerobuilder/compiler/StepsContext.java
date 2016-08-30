@@ -64,14 +64,14 @@ final class StepsContext {
 
   MethodSpec lastStep() {
     StepSpec stepSpec = getLast(context.stepSpecs);
-    ClassName targetType = ClassName.get(asType(context.annotatedType));
+    ClassName targetType = ClassName.get(asType(context.buildElement));
     MethodSpec.Builder builder = methodBuilder(stepSpec.argument.getSimpleName().toString())
         .addAnnotation(Override.class)
         .addParameter(stepSpec.parameter())
         .addModifiers(PUBLIC)
         .returns(targetType);
-    Name simpleName = context.annotatedExecutable.getSimpleName();
-    return (context.annotatedExecutable.getKind() == CONSTRUCTOR
+    Name simpleName = context.buildVia.getSimpleName();
+    return (context.buildVia.getKind() == CONSTRUCTOR
         ? builder.addStatement("return new $T($L)", targetType, context.factoryCallArgs())
         : builder.addStatement("return $T.$N($L)", targetType, simpleName, context.factoryCallArgs()))
         .build();

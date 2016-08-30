@@ -24,10 +24,11 @@ final class ValidationReport<T extends Element, P> {
     return !message.isPresent();
   }
 
-  void printMessagesTo(Messager messager) {
+  ValidationReport<T, P> printMessagesTo(Messager messager) {
     if (message.isPresent()) {
       messager.printMessage(ERROR, message.get(), element);
     }
+    return this;
   }
 
   @SuppressWarnings("unused")

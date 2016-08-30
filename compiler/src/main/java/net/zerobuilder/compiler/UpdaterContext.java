@@ -62,13 +62,13 @@ final class UpdaterContext {
   }
 
   MethodSpec buildMethod() {
-    ClassName targetType = ClassName.get(asType(context.annotatedType));
+    ClassName targetType = ClassName.get(asType(context.buildElement));
     MethodSpec.Builder builder = methodBuilder("build")
         .addAnnotation(Override.class)
         .addModifiers(PUBLIC)
         .returns(targetType);
-    Name simpleName = context.annotatedExecutable.getSimpleName();
-    return (context.annotatedExecutable.getKind() == CONSTRUCTOR
+    Name simpleName = context.buildVia.getSimpleName();
+    return (context.buildVia.getKind() == CONSTRUCTOR
         ? builder.addStatement("return new $T($L)", targetType, context.factoryCallArgs())
         : builder.addStatement("return $T.$N($L)", targetType, simpleName, context.factoryCallArgs()))
         .build();

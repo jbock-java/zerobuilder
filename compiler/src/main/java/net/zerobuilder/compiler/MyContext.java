@@ -3,7 +3,6 @@ package net.zerobuilder.compiler;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 
@@ -14,7 +13,7 @@ import javax.lang.model.element.VariableElement;
 import java.util.Set;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.CodeBlocks.makeParametersCodeBlock;
+import static net.zerobuilder.compiler.Util.joinCodeBlocks;
 
 final class MyContext implements GenerationContext {
 
@@ -25,24 +24,24 @@ final class MyContext implements GenerationContext {
   private static final String UPDATER_SUFFIX = "Updater";
   private static final String CONTRACT = "Contract";
 
-  final TypeElement annotatedType;
+  final TypeElement buildElement;
   final AccessType accessType;
-  final ExecutableElement annotatedExecutable;
+  final ExecutableElement buildVia;
   final ImmutableList<StepSpec> stepSpecs;
 
-  private MyContext(TypeElement annotatedType,
+  private MyContext(TypeElement buildElement,
                     AccessType accessType,
-                    ExecutableElement annotatedExecutable,
+                    ExecutableElement buildVia,
                     ImmutableList<StepSpec> stepSpecs) {
-    this.annotatedType = annotatedType;
+    this.buildElement = buildElement;
     this.accessType = accessType;
-    this.annotatedExecutable = annotatedExecutable;
+    this.buildVia = buildVia;
     this.stepSpecs = stepSpecs;
   }
 
-  static MyContext target(TypeElement typeElement, ExecutableElement executableElement, AccessType accessType) {
-    ImmutableList<StepSpec> specs = specs(typeElement, executableElement);
-    return new MyContext(typeElement, accessType, executableElement, specs);
+  static MyContext target(TypeElement buildElement, ExecutableElement buildVia, AccessType accessType) {
+    ImmutableList<StepSpec> specs = specs(buildElement, buildVia);
+    return new MyContext(buildElement, accessType, buildVia, specs);
   }
 
   private static ImmutableList<StepSpec> specs(TypeElement typeElement, ExecutableElement executableElement) {
@@ -67,7 +66,7 @@ final class MyContext implements GenerationContext {
 
   @Override
   public ClassName generatedTypeName() {
-    return generatedClassName(annotatedType);
+    return generatedClassName(buildElement);
   }
 
   ClassName contractName() {
@@ -75,7 +74,7 @@ final class MyContext implements GenerationContext {
   }
 
   ClassName contractUpdaterName() {
-    return contractName().nestedClass(ClassName.get(annotatedType).simpleName() + UPDATER_SUFFIX);
+    return contractName().nestedClass(ClassName.get(buildElement).simpleName() + UPDATER_SUFFIX);
   }
 
   StepsContext stepsContext() {
@@ -92,17 +91,19 @@ final class MyContext implements GenerationContext {
 
   CodeBlock factoryCallArgs() {
     ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
-    for (VariableElement arg : annotatedExecutable.getParameters()) {
+    for (VariableElement arg : buildVia.getParameters()) {
       builder.add(CodeBlock.of("$L", arg.getSimpleName()));
     }
-    return makeParametersCodeBlock(builder.build());
+    return joinCodeBlocks(builder.build(), ", ");
   }
 
-  Set<Modifier> maybeAddPublic(Modifier... minimum) {
-    if (annotatedType.getModifiers().contains(PUBLIC)) {
-      return Sets.union(ImmutableSet.copyOf(minimum), ImmutableSet.of(PUBLIC));
+  Set<Modifier> maybeAddPublic(Modifier... modifiers) {
+    ImmutableSet<Modifier> modifierSet = ImmutableSet.copyOf(modifiers);
+    if (buildVia.getModifiers().contains(PUBLIC)
+        && !modifierSet.contains(PUBLIC)) {
+      return new ImmutableSet.Builder<Modifier>().addAll(modifierSet).add(PUBLIC).build();
     }
-    return ImmutableSet.copyOf(minimum);
+    return modifierSet;
   }
 
 }
