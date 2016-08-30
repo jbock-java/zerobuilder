@@ -26,7 +26,7 @@ final class UpdaterContext {
     this.context = context;
   }
 
-  ClassName name() {
+  ClassName typeName() {
     return context.generatedTypeName().nestedClass(UPDATER_IMPL);
   }
 
@@ -37,12 +37,6 @@ final class UpdaterContext {
       builder.add(FieldSpec.builder(TypeName.get(stepSpec.argument.asType()), name, PRIVATE).build());
     }
     return builder.build();
-  }
-
-  MethodSpec constructor() {
-    return constructorBuilder()
-        .addModifiers(PRIVATE)
-        .build();
   }
 
   ImmutableList<MethodSpec> updaterMethods() {

@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
@@ -39,18 +40,18 @@ final class ContractContext {
     return specs.build();
   }
 
-  TypeSpec updaterInterface() {
+  Optional<TypeSpec> updaterInterface() {
     MethodSpec buildMethod = methodBuilder("build")
         .returns(context.buildVia.getKind() == CONSTRUCTOR
             ? ClassName.get(context.buildElement)
             : TypeName.get(context.buildVia.getReturnType()))
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
-    return interfaceBuilder(context.contractUpdaterName())
+    return Optional.of(interfaceBuilder(context.contractUpdaterName())
         .addMethod(buildMethod)
         .addMethods(updateMethods())
         .addModifiers(toArray(context.maybeAddPublic(), Modifier.class))
-        .build();
+        .build());
   }
 
   private ImmutableList<MethodSpec> updateMethods() {

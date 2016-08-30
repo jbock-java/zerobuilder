@@ -1,6 +1,8 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -11,6 +13,8 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 
+import static com.google.common.base.Optional.presentInstances;
+import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Iterables.toArray;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -23,6 +27,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.JAVADOC_BUILDER;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.Util.downcase;
+import static net.zerobuilder.compiler.Util.joinCodeBlocks;
 import static net.zerobuilder.compiler.Util.upcase;
 
 final class MyGenerator extends SourceFileGenerator<MyContext> {
@@ -42,13 +47,13 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
   TypeSpec write(
       ClassName generatedClassName, MyContext context) {
     return classBuilder(generatedClassName)
-        .addField(context.updaterContext().name(), "updater", PRIVATE, FINAL)
-        .addField(context.stepsContext().name(), "steps", PRIVATE, FINAL)
+        .addFields(presentInstances(of(updaterField(context))))
+        .addField(context.stepsContext().typeName(), "steps", PRIVATE, FINAL)
         .addMethod(constructor(context))
         .addField(threadLocalField(context.generatedTypeName()))
         .addMethod(builderMethod(context))
-        .addMethod(toBuilderMethod(context))
-        .addType(buildUpdaterImpl(context.contractUpdaterName(), context.updaterContext()))
+        .addMethods(presentInstances(of(toBuilderMethod(context))))
+        .addTypes(presentInstances(of(buildUpdaterImpl(context.contractUpdaterName(), context.updaterContext()))))
         .addType(buildStepsImpl(context.contractContext(), context.stepsContext()))
         .addType(buildContract(context))
         .addAnnotations(generatedAnnotations(elements))
@@ -56,12 +61,21 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
         .build();
   }
 
-  private MethodSpec constructor(MyContext context) {
+  private Optional<FieldSpec> updaterField(MyContext context) {
+    return Optional.of(FieldSpec.builder(context.updaterContext().typeName(),
+        "updater", PRIVATE, FINAL).build());
+  }
+
+  private static MethodSpec constructor(MyContext context) {
     return constructorBuilder()
-        .addStatement("this.$L = new $T()", FIELD_UPDATER, context.updaterContext().name())
-        .addStatement("this.$L = new $T()", FIELD_STEPS, context.stepsContext().name())
+        .addCode(joinCodeBlocks(presentInstances(of(constructorUpdaterStatement(context))), ""))
+        .addStatement("this.$L = new $T()", FIELD_STEPS, context.stepsContext().typeName())
         .addModifiers(PRIVATE)
         .build();
+  }
+
+  private static Optional<CodeBlock> constructorUpdaterStatement(MyContext context) {
+    return Optional.of(CodeBlock.of("this.$L = new $T();", FIELD_UPDATER, context.updaterContext().typeName()));
   }
 
   static FieldSpec threadLocalField(ClassName generatedType) {
@@ -81,12 +95,12 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
         .build();
   }
 
-  private MethodSpec toBuilderMethod(MyContext context) {
+  private Optional<MethodSpec> toBuilderMethod(MyContext context) {
     String parameterName = downcase(ClassName.get(context.buildElement).simpleName());
     MethodSpec.Builder builder = methodBuilder("toBuilder")
         .addParameter(ClassName.get(context.buildElement), parameterName);
     String varUpdater = "updater";
-    builder.addStatement("$T $L = $L.get().$N", context.updaterContext().name(), varUpdater, STATIC_FIELD_INSTANCE, FIELD_UPDATER);
+    builder.addStatement("$T $L = $L.get().$N", context.updaterContext().typeName(), varUpdater, STATIC_FIELD_INSTANCE, FIELD_UPDATER);
     for (StepSpec stepSpec : context.stepSpecs) {
       switch (context.accessType) {
         case AUTOVALUE:
@@ -105,9 +119,9 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
       }
     }
     builder.addStatement("return $L", varUpdater);
-    return builder
+    return Optional.of(builder
         .returns(context.contractUpdaterName())
-        .addModifiers(context.maybeAddPublic(STATIC)).build();
+        .addModifiers(context.maybeAddPublic(STATIC)).build());
   }
 
   private MethodSpec builderMethod(MyContext context) {
@@ -121,7 +135,7 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
   }
 
   private static TypeSpec buildStepsImpl(ContractContext contract, StepsContext impl) {
-    return classBuilder(impl.name())
+    return classBuilder(impl.typeName())
         .addSuperinterfaces(contract.stepInterfaceNames())
         .addFields(impl.fields())
         .addMethod(impl.constructor())
@@ -131,21 +145,21 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
         .build();
   }
 
-  private static TypeSpec buildUpdaterImpl(ClassName updateType, UpdaterContext impl) {
-    return classBuilder(impl.name())
+  private static Optional<TypeSpec> buildUpdaterImpl(ClassName updateType, UpdaterContext impl) {
+    return Optional.of(classBuilder(impl.typeName())
         .addSuperinterface(updateType)
         .addFields(impl.fields())
-        .addMethod(impl.constructor())
         .addMethods(impl.updaterMethods())
         .addMethod(impl.buildMethod())
         .addModifiers(FINAL, STATIC)
-        .build();
+        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
+        .build());
   }
 
   private static TypeSpec buildContract(MyContext context) {
     ContractContext contract = context.contractContext();
     return classBuilder(context.contractName())
-        .addType(contract.updaterInterface())
+        .addTypes(presentInstances(of(contract.updaterInterface())))
         .addTypes(contract.stepInterfaces())
         .addModifiers(toArray(context.maybeAddPublic(FINAL, STATIC), Modifier.class))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())

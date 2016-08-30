@@ -27,7 +27,7 @@ final class StepsContext {
     this.context = context;
   }
 
-  ClassName name() {
+  ClassName typeName() {
     return context.generatedTypeName().nestedClass(STEPS_IMPL);
   }
 
