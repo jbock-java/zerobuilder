@@ -32,15 +32,15 @@ final class ValidationReport<T extends Element, P> {
   }
 
   @SuppressWarnings("unused")
-  static <T extends Element, P> Builder about(T element, Class<P> payloadClass) {
-    return new Builder(element);
+  static <T extends Element, P> ReportBuilder about(T element, Class<P> payloadClass) {
+    return new ReportBuilder(element);
   }
 
-  static final class Builder<T extends Element, P> {
+  static final class ReportBuilder<T extends Element, P> {
 
     private final T element;
 
-    private Builder(T element) {
+    private ReportBuilder(T element) {
       this.element = element;
     }
 

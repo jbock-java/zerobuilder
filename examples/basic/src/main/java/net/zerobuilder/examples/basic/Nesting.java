@@ -6,7 +6,6 @@ class Nesting {
 
   @Build
   static class DovesNest {
-
     final int smallEgg;
     final int regularEgg;
 
@@ -15,7 +14,6 @@ class Nesting {
       this.smallEgg = smallEgg;
       this.regularEgg = regularEgg;
     }
-
   }
 
   @Build
@@ -23,12 +21,21 @@ class Nesting {
     final int largeEgg;
     final int hugeEgg;
 
+    @Build
+    static class LizardsNest {
+      final int spottedEgg;
+
+      @Build.Via
+      LizardsNest(int spottedEgg) {
+        this.spottedEgg = spottedEgg;
+      }
+    }
+
     @Build.Via
     CrowsNest(int largeEgg, int hugeEgg) {
       this.largeEgg = largeEgg;
       this.hugeEgg = hugeEgg;
     }
-
   }
 
 }

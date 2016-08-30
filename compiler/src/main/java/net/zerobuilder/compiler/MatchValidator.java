@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.MyContext.AccessType;
+import net.zerobuilder.compiler.ValidationReport.ReportBuilder;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -28,6 +29,7 @@ import static net.zerobuilder.compiler.MyContext.AccessType.AUTOVALUE;
 import static net.zerobuilder.compiler.MyContext.AccessType.FIELDS;
 import static net.zerobuilder.compiler.MyContext.AccessType.GETTERS;
 import static net.zerobuilder.compiler.Util.upcase;
+import static net.zerobuilder.compiler.ValidationReport.about;
 
 final class MatchValidator {
 
@@ -62,7 +64,7 @@ final class MatchValidator {
   }
 
   ValidationReport<TypeElement, AccessType> validate() {
-    ValidationReport.Builder<TypeElement, AccessType> builder = ValidationReport.about(typeElement, AccessType.class);
+    ReportBuilder<TypeElement, AccessType> builder = about(typeElement, AccessType.class);
     Optional<AccessType> access = checkFieldAccess()
         .or(checkAutovalue())
         .or(checkGetters());
@@ -133,7 +135,7 @@ final class MatchValidator {
       return this;
     }
     MatchValidator build() {
-      return MatchValidator.createMatchValidator(typeElement, targetMethod, elements);
+      return createMatchValidator(typeElement, targetMethod, elements);
     }
   }
 

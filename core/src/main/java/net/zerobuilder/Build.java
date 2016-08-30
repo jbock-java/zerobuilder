@@ -28,7 +28,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @Target(TYPE)
 public @interface Build {
 
-  Class<?> target() default Void.class;
+  Class<?> goal() default Void.class;
   boolean toBuilder() default true;
 
   @Retention(SOURCE)

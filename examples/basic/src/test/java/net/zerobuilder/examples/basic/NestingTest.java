@@ -27,4 +27,12 @@ public class NestingTest {
     assertThat(crowsNest.largeEgg, is(5));
   }
 
+  @Test
+  public void testLizardsNest() {
+    Nesting.CrowsNest.LizardsNest crowsNest = Nesting_CrowsNest_LizardsNestBuilder.builder().spottedEgg(1);
+    assertThat(crowsNest.spottedEgg, is(1));
+    crowsNest = Nesting_CrowsNest_LizardsNestBuilder.toBuilder(crowsNest).spottedEgg(2).build();
+    assertThat(crowsNest.spottedEgg, is(2));
+  }
+
 }
