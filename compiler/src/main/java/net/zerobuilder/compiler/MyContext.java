@@ -13,47 +13,49 @@ import javax.lang.model.element.VariableElement;
 import java.util.Set;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.MyContext.AccessType.NONE;
 import static net.zerobuilder.compiler.Util.joinCodeBlocks;
 
 final class MyContext implements GenerationContext {
 
   enum AccessType {
-    FIELDS, AUTOVALUE, GETTERS
+    FIELDS, AUTOVALUE, GETTERS, NONE
   }
 
   private static final String UPDATER_SUFFIX = "Updater";
   private static final String CONTRACT = "Contract";
 
+  final ClassName goalType;
   final TypeElement buildElement;
   final AccessType accessType;
   final ExecutableElement buildVia;
   final ImmutableList<StepSpec> stepSpecs;
 
-  private MyContext(TypeElement buildElement,
+  private MyContext(ClassName goalType, TypeElement buildElement,
                     AccessType accessType,
                     ExecutableElement buildVia,
                     ImmutableList<StepSpec> stepSpecs) {
+    this.goalType = goalType;
     this.buildElement = buildElement;
     this.accessType = accessType;
     this.buildVia = buildVia;
     this.stepSpecs = stepSpecs;
   }
 
-  static MyContext target(TypeElement buildElement, ExecutableElement buildVia, AccessType accessType) {
-    ImmutableList<StepSpec> specs = specs(buildElement, buildVia);
-    return new MyContext(buildElement, accessType, buildVia, specs);
+  static MyContext createContext(ClassName goalType, TypeElement buildElement, ExecutableElement buildVia, AccessType accessType) {
+    ImmutableList<StepSpec> specs = specs(buildElement, goalType, buildVia);
+    return new MyContext(goalType, buildElement, accessType, buildVia, specs);
   }
 
-  private static ImmutableList<StepSpec> specs(TypeElement typeElement, ExecutableElement executableElement) {
+  private static ImmutableList<StepSpec> specs(TypeElement typeElement, ClassName goalType, ExecutableElement executableElement) {
     ClassName contractName = generatedClassName(typeElement).nestedClass(CONTRACT);
-    ClassName name = ClassName.get(typeElement);
     ImmutableList.Builder<StepSpec> stepSpecsBuilder = ImmutableList.builder();
     for (int i = executableElement.getParameters().size() - 1; i >= 0; i--) {
       VariableElement arg = executableElement.getParameters().get(i);
       ClassName stepName = contractName.nestedClass(Util.upcase(arg.getSimpleName().toString()));
-      StepSpec stepSpec = StepSpec.stepSpec(stepName, arg, name);
+      StepSpec stepSpec = StepSpec.stepSpec(stepName, arg, goalType);
       stepSpecsBuilder.add(stepSpec);
-      name = stepSpec.stepName;
+      goalType = stepSpec.stepName;
     }
     return stepSpecsBuilder.build().reverse();
   }
@@ -104,6 +106,10 @@ final class MyContext implements GenerationContext {
       return new ImmutableSet.Builder<Modifier>().addAll(modifierSet).add(PUBLIC).build();
     }
     return modifierSet;
+  }
+
+  boolean toBuilder() {
+    return accessType != NONE;
   }
 
 }

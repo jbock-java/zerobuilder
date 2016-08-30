@@ -9,6 +9,7 @@ import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
 
+import static com.google.common.base.Optional.absent;
 import static com.google.common.collect.Iterables.toArray;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
@@ -41,6 +42,9 @@ final class ContractContext {
   }
 
   Optional<TypeSpec> updaterInterface() {
+    if (!context.toBuilder()) {
+      return absent();
+    }
     MethodSpec buildMethod = methodBuilder("build")
         .returns(context.buildVia.getKind() == CONSTRUCTOR
             ? ClassName.get(context.buildElement)

@@ -17,20 +17,20 @@ import static net.zerobuilder.compiler.ValidationReport.about;
 
 final class MethodValidator {
 
-  ValidationReport<TypeElement, ?> validateElement(TypeElement typeElement, ExecutableElement element) {
-    ReportBuilder<TypeElement, ?> builder = about(element, Object.class);
-    if (element.getKind() == METHOD) {
-      if (!element.getModifiers().contains(STATIC)) {
+  ValidationReport<TypeElement, ?> validateVia(ClassName buildGoal, ExecutableElement buildVia) {
+    ReportBuilder<TypeElement, ?> builder = about(buildVia, Object.class);
+    if (buildVia.getKind() == METHOD) {
+      if (!buildVia.getModifiers().contains(STATIC)) {
         return builder.error(NON_STATIC_METHOD);
       }
-      if (!ClassName.get(element.getReturnType()).equals(ClassName.get(typeElement))) {
+      if (!ClassName.get(buildVia.getReturnType()).equals(buildGoal)) {
         return builder.error(RETURN_TYPE);
       }
     }
-    if (element.getModifiers().contains(PRIVATE)) {
+    if (buildVia.getModifiers().contains(PRIVATE)) {
       return builder.error(PRIVATE_METHOD);
     }
-    if (element.getParameters().size() < 1) {
+    if (buildVia.getParameters().size() < 1) {
       return builder.error(NOT_ENOUGH_PARAMETERS);
     }
     return builder.clean();

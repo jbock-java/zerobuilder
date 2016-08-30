@@ -28,6 +28,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.MATCH_ERROR;
 import static net.zerobuilder.compiler.MyContext.AccessType.AUTOVALUE;
 import static net.zerobuilder.compiler.MyContext.AccessType.FIELDS;
 import static net.zerobuilder.compiler.MyContext.AccessType.GETTERS;
+import static net.zerobuilder.compiler.MyContext.AccessType.NONE;
 import static net.zerobuilder.compiler.Util.upcase;
 import static net.zerobuilder.compiler.ValidationReport.about;
 
@@ -116,6 +117,11 @@ final class MatchValidator {
 
   static Builder builder() {
     return new Builder();
+  }
+
+  static ValidationReport<TypeElement, AccessType> skipMatchValidation(TypeElement typeElement) {
+    ReportBuilder<TypeElement, AccessType> builder = about(typeElement, AccessType.class);
+    return builder.clean(NONE);
   }
 
   static class Builder {

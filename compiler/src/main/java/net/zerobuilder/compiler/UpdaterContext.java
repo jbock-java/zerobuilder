@@ -9,8 +9,6 @@ import com.squareup.javapoet.TypeName;
 
 import javax.lang.model.element.Name;
 
-import static com.google.auto.common.MoreElements.asType;
-import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -56,15 +54,14 @@ final class UpdaterContext {
   }
 
   MethodSpec buildMethod() {
-    ClassName targetType = ClassName.get(asType(context.buildElement));
     MethodSpec.Builder builder = methodBuilder("build")
         .addAnnotation(Override.class)
         .addModifiers(PUBLIC)
-        .returns(targetType);
+        .returns(context.goalType);
     Name simpleName = context.buildVia.getSimpleName();
     return (context.buildVia.getKind() == CONSTRUCTOR
-        ? builder.addStatement("return new $T($L)", targetType, context.factoryCallArgs())
-        : builder.addStatement("return $T.$N($L)", targetType, simpleName, context.factoryCallArgs()))
+        ? builder.addStatement("return new $T($L)", context.goalType, context.factoryCallArgs())
+        : builder.addStatement("return $T.$N($L)", context.goalType, simpleName, context.factoryCallArgs()))
         .build();
   }
 

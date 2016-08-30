@@ -13,6 +13,7 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 
+import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.presentInstances;
 import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Iterables.toArray;
@@ -53,7 +54,7 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
         .addField(threadLocalField(context.generatedTypeName()))
         .addMethod(builderMethod(context))
         .addMethods(presentInstances(of(toBuilderMethod(context))))
-        .addTypes(presentInstances(of(buildUpdaterImpl(context.contractUpdaterName(), context.updaterContext()))))
+        .addTypes(presentInstances(of(buildUpdaterImpl(context))))
         .addType(buildStepsImpl(context.contractContext(), context.stepsContext()))
         .addType(buildContract(context))
         .addAnnotations(generatedAnnotations(elements))
@@ -62,6 +63,9 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
   }
 
   private Optional<FieldSpec> updaterField(MyContext context) {
+    if (!context.toBuilder()) {
+      return absent();
+    }
     return Optional.of(FieldSpec.builder(context.updaterContext().typeName(),
         "updater", PRIVATE, FINAL).build());
   }
@@ -75,6 +79,9 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
   }
 
   private static Optional<CodeBlock> constructorUpdaterStatement(MyContext context) {
+    if (!context.toBuilder()) {
+      return absent();
+    }
     return Optional.of(CodeBlock.of("this.$L = new $T();", FIELD_UPDATER, context.updaterContext().typeName()));
   }
 
@@ -96,9 +103,12 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
   }
 
   private Optional<MethodSpec> toBuilderMethod(MyContext context) {
+    if (!context.toBuilder()) {
+      return absent();
+    }
     String parameterName = downcase(ClassName.get(context.buildElement).simpleName());
     MethodSpec.Builder builder = methodBuilder("toBuilder")
-        .addParameter(ClassName.get(context.buildElement), parameterName);
+        .addParameter(context.goalType, parameterName);
     String varUpdater = "updater";
     builder.addStatement("$T $L = $L.get().$N", context.updaterContext().typeName(), varUpdater, STATIC_FIELD_INSTANCE, FIELD_UPDATER);
     for (StepSpec stepSpec : context.stepSpecs) {
@@ -145,12 +155,16 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
         .build();
   }
 
-  private static Optional<TypeSpec> buildUpdaterImpl(ClassName updateType, UpdaterContext impl) {
-    return Optional.of(classBuilder(impl.typeName())
-        .addSuperinterface(updateType)
-        .addFields(impl.fields())
-        .addMethods(impl.updaterMethods())
-        .addMethod(impl.buildMethod())
+  private static Optional<TypeSpec> buildUpdaterImpl(MyContext context) {
+    if (!context.toBuilder()) {
+      return absent();
+    }
+    UpdaterContext updaterContext = context.updaterContext();
+    return Optional.of(classBuilder(updaterContext.typeName())
+        .addSuperinterface(context.contractUpdaterName())
+        .addFields(updaterContext.fields())
+        .addMethods(updaterContext.updaterMethods())
+        .addMethod(updaterContext.buildMethod())
         .addModifiers(FINAL, STATIC)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build());

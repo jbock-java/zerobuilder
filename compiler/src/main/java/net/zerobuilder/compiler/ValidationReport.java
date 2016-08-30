@@ -20,15 +20,15 @@ final class ValidationReport<T extends Element, P> {
     this.payload = payload;
   }
 
-  boolean isClean() {
+  boolean isClean(Messager messager) {
+    printMessagesTo(messager);
     return !message.isPresent();
   }
 
-  ValidationReport<T, P> printMessagesTo(Messager messager) {
+  private void printMessagesTo(Messager messager) {
     if (message.isPresent()) {
       messager.printMessage(ERROR, message.get(), element);
     }
-    return this;
   }
 
   @SuppressWarnings("unused")
