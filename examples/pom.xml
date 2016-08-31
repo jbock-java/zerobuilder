@@ -18,6 +18,7 @@
     <modules>
         <module>autovalue</module>
         <module>basic</module>
+        <module>derive4j</module>
     </modules>
 
 </project>

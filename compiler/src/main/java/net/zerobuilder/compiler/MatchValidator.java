@@ -46,8 +46,8 @@ final class MatchValidator {
     this.typeElement = typeElement;
   }
 
-  private static MatchValidator createMatchValidator(TypeElement typeElement, ExecutableElement targetMethod, Elements elements) {
-    ImmutableSet<ExecutableElement> methods = getLocalAndInheritedMethods(typeElement, elements);
+  private static MatchValidator createMatchValidator(TypeElement buildElement, ExecutableElement buildVia, Elements elements) {
+    ImmutableSet<ExecutableElement> methods = getLocalAndInheritedMethods(buildElement, elements);
     ImmutableMap<String, ExecutableElement> map = FluentIterable.from(methods)
         .filter(new Predicate<ExecutableElement>() {
           @Override
@@ -61,7 +61,7 @@ final class MatchValidator {
             return method.getSimpleName().toString();
           }
         });
-    return new MatchValidator(map, targetMethod.getParameters(), typeElement);
+    return new MatchValidator(map, buildVia.getParameters(), buildElement);
   }
 
   ValidationReport<TypeElement, AccessType> validate() {
@@ -115,9 +115,17 @@ final class MatchValidator {
     return Optional.of(GETTERS);
   }
 
-  static Builder builder() {
-    return new Builder();
+  static class BuilderFactory {
+    private final Elements elements;
+
+    BuilderFactory(Elements elements) {
+      this.elements = elements;
+    }
+    Builder buildViaElement(ExecutableElement buildVia) {
+      return new Builder().elements(elements).buildViaElement(buildVia);
+    }
   }
+
 
   static ValidationReport<TypeElement, AccessType> skipMatchValidation(TypeElement typeElement) {
     ReportBuilder<TypeElement, AccessType> builder = about(typeElement, AccessType.class);
@@ -125,23 +133,18 @@ final class MatchValidator {
   }
 
   static class Builder {
-    private TypeElement typeElement;
     private ExecutableElement targetMethod;
     private Elements elements;
-    Builder buildElement(TypeElement typeElement) {
-      this.typeElement = typeElement;
-      return this;
-    }
-    Builder buildViaElement(ExecutableElement targetMethod) {
+    private Builder buildViaElement(ExecutableElement targetMethod) {
       this.targetMethod = targetMethod;
       return this;
     }
-    Builder elements(Elements elements) {
+    private Builder elements(Elements elements) {
       this.elements = elements;
       return this;
     }
-    MatchValidator build() {
-      return createMatchValidator(typeElement, targetMethod, elements);
+    MatchValidator buildElement(TypeElement buildElement) {
+      return createMatchValidator(buildElement, targetMethod, elements);
     }
   }
 

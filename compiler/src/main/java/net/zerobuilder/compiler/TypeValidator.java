@@ -30,7 +30,7 @@ final class TypeValidator {
 
   private final EnumSet<NestingKind> allowedNestingKinds = EnumSet.of(TOP_LEVEL, MEMBER);
 
-  ValidationReport<TypeElement, ExecutableElement> validateElement(TypeElement buildType, ClassName buildGoal) {
+  ValidationReport<TypeElement, ExecutableElement> validateElement(TypeElement buildType, ClassName goalType) {
     ImmutableList<ExecutableElement> targetMethods = getTargetMethods(buildType);
     ReportBuilder<TypeElement, ExecutableElement> builder = about(buildType, ExecutableElement.class);
     if (targetMethods.isEmpty()) {
@@ -49,7 +49,7 @@ final class TypeValidator {
     }
     ExecutableElement buildVia = getOnlyElement(targetMethods);
     if (buildVia.getKind() == CONSTRUCTOR
-        && !buildGoal.equals(ClassName.get(buildType))) {
+        && !goalType.equals(ClassName.get(buildType))) {
       return builder.error(GOAL_VIA_CONSTRUCTOR);
     }
     return builder.clean(buildVia);
