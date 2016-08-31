@@ -49,14 +49,14 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
       ClassName generatedClassName, MyContext context) {
     return classBuilder(generatedClassName)
         .addFields(presentInstances(of(updaterField(context))))
-        .addField(context.stepsContext().typeName(), "steps", PRIVATE, FINAL)
+        .addField(context.stepsImplTypeName(), "steps", PRIVATE, FINAL)
         .addMethod(constructor(context))
         .addField(threadLocalField(context.generatedTypeName()))
         .addMethod(builderMethod(context))
         .addMethods(presentInstances(of(toBuilderMethod(context))))
-        .addTypes(presentInstances(of(buildUpdaterImpl(context))))
-        .addType(buildStepsImpl(context.contractContext(), context.stepsContext()))
-        .addType(buildContract(context))
+        .addTypes(presentInstances(of(context.updaterContext().buildUpdaterImpl())))
+        .addType(context.stepsContext().buildStepsImpl())
+        .addType(context.contractContext().buildContract())
         .addAnnotations(generatedAnnotations(elements))
         .addModifiers(toArray(context.maybeAddPublic(FINAL), Modifier.class))
         .build();
@@ -73,7 +73,7 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
   private static MethodSpec constructor(MyContext context) {
     return constructorBuilder()
         .addCode(joinCodeBlocks(presentInstances(of(constructorUpdaterStatement(context))), ""))
-        .addStatement("this.$L = new $T()", FIELD_STEPS, context.stepsContext().typeName())
+        .addStatement("this.$L = new $T()", FIELD_STEPS, context.stepsImplTypeName())
         .addModifiers(PRIVATE)
         .build();
   }
@@ -141,42 +141,6 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
         .addJavadoc(JAVADOC_BUILDER, ClassName.get(context.buildElement))
         .addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE, FIELD_STEPS)
         .addModifiers(context.maybeAddPublic(STATIC))
-        .build();
-  }
-
-  private static TypeSpec buildStepsImpl(ContractContext contract, StepsContext impl) {
-    return classBuilder(impl.typeName())
-        .addSuperinterfaces(contract.stepInterfaceNames())
-        .addFields(impl.fields())
-        .addMethod(impl.constructor())
-        .addMethods(impl.stepsButLast())
-        .addMethod(impl.lastStep())
-        .addModifiers(FINAL, STATIC)
-        .build();
-  }
-
-  private static Optional<TypeSpec> buildUpdaterImpl(MyContext context) {
-    if (!context.toBuilder()) {
-      return absent();
-    }
-    UpdaterContext updaterContext = context.updaterContext();
-    return Optional.of(classBuilder(updaterContext.typeName())
-        .addSuperinterface(context.contractUpdaterName())
-        .addFields(updaterContext.fields())
-        .addMethods(updaterContext.updaterMethods())
-        .addMethod(updaterContext.buildMethod())
-        .addModifiers(FINAL, STATIC)
-        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
-        .build());
-  }
-
-  private static TypeSpec buildContract(MyContext context) {
-    ContractContext contract = context.contractContext();
-    return classBuilder(context.contractName())
-        .addTypes(presentInstances(of(contract.updaterInterface())))
-        .addTypes(contract.stepInterfaces())
-        .addModifiers(toArray(context.maybeAddPublic(FINAL, STATIC), Modifier.class))
-        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
   }
 

@@ -15,7 +15,7 @@ public abstract class Request {
 
   public abstract <R> R match(Cases<R> cases);
 
-  @Build(goal = Request.class, toBuilder = false)
+  @Build
   static class PUT {
 
     @Build.Via
@@ -24,7 +24,7 @@ public abstract class Request {
     }
   }
 
-  @Build(goal = Request.class, toBuilder = false)
+  @Build
   static class POST {
 
     @Build.Via

@@ -28,9 +28,8 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @Target(TYPE)
 public @interface Build {
 
-  Class<?> goal() default Void.class;
-
-  boolean toBuilder() default true;
+  boolean toBuilder() default false;
+  boolean garbageless() default true;
 
   @Retention(SOURCE)
   @Target({METHOD, CONSTRUCTOR})

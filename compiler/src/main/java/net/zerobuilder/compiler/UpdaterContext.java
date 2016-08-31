@@ -1,18 +1,25 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Name;
 
+import static com.google.common.base.Optional.absent;
+import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
+import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
 
 final class UpdaterContext {
 
@@ -28,7 +35,7 @@ final class UpdaterContext {
     return context.generatedTypeName().nestedClass(UPDATER_IMPL);
   }
 
-  ImmutableList<FieldSpec> fields() {
+  private ImmutableList<FieldSpec> fields() {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
     for (StepSpec stepSpec : context.stepSpecs) {
       String name = stepSpec.argument.getSimpleName().toString();
@@ -37,7 +44,7 @@ final class UpdaterContext {
     return builder.build();
   }
 
-  ImmutableList<MethodSpec> updaterMethods() {
+  private ImmutableList<MethodSpec> updaterMethods() {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     for (StepSpec stepSpec : context.stepSpecs) {
       ParameterSpec parameter = stepSpec.parameter();
@@ -53,9 +60,10 @@ final class UpdaterContext {
     return builder.build();
   }
 
-  MethodSpec buildMethod() {
+  private MethodSpec buildMethod() {
     MethodSpec.Builder builder = methodBuilder("build")
         .addAnnotation(Override.class)
+        .addExceptions(context.thrownTypes())
         .addModifiers(PUBLIC)
         .returns(context.goalType);
     Name simpleName = context.buildVia.getSimpleName();
@@ -64,5 +72,21 @@ final class UpdaterContext {
         : builder.addStatement("return $T.$N($L)", context.goalType, simpleName, context.factoryCallArgs()))
         .build();
   }
+
+  Optional<TypeSpec> buildUpdaterImpl() {
+    if (!context.toBuilder()) {
+      return absent();
+    }
+    UpdaterContext updaterContext = context.updaterContext();
+    return Optional.of(classBuilder(updaterContext.typeName())
+        .addSuperinterface(context.contractUpdaterName())
+        .addFields(updaterContext.fields())
+        .addMethods(updaterContext.updaterMethods())
+        .addMethod(updaterContext.buildMethod())
+        .addModifiers(FINAL, STATIC)
+        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
+        .build());
+  }
+
 
 }

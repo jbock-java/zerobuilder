@@ -18,7 +18,7 @@ public class MyProcessorTest {
         "package cube;",
         "import net.zerobuilder.Build;",
         "",
-        "@Build",
+        "@Build(toBuilder = true)",
         "abstract class Cube {",
         "  abstract double height();",
         "  abstract double length();",

@@ -10,11 +10,15 @@ import javax.lang.model.util.Elements;
 final class Messages {
 
   static final class ErrorMessages {
+
     static final String NON_STATIC_METHOD =
         "The @Build annotation can only be used on static methods or constructors.";
 
     static final String PRIVATE_METHOD =
         "The @Build.Via annotated method may not be private.";
+
+    static final String PRIVATE_TYPE =
+        "The @Build annotated type may not be private.";
 
     static final String NOT_ENOUGH_PARAMETERS =
         "The @Build.Via annotated method has no parameters. Skipping code generation.";
@@ -25,8 +29,11 @@ final class Messages {
     static final String METHOD_NOT_FOUND =
         "The class should have a constructor or static method that carries the @Build.Via annotation.";
 
-    static final String SEVERAL_METHODS =
+    static final String SEVERAL_VIA_METHODS =
         "The @Build.Via annotation may not appear more than once per class.";
+
+    static final String COULD_NOT_GUESS_VIA =
+        "Could not determine the build method / constructor. Please add the @Build.Via annotation to it.";
 
     static final String RETURN_TYPE =
         "Static factory methods must return the type of the @Build annotated class, " +
@@ -36,7 +43,7 @@ final class Messages {
         "Could not correlate accessors with parameters. Consider using @Build(toBuilder = false).";
 
     static final String GOAL_VIA_CONSTRUCTOR =
-        "Cannot build goal type via constructor. Consider using a static metho.";
+        "Cannot build goal type via constructor. Consider using a static method.";
 
     private ErrorMessages() {
     }

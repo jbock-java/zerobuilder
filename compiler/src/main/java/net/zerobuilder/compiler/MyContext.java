@@ -1,15 +1,21 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.TypeName;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
+import java.util.List;
 import java.util.Set;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -24,14 +30,15 @@ final class MyContext implements GenerationContext {
 
   private static final String UPDATER_SUFFIX = "Updater";
   private static final String CONTRACT = "Contract";
+  private static final String STEPS_IMPL = "StepsImpl";
 
-  final ClassName goalType;
+  final TypeName goalType;
   final TypeElement buildElement;
   final AccessType accessType;
   final ExecutableElement buildVia;
   final ImmutableList<StepSpec> stepSpecs;
 
-  private MyContext(ClassName goalType, TypeElement buildElement,
+  private MyContext(TypeName goalType, TypeElement buildElement,
                     AccessType accessType,
                     ExecutableElement buildVia,
                     ImmutableList<StepSpec> stepSpecs) {
@@ -42,12 +49,12 @@ final class MyContext implements GenerationContext {
     this.stepSpecs = stepSpecs;
   }
 
-  static MyContext createContext(ClassName goalType, TypeElement buildElement, ExecutableElement buildVia, AccessType accessType) {
+  static MyContext createContext(TypeName goalType, TypeElement buildElement, ExecutableElement buildVia, AccessType accessType) {
     ImmutableList<StepSpec> specs = specs(buildElement, goalType, buildVia);
     return new MyContext(goalType, buildElement, accessType, buildVia, specs);
   }
 
-  private static ImmutableList<StepSpec> specs(TypeElement typeElement, ClassName goalType, ExecutableElement executableElement) {
+  private static ImmutableList<StepSpec> specs(TypeElement typeElement, TypeName goalType, ExecutableElement executableElement) {
     ClassName contractName = generatedClassName(typeElement).nestedClass(CONTRACT);
     ImmutableList.Builder<StepSpec> stepSpecsBuilder = ImmutableList.builder();
     for (int i = executableElement.getParameters().size() - 1; i >= 0; i--) {
@@ -66,6 +73,23 @@ final class MyContext implements GenerationContext {
     return sourceType.topLevelClassName().peerClass(simpleName);
   }
 
+  ImmutableList<ClassName> stepInterfaceNames() {
+    ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
+    for (StepSpec spec : stepSpecs) {
+      specs.add(spec.stepName);
+    }
+    return specs.build();
+  }
+
+  ImmutableList<TypeName> thrownTypes() {
+    return FluentIterable.from(buildVia.getThrownTypes()).transform(new Function<TypeMirror, TypeName>() {
+      @Override
+      public TypeName apply(TypeMirror thrownType) {
+        return TypeName.get(thrownType);
+      }
+    }).toList();
+  }
+
   @Override
   public ClassName generatedTypeName() {
     return generatedClassName(buildElement);
@@ -74,6 +98,11 @@ final class MyContext implements GenerationContext {
   ClassName contractName() {
     return generatedTypeName().nestedClass(CONTRACT);
   }
+
+  ClassName stepsImplTypeName() {
+    return generatedTypeName().nestedClass(STEPS_IMPL);
+  }
+
 
   ClassName contractUpdaterName() {
     return contractName().nestedClass(ClassName.get(buildElement).simpleName() + UPDATER_SUFFIX);

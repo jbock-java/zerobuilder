@@ -1,25 +1,32 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Name;
+import javax.lang.model.type.TypeMirror;
 
-import static com.google.auto.common.MoreElements.asType;
+import java.util.List;
+
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.VOID;
+import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
+import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
 
 final class StepsContext {
-
-  private static final String STEPS_IMPL = "StepsImpl";
 
   private final MyContext context;
 
@@ -27,11 +34,7 @@ final class StepsContext {
     this.context = context;
   }
 
-  ClassName typeName() {
-    return context.generatedTypeName().nestedClass(STEPS_IMPL);
-  }
-
-  ImmutableList<FieldSpec> fields() {
+  private ImmutableList<FieldSpec> fields() {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
     for (StepSpec stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
       String name = stepSpec.argument.getSimpleName().toString();
@@ -40,13 +43,13 @@ final class StepsContext {
     return builder.build();
   }
 
-  MethodSpec constructor() {
+  private MethodSpec constructor() {
     return constructorBuilder()
         .addModifiers(PRIVATE)
         .build();
   }
 
-  ImmutableList<MethodSpec> stepsButLast() {
+  private ImmutableList<MethodSpec> stepsButLast() {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     for (StepSpec stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
       ParameterSpec parameter = stepSpec.parameter();
@@ -62,18 +65,32 @@ final class StepsContext {
     return builder.build();
   }
 
-  MethodSpec lastStep() {
+  private MethodSpec lastStep() {
     StepSpec stepSpec = getLast(context.stepSpecs);
     MethodSpec.Builder builder = methodBuilder(stepSpec.argument.getSimpleName().toString())
         .addAnnotation(Override.class)
         .addParameter(stepSpec.parameter())
+        .addExceptions(context.thrownTypes())
         .addModifiers(PUBLIC)
         .returns(context.goalType);
-    Name simpleName = context.buildVia.getSimpleName();
+    Name buildVia = context.buildVia.getSimpleName();
+    String returnLiteral = VOID.equals(context.goalType) ? "" : "return ";
     return (context.buildVia.getKind() == CONSTRUCTOR
         ? builder.addStatement("return new $T($L)", context.buildElement, context.factoryCallArgs())
-        : builder.addStatement("return $T.$N($L)", context.buildElement, simpleName, context.factoryCallArgs()))
+        : builder.addStatement("$L $T.$N($L)", returnLiteral, context.buildElement, buildVia, context.factoryCallArgs()))
         .build();
   }
+
+  TypeSpec buildStepsImpl() {
+    return classBuilder(context.stepsImplTypeName())
+        .addSuperinterfaces(context.stepInterfaceNames())
+        .addFields(fields())
+        .addMethod(constructor())
+        .addMethods(stepsButLast())
+        .addMethod(lastStep())
+        .addModifiers(FINAL, STATIC)
+        .build();
+  }
+
 
 }

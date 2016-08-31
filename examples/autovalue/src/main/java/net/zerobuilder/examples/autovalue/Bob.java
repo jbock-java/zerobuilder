@@ -4,14 +4,13 @@ import com.google.auto.value.AutoValue;
 import net.zerobuilder.Build;
 
 @AutoValue
-@Build
+@Build(toBuilder = true)
 abstract class Bob {
 
   abstract String kevin();
   abstract String chantal();
   abstract String justin();
 
-  @Build.Via
   static Bob create(String kevin, String chantal, String justin) {
     return new AutoValue_Bob(kevin, chantal, justin);
   }

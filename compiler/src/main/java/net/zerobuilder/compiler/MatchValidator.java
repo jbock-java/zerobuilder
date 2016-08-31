@@ -8,14 +8,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.MyContext.AccessType;
-import net.zerobuilder.compiler.ValidationReport.ReportBuilder;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
-import java.util.List;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 import static com.google.common.collect.Maps.uniqueIndex;
@@ -28,21 +26,19 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.MATCH_ERROR;
 import static net.zerobuilder.compiler.MyContext.AccessType.AUTOVALUE;
 import static net.zerobuilder.compiler.MyContext.AccessType.FIELDS;
 import static net.zerobuilder.compiler.MyContext.AccessType.GETTERS;
-import static net.zerobuilder.compiler.MyContext.AccessType.NONE;
 import static net.zerobuilder.compiler.Util.upcase;
-import static net.zerobuilder.compiler.ValidationReport.about;
 
 final class MatchValidator {
 
   private final ImmutableMap<String, ExecutableElement> methodsByName;
-  private final List<? extends VariableElement> parameters;
+  private final ExecutableElement buildVia;
   private final TypeElement typeElement;
 
   private static final ImmutableSet<Modifier> BAD_MODIFIERS = immutableEnumSet(PRIVATE, STATIC);
 
-  private MatchValidator(ImmutableMap<String, ExecutableElement> methodsByName, List<? extends VariableElement> parameters, TypeElement typeElement) {
+  private MatchValidator(ImmutableMap<String, ExecutableElement> methodsByName, ExecutableElement buildVia, TypeElement typeElement) {
     this.methodsByName = methodsByName;
-    this.parameters = parameters;
+    this.buildVia = buildVia;
     this.typeElement = typeElement;
   }
 
@@ -61,18 +57,17 @@ final class MatchValidator {
             return method.getSimpleName().toString();
           }
         });
-    return new MatchValidator(map, buildVia.getParameters(), buildElement);
+    return new MatchValidator(map, buildVia, buildElement);
   }
 
-  ValidationReport<TypeElement, AccessType> validate() {
-    ReportBuilder<TypeElement, AccessType> builder = about(typeElement, AccessType.class);
+  AccessType validate() throws ValidationException {
     Optional<AccessType> access = checkFieldAccess()
         .or(checkAutovalue())
         .or(checkGetters());
     if (!access.isPresent()) {
-      return builder.error(MATCH_ERROR);
+      throw new ValidationException(MATCH_ERROR, buildVia);
     }
-    return builder.clean(access.get());
+    return access.get();
   }
 
   private Optional<AccessType> checkFieldAccess() {
@@ -82,7 +77,7 @@ final class MatchValidator {
         return field.getSimpleName().toString();
       }
     });
-    for (VariableElement parameter : parameters) {
+    for (VariableElement parameter : buildVia.getParameters()) {
       VariableElement field = fieldsByName.get(parameter.getSimpleName().toString());
       if (field == null
           || !TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))
@@ -94,7 +89,7 @@ final class MatchValidator {
   }
 
   private Optional<AccessType> checkAutovalue() {
-    for (VariableElement parameter : parameters) {
+    for (VariableElement parameter : buildVia.getParameters()) {
       ExecutableElement method = methodsByName.get(parameter.getSimpleName().toString());
       if (method == null
           || !TypeName.get(method.getReturnType()).equals(TypeName.get(parameter.asType()))
@@ -105,7 +100,7 @@ final class MatchValidator {
   }
 
   private Optional<AccessType> checkGetters() {
-    for (VariableElement parameter : parameters) {
+    for (VariableElement parameter : buildVia.getParameters()) {
       ExecutableElement method = methodsByName.get("get" + upcase(parameter.getSimpleName().toString()));
       if (method == null
           || !TypeName.get(method.getReturnType()).equals(TypeName.get(parameter.asType()))
@@ -124,12 +119,6 @@ final class MatchValidator {
     Builder buildViaElement(ExecutableElement buildVia) {
       return new Builder().elements(elements).buildViaElement(buildVia);
     }
-  }
-
-
-  static ValidationReport<TypeElement, AccessType> skipMatchValidation(TypeElement typeElement) {
-    ReportBuilder<TypeElement, AccessType> builder = about(typeElement, AccessType.class);
-    return builder.clean(NONE);
   }
 
   static class Builder {

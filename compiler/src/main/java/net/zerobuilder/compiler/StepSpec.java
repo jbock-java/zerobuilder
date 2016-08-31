@@ -1,10 +1,14 @@
 package net.zerobuilder.compiler;
 
-import com.squareup.javapoet.*;
+import com.google.common.collect.ImmutableList;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
-
 import java.util.Set;
 
 import static com.google.common.collect.Iterables.toArray;
@@ -17,28 +21,33 @@ final class StepSpec {
 
   final ClassName stepName;
   final VariableElement argument;
-  final ClassName returnType;
+  final TypeName returnType;
 
-  private StepSpec(ClassName stepName, VariableElement argument, ClassName returnType) {
+  private StepSpec(ClassName stepName, VariableElement argument, TypeName returnType) {
     this.stepName = stepName;
     this.argument = argument;
     this.returnType = returnType;
   }
 
-  static StepSpec stepSpec(ClassName stepName, VariableElement argument, ClassName returnType) {
+  static StepSpec stepSpec(ClassName stepName, VariableElement argument, TypeName returnType) {
     return new StepSpec(stepName, argument, returnType);
   }
 
-  TypeSpec asInterface(Set<Modifier> modifiers) {
+  TypeSpec asInterface(Set<Modifier> modifiers, ImmutableList<TypeName> thrownTypes) {
     MethodSpec methodSpec = methodBuilder(argument.getSimpleName().toString())
         .returns(returnType)
         .addParameter(parameter())
+        .addExceptions(thrownTypes)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
     return interfaceBuilder(stepName)
         .addMethod(methodSpec)
         .addModifiers(toArray(modifiers, Modifier.class))
         .build();
+  }
+
+  TypeSpec asInterface(Set<Modifier> modifiers) {
+    return asInterface(modifiers, ImmutableList.<TypeName>of());
   }
 
   ParameterSpec parameter() {
