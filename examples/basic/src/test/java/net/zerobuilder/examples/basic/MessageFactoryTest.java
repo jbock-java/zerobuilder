@@ -10,7 +10,7 @@ public class MessageFactoryTest {
 
   @Test
   public void createJumpNotice() throws Exception {
-    MessageFactory messageFactory = new MessageFactory("dog");
+    MessageFactory messageFactory = MessageFactory.target("dog");
     Message message = MessageFactoryBuilder.builder(messageFactory)
         .foxVelocity("quick")
         .foxColor("brown")

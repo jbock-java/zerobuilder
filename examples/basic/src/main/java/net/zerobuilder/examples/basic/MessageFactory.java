@@ -7,8 +7,12 @@ final class MessageFactory {
 
   private final String target;
 
-  MessageFactory(String target) {
+  private MessageFactory(String target) {
     this.target = target;
+  }
+
+  static MessageFactory target(String target) {
+    return new MessageFactory(target);
   }
 
   @Build.Via
