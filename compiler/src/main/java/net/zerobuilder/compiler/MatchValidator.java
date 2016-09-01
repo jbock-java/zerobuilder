@@ -7,7 +7,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.MyContext.AccessType;
+import net.zerobuilder.compiler.MyContext.ProjectionType;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -23,9 +23,9 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.MATCH_ERROR;
-import static net.zerobuilder.compiler.MyContext.AccessType.AUTOVALUE;
-import static net.zerobuilder.compiler.MyContext.AccessType.FIELDS;
-import static net.zerobuilder.compiler.MyContext.AccessType.GETTERS;
+import static net.zerobuilder.compiler.MyContext.ProjectionType.AUTOVALUE;
+import static net.zerobuilder.compiler.MyContext.ProjectionType.FIELDS;
+import static net.zerobuilder.compiler.MyContext.ProjectionType.GETTERS;
 import static net.zerobuilder.compiler.Util.upcase;
 
 final class MatchValidator {
@@ -60,8 +60,8 @@ final class MatchValidator {
     return new MatchValidator(map, buildVia, buildElement);
   }
 
-  AccessType validate() throws ValidationException {
-    Optional<AccessType> access = checkFieldAccess()
+  ProjectionType validate() throws ValidationException {
+    Optional<ProjectionType> access = checkFieldAccess()
         .or(checkAutovalue())
         .or(checkGetters());
     if (!access.isPresent()) {
@@ -70,7 +70,7 @@ final class MatchValidator {
     return access.get();
   }
 
-  private Optional<AccessType> checkFieldAccess() {
+  private Optional<ProjectionType> checkFieldAccess() {
     ImmutableMap<String, VariableElement> fieldsByName = uniqueIndex(fieldsIn(typeElement.getEnclosedElements()), new Function<VariableElement, String>() {
       @Override
       public String apply(VariableElement field) {
@@ -88,7 +88,7 @@ final class MatchValidator {
     return Optional.of(FIELDS);
   }
 
-  private Optional<AccessType> checkAutovalue() {
+  private Optional<ProjectionType> checkAutovalue() {
     for (VariableElement parameter : buildVia.getParameters()) {
       ExecutableElement method = methodsByName.get(parameter.getSimpleName().toString());
       if (method == null
@@ -99,7 +99,7 @@ final class MatchValidator {
     return Optional.of(AUTOVALUE);
   }
 
-  private Optional<AccessType> checkGetters() {
+  private Optional<ProjectionType> checkGetters() {
     for (VariableElement parameter : buildVia.getParameters()) {
       ExecutableElement method = methodsByName.get("get" + upcase(parameter.getSimpleName().toString()));
       if (method == null

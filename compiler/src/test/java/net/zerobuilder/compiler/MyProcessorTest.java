@@ -23,7 +23,7 @@ public class MyProcessorTest {
         "  abstract double height();",
         "  abstract double length();",
         "  abstract double width();",
-        "  @Build.Via",
+        "  @Build.Goal",
         "  static Cube create(double height, double length, double width) {",
         "    return null;",
         "  }",

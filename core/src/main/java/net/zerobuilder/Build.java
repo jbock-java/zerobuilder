@@ -10,30 +10,34 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Declares that a builder class should be generated. The builder's goal is to invoke
- * the element (method or constructor) carrying the {@link Via} annotation.
- * <ul>
- * <li>The class must be a top level class, or a <i>static</i> inner class.</li>
- * <li>The class may not be private.</li>
- * <li>Only one element (static method or constructor) may carry the {@link Via} annotation.</li>
- * <li>For each argument of the element carrying the {@link Via} annotation, the class must declare
- * a parameterless method which has the same name as the argument, and returns the argument's type.
- * <li>The {@link Via} annotation may be used on constructors or <i>static</i> methods
- * that return the type of their enclosing class.</li>
- * <li>The element carrying the {@link Via} annotation may not have less than 2 parameters.</li>
- * <li>The element carrying the {@link Via} annotation may not be private.</li>
- * </ul>
+ * <p>
+ * Declares that the builder pattern code should be generated. The generated builder will
+ * invoke the element (method or constructor) carrying the {@link Goal} annotation.
+ * </p><p>
+ * {@link Goal} cannot appear more than once per class, except in {@code static} inner classes.
+ * If it is missing, the annotation processor tries to guess the goal,
+ * by checking for suitable constructors first, then static methods,
+ * and finally instance methods.
+ * </p><p>
+ * In the case of instance methods, the generated
+ * {@code static builder()} (and optionally {@code static toBuilder()}) methods
+ * will take an instance parameter respectively.
+ * </p><p>
+ * The goal may return anything, including {@code void}. The name of the generated class
+ * however will always be {@code XXXBuilder}, where {@code XXX} is the name of the class
+ * that carries the {@code Build} annotation.
+ * </p>
  */
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface Build {
 
   boolean toBuilder() default false;
-  boolean garbageless() default true;
+  boolean nogc() default false;
 
   @Retention(SOURCE)
   @Target({METHOD, CONSTRUCTOR})
-  @interface Via {
+  @interface Goal {
   }
 
 }

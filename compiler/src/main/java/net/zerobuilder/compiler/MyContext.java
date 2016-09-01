@@ -6,7 +6,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
@@ -16,18 +15,17 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
-import java.util.List;
 import java.util.Set;
 
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.MyContext.AccessType.NONE;
+import static net.zerobuilder.compiler.MyContext.ProjectionType.NONE;
 import static net.zerobuilder.compiler.Util.joinCodeBlocks;
 
 final class MyContext implements GenerationContext {
 
-  enum AccessType {
+  enum ProjectionType {
     FIELDS, AUTOVALUE, GETTERS, NONE
   }
 
@@ -35,26 +33,43 @@ final class MyContext implements GenerationContext {
   private static final String CONTRACT = "Contract";
   private static final String STEPS_IMPL = "StepsImpl";
 
+  /**
+   * return type of {@link #buildVia}
+   */
+
   final TypeName goalType;
+
+  /**
+   * the element carrying the {@link net.zerobuilder.Build} annotation
+   */
   final TypeElement buildElement;
-  final AccessType accessType;
+
+  final ProjectionType projectionType;
+
+  /**
+   * the element carrying the {@link net.zerobuilder.Build.Goal} annotation
+   */
   final ExecutableElement buildVia;
+
+  /**
+   * arguments of the {@link #buildVia}
+   */
   final ImmutableList<StepSpec> stepSpecs;
 
   private MyContext(TypeName goalType, TypeElement buildElement,
-                    AccessType accessType,
+                    ProjectionType projectionType,
                     ExecutableElement buildVia,
                     ImmutableList<StepSpec> stepSpecs) {
     this.goalType = goalType;
     this.buildElement = buildElement;
-    this.accessType = accessType;
+    this.projectionType = projectionType;
     this.buildVia = buildVia;
     this.stepSpecs = stepSpecs;
   }
 
-  static MyContext createContext(TypeName goalType, TypeElement buildElement, ExecutableElement buildVia, AccessType accessType) {
+  static MyContext createContext(TypeName goalType, TypeElement buildElement, ExecutableElement buildVia, ProjectionType projectionType) {
     ImmutableList<StepSpec> specs = specs(buildElement, goalType, buildVia);
-    return new MyContext(goalType, buildElement, accessType, buildVia, specs);
+    return new MyContext(goalType, buildElement, projectionType, buildVia, specs);
   }
 
   private static ImmutableList<StepSpec> specs(TypeElement typeElement, TypeName goalType, ExecutableElement executableElement) {
@@ -147,7 +162,7 @@ final class MyContext implements GenerationContext {
   }
 
   boolean toBuilder() {
-    return accessType != NONE;
+    return projectionType != NONE;
   }
 
 }

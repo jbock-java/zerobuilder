@@ -113,7 +113,7 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
     String varUpdater = "updater";
     builder.addStatement("$T $L = $L.get().$N", context.updaterContext().typeName(), varUpdater, STATIC_FIELD_INSTANCE, FIELD_UPDATER);
     for (StepSpec stepSpec : context.stepSpecs) {
-      switch (context.accessType) {
+      switch (context.projectionType) {
         case AUTOVALUE:
           builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.argument.getSimpleName(),
               parameterName, stepSpec.argument.getSimpleName());

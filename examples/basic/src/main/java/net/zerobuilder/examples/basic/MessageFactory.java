@@ -15,7 +15,7 @@ final class MessageFactory {
     return new MessageFactory(target);
   }
 
-  @Build.Via
+  @Build.Goal
   Message createJumpNotice(String foxVelocity, String foxColor, String targetState) {
     return new Message(String.format("The %s %s fox jumps over the %s %s.",
         foxVelocity, foxColor, targetState, target));
