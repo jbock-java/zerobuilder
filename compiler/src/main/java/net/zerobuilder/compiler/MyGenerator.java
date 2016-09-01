@@ -5,6 +5,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -136,10 +137,21 @@ final class MyGenerator extends SourceFileGenerator<MyContext> {
 
   private MethodSpec builderMethod(MyContext context) {
     StepSpec firstStep = context.stepSpecs.get(0);
-    return methodBuilder("builder")
-        .returns(firstStep.stepName)
+    Optional<ClassName> receiver = context.receiver();
+    MethodSpec.Builder builder = methodBuilder("builder");
+    if (receiver.isPresent()) {
+      ClassName r = receiver.get();
+      builder.addParameter(ParameterSpec.builder(r, downcase(r.simpleName())).build());
+      builder.addStatement("$T $N = $N.get().$N", context.stepsImplTypeName(),
+          downcase(context.stepsImplTypeName().simpleName()), STATIC_FIELD_INSTANCE, FIELD_STEPS);
+      builder.addStatement("$N.$N = $N", downcase(context.stepsImplTypeName().simpleName()),
+          "_" + downcase(r.simpleName()), downcase(r.simpleName()));
+      builder.addStatement("return $N", downcase(context.stepsImplTypeName().simpleName()));
+    } else {
+      builder.addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE, FIELD_STEPS);
+    }
+    return builder.returns(firstStep.stepName)
         .addJavadoc(JAVADOC_BUILDER, ClassName.get(context.buildElement))
-        .addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE, FIELD_STEPS)
         .addModifiers(context.maybeAddPublic(STATIC))
         .build();
   }

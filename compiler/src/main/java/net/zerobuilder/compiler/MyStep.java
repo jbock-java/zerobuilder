@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.google.auto.common.MoreTypes;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
@@ -9,30 +7,19 @@ import net.zerobuilder.Build;
 import net.zerobuilder.compiler.MyContext.AccessType;
 
 import javax.annotation.processing.Messager;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.SimpleAnnotationValueVisitor7;
-import java.util.Map;
 
-import static com.google.auto.common.MoreElements.getAnnotationMirror;
-import static com.google.auto.common.MoreTypes.asTypeElement;
-import static com.google.common.base.Optional.absent;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
-import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_VIA;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NON_STATIC_METHOD;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.SEVERAL_VIA_METHODS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.SEVERAL_VIA_ANNOTATIONS;
 import static net.zerobuilder.compiler.MyContext.createContext;
 
 final class MyStep {
@@ -50,7 +37,7 @@ final class MyStep {
 
   void process(TypeElement buildElement) {
     try {
-      ExecutableElement buildVia = viaAnnotatedElement(buildElement).or(guessVia(buildElement));
+      ExecutableElement buildVia = viaAnnotatedElement(buildElement);
       TypeName goalType = buildVia.getKind() == CONSTRUCTOR ?
           ClassName.get(buildElement) :
           TypeName.get(buildVia.getReturnType());
@@ -66,17 +53,13 @@ final class MyStep {
   }
 
 
-  private Optional<ExecutableElement> viaAnnotatedElement(TypeElement buildElement) throws ValidationException {
+  private ExecutableElement viaAnnotatedElement(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (ExecutableElement executableElement : concat(constructorsIn(buildElement.getEnclosedElements()),
         methodsIn(buildElement.getEnclosedElements()))) {
       if (executableElement.getAnnotation(Build.Via.class) != null) {
         if (executableElement.getModifiers().contains(PRIVATE)) {
           throw new ValidationException(PRIVATE_METHOD, buildElement);
-        }
-        if (executableElement.getKind() == METHOD
-            && !executableElement.getModifiers().contains(STATIC)) {
-          throw new ValidationException(NON_STATIC_METHOD, buildElement);
         }
         if (executableElement.getParameters().isEmpty()) {
           throw new ValidationException(Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS, buildElement);
@@ -86,12 +69,12 @@ final class MyStep {
     }
     ImmutableList<ExecutableElement> elements = builder.build();
     if (elements.isEmpty()) {
-      return absent();
+      return guessVia(buildElement);
     }
     if (elements.size() > 1) {
-      throw new ValidationException(SEVERAL_VIA_METHODS, buildElement);
+      throw new ValidationException(SEVERAL_VIA_ANNOTATIONS, buildElement);
     }
-    return Optional.of(getOnlyElement(elements));
+    return getOnlyElement(elements);
   }
 
   private ExecutableElement guessVia(TypeElement buildElement) throws ValidationException {
@@ -99,8 +82,6 @@ final class MyStep {
     for (ExecutableElement executableElement : concat(constructorsIn(buildElement.getEnclosedElements()),
         methodsIn(buildElement.getEnclosedElements()))) {
       if (!executableElement.getModifiers().contains(PRIVATE)
-          && (executableElement.getKind() == CONSTRUCTOR
-          || executableElement.getModifiers().contains(STATIC))
           && !executableElement.getParameters().isEmpty()) {
         builder.add(executableElement);
       }

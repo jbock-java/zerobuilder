@@ -2,6 +2,7 @@ package net.zerobuilder.compiler;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -18,7 +19,9 @@ import javax.lang.model.type.TypeMirror;
 import java.util.List;
 import java.util.Set;
 
+import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.MyContext.AccessType.NONE;
 import static net.zerobuilder.compiler.Util.joinCodeBlocks;
 
@@ -88,6 +91,12 @@ final class MyContext implements GenerationContext {
         return TypeName.get(thrownType);
       }
     }).toList();
+  }
+
+  Optional<ClassName> receiver() {
+    return buildVia.getKind() == METHOD && !buildVia.getModifiers().contains(STATIC)
+        ? Optional.of(ClassName.get(buildElement))
+        : Optional.<ClassName>absent();
   }
 
   @Override

@@ -9,6 +9,8 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 
 import static com.google.common.base.Optional.absent;
@@ -16,10 +18,12 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
+import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.Util.downcase;
 
 final class UpdaterContext {
 
@@ -37,6 +41,11 @@ final class UpdaterContext {
 
   private ImmutableList<FieldSpec> fields() {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
+    Optional<ClassName> receiver = context.receiver();
+    if (receiver.isPresent()) {
+      ClassName r = receiver.get();
+      builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
+    }
     for (StepSpec stepSpec : context.stepSpecs) {
       String name = stepSpec.argument.getSimpleName().toString();
       builder.add(FieldSpec.builder(TypeName.get(stepSpec.argument.asType()), name, PRIVATE).build());
@@ -66,10 +75,13 @@ final class UpdaterContext {
         .addExceptions(context.thrownTypes())
         .addModifiers(PUBLIC)
         .returns(context.goalType);
-    Name simpleName = context.buildVia.getSimpleName();
+    Name buildVia = context.buildVia.getSimpleName();
+    Optional<ClassName> receiver = context.receiver();
     return (context.buildVia.getKind() == CONSTRUCTOR
         ? builder.addStatement("return new $T($L)", context.goalType, context.factoryCallArgs())
-        : builder.addStatement("return $T.$N($L)", context.goalType, simpleName, context.factoryCallArgs()))
+        : receiver.isPresent()
+        ? builder.addStatement("return $N.$N($L)", "_" + downcase(receiver.get().simpleName()), buildVia, context.factoryCallArgs())
+        : builder.addStatement("return $T.$N($L)", context.buildElement, buildVia, context.factoryCallArgs()))
         .build();
   }
 
@@ -77,16 +89,14 @@ final class UpdaterContext {
     if (!context.toBuilder()) {
       return absent();
     }
-    UpdaterContext updaterContext = context.updaterContext();
-    return Optional.of(classBuilder(updaterContext.typeName())
+    return Optional.of(classBuilder(typeName())
         .addSuperinterface(context.contractUpdaterName())
-        .addFields(updaterContext.fields())
-        .addMethods(updaterContext.updaterMethods())
-        .addMethod(updaterContext.buildMethod())
+        .addFields(fields())
+        .addMethods(updaterMethods())
+        .addMethod(buildMethod())
         .addModifiers(FINAL, STATIC)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build());
   }
-
 
 }

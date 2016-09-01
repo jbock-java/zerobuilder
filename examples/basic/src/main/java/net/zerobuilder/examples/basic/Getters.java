@@ -3,7 +3,7 @@ package net.zerobuilder.examples.basic;
 import net.zerobuilder.Build;
 
 @Build(toBuilder = true)
-class Getters {
+final class Getters {
 
   private final double lenght;
   private final double width;

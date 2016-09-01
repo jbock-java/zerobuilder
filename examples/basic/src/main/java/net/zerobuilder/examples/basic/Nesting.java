@@ -2,7 +2,7 @@ package net.zerobuilder.examples.basic;
 
 import net.zerobuilder.Build;
 
-class Nesting {
+final class Nesting {
 
   @Build(toBuilder = true)
   static class DovesNest {
