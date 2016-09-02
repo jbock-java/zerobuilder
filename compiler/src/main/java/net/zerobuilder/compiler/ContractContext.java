@@ -45,13 +45,13 @@ final class ContractContext {
   }
 
   private Optional<TypeSpec> updaterInterface() {
-    if (!context.toBuilder()) {
+    if (!context.toBuilder) {
       return absent();
     }
     MethodSpec buildMethod = methodBuilder("build")
-        .returns(context.buildVia.getKind() == CONSTRUCTOR
+        .returns(context.goal.getKind() == CONSTRUCTOR
             ? ClassName.get(context.buildElement)
-            : TypeName.get(context.buildVia.getReturnType()))
+            : TypeName.get(context.goal.getReturnType()))
         .addModifiers(PUBLIC, ABSTRACT)
         .addExceptions(context.thrownTypes())
         .build();

@@ -9,8 +9,6 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 
 import static com.google.common.base.Optional.absent;
@@ -18,7 +16,6 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
-import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -47,8 +44,8 @@ final class UpdaterContext {
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
     for (StepSpec stepSpec : context.stepSpecs) {
-      String name = stepSpec.argument.getSimpleName().toString();
-      builder.add(FieldSpec.builder(TypeName.get(stepSpec.argument.asType()), name, PRIVATE).build());
+      String name = stepSpec.parameter.getSimpleName().toString();
+      builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.asType()), name, PRIVATE).build());
     }
     return builder.build();
   }
@@ -75,9 +72,9 @@ final class UpdaterContext {
         .addExceptions(context.thrownTypes())
         .addModifiers(PUBLIC)
         .returns(context.goalType);
-    Name buildVia = context.buildVia.getSimpleName();
+    Name buildVia = context.goal.getSimpleName();
     Optional<ClassName> receiver = context.receiver();
-    return (context.buildVia.getKind() == CONSTRUCTOR
+    return (context.goal.getKind() == CONSTRUCTOR
         ? builder.addStatement("return new $T($L)", context.goalType, context.factoryCallArgs())
         : receiver.isPresent()
         ? builder.addStatement("return $N.$N($L)", "_" + downcase(receiver.get().simpleName()), buildVia, context.factoryCallArgs())
@@ -86,7 +83,7 @@ final class UpdaterContext {
   }
 
   Optional<TypeSpec> buildUpdaterImpl() {
-    if (!context.toBuilder()) {
+    if (!context.toBuilder) {
       return absent();
     }
     return Optional.of(classBuilder(typeName())

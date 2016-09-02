@@ -14,7 +14,6 @@ import javax.lang.model.element.Name;
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static com.squareup.javapoet.TypeName.VOID;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -39,8 +38,8 @@ final class StepsContext {
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
     for (StepSpec stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
-      String name = stepSpec.argument.getSimpleName().toString();
-      builder.add(FieldSpec.builder(TypeName.get(stepSpec.argument.asType()), name, PRIVATE).build());
+      String name = stepSpec.parameter.getSimpleName().toString();
+      builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.asType()), name, PRIVATE).build());
     }
     return builder.build();
   }
@@ -69,16 +68,16 @@ final class StepsContext {
 
   private MethodSpec lastStep() {
     StepSpec stepSpec = getLast(context.stepSpecs);
-    MethodSpec.Builder builder = methodBuilder(stepSpec.argument.getSimpleName().toString())
+    MethodSpec.Builder builder = methodBuilder(stepSpec.parameter.getSimpleName().toString())
         .addAnnotation(Override.class)
         .addParameter(stepSpec.parameter())
         .addExceptions(context.thrownTypes())
         .addModifiers(PUBLIC)
         .returns(context.goalType);
-    Name buildVia = context.buildVia.getSimpleName();
-    String returnLiteral = VOID.equals(context.goalType) ? "" : "return ";
+    Name buildVia = context.goal.getSimpleName();
+    String returnLiteral = TypeName.VOID.equals(context.goalType) ? "" : "return ";
     Optional<ClassName> receiver = context.receiver();
-    return (context.buildVia.getKind() == CONSTRUCTOR
+    return (context.goal.getKind() == CONSTRUCTOR
         ? builder.addStatement("return new $T($L)", context.buildElement, context.factoryCallArgs())
         : receiver.isPresent()
         ? builder.addStatement("$L $N.$N($L)", returnLiteral, "_" + downcase(receiver.get().simpleName()), buildVia, context.factoryCallArgs())

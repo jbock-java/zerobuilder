@@ -18,7 +18,6 @@ public abstract class Request {
   @Build
   static class PUT {
 
-    @Build.Goal
     static Request build(String path, String body) {
       return Requests.PUT(path, body);
     }
@@ -27,7 +26,6 @@ public abstract class Request {
   @Build
   static class POST {
 
-    @Build.Goal
     static Request build(String path, String body) {
       return Requests.POST(path, body);
     }

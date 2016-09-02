@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Build;
-import net.zerobuilder.compiler.MyContext.ProjectionType;
+import net.zerobuilder.compiler.MatchValidator.ProjectionInfo;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
@@ -18,10 +18,10 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_VIA;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_GOAL;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.SEVERAL_VIA_ANNOTATIONS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.SEVERAL_GOAL_ANNOTATIONS;
 import static net.zerobuilder.compiler.MyContext.createContext;
 
 final class MyStep {
@@ -29,34 +29,36 @@ final class MyStep {
   private final MyGenerator myGenerator;
   private final Messager messager;
   private final TypeValidator typeValidator = new TypeValidator();
-  private final MatchValidator.Factory matchValidator;
+  private final MatchValidator.Factory matchValidatorFactory;
 
   MyStep(MyGenerator myGenerator, Messager messager, Elements elements) {
     this.myGenerator = myGenerator;
     this.messager = messager;
-    this.matchValidator = new MatchValidator.Factory(elements);
+    this.matchValidatorFactory = new MatchValidator.Factory(elements);
   }
 
   void process(TypeElement buildElement) {
+    boolean nogc = buildElement.getAnnotation(Build.class).nogc();
+    boolean toBuilder = buildElement.getAnnotation(Build.class).toBuilder();
     try {
-      ExecutableElement buildVia = viaAnnotatedElement(buildElement);
-      TypeName goalType = buildVia.getKind() == CONSTRUCTOR ?
+      ExecutableElement goal = goal(buildElement);
+      TypeName goalType = goal.getKind() == CONSTRUCTOR ?
           ClassName.get(buildElement) :
-          TypeName.get(buildVia.getReturnType());
+          TypeName.get(goal.getReturnType());
       typeValidator.validateBuildType(buildElement);
-      ProjectionType projectionType = buildElement.getAnnotation(Build.class).toBuilder()
-          ? matchValidator.buildViaElement(buildVia).buildElement(buildElement).validate()
-          : ProjectionType.NONE;
-      MyContext context = createContext(goalType, buildElement, buildVia, projectionType,
-          buildElement.getAnnotation(Build.class).nogc());
+      MatchValidator matchValidator = matchValidatorFactory
+          .buildViaElement(goal).buildElement(buildElement);
+      ImmutableList<ProjectionInfo> projectionInfos = toBuilder
+          ? matchValidator.validate()
+          : matchValidator.skip();
+      MyContext context = createContext(goalType, toBuilder, buildElement, projectionInfos, goal, nogc);
       myGenerator.generate(context);
     } catch (ValidationException e) {
       e.printMessage(messager);
     }
   }
 
-
-  private ExecutableElement viaAnnotatedElement(TypeElement buildElement) throws ValidationException {
+  private ExecutableElement goal(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (ExecutableElement executableElement : concat(constructorsIn(buildElement.getEnclosedElements()),
         methodsIn(buildElement.getEnclosedElements()))) {
@@ -72,15 +74,15 @@ final class MyStep {
     }
     switch (builder.build().size()) {
       case 0:
-        return guessVia(buildElement);
+        return guessGoal(buildElement);
       case 1:
         return getOnlyElement(builder.build());
       default:
-        throw new ValidationException(SEVERAL_VIA_ANNOTATIONS, buildElement);
+        throw new ValidationException(SEVERAL_GOAL_ANNOTATIONS, buildElement);
     }
   }
 
-  private ExecutableElement guessVia(TypeElement buildElement) throws ValidationException {
+  private ExecutableElement guessGoal(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (ExecutableElement executableElement : constructorsIn(buildElement.getEnclosedElements())) {
       if (!executableElement.getModifiers().contains(PRIVATE)
@@ -112,7 +114,7 @@ final class MyStep {
     if (builder.build().size() == 1) {
       return getOnlyElement(builder.build());
     }
-    throw new ValidationException(COULD_NOT_GUESS_VIA, buildElement);
+    throw new ValidationException(COULD_NOT_GUESS_GOAL, buildElement);
   }
 
 }

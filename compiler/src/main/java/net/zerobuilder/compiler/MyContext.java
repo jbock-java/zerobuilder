@@ -13,6 +13,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.MatchValidator.ProjectionInfo;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -32,16 +33,11 @@ import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.JAVADOC_BUILDER;
-import static net.zerobuilder.compiler.MyContext.ProjectionType.NONE;
 import static net.zerobuilder.compiler.Util.downcase;
 import static net.zerobuilder.compiler.Util.joinCodeBlocks;
 import static net.zerobuilder.compiler.Util.upcase;
 
 final class MyContext implements GenerationContext {
-
-  enum ProjectionType {
-    FIELDS, AUTOVALUE, GETTERS, NONE
-  }
 
   private static final String STATIC_FIELD_INSTANCE = "INSTANCE";
   private static final String FIELD_UPDATER = "updater";
@@ -52,60 +48,59 @@ final class MyContext implements GenerationContext {
   private static final String STEPS_IMPL = "StepsImpl";
 
   /**
-   * return type of {@link #buildVia}
+   * return type of {@link #goal}
    */
-
   final TypeName goalType;
+
+  final boolean toBuilder;
 
   /**
    * the element carrying the {@link net.zerobuilder.Build} annotation
    */
   final TypeElement buildElement;
 
-  final ProjectionType projectionType;
-
   /**
    * the element carrying the {@link net.zerobuilder.Build.Goal} annotation
    */
-  final ExecutableElement buildVia;
+  final ExecutableElement goal;
 
   /**
-   * arguments of the {@link #buildVia}
+   * arguments of the {@link #goal}
    */
   final ImmutableList<StepSpec> stepSpecs;
 
   final boolean nogc;
 
-  private MyContext(TypeName goalType, TypeElement buildElement,
-                    ProjectionType projectionType,
-                    ExecutableElement buildVia,
+  private MyContext(TypeName goalType, boolean toBuilder, TypeElement buildElement,
+                    ExecutableElement goal,
                     ImmutableList<StepSpec> stepSpecs, boolean nogc) {
     this.goalType = goalType;
+    this.toBuilder = toBuilder;
     this.buildElement = buildElement;
-    this.projectionType = projectionType;
-    this.buildVia = buildVia;
+    this.goal = goal;
     this.stepSpecs = stepSpecs;
     this.nogc = nogc;
   }
 
-  static MyContext createContext(TypeName goalType, TypeElement buildElement,
-                                 ExecutableElement buildVia, ProjectionType projectionType,
+  static MyContext createContext(TypeName goalType, boolean toBuilder, TypeElement buildElement,
+                                 ImmutableList<ProjectionInfo> projectionInfos,
+                                 ExecutableElement goal,
                                  boolean nogc) {
-    ImmutableList<StepSpec> specs = specs(buildElement, goalType, buildVia);
-    return new MyContext(goalType, buildElement, projectionType, buildVia, specs, nogc);
+    ImmutableList<StepSpec> specs = specs(buildElement, goalType, projectionInfos);
+    return new MyContext(goalType, toBuilder, buildElement, goal, specs, nogc);
   }
 
-  private static ImmutableList<StepSpec> specs(TypeElement typeElement, TypeName goalType,
-                                               ExecutableElement executableElement) {
-    ClassName contractName = generatedClassName(typeElement).nestedClass(CONTRACT);
+  private static ImmutableList<StepSpec> specs(TypeElement buildElement, TypeName goalType,
+                                               ImmutableList<ProjectionInfo> goal) {
+    ClassName contractName = generatedClassName(buildElement).nestedClass(CONTRACT);
     ImmutableList.Builder<StepSpec> stepSpecsBuilder = ImmutableList.builder();
-    for (int i = executableElement.getParameters().size() - 1; i >= 0; i--) {
-      VariableElement arg = executableElement.getParameters().get(i);
+    for (int i = goal.size() - 1; i >= 0; i--) {
+      ProjectionInfo arg = goal.get(i);
       ClassName stepName = contractName.nestedClass(
-          upcase(arg.getSimpleName().toString()));
+          upcase(arg.parameter.getSimpleName().toString()));
       StepSpec stepSpec = StepSpec.stepSpec(stepName, arg, goalType);
       stepSpecsBuilder.add(stepSpec);
-      goalType = stepSpec.stepName;
+      goalType = stepSpec.stepContractType;
     }
     return stepSpecsBuilder.build().reverse();
   }
@@ -119,13 +114,13 @@ final class MyContext implements GenerationContext {
   ImmutableList<ClassName> stepInterfaceNames() {
     ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
     for (StepSpec spec : stepSpecs) {
-      specs.add(spec.stepName);
+      specs.add(spec.stepContractType);
     }
     return specs.build();
   }
 
   ImmutableList<TypeName> thrownTypes() {
-    return FluentIterable.from(buildVia.getThrownTypes())
+    return FluentIterable.from(goal.getThrownTypes())
         .transform(new Function<TypeMirror, TypeName>() {
           @Override
           public TypeName apply(TypeMirror thrownType) {
@@ -136,7 +131,7 @@ final class MyContext implements GenerationContext {
   }
 
   Optional<ClassName> receiver() {
-    return buildVia.getKind() == METHOD && !buildVia.getModifiers().contains(STATIC)
+    return goal.getKind() == METHOD && !goal.getModifiers().contains(STATIC)
         ? Optional.of(ClassName.get(buildElement))
         : Optional.<ClassName>absent();
   }
@@ -164,7 +159,7 @@ final class MyContext implements GenerationContext {
   }
 
   Optional<MethodSpec> toBuilderMethod() {
-    if (!toBuilder()) {
+    if (!toBuilder) {
       return absent();
     }
     String parameterName = downcase(ClassName.get(buildElement).simpleName());
@@ -180,20 +175,12 @@ final class MyContext implements GenerationContext {
           updaterType);
     }
     for (StepSpec stepSpec : stepSpecs) {
-      switch (projectionType) {
-        case AUTOVALUE:
-          builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.argument.getSimpleName(),
-              parameterName, stepSpec.argument.getSimpleName());
-          break;
-        case FIELDS:
-          builder.addStatement("$N.$N = $N.$N", varUpdater, stepSpec.argument.getSimpleName(),
-              parameterName, stepSpec.argument.getSimpleName());
-          break;
-        case GETTERS:
-          builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.argument.getSimpleName(),
-              parameterName, "get" + upcase(stepSpec.argument.getSimpleName().toString()));
-          break;
-        default:
+      if (stepSpec.projectionMethodName.isPresent()) {
+        builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.parameter.getSimpleName(),
+            parameterName, stepSpec.projectionMethodName.get());
+      } else {
+        builder.addStatement("$N.$N = $N.$N", varUpdater, stepSpec.parameter.getSimpleName(),
+            parameterName, stepSpec.parameter.getSimpleName());
       }
     }
     builder.addStatement("return $L", varUpdater);
@@ -230,7 +217,7 @@ final class MyContext implements GenerationContext {
         builder.addStatement("return new $T()", stepsImplTypeName());
       }
     }
-    return builder.returns(firstStep.stepName)
+    return builder.returns(firstStep.stepContractType)
         .addJavadoc(JAVADOC_BUILDER, ClassName.get(buildElement))
         .addModifiers(maybeAddPublic(STATIC))
         .build();
@@ -241,7 +228,7 @@ final class MyContext implements GenerationContext {
       return ImmutableList.of();
     }
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    if (toBuilder()) {
+    if (toBuilder) {
       builder.add(FieldSpec.builder(updaterContext().typeName(),
           "updater", PRIVATE, FINAL).build());
     }
@@ -252,7 +239,7 @@ final class MyContext implements GenerationContext {
 
   MethodSpec constructor() {
     MethodSpec.Builder builder = constructorBuilder();
-    if (nogc && toBuilder()) {
+    if (nogc && toBuilder) {
       builder.addStatement("this.$L = new $T()", FIELD_UPDATER, updaterContext().typeName());
     }
     if (nogc) {
@@ -294,7 +281,7 @@ final class MyContext implements GenerationContext {
 
   CodeBlock factoryCallArgs() {
     ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
-    for (VariableElement arg : buildVia.getParameters()) {
+    for (VariableElement arg : goal.getParameters()) {
       builder.add(CodeBlock.of("$L", arg.getSimpleName()));
     }
     return joinCodeBlocks(builder.build(), ", ");
@@ -302,15 +289,11 @@ final class MyContext implements GenerationContext {
 
   Set<Modifier> maybeAddPublic(Modifier... modifiers) {
     ImmutableSet<Modifier> modifierSet = ImmutableSet.copyOf(modifiers);
-    if (buildVia.getModifiers().contains(PUBLIC)
+    if (goal.getModifiers().contains(PUBLIC)
         && !modifierSet.contains(PUBLIC)) {
       return new ImmutableSet.Builder<Modifier>().addAll(modifierSet).add(PUBLIC).build();
     }
     return modifierSet;
-  }
-
-  boolean toBuilder() {
-    return projectionType != NONE;
   }
 
 }

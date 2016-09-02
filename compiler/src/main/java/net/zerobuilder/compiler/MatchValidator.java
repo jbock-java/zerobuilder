@@ -4,51 +4,44 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.MyContext.ProjectionType;
 
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
-import static com.google.common.collect.Maps.uniqueIndex;
-import static com.google.common.collect.Sets.immutableEnumSet;
-import static com.google.common.collect.Sets.intersection;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.MATCH_ERROR;
-import static net.zerobuilder.compiler.MyContext.ProjectionType.AUTOVALUE;
-import static net.zerobuilder.compiler.MyContext.ProjectionType.FIELDS;
-import static net.zerobuilder.compiler.MyContext.ProjectionType.GETTERS;
 import static net.zerobuilder.compiler.Util.upcase;
 
 final class MatchValidator {
 
-  private final ImmutableMap<String, ExecutableElement> methodsByName;
-  private final ExecutableElement buildVia;
-  private final TypeElement typeElement;
+  private final ImmutableMap<String, ExecutableElement> methods;
+  private final ImmutableMap<String, VariableElement> fields;
+  private final ExecutableElement goal;
 
-  private static final ImmutableSet<Modifier> BAD_MODIFIERS = immutableEnumSet(PRIVATE, STATIC);
-
-  private MatchValidator(ImmutableMap<String, ExecutableElement> methodsByName, ExecutableElement buildVia, TypeElement typeElement) {
-    this.methodsByName = methodsByName;
-    this.buildVia = buildVia;
-    this.typeElement = typeElement;
+  private MatchValidator(ImmutableMap<String, ExecutableElement> methodsByName,
+                         ImmutableMap<String, VariableElement> fieldsByName,
+                         ExecutableElement goal) {
+    this.methods = methodsByName;
+    this.fields = fieldsByName;
+    this.goal = goal;
   }
 
-  private static MatchValidator createMatchValidator(TypeElement buildElement, ExecutableElement buildVia, Elements elements) {
+  private static MatchValidator createMatchValidator(TypeElement buildElement, ExecutableElement goal, Elements elements) {
     ImmutableSet<ExecutableElement> methods = getLocalAndInheritedMethods(buildElement, elements);
-    ImmutableMap<String, ExecutableElement> map = FluentIterable.from(methods)
+    ImmutableMap<String, ExecutableElement> methodsByName = FluentIterable.from(methods)
         .filter(new Predicate<ExecutableElement>() {
           @Override
           public boolean apply(ExecutableElement method) {
-            return method.getParameters().isEmpty();
+            return method.getParameters().isEmpty()
+                && !method.getModifiers().contains(PRIVATE) && !method.getModifiers().contains(STATIC);
           }
         })
         .uniqueIndex(new Function<ExecutableElement, String>() {
@@ -57,60 +50,60 @@ final class MatchValidator {
             return method.getSimpleName().toString();
           }
         });
-    return new MatchValidator(map, buildVia, buildElement);
+    ImmutableMap<String, VariableElement> fieldsByName
+        = FluentIterable.from(fieldsIn(buildElement.getEnclosedElements()))
+        .filter(new Predicate<VariableElement>() {
+          @Override
+          public boolean apply(VariableElement field) {
+            return !field.getModifiers().contains(PRIVATE) && !field.getModifiers().contains(STATIC);
+          }
+        })
+        .uniqueIndex(new Function<VariableElement, String>() {
+          @Override
+          public String apply(VariableElement field) {
+            return field.getSimpleName().toString();
+          }
+        });
+    return new MatchValidator(methodsByName, fieldsByName, goal);
   }
 
-  ProjectionType validate() throws ValidationException {
-    Optional<ProjectionType> access = checkFieldAccess()
-        .or(checkAutovalue())
-        .or(checkGetters());
-    if (!access.isPresent()) {
-      throw new ValidationException(MATCH_ERROR, buildVia);
-    }
-    return access.get();
-  }
-
-  private Optional<ProjectionType> checkFieldAccess() {
-    ImmutableMap<String, VariableElement> fieldsByName = uniqueIndex(fieldsIn(typeElement.getEnclosedElements()), new Function<VariableElement, String>() {
-      @Override
-      public String apply(VariableElement field) {
-        return field.getSimpleName().toString();
+  ImmutableList<ProjectionInfo> validate() throws ValidationException {
+    ImmutableList.Builder<ProjectionInfo> builder = ImmutableList.builder();
+    for (VariableElement parameter : goal.getParameters()) {
+      VariableElement field = fields.get(parameter.getSimpleName().toString());
+      if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
+        builder.add(new ProjectionInfo(parameter, Optional.<String>absent()));
+      } else {
+        String methodName = "get" + upcase(parameter.getSimpleName().toString());
+        ExecutableElement method = methods.get(methodName);
+        if (method == null
+            && TypeName.get(parameter.asType()) == TypeName.BOOLEAN) {
+          methodName = "is" + upcase(parameter.getSimpleName().toString());
+          method = methods.get(methodName);
+        }
+        if (method == null) {
+          methodName = parameter.getSimpleName().toString();
+          method = methods.get(methodName);
+        }
+        if (method == null) {
+          throw new ValidationException("Could not find projection for parameter: "
+              + parameter.getSimpleName(), goal);
+        }
+        builder.add(new ProjectionInfo(parameter, Optional.of(methodName)));
       }
-    });
-    for (VariableElement parameter : buildVia.getParameters()) {
-      VariableElement field = fieldsByName.get(parameter.getSimpleName().toString());
-      if (field == null
-          || !TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))
-          || !intersection(BAD_MODIFIERS, field.getModifiers()).isEmpty()) {
-        return Optional.absent();
-      }
     }
-    return Optional.of(FIELDS);
+    return builder.build();
   }
 
-  private Optional<ProjectionType> checkAutovalue() {
-    for (VariableElement parameter : buildVia.getParameters()) {
-      ExecutableElement method = methodsByName.get(parameter.getSimpleName().toString());
-      if (method == null
-          || !TypeName.get(method.getReturnType()).equals(TypeName.get(parameter.asType()))
-          || !intersection(BAD_MODIFIERS, method.getModifiers()).isEmpty())
-        return Optional.absent();
+  ImmutableList<ProjectionInfo> skip() {
+    ImmutableList.Builder<ProjectionInfo> builder = ImmutableList.builder();
+    for (VariableElement parameter : goal.getParameters()) {
+      builder.add(new ProjectionInfo(parameter, Optional.<String>absent()));
     }
-    return Optional.of(AUTOVALUE);
+    return builder.build();
   }
 
-  private Optional<ProjectionType> checkGetters() {
-    for (VariableElement parameter : buildVia.getParameters()) {
-      ExecutableElement method = methodsByName.get("get" + upcase(parameter.getSimpleName().toString()));
-      if (method == null
-          || !TypeName.get(method.getReturnType()).equals(TypeName.get(parameter.asType()))
-          || !intersection(BAD_MODIFIERS, method.getModifiers()).isEmpty())
-        return Optional.absent();
-    }
-    return Optional.of(GETTERS);
-  }
-
-  static class Factory {
+  static final class Factory {
     private final Elements elements;
 
     Factory(Elements elements) {
@@ -121,7 +114,7 @@ final class MatchValidator {
     }
   }
 
-  static class Builder {
+  static final class Builder {
     private ExecutableElement targetMethod;
     private Elements elements;
     private Builder buildViaElement(ExecutableElement targetMethod) {
@@ -135,6 +128,17 @@ final class MatchValidator {
     MatchValidator buildElement(TypeElement buildElement) {
       return createMatchValidator(buildElement, targetMethod, elements);
     }
+  }
+
+  static final class ProjectionInfo {
+    final VariableElement parameter;
+    final Optional<String> projectionMethodName;
+
+    ProjectionInfo(VariableElement parameter, Optional<String> projectionMethodName) {
+      this.parameter = parameter;
+      this.projectionMethodName = projectionMethodName;
+    }
+
   }
 
 }

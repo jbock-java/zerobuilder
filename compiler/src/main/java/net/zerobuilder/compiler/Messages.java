@@ -11,29 +11,23 @@ final class Messages {
 
   static final class ErrorMessages {
 
-    static final String NON_STATIC_METHOD =
-        "The @Build annotation can only be used on static methods or constructors.";
-
     static final String PRIVATE_METHOD =
-        "The @Build.Goal annotated method may not be private.";
+        "The goal may not be private.";
 
     static final String PRIVATE_TYPE =
         "The @Build annotated type may not be private.";
 
     static final String NOT_ENOUGH_PARAMETERS =
-        "The @Build.Goal annotated method has no parameters. Skipping code generation.";
+        "The goal has no parameters.";
 
     static final String NESTING_KIND =
         "The @Build annotation can only be used on top level and non-private static inner classes.";
 
-    static final String SEVERAL_VIA_ANNOTATIONS =
-        "The @Build.Goal annotation may not appear more than once per class.";
+    static final String SEVERAL_GOAL_ANNOTATIONS =
+        "The @Goal annotation may not appear more than once per class.";
 
-    static final String COULD_NOT_GUESS_VIA =
-        "Could not guess the @BuildVia method. Please add the @Build.Goal annotation to it.";
-
-    static final String MATCH_ERROR =
-        "Could not correlate accessors with parameters. Consider using @Build(toBuilder = false).";
+    static final String COULD_NOT_GUESS_GOAL =
+        "Could not guess the @Goal method. Please add a @Goal annotation.";
 
     private ErrorMessages() {
     }
