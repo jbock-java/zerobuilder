@@ -19,6 +19,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_VIA;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.SEVERAL_VIA_ANNOTATIONS;
 import static net.zerobuilder.compiler.MyContext.createContext;
@@ -28,12 +29,12 @@ final class MyStep {
   private final MyGenerator myGenerator;
   private final Messager messager;
   private final TypeValidator typeValidator = new TypeValidator();
-  private final MatchValidator.BuilderFactory matchValidatorFactory;
+  private final MatchValidator.Factory matchValidator;
 
   MyStep(MyGenerator myGenerator, Messager messager, Elements elements) {
     this.myGenerator = myGenerator;
     this.messager = messager;
-    this.matchValidatorFactory = new MatchValidator.BuilderFactory(elements);
+    this.matchValidator = new MatchValidator.Factory(elements);
   }
 
   void process(TypeElement buildElement) {
@@ -44,9 +45,10 @@ final class MyStep {
           TypeName.get(buildVia.getReturnType());
       typeValidator.validateBuildType(buildElement);
       ProjectionType projectionType = buildElement.getAnnotation(Build.class).toBuilder()
-          ? matchValidatorFactory.buildViaElement(buildVia).buildElement(buildElement).validate()
+          ? matchValidator.buildViaElement(buildVia).buildElement(buildElement).validate()
           : ProjectionType.NONE;
-      MyContext context = createContext(goalType, buildElement, buildVia, projectionType);
+      MyContext context = createContext(goalType, buildElement, buildVia, projectionType,
+          buildElement.getAnnotation(Build.class).nogc());
       myGenerator.generate(context);
     } catch (ValidationException e) {
       e.printMessage(messager);
@@ -63,7 +65,7 @@ final class MyStep {
           throw new ValidationException(PRIVATE_METHOD, buildElement);
         }
         if (executableElement.getParameters().isEmpty()) {
-          throw new ValidationException(Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS, buildElement);
+          throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
         }
         builder.add(executableElement);
       }

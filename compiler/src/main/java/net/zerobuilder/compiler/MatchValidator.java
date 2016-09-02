@@ -110,10 +110,10 @@ final class MatchValidator {
     return Optional.of(GETTERS);
   }
 
-  static class BuilderFactory {
+  static class Factory {
     private final Elements elements;
 
-    BuilderFactory(Elements elements) {
+    Factory(Elements elements) {
       this.elements = elements;
     }
     Builder buildViaElement(ExecutableElement buildVia) {

@@ -2,7 +2,7 @@ package net.zerobuilder.examples.basic;
 
 import net.zerobuilder.Build;
 
-@Build(toBuilder = true)
+@Build(toBuilder = true, nogc = true)
 final class FieldAccess {
 
   final double length;

@@ -5,20 +5,20 @@ import net.zerobuilder.Build;
 @Build
 final class MessageFactory {
 
-  private final String target;
+  private final String sender;
 
-  private MessageFactory(String target) {
-    this.target = target;
+  private MessageFactory(String sender) {
+    this.sender = sender;
   }
 
-  static MessageFactory target(String target) {
-    return new MessageFactory(target);
+  static MessageFactory sender(String sender) {
+    return new MessageFactory(sender);
   }
 
   @Build.Goal
-  Message createJumpNotice(String foxVelocity, String foxColor, String targetState) {
-    return new Message(String.format("The %s %s fox jumps over the %s %s.",
-        foxVelocity, foxColor, targetState, target));
+  Message createJumpNotice(String velocity, String color, String recipient) {
+    return new Message(String.format("The %s %s %s jumps over the lazy %s.",
+        velocity, color, sender, recipient));
   }
 
   static class Message {
@@ -27,6 +27,10 @@ final class MessageFactory {
     Message(String body) {
       this.body = body;
     }
+  }
+
+  MessageFactoryBuilder.Contract.Velocity messageBuilder() {
+    return MessageFactoryBuilder.builder(this);
   }
 
 }

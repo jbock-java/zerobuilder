@@ -8,14 +8,15 @@ import static org.junit.Assert.*;
 
 public class MessageFactoryTest {
 
+  private final MessageFactory messageFactory = MessageFactory.sender("zebra");
+
   @Test
-  public void createJumpNotice() throws Exception {
-    MessageFactory messageFactory = MessageFactory.target("dog");
-    Message message = MessageFactoryBuilder.builder(messageFactory)
-        .foxVelocity("quick")
-        .foxColor("brown")
-        .targetState("lazy");
-    assertThat(message.body, is("The quick brown fox jumps over the lazy dog."));
+  public void message() throws Exception {
+    Message message = messageFactory.messageBuilder()
+        .velocity("quick")
+        .color("brown")
+        .recipient("dog");
+    assertThat(message.body, is("The quick brown zebra jumps over the lazy dog."));
   }
 
 }
