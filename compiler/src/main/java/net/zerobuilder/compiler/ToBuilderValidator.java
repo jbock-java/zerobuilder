@@ -18,23 +18,23 @@ import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
-import static net.zerobuilder.compiler.Util.upcase;
+import static net.zerobuilder.compiler.Utilities.upcase;
 
-final class MatchValidator {
+final class ToBuilderValidator {
 
   private final ImmutableMap<String, ExecutableElement> methods;
   private final ImmutableMap<String, VariableElement> fields;
   private final ExecutableElement goal;
 
-  private MatchValidator(ImmutableMap<String, ExecutableElement> methodsByName,
-                         ImmutableMap<String, VariableElement> fieldsByName,
-                         ExecutableElement goal) {
+  private ToBuilderValidator(ImmutableMap<String, ExecutableElement> methodsByName,
+                             ImmutableMap<String, VariableElement> fieldsByName,
+                             ExecutableElement goal) {
     this.methods = methodsByName;
     this.fields = fieldsByName;
     this.goal = goal;
   }
 
-  private static MatchValidator createMatchValidator(TypeElement buildElement, ExecutableElement goal, Elements elements) {
+  private static ToBuilderValidator createMatchValidator(TypeElement buildElement, ExecutableElement goal, Elements elements) {
     ImmutableSet<ExecutableElement> methods = getLocalAndInheritedMethods(buildElement, elements);
     ImmutableMap<String, ExecutableElement> methodsByName = FluentIterable.from(methods)
         .filter(new Predicate<ExecutableElement>() {
@@ -64,7 +64,7 @@ final class MatchValidator {
             return field.getSimpleName().toString();
           }
         });
-    return new MatchValidator(methodsByName, fieldsByName, goal);
+    return new ToBuilderValidator(methodsByName, fieldsByName, goal);
   }
 
   ImmutableList<ProjectionInfo> validate() throws ValidationException {
@@ -125,7 +125,7 @@ final class MatchValidator {
       this.elements = elements;
       return this;
     }
-    MatchValidator buildElement(TypeElement buildElement) {
+    ToBuilderValidator buildElement(TypeElement buildElement) {
       return createMatchValidator(buildElement, targetMethod, elements);
     }
   }

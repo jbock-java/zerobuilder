@@ -3,6 +3,7 @@ package net.zerobuilder.compiler;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 
+import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.WARNING;
 
 class ValidationException extends Exception {

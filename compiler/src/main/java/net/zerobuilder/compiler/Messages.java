@@ -45,7 +45,7 @@ final class Messages {
     static ImmutableList<AnnotationSpec> generatedAnnotations(Elements elements) {
       if (elements.getTypeElement("javax.annotation.Generated") != null) {
         return ImmutableList.of(AnnotationSpec.builder(Generated.class)
-            .addMember("value", "$S", MyProcessor.class.getName())
+            .addMember("value", "$S", ZeroProcessor.class.getName())
             .addMember("comments", "$S", GENERATED_COMMENTS)
             .build());
       }

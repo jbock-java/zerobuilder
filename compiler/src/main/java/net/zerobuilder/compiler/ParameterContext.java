@@ -7,7 +7,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.MatchValidator.ProjectionInfo;
+import net.zerobuilder.compiler.ToBuilderValidator.ProjectionInfo;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
@@ -19,29 +19,29 @@ import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-final class StepSpec {
+final class ParameterContext {
 
   final ClassName stepContractType;
   final VariableElement parameter;
   final TypeName returnType;
   final Optional<String> projectionMethodName;
 
-  private StepSpec(ClassName stepContractType, VariableElement parameter, TypeName returnType, Optional<String> projectionMethodName) {
+  private ParameterContext(ClassName stepContractType, VariableElement parameter, TypeName returnType, Optional<String> projectionMethodName) {
     this.stepContractType = stepContractType;
     this.parameter = parameter;
     this.returnType = returnType;
     this.projectionMethodName = projectionMethodName;
   }
 
-  static StepSpec stepSpec(ClassName stepName, ProjectionInfo projectionInfo, TypeName returnType) {
-    return new StepSpec(stepName, projectionInfo.parameter, returnType, projectionInfo.projectionMethodName);
+  static ParameterContext stepSpec(ClassName stepName, ProjectionInfo projectionInfo, TypeName returnType) {
+    return new ParameterContext(stepName, projectionInfo.parameter, returnType, projectionInfo.projectionMethodName);
   }
 
-  TypeSpec asInterface(Set<Modifier> modifiers, ImmutableList<TypeName> thrownTypes) {
+  TypeSpec asStepInterface(Set<Modifier> modifiers, ImmutableList<TypeName> declaredExceptions) {
     MethodSpec methodSpec = methodBuilder(parameter.getSimpleName().toString())
         .returns(returnType)
         .addParameter(parameter())
-        .addExceptions(thrownTypes)
+        .addExceptions(declaredExceptions)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
     return interfaceBuilder(stepContractType)
@@ -50,8 +50,8 @@ final class StepSpec {
         .build();
   }
 
-  TypeSpec asInterface(Set<Modifier> modifiers) {
-    return asInterface(modifiers, ImmutableList.<TypeName>of());
+  TypeSpec asStepInterface(Set<Modifier> modifiers) {
+    return asStepInterface(modifiers, ImmutableList.<TypeName>of());
   }
 
   ParameterSpec parameter() {

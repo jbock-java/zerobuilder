@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.GoalContext.SharedGoalContext;
 
 import javax.lang.model.element.Modifier;
 
@@ -25,25 +26,25 @@ import static javax.lang.model.element.Modifier.STATIC;
 
 final class ContractContext {
 
-  private final GoalContext context;
+  private final SharedGoalContext context;
 
-  ContractContext(GoalContext context) {
+  ContractContext(SharedGoalContext context) {
     this.context = context;
   }
 
   private ImmutableList<TypeSpec> stepInterfaces() {
     ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
     for (int i = 0; i < context.stepSpecs.size() - 1; i++) {
-      StepSpec spec = context.stepSpecs.get(i);
-      specs.add(spec.asInterface(context.maybeAddPublic()));
+      ParameterContext spec = context.stepSpecs.get(i);
+      specs.add(spec.asStepInterface(context.maybeAddPublic()));
     }
-    StepSpec spec = getLast(context.stepSpecs);
-    specs.add(spec.asInterface(context.maybeAddPublic(), context.thrownTypes()));
+    ParameterContext spec = getLast(context.stepSpecs);
+    specs.add(spec.asStepInterface(context.maybeAddPublic(), context.thrownTypes()));
     return specs.build();
   }
 
   private Optional<TypeSpec> updaterInterface() {
-    if (!context.config.toBuilder) {
+    if (!context.toBuilder) {
       return absent();
     }
     MethodSpec buildMethod = methodBuilder("build")
@@ -61,7 +62,7 @@ final class ContractContext {
   private ImmutableList<MethodSpec> updateMethods() {
     ClassName updaterName = context.contractUpdaterName();
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (StepSpec spec : context.stepSpecs) {
+    for (ParameterContext spec : context.stepSpecs) {
       builder.add(spec.asUpdaterInterfaceMethod(updaterName));
     }
     return builder.build();

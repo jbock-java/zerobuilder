@@ -7,7 +7,7 @@ import java.util.Iterator;
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 
-final class Util {
+final class Utilities {
 
   static String upcase(String s) {
     return LOWER_CAMEL.to(UPPER_CAMEL, s);
@@ -29,7 +29,7 @@ final class Util {
     return builder.build();
   }
 
-  private Util() {
+  private Utilities() {
   }
 
 }

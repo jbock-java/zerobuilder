@@ -8,6 +8,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.GoalContext.SharedGoalContext;
 
 import javax.lang.model.element.Name;
 
@@ -20,15 +21,15 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Util.downcase;
+import static net.zerobuilder.compiler.Utilities.downcase;
 
 final class UpdaterContext {
 
   private static final String UPDATER_IMPL = "UpdaterImpl";
 
-  private final GoalContext context;
+  private final SharedGoalContext context;
 
-  UpdaterContext(GoalContext context) {
+  UpdaterContext(SharedGoalContext context) {
     this.context = context;
   }
 
@@ -43,7 +44,7 @@ final class UpdaterContext {
       ClassName r = receiver.get();
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
-    for (StepSpec stepSpec : context.stepSpecs) {
+    for (ParameterContext stepSpec : context.stepSpecs) {
       String name = stepSpec.parameter.getSimpleName().toString();
       builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.asType()), name, PRIVATE).build());
     }
@@ -52,7 +53,7 @@ final class UpdaterContext {
 
   private ImmutableList<MethodSpec> updaterMethods() {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (StepSpec stepSpec : context.stepSpecs) {
+    for (ParameterContext stepSpec : context.stepSpecs) {
       ParameterSpec parameter = stepSpec.parameter();
       builder.add(methodBuilder(parameter.name)
           .addAnnotation(Override.class)
@@ -83,7 +84,7 @@ final class UpdaterContext {
   }
 
   Optional<TypeSpec> buildUpdaterImpl() {
-    if (!context.config.toBuilder) {
+    if (!context.toBuilder) {
       return absent();
     }
     return Optional.of(classBuilder(typeName())

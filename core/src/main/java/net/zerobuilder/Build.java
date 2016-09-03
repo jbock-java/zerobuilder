@@ -1,5 +1,6 @@
 package net.zerobuilder;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -28,16 +29,19 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * that carries the {@code Build} annotation.
  * </p>
  */
+@Documented
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface Build {
 
-  boolean toBuilder() default false;
   boolean nogc() default false;
 
   @Retention(SOURCE)
   @Target({METHOD, CONSTRUCTOR})
   @interface Goal {
+
+    String value() default "";
+    boolean toBuilder() default false;
   }
 
 }

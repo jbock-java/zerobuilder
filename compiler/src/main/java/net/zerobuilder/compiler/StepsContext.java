@@ -9,6 +9,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.GoalContext.SharedGoalContext;
 
 import javax.lang.model.element.Name;
 
@@ -21,13 +22,13 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Util.downcase;
+import static net.zerobuilder.compiler.Utilities.downcase;
 
 final class StepsContext {
 
-  private final GoalContext context;
+  private final SharedGoalContext context;
 
-  StepsContext(GoalContext context) {
+  StepsContext(SharedGoalContext context) {
     this.context = context;
   }
 
@@ -38,7 +39,7 @@ final class StepsContext {
       ClassName r = receiver.get();
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
-    for (StepSpec stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
+    for (ParameterContext stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
       String name = stepSpec.parameter.getSimpleName().toString();
       builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.asType()), name, PRIVATE).build());
     }
@@ -53,7 +54,7 @@ final class StepsContext {
 
   private ImmutableList<MethodSpec> stepsButLast() {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (StepSpec stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
+    for (ParameterContext stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
       ParameterSpec parameter = stepSpec.parameter();
       builder.add(methodBuilder(parameter.name)
           .addAnnotation(Override.class)
@@ -68,7 +69,7 @@ final class StepsContext {
   }
 
   private MethodSpec lastStep() {
-    StepSpec stepSpec = getLast(context.stepSpecs);
+    ParameterContext stepSpec = getLast(context.stepSpecs);
     MethodSpec.Builder builder = methodBuilder(stepSpec.parameter.getSimpleName().toString())
         .addAnnotation(Override.class)
         .addParameter(stepSpec.parameter())
@@ -97,6 +98,5 @@ final class StepsContext {
         .addModifiers(FINAL, STATIC)
         .build();
   }
-
 
 }

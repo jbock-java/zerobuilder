@@ -20,7 +20,7 @@ public final class GeneratedLines {
   public static final String GENERATED_ANNOTATION =
       "@Generated("
           + "value = \""
-          + MyProcessor.class.getName()
+          + ZeroProcessor.class.getName()
           + "\", "
           + "comments = \""
           + Messages.JavadocMessages.GENERATED_COMMENTS

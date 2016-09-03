@@ -4,9 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Build;
-import net.zerobuilder.compiler.MatchValidator.ProjectionInfo;
+import net.zerobuilder.compiler.ToBuilderValidator.ProjectionInfo;
 
-import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -19,45 +18,39 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static net.zerobuilder.compiler.BuildConfig.createBuildConfig;
+import static net.zerobuilder.compiler.GoalContext.createGoalContext;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_GOAL;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.SEVERAL_GOAL_ANNOTATIONS;
-import static net.zerobuilder.compiler.GoalContext.createGoalContext;
 
-final class MyStep {
+final class Analyzer {
 
-  private final MyGenerator myGenerator;
-  private final Messager messager;
+  private final Generator generator;
   private final TypeValidator typeValidator = new TypeValidator();
-  private final MatchValidator.Factory matchValidatorFactory;
+  private final ToBuilderValidator.Factory toBuilderValidatorFactory;
 
-  MyStep(MyGenerator myGenerator, Messager messager, Elements elements) {
-    this.myGenerator = myGenerator;
-    this.messager = messager;
-    this.matchValidatorFactory = new MatchValidator.Factory(elements);
+  Analyzer(Elements elements) {
+    this.generator = new Generator(elements);
+    this.toBuilderValidatorFactory = new ToBuilderValidator.Factory(elements);
   }
 
-  void process(TypeElement buildElement) {
-    try {
-      ExecutableElement goal = goal(buildElement);
-      ClassName annotatedType = ClassName.get(buildElement);
-      TypeName goalType = goal.getKind() == CONSTRUCTOR
-          ? annotatedType
-          : TypeName.get(goal.getReturnType());
-      typeValidator.validateBuildType(buildElement);
-      MatchValidator matchValidator = matchValidatorFactory
-          .buildViaElement(goal).buildElement(buildElement);
-      ImmutableList<ProjectionInfo> projectionInfos =
-          buildElement.getAnnotation(Build.class).toBuilder()
-              ? matchValidator.validate()
-              : matchValidator.skip();
-      BuildConfig config = createBuildConfig(buildElement);
-      GoalContext context = createGoalContext(goalType, config, projectionInfos, goal);
-      myGenerator.generate(config, context);
-    } catch (ValidationException e) {
-      e.printMessage(messager);
-    }
+  AnalysisResult parse(TypeElement buildElement) throws ValidationException {
+    ExecutableElement goal = goal(buildElement);
+    ClassName annotatedType = ClassName.get(buildElement);
+    TypeName goalType = goal.getKind() == CONSTRUCTOR
+        ? annotatedType
+        : TypeName.get(goal.getReturnType());
+    typeValidator.validateBuildType(buildElement);
+    ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
+        .buildViaElement(goal).buildElement(buildElement);
+    Build.Goal goalAnnotation = goal.getAnnotation(Build.Goal.class);
+    boolean toBuilder = goalAnnotation != null && goalAnnotation.toBuilder();
+    ImmutableList<ProjectionInfo> projectionInfos =
+        toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
+    BuildConfig config = createBuildConfig(buildElement);
+    GoalContext context = createGoalContext(goalType, config, projectionInfos, goal, toBuilder);
+    return new AnalysisResult(config, context);
   }
 
   private ExecutableElement goal(TypeElement buildElement) throws ValidationException {
@@ -117,6 +110,16 @@ final class MyStep {
       return getOnlyElement(builder.build());
     }
     throw new ValidationException(COULD_NOT_GUESS_GOAL, buildElement);
+  }
+
+  static final class AnalysisResult {
+    final BuildConfig config;
+    final GoalContext context;
+
+    AnalysisResult(BuildConfig config, GoalContext context) {
+      this.config = config;
+      this.context = context;
+    }
   }
 
 }
