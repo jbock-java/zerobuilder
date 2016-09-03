@@ -13,16 +13,9 @@ public class RequestTest {
 
   @Test
   public void buildPost() throws Exception {
-    Request body = Request_POSTBuilder.builder().path("/").body("Hello world!");
+    Request body = RequestBuilders.requestBuilder().path("/").body("Hello world!");
     assertThat(getPath(body), is("/"));
     assertThat(getBody(body), is(Optional.of("Hello world!")));
-  }
-
-  @Test
-  public void buildPut() throws Exception {
-    Request body = Request_PUTBuilder.builder().path("/").body("{'Hello':'world'}");
-    assertThat(getPath(body), is("/"));
-    assertThat(getBody(body), is(Optional.of("{'Hello':'world'}")));
   }
 
 }

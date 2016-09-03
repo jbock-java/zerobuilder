@@ -16,8 +16,8 @@ abstract class Bob {
     return new AutoValue_Bob(kevin, chantal, justin);
   }
 
-  BobBuilder.Contract.BobUpdater toBuilder() {
-    return BobBuilder.toBuilder(this);
+  BobBuilders.BobBuilder.Contract.BobUpdater toBuilder() {
+    return BobBuilders.toBuilder(this);
   }
 
   Bob withChantal(String chantal) {

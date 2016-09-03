@@ -26,19 +26,19 @@ final class UpdaterContext {
 
   private static final String UPDATER_IMPL = "UpdaterImpl";
 
-  private final MyContext context;
+  private final GoalContext context;
 
-  UpdaterContext(MyContext context) {
+  UpdaterContext(GoalContext context) {
     this.context = context;
   }
 
   ClassName typeName() {
-    return context.generatedTypeName().nestedClass(UPDATER_IMPL);
+    return context.builderType.nestedClass(UPDATER_IMPL);
   }
 
   private ImmutableList<FieldSpec> fields() {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    Optional<ClassName> receiver = context.receiver();
+    Optional<ClassName> receiver = context.receiverType();
     if (receiver.isPresent()) {
       ClassName r = receiver.get();
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
@@ -73,17 +73,17 @@ final class UpdaterContext {
         .addModifiers(PUBLIC)
         .returns(context.goalType);
     Name buildVia = context.goal.getSimpleName();
-    Optional<ClassName> receiver = context.receiver();
+    Optional<ClassName> receiver = context.receiverType();
     return (context.goal.getKind() == CONSTRUCTOR
-        ? builder.addStatement("return new $T($L)", context.goalType, context.factoryCallArgs())
+        ? builder.addStatement("return new $T($L)", context.goalType, context.goalParameters())
         : receiver.isPresent()
-        ? builder.addStatement("return $N.$N($L)", "_" + downcase(receiver.get().simpleName()), buildVia, context.factoryCallArgs())
-        : builder.addStatement("return $T.$N($L)", context.buildElement, buildVia, context.factoryCallArgs()))
+        ? builder.addStatement("return $N.$N($L)", "_" + downcase(receiver.get().simpleName()), buildVia, context.goalParameters())
+        : builder.addStatement("return $T.$N($L)", context.config.annotatedType, buildVia, context.goalParameters()))
         .build();
   }
 
   Optional<TypeSpec> buildUpdaterImpl() {
-    if (!context.toBuilder) {
+    if (!context.config.toBuilder) {
       return absent();
     }
     return Optional.of(classBuilder(typeName())

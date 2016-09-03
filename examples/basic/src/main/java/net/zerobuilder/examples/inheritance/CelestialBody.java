@@ -1,14 +1,16 @@
 package net.zerobuilder.examples.inheritance;
 
+import java.math.BigInteger;
+
 abstract class CelestialBody {
 
-  private final long mass;
+  private final BigInteger mass;
 
-  protected CelestialBody(long mass) {
+  protected CelestialBody(BigInteger mass) {
     this.mass = mass;
   }
 
-  long getMass() {
+  BigInteger getMass() {
     return mass;
   }
 }

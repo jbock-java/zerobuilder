@@ -9,7 +9,7 @@ public class BobTest {
 
   @Test
   public void updateEveryCombination() {
-    Bob bob = BobBuilder.builder()
+    Bob bob = BobBuilders.bobBuilder()
         .kevin("kevin")
         .chantal("chantal")
         .justin("justin");

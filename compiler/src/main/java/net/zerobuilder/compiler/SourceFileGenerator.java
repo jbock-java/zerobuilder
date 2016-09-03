@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 
@@ -11,10 +10,10 @@ import java.io.IOException;
 import java.io.Writer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Throwables.propagateIfPossible;
+import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Iterables.toArray;
 
-abstract class SourceFileGenerator<T extends GenerationContext> {
+abstract class SourceFileGenerator {
 
   private final Filer filer;
 
@@ -22,27 +21,25 @@ abstract class SourceFileGenerator<T extends GenerationContext> {
     this.filer = checkNotNull(filer);
   }
 
-  final void generate(T input) {
-    ClassName generatedTypeName = input.generatedTypeName();
+  final void generate(BuildConfig config, GoalContext context) {
     try {
-      TypeSpec type = write(generatedTypeName, input);
-      JavaFile javaFile = JavaFile.builder(generatedTypeName.packageName(), type)
+      TypeSpec type = write(config, context);
+      JavaFile javaFile = JavaFile.builder(config.generatedType.packageName(), type)
           .skipJavaLangImports(true)
           .build();
       JavaFileObject sourceFile = filer.createSourceFile(
-          generatedTypeName.toString(),
+          config.generatedType.toString(),
           toArray(javaFile.typeSpec.originatingElements, Element.class));
       try (Writer writer = sourceFile.openWriter()) {
         writer.write(javaFile.toString());
       } catch (IOException e) {
-        String message = "Could not write generated class " + generatedTypeName + ": " + e;
+        String message = "Could not write generated class " + config.generatedType + ": " + e;
         throw new RuntimeException(message);
       }
     } catch (Exception e) {
-      propagateIfPossible(e);
-      throw new RuntimeException(e);
+      propagate(e);
     }
   }
 
-  abstract TypeSpec write(ClassName generatedTypeName, T input);
+  abstract TypeSpec write(BuildConfig config, GoalContext context);
 }

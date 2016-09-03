@@ -4,7 +4,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
@@ -18,7 +17,6 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
-import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -27,9 +25,9 @@ import static javax.lang.model.element.Modifier.STATIC;
 
 final class ContractContext {
 
-  private final MyContext context;
+  private final GoalContext context;
 
-  ContractContext(MyContext context) {
+  ContractContext(GoalContext context) {
     this.context = context;
   }
 
@@ -45,13 +43,11 @@ final class ContractContext {
   }
 
   private Optional<TypeSpec> updaterInterface() {
-    if (!context.toBuilder) {
+    if (!context.config.toBuilder) {
       return absent();
     }
     MethodSpec buildMethod = methodBuilder("build")
-        .returns(context.goal.getKind() == CONSTRUCTOR
-            ? ClassName.get(context.buildElement)
-            : TypeName.get(context.goal.getReturnType()))
+        .returns(context.goalType)
         .addModifiers(PUBLIC, ABSTRACT)
         .addExceptions(context.thrownTypes())
         .build();
@@ -72,10 +68,9 @@ final class ContractContext {
   }
 
   TypeSpec buildContract() {
-    ContractContext contract = context.contractContext();
     return classBuilder(context.contractName())
-        .addTypes(presentInstances(of(contract.updaterInterface())))
-        .addTypes(contract.stepInterfaces())
+        .addTypes(presentInstances(of(updaterInterface())))
+        .addTypes(stepInterfaces())
         .addModifiers(toArray(context.maybeAddPublic(FINAL, STATIC), Modifier.class))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();

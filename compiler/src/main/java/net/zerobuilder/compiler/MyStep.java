@@ -18,11 +18,12 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static net.zerobuilder.compiler.BuildConfig.createBuildConfig;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_GOAL;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.SEVERAL_GOAL_ANNOTATIONS;
-import static net.zerobuilder.compiler.MyContext.createContext;
+import static net.zerobuilder.compiler.GoalContext.createGoalContext;
 
 final class MyStep {
 
@@ -38,21 +39,22 @@ final class MyStep {
   }
 
   void process(TypeElement buildElement) {
-    boolean nogc = buildElement.getAnnotation(Build.class).nogc();
-    boolean toBuilder = buildElement.getAnnotation(Build.class).toBuilder();
     try {
       ExecutableElement goal = goal(buildElement);
-      TypeName goalType = goal.getKind() == CONSTRUCTOR ?
-          ClassName.get(buildElement) :
-          TypeName.get(goal.getReturnType());
+      ClassName annotatedType = ClassName.get(buildElement);
+      TypeName goalType = goal.getKind() == CONSTRUCTOR
+          ? annotatedType
+          : TypeName.get(goal.getReturnType());
       typeValidator.validateBuildType(buildElement);
       MatchValidator matchValidator = matchValidatorFactory
           .buildViaElement(goal).buildElement(buildElement);
-      ImmutableList<ProjectionInfo> projectionInfos = toBuilder
-          ? matchValidator.validate()
-          : matchValidator.skip();
-      MyContext context = createContext(goalType, toBuilder, buildElement, projectionInfos, goal, nogc);
-      myGenerator.generate(context);
+      ImmutableList<ProjectionInfo> projectionInfos =
+          buildElement.getAnnotation(Build.class).toBuilder()
+              ? matchValidator.validate()
+              : matchValidator.skip();
+      BuildConfig config = createBuildConfig(buildElement);
+      GoalContext context = createGoalContext(goalType, config, projectionInfos, goal);
+      myGenerator.generate(config, context);
     } catch (ValidationException e) {
       e.printMessage(messager);
     }

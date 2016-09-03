@@ -29,8 +29,8 @@ final class MessageFactory {
     }
   }
 
-  MessageFactoryBuilder.Contract.Velocity messageBuilder() {
-    return MessageFactoryBuilder.builder(this);
+  MessageFactoryBuilders.MessageBuilder.Contract.Velocity messageBuilder() {
+    return MessageFactoryBuilders.messageBuilder(this);
   }
 
 }

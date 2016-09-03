@@ -3,6 +3,7 @@ package net.zerobuilder.compiler;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
@@ -24,15 +25,15 @@ import static net.zerobuilder.compiler.Util.downcase;
 
 final class StepsContext {
 
-  private final MyContext context;
+  private final GoalContext context;
 
-  StepsContext(MyContext context) {
+  StepsContext(GoalContext context) {
     this.context = context;
   }
 
   private ImmutableList<FieldSpec> fields() {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    Optional<ClassName> receiver = context.receiver();
+    Optional<ClassName> receiver = context.receiverType();
     if (receiver.isPresent()) {
       ClassName r = receiver.get();
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
@@ -74,14 +75,15 @@ final class StepsContext {
         .addExceptions(context.thrownTypes())
         .addModifiers(PUBLIC)
         .returns(context.goalType);
-    Name buildVia = context.goal.getSimpleName();
+    Name goal = context.goal.getSimpleName();
     String returnLiteral = TypeName.VOID.equals(context.goalType) ? "" : "return ";
-    Optional<ClassName> receiver = context.receiver();
+    Optional<ClassName> receiver = context.receiverType();
+    CodeBlock parameters = context.goalParameters();
     return (context.goal.getKind() == CONSTRUCTOR
-        ? builder.addStatement("return new $T($L)", context.buildElement, context.factoryCallArgs())
+        ? builder.addStatement("return new $T($L)", context.goalType, parameters)
         : receiver.isPresent()
-        ? builder.addStatement("$L $N.$N($L)", returnLiteral, "_" + downcase(receiver.get().simpleName()), buildVia, context.factoryCallArgs())
-        : builder.addStatement("$L $T.$N($L)", returnLiteral, context.buildElement, buildVia, context.factoryCallArgs()))
+        ? builder.addStatement("$L$N.$N($L)", returnLiteral, "_" + downcase(receiver.get().simpleName()), goal, parameters)
+        : builder.addStatement("$L$T.$N($L)", returnLiteral, context.config.annotatedType, goal, parameters))
         .build();
   }
 
