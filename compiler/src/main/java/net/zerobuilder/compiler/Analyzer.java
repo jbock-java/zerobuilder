@@ -22,38 +22,38 @@ import static net.zerobuilder.compiler.GoalContext.createGoalContext;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_GOAL;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.SEVERAL_GOAL_ANNOTATIONS;
 
 final class Analyzer {
 
-  private final Generator generator;
   private final TypeValidator typeValidator = new TypeValidator();
   private final ToBuilderValidator.Factory toBuilderValidatorFactory;
 
   Analyzer(Elements elements) {
-    this.generator = new Generator(elements);
     this.toBuilderValidatorFactory = new ToBuilderValidator.Factory(elements);
   }
 
   AnalysisResult parse(TypeElement buildElement) throws ValidationException {
-    ExecutableElement goal = goal(buildElement);
+    ImmutableList<ExecutableElement> goals = goals(buildElement);
     ClassName annotatedType = ClassName.get(buildElement);
-    TypeName goalType = goal.getKind() == CONSTRUCTOR
-        ? annotatedType
-        : TypeName.get(goal.getReturnType());
-    typeValidator.validateBuildType(buildElement);
-    ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
-        .buildViaElement(goal).buildElement(buildElement);
-    Build.Goal goalAnnotation = goal.getAnnotation(Build.Goal.class);
-    boolean toBuilder = goalAnnotation != null && goalAnnotation.toBuilder();
-    ImmutableList<ProjectionInfo> projectionInfos =
-        toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
     BuildConfig config = createBuildConfig(buildElement);
-    GoalContext context = createGoalContext(goalType, config, projectionInfos, goal, toBuilder);
-    return new AnalysisResult(config, context);
+    ImmutableList.Builder<GoalContext> builder = ImmutableList.builder();
+    for (ExecutableElement goal : goals) {
+      TypeName goalType = goal.getKind() == CONSTRUCTOR
+          ? annotatedType
+          : TypeName.get(goal.getReturnType());
+      typeValidator.validateBuildType(buildElement);
+      ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
+          .buildViaElement(goal).buildElement(buildElement);
+      Build.Goal goalAnnotation = goal.getAnnotation(Build.Goal.class);
+      boolean toBuilder = goalAnnotation != null && goalAnnotation.toBuilder();
+      ImmutableList<ProjectionInfo> projectionInfos =
+          toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
+      builder.add(createGoalContext(goalType, config, projectionInfos, goal, toBuilder));
+    }
+    return new AnalysisResult(config, builder.build());
   }
 
-  private ExecutableElement goal(TypeElement buildElement) throws ValidationException {
+  private ImmutableList<ExecutableElement> goals(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (ExecutableElement executableElement : concat(constructorsIn(buildElement.getEnclosedElements()),
         methodsIn(buildElement.getEnclosedElements()))) {
@@ -67,14 +67,10 @@ final class Analyzer {
         builder.add(executableElement);
       }
     }
-    switch (builder.build().size()) {
-      case 0:
-        return guessGoal(buildElement);
-      case 1:
-        return getOnlyElement(builder.build());
-      default:
-        throw new ValidationException(SEVERAL_GOAL_ANNOTATIONS, buildElement);
+    if (builder.build().isEmpty()) {
+      return ImmutableList.of(guessGoal(buildElement));
     }
+    return builder.build();
   }
 
   private ExecutableElement guessGoal(TypeElement buildElement) throws ValidationException {
@@ -99,26 +95,16 @@ final class Analyzer {
     if (builder.build().size() == 1) {
       return getOnlyElement(builder.build());
     }
-    builder = ImmutableList.builder();
-    for (ExecutableElement executableElement : methodsIn(buildElement.getEnclosedElements())) {
-      if (!executableElement.getModifiers().contains(PRIVATE)
-          && !executableElement.getParameters().isEmpty()) {
-        builder.add(executableElement);
-      }
-    }
-    if (builder.build().size() == 1) {
-      return getOnlyElement(builder.build());
-    }
     throw new ValidationException(COULD_NOT_GUESS_GOAL, buildElement);
   }
 
   static final class AnalysisResult {
     final BuildConfig config;
-    final GoalContext context;
+    final ImmutableList<GoalContext> goals;
 
-    AnalysisResult(BuildConfig config, GoalContext context) {
+    AnalysisResult(BuildConfig config, ImmutableList<GoalContext> goals) {
       this.config = config;
-      this.context = context;
+      this.goals = goals;
     }
   }
 

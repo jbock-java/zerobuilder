@@ -3,9 +3,11 @@ package net.zerobuilder.examples.derive4j;
 import net.zerobuilder.Build;
 import org.derive4j.Data;
 
+import static net.zerobuilder.Build.Goal;
+
 @Data
-@Build
-public abstract class Request {
+@Build(nogc = true)
+abstract class Request {
 
   interface Cases<R> {
     R GET(String path);
@@ -14,11 +16,26 @@ public abstract class Request {
     R POST(String path, String body);
   }
 
-  public abstract <R> R match(Cases<R> cases);
+  abstract <R> R match(Cases<R> cases);
 
-  @Build.Goal
+  @Goal("get")
+  static Request get(String path) {
+    return Requests.GET(path);
+  }
+
+  @Goal("delete")
+  static Request delete(String path) {
+    return Requests.DELETE(path);
+  }
+
+  @Goal("put")
   static Request put(String path, String body) {
     return Requests.PUT(path, body);
+  }
+
+  @Goal("post")
+  static Request post(String path, String body) {
+    return Requests.POST(path, body);
   }
 
 }

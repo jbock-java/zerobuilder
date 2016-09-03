@@ -1,6 +1,8 @@
 package net.zerobuilder.compiler;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -44,14 +46,22 @@ final class Generator {
   TypeSpec generate(AnalysisResult analysisResult) {
     return classBuilder(analysisResult.config.generatedType)
         .addFields(instanceFields(analysisResult))
-        .addMethod(constructor(analysisResult))
+        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .addFields(presentInstances(of(threadLocalField(analysisResult.config))))
-        .addMethod(builderMethod(analysisResult))
+        .addMethods(builderMethods(analysisResult))
         .addMethods(presentInstances(of(toBuilderMethod(analysisResult))))
         .addAnnotations(generatedAnnotations(elements))
         .addModifiers(toArray(maybeAddPublic(analysisResult.config.isPublic, FINAL), Modifier.class))
-        .addType(analysisResult.context.builderImpl())
+        .addTypes(builderImpls(analysisResult.goals))
         .build();
+  }
+
+  private ImmutableList<TypeSpec> builderImpls(ImmutableList<GoalContext> goals) {
+    ImmutableList.Builder<TypeSpec> builder = ImmutableList.builder();
+    for (GoalContext goal : goals) {
+      builder.add(goal.builderImpl());
+    }
+    return builder.build();
   }
 
   private Optional<FieldSpec> threadLocalField(BuildConfig config) {
@@ -77,22 +87,30 @@ final class Generator {
   }
 
   private Optional<MethodSpec> toBuilderMethod(AnalysisResult analysisResult) {
-    if (!analysisResult.context.innerContext.toBuilder) {
+    // TODO check in analyzer that there cannot be more than one
+    Optional<GoalContext> annotated = FluentIterable.from(analysisResult.goals).filter(new Predicate<GoalContext>() {
+      @Override
+      public boolean apply(GoalContext context) {
+        return context.innerContext.toBuilder;
+      }
+    }).first();
+    if (!annotated.isPresent()) {
       return absent();
     }
-    String parameterName = downcase(analysisResult.context.innerContext.goalTypeName());
+    GoalContext goal = annotated.get();
+    String parameterName = downcase(goal.innerContext.goalTypeName());
     MethodSpec.Builder builder = methodBuilder("toBuilder")
-        .addParameter(analysisResult.context.innerContext.goalType, parameterName);
+        .addParameter(goal.innerContext.goalType, parameterName);
     String varUpdater = "updater";
-    ClassName updaterType = analysisResult.context.updaterContext.typeName();
+    ClassName updaterType = goal.updaterContext.typeName();
     if (analysisResult.config.nogc) {
       builder.addStatement("$T $L = $L.get().$N", updaterType, varUpdater,
-          STATIC_FIELD_INSTANCE, updaterField(analysisResult.context));
+          STATIC_FIELD_INSTANCE, updaterField(goal));
     } else {
       builder.addStatement("$T $L = new $T()", updaterType, varUpdater,
           updaterType);
     }
-    for (ParameterContext stepSpec : analysisResult.context.innerContext.stepSpecs) {
+    for (ParameterContext stepSpec : goal.innerContext.stepSpecs) {
       if (stepSpec.projectionMethodName.isPresent()) {
         builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.parameter.getSimpleName(),
             parameterName, stepSpec.projectionMethodName.get());
@@ -103,46 +121,50 @@ final class Generator {
     }
     builder.addStatement("return $L", varUpdater);
     return Optional.of(builder
-        .returns(analysisResult.context.innerContext.contractUpdaterName())
-        .addModifiers(analysisResult.context.innerContext.maybeAddPublic(STATIC)).build());
+        .returns(goal.innerContext.contractUpdaterName())
+        .addModifiers(goal.innerContext.maybeAddPublic(STATIC)).build());
   }
 
-  private MethodSpec builderMethod(AnalysisResult analysisResult) {
-    ParameterContext firstStep = analysisResult.context.innerContext.stepSpecs.get(0);
-    Optional<ClassName> maybeReceiver = analysisResult.context.innerContext.receiverType();
-    MethodSpec.Builder builder = methodBuilder(
-        downcase(analysisResult.context.innerContext.goalName() + "Builder"));
-    if (maybeReceiver.isPresent()) {
-      ClassName receiver = maybeReceiver.get();
-      builder.addParameter(ParameterSpec.builder(receiver,
-          downcase(receiver.simpleName())).build());
-      if (analysisResult.config.nogc) {
-        builder.addStatement("$T $N = $N.get().$N", analysisResult.context.innerContext.stepsImplTypeName(),
-            downcase(analysisResult.context.innerContext.stepsImplTypeName().simpleName()), STATIC_FIELD_INSTANCE,
-            stepsField(analysisResult.context));
+  private ImmutableList<MethodSpec> builderMethods(AnalysisResult analysisResult) {
+    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+    for (GoalContext goal : analysisResult.goals) {
+      ParameterContext firstStep = goal.innerContext.stepSpecs.get(0);
+      Optional<ClassName> maybeReceiver = goal.innerContext.receiverType();
+      MethodSpec.Builder spec = methodBuilder(
+          downcase(goal.innerContext.goalName() + "Builder"));
+      if (maybeReceiver.isPresent()) {
+        ClassName receiver = maybeReceiver.get();
+        spec.addParameter(ParameterSpec.builder(receiver,
+            downcase(receiver.simpleName())).build());
+        if (analysisResult.config.nogc) {
+          spec.addStatement("$T $N = $N.get().$N", goal.innerContext.stepsImplTypeName(),
+              downcase(goal.innerContext.stepsImplTypeName().simpleName()), STATIC_FIELD_INSTANCE,
+              stepsField(goal));
+        } else {
+          spec.addStatement("$T $N = new $T()", goal.innerContext.stepsImplTypeName(),
+              downcase(goal.innerContext.stepsImplTypeName().simpleName()),
+              goal.innerContext.stepsImplTypeName());
+        }
+        spec.addStatement("$N.$N = $N",
+            downcase(goal.innerContext.stepsImplTypeName().simpleName()),
+            "_" + downcase(receiver.simpleName()),
+            downcase(receiver.simpleName()));
+        spec.addStatement("return $N",
+            downcase(goal.innerContext.stepsImplTypeName().simpleName()));
       } else {
-        builder.addStatement("$T $N = new $T()", analysisResult.context.innerContext.stepsImplTypeName(),
-            downcase(analysisResult.context.innerContext.stepsImplTypeName().simpleName()),
-            analysisResult.context.innerContext.stepsImplTypeName());
+        if (analysisResult.config.nogc) {
+          spec.addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE,
+              stepsField(goal));
+        } else {
+          spec.addStatement("return new $T()", goal.innerContext.stepsImplTypeName());
+        }
       }
-      builder.addStatement("$N.$N = $N",
-          downcase(analysisResult.context.innerContext.stepsImplTypeName().simpleName()),
-          "_" + downcase(receiver.simpleName()),
-          downcase(receiver.simpleName()));
-      builder.addStatement("return $N",
-          downcase(analysisResult.context.innerContext.stepsImplTypeName().simpleName()));
-    } else {
-      if (analysisResult.config.nogc) {
-        builder.addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE,
-            stepsField(analysisResult.context));
-      } else {
-        builder.addStatement("return new $T()", analysisResult.context.innerContext.stepsImplTypeName());
-      }
+      builder.add(spec.returns(firstStep.stepContractType)
+          .addJavadoc(JAVADOC_BUILDER, goal.innerContext.goalType)
+          .addModifiers(goal.innerContext.maybeAddPublic(STATIC))
+          .build());
     }
-    return builder.returns(firstStep.stepContractType)
-        .addJavadoc(JAVADOC_BUILDER, analysisResult.context.innerContext.goalType)
-        .addModifiers(analysisResult.context.innerContext.maybeAddPublic(STATIC))
-        .build();
+    return builder.build();
   }
 
   private ImmutableList<FieldSpec> instanceFields(AnalysisResult analysisResult) {
@@ -150,26 +172,17 @@ final class Generator {
       return ImmutableList.of();
     }
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    if (analysisResult.context.innerContext.toBuilder) {
-      builder.add(FieldSpec.builder(analysisResult.context.updaterContext.typeName(),
-          downcase(analysisResult.context.innerContext.goalName() + "Updater"), PRIVATE, FINAL).build());
+    for (GoalContext goal : analysisResult.goals) {
+      if (goal.innerContext.toBuilder) {
+        builder.add(FieldSpec.builder(goal.updaterContext.typeName(),
+            downcase(goal.innerContext.goalName() + "Updater"), PRIVATE, FINAL)
+            .initializer("new $T()", goal.updaterContext.typeName()).build());
+      }
+      builder.add(FieldSpec.builder(goal.innerContext.stepsImplTypeName(),
+          downcase(goal.innerContext.goalName() + "Steps"), PRIVATE, FINAL)
+          .initializer("new $T()", goal.innerContext.stepsImplTypeName()).build());
     }
-    builder.add(FieldSpec.builder(analysisResult.context.innerContext.stepsImplTypeName(),
-        downcase(analysisResult.context.innerContext.goalName() + "Steps"), PRIVATE, FINAL).build());
     return builder.build();
-  }
-
-  private MethodSpec constructor(AnalysisResult analysisResult) {
-    MethodSpec.Builder builder = constructorBuilder();
-    if (analysisResult.config.nogc && analysisResult.context.innerContext.toBuilder) {
-      builder.addStatement("this.$L = new $T()",
-          updaterField(analysisResult.context), analysisResult.context.updaterContext.typeName());
-    }
-    if (analysisResult.config.nogc) {
-      builder.addStatement("this.$L = new $T()",
-          stepsField(analysisResult.context), analysisResult.context.innerContext.stepsImplTypeName());
-    }
-    return builder.addModifiers(PRIVATE).build();
   }
 
   private String updaterField(GoalContext context) {
