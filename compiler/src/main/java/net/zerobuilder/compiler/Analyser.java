@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.Build;
+import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.ToBuilderValidator.ProjectionInfo;
 
 import javax.lang.model.element.ExecutableElement;
@@ -28,7 +28,6 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_GO
 import static net.zerobuilder.compiler.Messages.ErrorMessages.MULTIPLE_TOBUILDER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.ValidationException.checkState;
 
 final class Analyser {
 
@@ -50,7 +49,7 @@ final class Analyser {
       typeValidator.validateBuildType(buildElement);
       ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
           .buildViaElement(goal).buildElement(buildElement);
-      Build.Goal goalAnnotation = goal.getAnnotation(Build.Goal.class);
+      Goal goalAnnotation = goal.getAnnotation(Goal.class);
       boolean toBuilder = goalAnnotation != null && goalAnnotation.toBuilder();
       ImmutableList<ProjectionInfo> projectionInfos =
           toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
@@ -94,7 +93,7 @@ final class Analyser {
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (ExecutableElement executableElement : concat(constructorsIn(buildElement.getEnclosedElements()),
         methodsIn(buildElement.getEnclosedElements()))) {
-      if (executableElement.getAnnotation(Build.Goal.class) != null) {
+      if (executableElement.getAnnotation(Goal.class) != null) {
         if (executableElement.getModifiers().contains(PRIVATE)) {
           throw new ValidationException(PRIVATE_METHOD, buildElement);
         }

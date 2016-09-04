@@ -3,7 +3,7 @@ package net.zerobuilder.examples.derive4j;
 import net.zerobuilder.Build;
 import org.derive4j.Data;
 
-import static net.zerobuilder.Build.Goal;
+import net.zerobuilder.Goal;
 
 @Data
 @Build(nogc = true)

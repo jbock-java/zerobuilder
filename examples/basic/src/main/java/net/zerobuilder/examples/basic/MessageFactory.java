@@ -1,7 +1,7 @@
 package net.zerobuilder.examples.basic;
 
 import net.zerobuilder.Build;
-import net.zerobuilder.Build.Goal;
+import net.zerobuilder.Goal;
 
 @Build
 final class MessageFactory {

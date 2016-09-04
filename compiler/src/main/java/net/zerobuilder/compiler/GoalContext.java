@@ -9,7 +9,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.Build;
+import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.ToBuilderValidator.ProjectionInfo;
 
 import javax.lang.model.element.ExecutableElement;
@@ -95,7 +95,7 @@ final class GoalContext {
     final boolean toBuilder;
 
     /**
-     * the element carrying the {@link net.zerobuilder.Build.Goal} annotation
+     * the element carrying the {@link Goal} annotation
      */
     final ExecutableElement goal;
 
@@ -166,7 +166,7 @@ final class GoalContext {
     }
 
     static String goalName(TypeName goalType, ExecutableElement goal) {
-      Build.Goal goalAnnotation = goal.getAnnotation(Build.Goal.class);
+      Goal goalAnnotation = goal.getAnnotation(Goal.class);
       if (goalAnnotation == null || isNullOrEmpty(goalAnnotation.name())) {
         return goalTypeName(goalType);
       }

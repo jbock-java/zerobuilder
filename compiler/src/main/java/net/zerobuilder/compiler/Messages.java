@@ -29,6 +29,9 @@ final class Messages {
     static final String MULTIPLE_TOBUILDER =
         "Only one goal can have the toBuilder flag set.";
 
+    static final String GOAL_NOT_IN_BUILD =
+        "The @Goal annotation may not appear outside a class that carries the @Build annotation.";
+
     private ErrorMessages() {
     }
 
