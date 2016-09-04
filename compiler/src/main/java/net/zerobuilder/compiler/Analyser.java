@@ -1,6 +1,10 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Build;
@@ -12,6 +16,7 @@ import javax.lang.model.util.Elements;
 
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.common.collect.Multimaps.index;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -20,8 +25,10 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 import static net.zerobuilder.compiler.BuildConfig.createBuildConfig;
 import static net.zerobuilder.compiler.GoalContext.createGoalContext;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_GOAL;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.MULTIPLE_TOBUILDER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.ValidationException.checkState;
 
 final class Analyser {
 
@@ -33,11 +40,10 @@ final class Analyser {
   }
 
   AnalysisResult parse(TypeElement buildElement) throws ValidationException {
-    ImmutableList<ExecutableElement> goals = goals(buildElement);
     ClassName annotatedType = ClassName.get(buildElement);
     BuildConfig config = createBuildConfig(buildElement);
     ImmutableList.Builder<GoalContext> builder = ImmutableList.builder();
-    for (ExecutableElement goal : goals) {
+    for (ExecutableElement goal : goals(buildElement)) {
       TypeName goalType = goal.getKind() == CONSTRUCTOR
           ? annotatedType
           : TypeName.get(goal.getReturnType());
@@ -50,7 +56,38 @@ final class Analyser {
           toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
       builder.add(createGoalContext(goalType, config, projectionInfos, goal, toBuilder));
     }
-    return new AnalysisResult(config, builder.build());
+    ImmutableList<GoalContext> goals = builder.build();
+    checkMultipleToBuilder(goals);
+    checkNameConflict(goals);
+    return new AnalysisResult(config, goals);
+  }
+  private void checkMultipleToBuilder(ImmutableList<GoalContext> goals) throws ValidationException {
+    ImmutableList<GoalContext> toBuilderGoals = FluentIterable.from(goals).filter(
+        new Predicate<GoalContext>() {
+          @Override
+          public boolean apply(GoalContext goal) {
+            return goal.innerContext.toBuilder;
+          }
+        }).toList();
+    if (toBuilderGoals.size() > 1) {
+      throw new ValidationException(MULTIPLE_TOBUILDER, toBuilderGoals.get(1).innerContext.goal);
+    }
+  }
+
+  private void checkNameConflict(ImmutableList<GoalContext> goals) throws ValidationException {
+    ImmutableListMultimap<String, GoalContext> m = index(goals,
+        new Function<GoalContext, String>() {
+          @Override
+          public String apply(GoalContext goal) {
+            return goal.innerContext.goalName();
+          }
+        });
+    for (String goalName : m.keySet()) {
+      if (m.get(goalName).size() > 1) {
+        throw new ValidationException("Duplicate goal name: " + goalName,
+            m.get(goalName).get(0).innerContext.goal);
+      }
+    }
   }
 
   private ImmutableList<ExecutableElement> goals(TypeElement buildElement) throws ValidationException {

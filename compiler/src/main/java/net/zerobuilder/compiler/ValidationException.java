@@ -15,4 +15,9 @@ class ValidationException extends Exception {
   void printMessage(Messager messager) {
     messager.printMessage(WARNING, getMessage(), about);
   }
+  static void checkState(boolean condition, String message, Element about) throws ValidationException {
+    if (!condition) {
+      throw new ValidationException(message, about);
+    }
+  }
 }

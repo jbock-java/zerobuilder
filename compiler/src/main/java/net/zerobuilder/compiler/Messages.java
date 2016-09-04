@@ -23,11 +23,11 @@ final class Messages {
     static final String NESTING_KIND =
         "The @Build annotation can only be used on top level and non-private static inner classes.";
 
-    static final String SEVERAL_GOAL_ANNOTATIONS =
-        "The @Goal annotation may not appear more than once per class.";
-
     static final String COULD_NOT_GUESS_GOAL =
         "Could not guess the @Goal method. Please add a @Goal annotation.";
+
+    static final String MULTIPLE_TOBUILDER =
+        "Only one goal can have the toBuilder flag set.";
 
     private ErrorMessages() {
     }

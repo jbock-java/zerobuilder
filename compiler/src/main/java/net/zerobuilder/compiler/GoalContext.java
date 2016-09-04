@@ -165,16 +165,20 @@ final class GoalContext {
       return goalName(goalType, goal);
     }
 
-    String goalTypeName() {
-      return ((ClassName) goalType.box()).simpleName();
-    }
-
     static String goalName(TypeName goalType, ExecutableElement goal) {
       Build.Goal goalAnnotation = goal.getAnnotation(Build.Goal.class);
       if (goalAnnotation == null || isNullOrEmpty(goalAnnotation.name())) {
-        return ((ClassName) goalType.box()).simpleName();
+        return goalTypeName(goalType);
       }
       return upcase(goalAnnotation.name());
+    }
+
+    String goalTypeName() {
+      return goalTypeName(goalType);
+    }
+
+    private static String goalTypeName(TypeName goalType) {
+      return ((ClassName) goalType.box()).simpleName();
     }
 
     Set<Modifier> maybeAddPublic(Modifier... modifiers) {
