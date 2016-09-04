@@ -1,10 +1,10 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Ordering;
+import com.google.common.primitives.Ints;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
@@ -13,11 +13,14 @@ import net.zerobuilder.compiler.ToBuilderValidator.ProjectionInfo;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import java.util.Comparator;
+import java.util.HashMap;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static com.google.common.collect.Multimaps.index;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
+import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
@@ -31,6 +34,14 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 
 final class Analyser {
 
+  private static final Ordering<GoalContext> CONSTRUCTORS_FIRST = Ordering.from(new Comparator<GoalContext>() {
+    @Override
+    public int compare(GoalContext g0, GoalContext g1) {
+      int w0 = g0.innerContext.goal.getKind() == CONSTRUCTOR ? 0 : 1;
+      int w1 = g1.innerContext.goal.getKind() == CONSTRUCTOR ? 0 : 1;
+      return Ints.compare(w0, w1);
+    }
+  });
   private final TypeValidator typeValidator = new TypeValidator();
   private final ToBuilderValidator.Factory toBuilderValidatorFactory;
 
@@ -74,17 +85,40 @@ final class Analyser {
   }
 
   private void checkNameConflict(ImmutableList<GoalContext> goals) throws ValidationException {
-    ImmutableListMultimap<String, GoalContext> m = index(goals,
-        new Function<GoalContext, String>() {
-          @Override
-          public String apply(GoalContext goal) {
-            return goal.innerContext.goalName();
-          }
-        });
-    for (String goalName : m.keySet()) {
-      if (m.get(goalName).size() > 1) {
-        throw new ValidationException("Duplicate goal name: " + goalName,
-            m.get(goalName).get(0).innerContext.goal);
+    goals = ImmutableList.copyOf(CONSTRUCTORS_FIRST.sortedCopy(goals));
+    HashMap<Object, ExecutableElement> goalNames = new HashMap<>();
+    for (GoalContext goal : goals) {
+      String goalName = goal.innerContext.goalName();
+      ExecutableElement thisGoal = goal.innerContext.goal;
+      ExecutableElement otherGoal = goalNames.put(goalName, thisGoal);
+      if (otherGoal != null) {
+        if (thisGoal.getKind() == CONSTRUCTOR
+            && otherGoal.getKind() == CONSTRUCTOR
+            && isNullOrEmpty(thisGoal.getAnnotation(Goal.class).name())
+            && isNullOrEmpty(otherGoal.getAnnotation(Goal.class).name())) {
+          throw new ValidationException("Multiple constructor goals found. Please add a goal name.",
+              thisGoal);
+        }
+        if (thisGoal.getKind() == METHOD
+            && otherGoal.getKind() == METHOD
+            && isNullOrEmpty(thisGoal.getAnnotation(Goal.class).name())
+            && isNullOrEmpty(otherGoal.getAnnotation(Goal.class).name())) {
+          throw new ValidationException("Multiple goals with the same return type found. Please add a goal name.",
+              thisGoal);
+        }
+        if (thisGoal.getKind() == METHOD
+            && otherGoal.getKind() == CONSTRUCTOR
+            && isNullOrEmpty(thisGoal.getAnnotation(Goal.class).name())
+            && isNullOrEmpty(otherGoal.getAnnotation(Goal.class).name())) {
+          throw new ValidationException("The return type is conflicting with a constructor goal. Please add a goal name.",
+              thisGoal);
+        }
+        if (isNullOrEmpty(thisGoal.getAnnotation(Goal.class).name())) {
+          throw new ValidationException("The return type is conflicting with another goal. Please add a goal name.",
+              thisGoal);
+        }
+        throw new ValidationException("The goal name is conflicting with another goal. Please pick another one.",
+            thisGoal);
       }
     }
   }

@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.AnnotationSpec;
 
@@ -18,13 +17,13 @@ final class Messages {
         "The @Build annotated type may not be private.";
 
     static final String NOT_ENOUGH_PARAMETERS =
-        "The goal has no parameters.";
+        "The goal must have at least one parameter.";
 
     static final String NESTING_KIND =
         "The @Build annotation can only be used on top level and non-private static inner classes.";
 
     static final String COULD_NOT_GUESS_GOAL =
-        "Could not guess the @Goal method. Please add a @Goal annotation.";
+        "Could not guess the goal. Please add a @Goal annotation.";
 
     static final String MULTIPLE_TOBUILDER =
         "Only one goal can have the toBuilder flag set.";

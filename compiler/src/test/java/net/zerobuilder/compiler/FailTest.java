@@ -13,18 +13,40 @@ public class FailTest {
 
   @Test
   public void goalNotInBuild() {
-    String subject = "  @Goal static void create(int numberOfLegs) {}";
-    ImmutableList<String> sourceLines = ImmutableList.of("package test;",
+    String badLine = "  @Goal static void create(int numberOfLegs) {}";
+    ImmutableList<String> sourceLines = ImmutableList.of(
+        "package test;",
         "import net.zerobuilder.Goal;",
         "class Centipede {",
-        subject,
+        badLine,
         "}");
     JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
-    int line = sourceLines.indexOf(subject);
+    int line = sourceLines.indexOf(badLine);
     assertAbout(javaSources()).that(ImmutableList.of(javaFile))
         .processedWith(new ZeroProcessor())
         .failsToCompile()
         .withErrorContaining("outside")
+        .in(javaFile)
+        .onLine(line + 1);
+  }
+
+  @Test
+  public void twoUnnamedConstructors() {
+    String badLine = "  @Goal Centipede(int a) {}";
+    ImmutableList<String> sourceLines = ImmutableList.of(
+        "package test;",
+        "import net.zerobuilder.Build;",
+        "import net.zerobuilder.Goal;",
+        "@Build class Centipede {",
+        "  @Goal Centipede(int a, int b) {}",
+        badLine,
+        "}");
+    JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
+    int line = sourceLines.indexOf(badLine);
+    assertAbout(javaSources()).that(ImmutableList.of(javaFile))
+        .processedWith(new ZeroProcessor())
+        .failsToCompile()
+        .withErrorContaining("Multiple constructor goals")
         .in(javaFile)
         .onLine(line + 1);
   }

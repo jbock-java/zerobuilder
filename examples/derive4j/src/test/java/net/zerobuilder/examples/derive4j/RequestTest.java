@@ -22,9 +22,9 @@ public class RequestTest {
   public void put() throws Exception {
     Request body = RequestBuilders.putBuilder()
         .path("/put")
-        .body("Hello world!");
+        .body("body");
     assertThat(getPath(body), is("/put"));
-    assertThat(getBody(body), is(Optional.of("Hello world!")));
+    assertThat(getBody(body), is(Optional.of("body")));
     assertThat(type.apply(body), is("PUT"));
   }
 
@@ -32,15 +32,16 @@ public class RequestTest {
   public void post() throws Exception {
     Request body = RequestBuilders.postBuilder()
         .path("/post")
-        .body("<someXmlData/>");
+        .body("body");
     assertThat(getPath(body), is("/post"));
-    assertThat(getBody(body), is(Optional.of("<someXmlData/>")));
+    assertThat(getBody(body), is(Optional.of("body")));
     assertThat(type.apply(body), is("POST"));
   }
 
   @Test
   public void get() throws Exception {
-    Request body = RequestBuilders.getBuilder().path("/get");
+    Request body = RequestBuilders.getBuilder()
+        .path("/get");
     assertThat(getPath(body), is("/get"));
     assertThat(getBody(body), is(Optional.empty()));
     assertThat(type.apply(body), is("GET"));
@@ -48,7 +49,8 @@ public class RequestTest {
 
   @Test
   public void delete() throws Exception {
-    Request body = RequestBuilders.deleteBuilder().path("/delete");
+    Request body = RequestBuilders.deleteBuilder()
+        .path("/delete");
     assertThat(getPath(body), is("/delete"));
     assertThat(getBody(body), is(Optional.empty()));
     assertThat(type.apply(body), is("DELETE"));
