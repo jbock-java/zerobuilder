@@ -36,10 +36,6 @@ final class Messages {
 
   static final class JavadocMessages {
 
-    static final String JAVADOC_BUILDER = Joiner.on('\n').join(ImmutableList.of(
-        "First step of the builder chain that builds {@link $T}.",
-        "@return A builder object", ""));
-
     static final String GENERATED_COMMENTS = "https://github.com/h908714124/zerobuilder";
 
     static ImmutableList<AnnotationSpec> generatedAnnotations(Elements elements) {

@@ -29,7 +29,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.SharedGoalContext.maybeAddPublic;
-import static net.zerobuilder.compiler.Messages.JavadocMessages.JAVADOC_BUILDER;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
@@ -159,7 +158,6 @@ final class Generator {
         }
       }
       builder.add(spec.returns(firstStep.stepContractType)
-          .addJavadoc(JAVADOC_BUILDER, goal.innerContext.goalType)
           .addModifiers(goal.innerContext.maybeAddPublic(STATIC))
           .build());
     }

@@ -3,20 +3,25 @@ package net.zerobuilder.examples.basic;
 import net.zerobuilder.examples.basic.MessageFactory.Message;
 import org.junit.Test;
 
+import static net.zerobuilder.examples.basic.MessageFactoryBuilders.messageFactoryBuilder;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class MessageFactoryTest {
 
-  private final MessageFactory messageFactory = MessageFactory.sender("zebra");
+  final MessageFactory messageFactory = messageFactoryBuilder()
+      .sender("Alice");
 
   @Test
   public void message() throws Exception {
     Message message = messageFactory.messageBuilder()
-        .velocity("quick")
-        .color("brown")
-        .recipient("dog");
-    assertThat(message.body, is("The quick brown zebra jumps over the lazy dog."));
+        .body("Hi")
+        .recipient("Bob")
+        .subject("test");
+    assertThat(message.sender, is("Alice"));
+    assertThat(message.body, is("Hi"));
+    assertThat(message.recipient, is("Bob"));
+    assertThat(message.subject, is("test"));
   }
 
 }
