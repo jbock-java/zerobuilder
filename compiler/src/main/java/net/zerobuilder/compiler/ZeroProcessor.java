@@ -43,12 +43,12 @@ public final class ZeroProcessor extends AbstractProcessor {
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
     Elements elements = processingEnv.getElementUtils();
     Messager messager = processingEnv.getMessager();
-    Analyzer transformer = new Analyzer(elements);
+    Analyser transformer = new Analyser(elements);
     Generator generator = new Generator(elements);
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Build.class));
     for (TypeElement annotatedType : types) {
       try {
-        Analyzer.AnalysisResult analysisResult = transformer.parse(annotatedType);
+        Analyser.AnalysisResult analysisResult = transformer.parse(annotatedType);
         TypeSpec typeSpec = generator.generate(analysisResult);
         try {
           write(analysisResult.config.generatedType, typeSpec);

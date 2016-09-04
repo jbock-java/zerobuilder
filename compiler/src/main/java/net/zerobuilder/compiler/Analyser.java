@@ -23,12 +23,12 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_GO
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 
-final class Analyzer {
+final class Analyser {
 
   private final TypeValidator typeValidator = new TypeValidator();
   private final ToBuilderValidator.Factory toBuilderValidatorFactory;
 
-  Analyzer(Elements elements) {
+  Analyser(Elements elements) {
     this.toBuilderValidatorFactory = new ToBuilderValidator.Factory(elements);
   }
 

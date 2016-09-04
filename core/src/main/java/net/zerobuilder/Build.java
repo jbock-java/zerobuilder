@@ -12,21 +12,29 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * <p>
- * Declares that the builder pattern code should be generated. The generated builder will
- * invoke the element (method or constructor) carrying the {@link Goal} annotation.
+ * Declares that a class named {@code some.package.MyObjectBuilder} should be generated,
+ * where {@code some.package.MyObject} is the name of the class that carries the {@link Build} annotation.
+ * The generated builders will invoke the elements (methods or constructors)
+ * carrying the {@link Goal} annotation. Consequently, these elements must at least be package visible.
  * </p><p>
- * {@link Goal} cannot appear more than once per class, except in {@code static} inner classes.
- * If it is missing, the annotation processor tries to guess the goal,
- * by checking for suitable constructors first, then static methods,
- * and finally instance methods.
+ * If the the {@link Goal} annotation is not present on any executable element of the {@link Build} annotated class,
+ * the annotation processor tries to guess a <em>single</em> goal, by checking for suitable constructors first,
+ * then static methods.
+ * In this case, it is an error if there are no suitable goal candidates, or more than one.
+ * Non-static methods are excluded from goal guessing.
  * </p><p>
- * In the case of instance methods, the generated
- * {@code static builder()} (and optionally {@code static toBuilder()}) methods
- * will take an instance parameter respectively.
+ * If the {@link Goal} annotation is present on a non-static &quot;instance&quot; method,
+ * the generated {@code static someGoalBuilder} method will take a parameter of type {@code MyObject}.
  * </p><p>
- * The goal may return anything, including {@code void}. The name of the generated class
- * however will always be {@code XXXBuilder}, where {@code XXX} is the name of the class
- * that carries the {@code Build} annotation.
+ * A goal may return anything, including {@code void}.
+ * </p><p>
+ * Only one goal per class may have the {@link Goal#toBuilder} flag set. Additional rules apply in that case:
+ * <ul>
+ * <li>The goal must be a constructor, or a static method that returns the {@link Build} annotated type.</li>
+ * <li>Each parameter of the goal must have a corresponding projection,
+ * i.e. a corresponding non-private &quot;getter&quot;, or a non-private instance field
+ * of the same type and name.</li>
+ * </ul>
  * </p>
  */
 @Documented
@@ -34,13 +42,31 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @Target(TYPE)
 public @interface Build {
 
+  /**
+   * If this flag is set, the generated code will cache the builder instances in a {@link ThreadLocal}.
+   */
   boolean nogc() default false;
 
+  @Documented
   @Retention(SOURCE)
   @Target({METHOD, CONSTRUCTOR})
   @interface Goal {
 
-    String value() default "";
+    /**
+     * By default, a goal is named by its return type,
+     * or if it is a constructor goal, by the {@link Build} annotated class.
+     * It is an error if two goals have the same name.
+     * The name attribute overrides the default name.
+     * In this way, it is possible to have constructor goals,
+     * or multiple goals with the same return type.
+     */
+    String name() default "";
+
+    /**
+     * Declares that a {@code static toBuilder} method should be generated for this goal.
+     *
+     * @see Build
+     */
     boolean toBuilder() default false;
   }
 

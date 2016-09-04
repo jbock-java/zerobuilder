@@ -171,10 +171,10 @@ final class GoalContext {
 
     static String goalName(TypeName goalType, ExecutableElement goal) {
       Build.Goal goalAnnotation = goal.getAnnotation(Build.Goal.class);
-      if (goalAnnotation == null || isNullOrEmpty(goalAnnotation.value())) {
+      if (goalAnnotation == null || isNullOrEmpty(goalAnnotation.name())) {
         return ((ClassName) goalType.box()).simpleName();
       }
-      return upcase(goalAnnotation.value());
+      return upcase(goalAnnotation.name());
     }
 
     Set<Modifier> maybeAddPublic(Modifier... modifiers) {

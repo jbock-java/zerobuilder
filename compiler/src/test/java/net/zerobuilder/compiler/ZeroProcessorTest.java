@@ -23,7 +23,7 @@ public class ZeroProcessorTest {
         "  abstract double height();",
         "  abstract double length();",
         "  abstract double width();",
-        "  @Build.Goal(value = \"cuboid\", toBuilder = true)",
+        "  @Build.Goal(name = \"cuboid\", toBuilder = true)",
         "  static Cube create(double height, double length, double width) {",
         "    return null;",
         "  }",

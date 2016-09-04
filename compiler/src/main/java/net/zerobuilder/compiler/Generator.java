@@ -11,7 +11,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.Analyzer.AnalysisResult;
+import net.zerobuilder.compiler.Analyser.AnalysisResult;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
@@ -87,7 +87,6 @@ final class Generator {
   }
 
   private Optional<MethodSpec> toBuilderMethod(AnalysisResult analysisResult) {
-    // TODO check in analyzer that there cannot be more than one
     Optional<GoalContext> annotated = FluentIterable.from(analysisResult.goals).filter(new Predicate<GoalContext>() {
       @Override
       public boolean apply(GoalContext context) {

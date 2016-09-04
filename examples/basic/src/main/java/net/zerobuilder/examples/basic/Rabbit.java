@@ -7,7 +7,7 @@ final class Rabbit {
 
   final String name;
 
-  @Build.Goal(value = "hare", toBuilder = true)
+  @Build.Goal(name = "hare", toBuilder = true)
   Rabbit(String name) {
     this.name = name;
   }
