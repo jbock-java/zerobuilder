@@ -23,19 +23,20 @@ final class MessageFactory {
   }
 
   @Build(recycle = true)
-  static class Message {
+  static final class Message {
     final String sender;
     final String body;
     final String recipient;
     final String subject;
 
-    @Goal
+    @Goal(toBuilder = true)
     Message(String sender, String body, String recipient, String subject) {
       this.sender = sender;
       this.body = body;
       this.recipient = recipient;
       this.subject = subject;
     }
+
   }
 
   MessageFactoryBuilders.MessageBuilder.Contract.Body messageBuilder() {

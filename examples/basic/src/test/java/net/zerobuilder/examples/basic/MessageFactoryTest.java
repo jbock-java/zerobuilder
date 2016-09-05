@@ -22,6 +22,8 @@ public class MessageFactoryTest {
     assertThat(message.body, is("Hi"));
     assertThat(message.recipient, is("Bob"));
     assertThat(message.subject, is("test"));
+    assertThat(MessageFactory_MessageBuilders.toBuilder(message).body("Goodbye").build().body,
+        is("Goodbye"));
   }
 
 }

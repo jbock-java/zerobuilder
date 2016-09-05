@@ -9,3 +9,72 @@ This repetitive work is best left to a code generator.
 
 Under the hood, a single mutable object can implement all of these &quot;step&quot; interfaces. 
 Because parameters cannot be forgotten anymore, it is even safe to reuse this object and store it in a `ThreadLocal`.
+
+## Basic example: [Message.java](blob/master/examples/basic/src/main/java/net/zerobuilder/examples/basic/Message.java)
+
+````java
+@Build(recycle = true)
+final class Message {
+
+  final String sender;
+  final String body;
+  final String recipient;
+  final String subject;
+
+  @Goal(toBuilder = true)
+  Message(String sender, String body, String recipient, String subject) {
+    this.sender = sender;
+    this.body = body;
+    this.recipient = recipient;
+    this.subject = subject;
+  }
+}
+
+````
+
+This class is valid input for the annotation processor.
+
+* The `@Goal` doesn't stand alone. It is contained in a `@Build` annotated class.
+* For each goal parameter, there is one corresponding instance field. Otherwise, `toBuilder` would not work.
+
+The following structure will be generated:
+
+````java
+final class MessageBuilders {
+
+  static MessageBuilder.Contract.Sender messageBuilder();
+  static MessageBuilder.Contract.MessageUpdater toBuilder(Message message);
+
+  static final class MessageBuilder {
+    static final class Contract {
+      interface MessageUpdater {
+        Message build();
+        MessageUpdater sender(String sender);
+        MessageUpdater body(String body);
+        MessageUpdater recipient(String recipient);
+        MessageUpdater subject(String subject);
+      }
+      interface Sender {
+        Body sender(String sender);
+      }
+      interface Body {
+        Recipient body(String body);
+      }
+      interface Recipient {
+        Subject recipient(String recipient);
+      }
+      interface Subject {
+        Message subject(String subject);
+      }
+    }
+  }
+}
+````
+
+The implementations have been left out, for brevity.
+
+Let's take a closer look at the `MessageBuilders` class.
+
+* There is one "step" interface for each of the four goal parameters `sender`, `body`, `recipient` and `subject`. 
+* There is a `static toBuilder` method that returns a `MessageUpdater`.
+* There is a `static messageBuilder` method that returns the `Sender` step.
