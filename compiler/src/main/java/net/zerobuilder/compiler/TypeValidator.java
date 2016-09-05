@@ -1,8 +1,10 @@
 package net.zerobuilder.compiler;
 
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import java.util.EnumSet;
+import java.util.Set;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -13,15 +15,15 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_TYPE;
 
 final class TypeValidator {
 
-  private final EnumSet<NestingKind> allowedNestingKinds = EnumSet.of(TOP_LEVEL, MEMBER);
-
   void validateBuildType(TypeElement buildType) throws ValidationException {
-    if (buildType.getModifiers().contains(PRIVATE)) {
+    Set<Modifier> modifiers = buildType.getModifiers();
+    NestingKind nestingKind = buildType.getNestingKind();
+    if (modifiers.contains(PRIVATE)) {
       throw new ValidationException(PRIVATE_TYPE, buildType);
     }
-    if (!allowedNestingKinds.contains(buildType.getNestingKind())
-        || (buildType.getNestingKind() == MEMBER
-        && !buildType.getModifiers().contains(STATIC))) {
+    boolean unknownType = !EnumSet.of(TOP_LEVEL, MEMBER).contains(nestingKind);
+    boolean nonstaticMember = nestingKind == MEMBER && !modifiers.contains(STATIC);
+    if (unknownType || nonstaticMember) {
       throw new ValidationException(NESTING_KIND, buildType);
     }
   }

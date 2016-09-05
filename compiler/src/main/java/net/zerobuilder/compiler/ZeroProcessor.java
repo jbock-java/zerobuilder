@@ -48,10 +48,11 @@ public final class ZeroProcessor extends AbstractProcessor {
 
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
-    Optional<ExecutableElement> goalNotInBuild;
-    if ((goalNotInBuild = goalNotInBuild(env)).isPresent()) {
+    Optional<ExecutableElement> goalNotInBuild = goalNotInBuild(env);
+    if (goalNotInBuild.isPresent()) {
       processingEnv.getMessager().printMessage(ERROR,
           GOAL_NOT_IN_BUILD, goalNotInBuild.get());
+      return false;
     }
     Messager messager = processingEnv.getMessager();
     Elements elements = processingEnv.getElementUtils();
@@ -71,8 +72,7 @@ public final class ZeroProcessor extends AbstractProcessor {
           return false;
         }
       } catch (ValidationException e) {
-        messager.printMessage(ERROR, e.getMessage(), e.about);
-        return false;
+        messager.printMessage(e.kind, e.getMessage(), e.about);
       } catch (RuntimeException e) {
         String message = "Error processing "
             + ClassName.get(annotatedType) + ": " + getStackTraceAsString(e);

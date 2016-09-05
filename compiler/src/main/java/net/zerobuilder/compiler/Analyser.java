@@ -19,16 +19,14 @@ import java.util.HashMap;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Iterables.concat;
-import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static javax.tools.Diagnostic.Kind.WARNING;
 import static net.zerobuilder.compiler.BuildConfig.createBuildConfig;
 import static net.zerobuilder.compiler.GoalContext.createGoalContext;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_GOAL;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMM;
@@ -38,6 +36,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.MULTIPLE_TOBUILDER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 
 final class Analyser {
@@ -151,35 +150,11 @@ final class Analyser {
         builder.add(executableElement);
       }
     }
-    if (builder.build().isEmpty()) {
-      return ImmutableList.of(guessGoal(buildElement));
+    ImmutableList<ExecutableElement> goals = builder.build();
+    if (goals.isEmpty()) {
+      throw new ValidationException(WARNING, NO_GOALS, buildElement);
     }
-    return builder.build();
-  }
-
-  private ExecutableElement guessGoal(TypeElement buildElement) throws ValidationException {
-    ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
-    for (ExecutableElement executableElement : constructorsIn(buildElement.getEnclosedElements())) {
-      if (!executableElement.getModifiers().contains(PRIVATE)
-          && !executableElement.getParameters().isEmpty()) {
-        builder.add(executableElement);
-      }
-    }
-    if (builder.build().size() == 1) {
-      return getOnlyElement(builder.build());
-    }
-    builder = ImmutableList.builder();
-    for (ExecutableElement executableElement : methodsIn(buildElement.getEnclosedElements())) {
-      if (!executableElement.getModifiers().contains(PRIVATE)
-          && executableElement.getModifiers().contains(STATIC)
-          && !executableElement.getParameters().isEmpty()) {
-        builder.add(executableElement);
-      }
-    }
-    if (builder.build().size() == 1) {
-      return getOnlyElement(builder.build());
-    }
-    throw new ValidationException(COULD_NOT_GUESS_GOAL, buildElement);
+    return goals;
   }
 
   static final class AnalysisResult {

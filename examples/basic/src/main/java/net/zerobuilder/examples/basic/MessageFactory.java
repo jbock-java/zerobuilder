@@ -29,6 +29,7 @@ final class MessageFactory {
     final String recipient;
     final String subject;
 
+    @Goal
     Message(String sender, String body, String recipient, String subject) {
       this.sender = sender;
       this.body = body;

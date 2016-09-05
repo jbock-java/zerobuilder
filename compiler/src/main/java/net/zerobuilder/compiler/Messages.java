@@ -22,8 +22,8 @@ final class Messages {
     static final String NESTING_KIND =
         "The @Build annotation can only be used on top level and non-private static inner classes.";
 
-    static final String COULD_NOT_GUESS_GOAL =
-        "Could not guess the goal. Please add a @Goal annotation.";
+    static final String NO_GOALS =
+        "No goals were found.";
 
     static final String MULTIPLE_TOBUILDER =
         "Only one goal can have the toBuilder flag set.";
@@ -31,24 +31,31 @@ final class Messages {
     static final String GOAL_NOT_IN_BUILD =
         "The @Goal annotation may not appear outside a class that carries the @Build annotation.";
 
+    /* empty, empty, constructor, constructor */
     static final String GOALNAME_EECC =
         "Multiple constructor goals found. Please add a goal name.";
 
+    /* empty, empty, method, constructor */
     static final String GOALNAME_EEMC =
         "There is already a constructor goal for this return type. Please add a goal name.";
 
+    /* empty, empty, method, method */
     static final String GOALNAME_EEMM =
         "There is already another goal for this return type. Please add a goal name.";
 
+    /* named, empty, constructor, constructor */
     static final String GOALNAME_NECC =
         "This goal name is taken by another constructor.";
 
+    /* named, empty, method, constructor */
     static final String GOALNAME_NEMC =
         "This goal name is taken by a constructor.";
 
+    /* named, empty, method, method */
     static final String GOALNAME_NEMM =
         "This goal name is taken by another goal.";
 
+    /* named, named */
     static final String GOALNAME_NN =
         "There is another goal name with this goal name.";
 
