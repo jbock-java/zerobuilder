@@ -31,6 +31,27 @@ final class Messages {
     static final String GOAL_NOT_IN_BUILD =
         "The @Goal annotation may not appear outside a class that carries the @Build annotation.";
 
+    static final String GOALNAME_EECC =
+        "Multiple constructor goals found. Please add a goal name.";
+
+    static final String GOALNAME_EEMC =
+        "There is already a constructor goal for this return type. Please add a goal name.";
+
+    static final String GOALNAME_EEMM =
+        "There is already another goal for this return type. Please add a goal name.";
+
+    static final String GOALNAME_NECC =
+        "This goal name is taken by another constructor.";
+
+    static final String GOALNAME_NEMC =
+        "This goal name is taken by a constructor.";
+
+    static final String GOALNAME_NEMM =
+        "This goal name is taken by another goal.";
+
+    static final String GOALNAME_NN =
+        "There is another goal name with this goal name.";
+
     private ErrorMessages() {
     }
 

@@ -10,6 +10,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.ToBuilderValidator.ProjectionInfo;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -28,6 +29,13 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 import static net.zerobuilder.compiler.BuildConfig.createBuildConfig;
 import static net.zerobuilder.compiler.GoalContext.createGoalContext;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_GUESS_GOAL;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EECC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMM;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.MULTIPLE_TOBUILDER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
@@ -35,13 +43,22 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 final class Analyser {
 
   private static final Ordering<GoalContext> CONSTRUCTORS_FIRST = Ordering.from(new Comparator<GoalContext>() {
+
+    private int goalWeight(GoalContext goal) {
+      ElementKind kind = goal.innerContext.goal.getKind();
+      Goal annotation = goal.innerContext.goal.getAnnotation(Goal.class);
+      String name = annotation == null ? "" : annotation.name();
+      return isNullOrEmpty(name)
+          ? kind == CONSTRUCTOR ? 0 : 1
+          : kind == CONSTRUCTOR ? 2 : 3;
+    }
+
     @Override
     public int compare(GoalContext g0, GoalContext g1) {
-      int w0 = g0.innerContext.goal.getKind() == CONSTRUCTOR ? 0 : 1;
-      int w1 = g1.innerContext.goal.getKind() == CONSTRUCTOR ? 0 : 1;
-      return Ints.compare(w0, w1);
+      return Ints.compare(goalWeight(g0), goalWeight(g1));
     }
   });
+
   private final TypeValidator typeValidator = new TypeValidator();
   private final ToBuilderValidator.Factory toBuilderValidatorFactory;
 
@@ -92,33 +109,30 @@ final class Analyser {
       ExecutableElement thisGoal = goal.innerContext.goal;
       ExecutableElement otherGoal = goalNames.put(goalName, thisGoal);
       if (otherGoal != null) {
-        if (thisGoal.getKind() == CONSTRUCTOR
-            && otherGoal.getKind() == CONSTRUCTOR
-            && isNullOrEmpty(thisGoal.getAnnotation(Goal.class).name())
-            && isNullOrEmpty(otherGoal.getAnnotation(Goal.class).name())) {
-          throw new ValidationException("Multiple constructor goals found. Please add a goal name.",
-              thisGoal);
+        String thisName = thisGoal.getAnnotation(Goal.class) == null ? ""
+            : thisGoal.getAnnotation(Goal.class).name();
+        String otherName = otherGoal.getAnnotation(Goal.class) == null ? ""
+            : otherGoal.getAnnotation(Goal.class).name();
+        ElementKind thisKind = thisGoal.getKind();
+        ElementKind otherKind = otherGoal.getKind();
+        if (isNullOrEmpty(thisName)) {
+          if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
+            throw new ValidationException(GOALNAME_EECC, thisGoal);
+          }
+          if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
+            throw new ValidationException(GOALNAME_EEMC, thisGoal);
+          }
+          throw new ValidationException(GOALNAME_EEMM, thisGoal);
+        } else if (isNullOrEmpty(otherName)) {
+          if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
+            throw new ValidationException(GOALNAME_NECC, thisGoal);
+          }
+          if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
+            throw new ValidationException(GOALNAME_NEMC, thisGoal);
+          }
+          throw new ValidationException(GOALNAME_NEMM, thisGoal);
         }
-        if (thisGoal.getKind() == METHOD
-            && otherGoal.getKind() == METHOD
-            && isNullOrEmpty(thisGoal.getAnnotation(Goal.class).name())
-            && isNullOrEmpty(otherGoal.getAnnotation(Goal.class).name())) {
-          throw new ValidationException("Multiple goals with the same return type found. Please add a goal name.",
-              thisGoal);
-        }
-        if (thisGoal.getKind() == METHOD
-            && otherGoal.getKind() == CONSTRUCTOR
-            && isNullOrEmpty(thisGoal.getAnnotation(Goal.class).name())
-            && isNullOrEmpty(otherGoal.getAnnotation(Goal.class).name())) {
-          throw new ValidationException("The return type is conflicting with a constructor goal. Please add a goal name.",
-              thisGoal);
-        }
-        if (isNullOrEmpty(thisGoal.getAnnotation(Goal.class).name())) {
-          throw new ValidationException("The return type is conflicting with another goal. Please add a goal name.",
-              thisGoal);
-        }
-        throw new ValidationException("The goal name is conflicting with another goal. Please pick another one.",
-            thisGoal);
+        throw new ValidationException(GOALNAME_NN, thisGoal);
       }
     }
   }

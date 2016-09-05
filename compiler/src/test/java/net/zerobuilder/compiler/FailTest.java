@@ -35,8 +35,7 @@ public class FailTest {
     String badLine = "  @Goal Centipede(int a) {}";
     ImmutableList<String> sourceLines = ImmutableList.of(
         "package test;",
-        "import net.zerobuilder.Build;",
-        "import net.zerobuilder.Goal;",
+        "import net.zerobuilder.*;",
         "@Build class Centipede {",
         "  @Goal Centipede(int a, int b) {}",
         badLine,
@@ -47,6 +46,26 @@ public class FailTest {
         .processedWith(new ZeroProcessor())
         .failsToCompile()
         .withErrorContaining("Multiple constructor goals")
+        .in(javaFile)
+        .onLine(line + 1);
+  }
+
+  @Test
+  public void constructorVersusFactory() {
+    String badLine = "  @Goal static Centipede create (int a) {}";
+    ImmutableList<String> sourceLines = ImmutableList.of(
+        "package test;",
+        "import net.zerobuilder.*;",
+        "@Build class Centipede {",
+        "  @Goal Centipede(int a) {}",
+        badLine,
+        "}");
+    JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
+    int line = sourceLines.indexOf(badLine);
+    assertAbout(javaSources()).that(ImmutableList.of(javaFile))
+        .processedWith(new ZeroProcessor())
+        .failsToCompile()
+        .withErrorContaining("already a constructor goal")
         .in(javaFile)
         .onLine(line + 1);
   }
