@@ -6,7 +6,7 @@ import org.derive4j.Data;
 import net.zerobuilder.Goal;
 
 @Data
-@Build(nogc = true)
+@Build(recycle = true)
 abstract class Request {
 
   interface Cases<R> {

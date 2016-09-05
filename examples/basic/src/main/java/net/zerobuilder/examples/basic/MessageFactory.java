@@ -3,7 +3,7 @@ package net.zerobuilder.examples.basic;
 import net.zerobuilder.Build;
 import net.zerobuilder.Goal;
 
-@Build
+@Build(recycle = true)
 final class MessageFactory {
 
   final String sender;
@@ -22,7 +22,7 @@ final class MessageFactory {
         .subject(subject);
   }
 
-  @Build(nogc = true)
+  @Build(recycle = true)
   static class Message {
     final String sender;
     final String body;

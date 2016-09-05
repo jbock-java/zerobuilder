@@ -38,6 +38,6 @@ public @interface Build {
    * When this flag is set to {@code true},
    * the generated code will cache builder instances in a {@link ThreadLocal}.
    */
-  boolean nogc() default false;
+  boolean recycle() default false;
 
 }

@@ -3,7 +3,7 @@ package net.zerobuilder.examples.basic;
 import net.zerobuilder.Build;
 import net.zerobuilder.Goal;
 
-@Build(nogc = true)
+@Build(recycle = true)
 final class FieldAccess {
 
   final double length;

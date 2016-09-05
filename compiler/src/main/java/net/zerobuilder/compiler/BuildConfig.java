@@ -23,7 +23,7 @@ final class BuildConfig {
   }
 
   static BuildConfig createBuildConfig(TypeElement buildElement) {
-    boolean nogc = buildElement.getAnnotation(Build.class).nogc();
+    boolean nogc = buildElement.getAnnotation(Build.class).recycle();
     boolean isPublic = buildElement.getModifiers().contains(PUBLIC);
     ClassName generatedType = generatedClassName(buildElement);
     ClassName annotatedType = ClassName.get(buildElement);

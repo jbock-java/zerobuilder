@@ -19,7 +19,7 @@ public class ZeroProcessorTest {
         "import net.zerobuilder.Build;",
         "import net.zerobuilder.Goal;",
         "",
-        "@Build(nogc = true)",
+        "@Build(recycle = true)",
         "abstract class Cube {",
         "  abstract double height();",
         "  abstract double length();",
