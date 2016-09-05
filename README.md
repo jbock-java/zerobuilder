@@ -10,7 +10,7 @@ This repetitive work is best left to a code generator.
 Under the hood, a single mutable object can implement all of these &quot;step&quot; interfaces. 
 Because parameters cannot be forgotten anymore, it is even safe to reuse this object and store it in a `ThreadLocal`.
 
-## Basic example: [Message.java](blob/master/examples/basic/src/main/java/net/zerobuilder/examples/basic/Message.java)
+## Basic example: [Message.java](../blob/master/examples/basic/src/main/java/net/zerobuilder/examples/basic/Message.java)
 
 ````java
 @Build(recycle = true)
