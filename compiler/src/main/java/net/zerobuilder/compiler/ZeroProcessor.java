@@ -11,14 +11,12 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.Analyser.AnalysisResult;
 
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
@@ -54,10 +52,8 @@ public final class ZeroProcessor extends AbstractProcessor {
           GOAL_NOT_IN_BUILD, goalNotInBuild.get());
       return false;
     }
-    Messager messager = processingEnv.getMessager();
-    Elements elements = processingEnv.getElementUtils();
-    Analyser transformer = new Analyser(elements);
-    Generator generator = new Generator(elements);
+    Analyser transformer = new Analyser(processingEnv.getElementUtils());
+    Generator generator = new Generator(processingEnv.getElementUtils());
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Build.class));
     for (TypeElement annotatedType : types) {
       try {
@@ -68,15 +64,15 @@ public final class ZeroProcessor extends AbstractProcessor {
         } catch (IOException e) {
           String message = "Error processing "
               + ClassName.get(annotatedType) + ": " + getStackTraceAsString(e);
-          messager.printMessage(ERROR, message, annotatedType);
+          processingEnv.getMessager().printMessage(ERROR, message, annotatedType);
           return false;
         }
       } catch (ValidationException e) {
-        messager.printMessage(e.kind, e.getMessage(), e.about);
+        processingEnv.getMessager().printMessage(e.kind, e.getMessage(), e.about);
       } catch (RuntimeException e) {
         String message = "Error processing "
             + ClassName.get(annotatedType) + ": " + getStackTraceAsString(e);
-        messager.printMessage(ERROR, message, annotatedType);
+        processingEnv.getMessager().printMessage(ERROR, message, annotatedType);
         return false;
       }
     }

@@ -8,7 +8,7 @@ import com.google.common.primitives.Ints;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.ToBuilderValidator.ProjectionInfo;
+import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -78,9 +78,9 @@ final class Analyser {
           .buildViaElement(goal).buildElement(buildElement);
       Goal goalAnnotation = goal.getAnnotation(Goal.class);
       boolean toBuilder = goalAnnotation != null && goalAnnotation.toBuilder();
-      ImmutableList<ProjectionInfo> projectionInfos =
+      ImmutableList<ValidParameter> validParameters =
           toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
-      builder.add(createGoalContext(goalType, config, projectionInfos, goal, toBuilder));
+      builder.add(createGoalContext(goalType, config, validParameters, goal, toBuilder));
     }
     ImmutableList<GoalContext> goals = builder.build();
     checkMultipleToBuilder(goals);

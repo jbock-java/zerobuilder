@@ -10,7 +10,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.ToBuilderValidator.ProjectionInfo;
+import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -53,27 +53,26 @@ final class GoalContext {
   }
 
   static GoalContext createGoalContext(TypeName goalType, BuildConfig config,
-                                       ImmutableList<ProjectionInfo> projectionInfos,
+                                       ImmutableList<ValidParameter> validParameters,
                                        ExecutableElement goal, boolean toBuilder) {
     String builderTypeName = goalName(goalType, goal) + "Builder";
     ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);
-    ImmutableList<ParameterContext> specs = specs(contractType, goalType, projectionInfos);
+    ImmutableList<ParameterContext> specs = specs(contractType, goalType, validParameters);
     SharedGoalContext sharedContext = new SharedGoalContext(goalType, builderType, config, toBuilder, goal, specs);
     return new GoalContext(sharedContext, new StepsContext(sharedContext),
         new ContractContext(sharedContext), new UpdaterContext(sharedContext));
   }
 
-  private static ImmutableList<ParameterContext> specs(ClassName contractType, TypeName goalType,
-                                                       ImmutableList<ProjectionInfo> parameters) {
+  private static ImmutableList<ParameterContext> specs(ClassName contract, TypeName returnType,
+                                                       ImmutableList<ValidParameter> parameters) {
     ImmutableList.Builder<ParameterContext> stepSpecsBuilder = ImmutableList.builder();
     for (int i = parameters.size() - 1; i >= 0; i--) {
-      ProjectionInfo parameter = parameters.get(i);
-      ClassName stepName = contractType.nestedClass(
+      ValidParameter parameter = parameters.get(i);
+      ClassName stepContract = contract.nestedClass(
           upcase(parameter.parameter.getSimpleName().toString()));
-      ParameterContext stepSpec = ParameterContext.stepSpec(stepName, parameter, goalType);
-      stepSpecsBuilder.add(stepSpec);
-      goalType = stepSpec.stepContractType;
+      stepSpecsBuilder.add(new ParameterContext(stepContract, parameter, returnType));
+      returnType = stepContract;
     }
     return stepSpecsBuilder.build().reverse();
   }
@@ -118,7 +117,7 @@ final class GoalContext {
     ImmutableList<ClassName> stepInterfaceNames() {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
       for (ParameterContext spec : stepSpecs) {
-        specs.add(spec.stepContractType);
+        specs.add(spec.stepContract);
       }
       return specs.build();
     }

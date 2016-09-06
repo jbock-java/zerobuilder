@@ -109,12 +109,12 @@ final class Generator {
           updaterType);
     }
     for (ParameterContext stepSpec : goal.innerContext.stepSpecs) {
-      if (stepSpec.projectionMethodName.isPresent()) {
-        builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.parameter.getSimpleName(),
-            parameterName, stepSpec.projectionMethodName.get());
+      if (stepSpec.parameter.projectionMethodName.isPresent()) {
+        builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.parameter.parameter.getSimpleName(),
+            parameterName, stepSpec.parameter.projectionMethodName.get());
       } else {
-        builder.addStatement("$N.$N = $N.$N", varUpdater, stepSpec.parameter.getSimpleName(),
-            parameterName, stepSpec.parameter.getSimpleName());
+        builder.addStatement("$N.$N = $N.$N", varUpdater, stepSpec.parameter.parameter.getSimpleName(),
+            parameterName, stepSpec.parameter.parameter.getSimpleName());
       }
     }
     builder.addStatement("return $L", varUpdater);
@@ -157,7 +157,7 @@ final class Generator {
           spec.addStatement("return new $T()", goal.innerContext.stepsImplTypeName());
         }
       }
-      builder.add(spec.returns(firstStep.stepContractType)
+      builder.add(spec.returns(firstStep.stepContract)
           .addModifiers(goal.innerContext.maybeAddPublic(STATIC))
           .build());
     }

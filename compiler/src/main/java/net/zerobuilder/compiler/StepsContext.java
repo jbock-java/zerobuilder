@@ -40,8 +40,8 @@ final class StepsContext {
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
     for (ParameterContext stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
-      String name = stepSpec.parameter.getSimpleName().toString();
-      builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.asType()), name, PRIVATE).build());
+      String name = stepSpec.parameter.parameter.getSimpleName().toString();
+      builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.parameter.asType()), name, PRIVATE).build());
     }
     return builder.build();
   }
@@ -70,7 +70,7 @@ final class StepsContext {
 
   private MethodSpec lastStep() {
     ParameterContext stepSpec = getLast(context.stepSpecs);
-    MethodSpec.Builder builder = methodBuilder(stepSpec.parameter.getSimpleName().toString())
+    MethodSpec.Builder builder = methodBuilder(stepSpec.parameter.parameter.getSimpleName().toString())
         .addAnnotation(Override.class)
         .addParameter(stepSpec.parameter())
         .addExceptions(context.thrownTypes())

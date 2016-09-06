@@ -45,8 +45,8 @@ final class UpdaterContext {
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
     for (ParameterContext stepSpec : context.stepSpecs) {
-      String name = stepSpec.parameter.getSimpleName().toString();
-      builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.asType()), name, PRIVATE).build());
+      String name = stepSpec.parameter.parameter.getSimpleName().toString();
+      builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.parameter.asType()), name, PRIVATE).build());
     }
     return builder.build();
   }
