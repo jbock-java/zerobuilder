@@ -40,7 +40,7 @@ This class is valid input for the annotation processor.
 The following structure will be generated:
 
 ````java
-final class MessageBuilders {
+@Generated final class MessageBuilders {
 
   static MessageBuilder.Contract.Sender messageBuilder();
   static MessageBuilder.Contract.MessageUpdater toBuilder(Message message);
