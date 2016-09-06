@@ -71,7 +71,10 @@ final class MessageBuilders {
 }
 ````
 
-The implementations have been left out, for brevity. Let's take a closer look at the `MessageBuilders` class:
+The implementations have been left out, for brevity. If you clone this project and do a `mvn install`, you will find the complete code
+in the `examples/basic/target/generated-sources/annotations` folder.
+
+Let's take a closer look at the `MessageBuilders` class:
 
 * There is a `MessageUpdater` interface, which looks like the familiar builder pattern, 
   where each method can be called `0..n` times before `build()` is called.
