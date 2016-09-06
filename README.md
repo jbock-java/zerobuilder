@@ -82,7 +82,9 @@ The implementations have been left out, for brevity. Let's take a closer look at
 * There is a parameterless `static messageBuilder` method that returns a `Sender` step instance.
 
 In addition to constructors, the `@Goal` annotation can appear on methods, even non-static ones. 
-Have a look at the [MessageFactory](../master/examples/basic/src/main/java/net/zerobuilder/examples/basic/Message.java) example,
+Have a look at the [MessageFactory](../master/examples/basic/src/main/java/net/zerobuilder/examples/basic/MessageFactory.java) example,
 to see what this can be used for.
 
-There are also examples that show how to integrate with [auto-value](../master/examples/autovalue) and [derive4j](../master/examples/derive4j).
+There are also examples that show how to integrate with 
+[auto-value](../master/examples/autovalue/src/main/java/net/zerobuilder/examples/autovalue/Bob.java) and 
+[derive4j](../master/examples/derive4j/src/main/java/net/zerobuilder/examples/derive4j/Request.java).
