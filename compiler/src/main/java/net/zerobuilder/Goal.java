@@ -1,6 +1,5 @@
 package net.zerobuilder;
 
-import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -14,7 +13,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  *
  * @see Build
  */
-@Documented
 @Retention(SOURCE)
 @Target({METHOD, CONSTRUCTOR})
 public @interface Goal {

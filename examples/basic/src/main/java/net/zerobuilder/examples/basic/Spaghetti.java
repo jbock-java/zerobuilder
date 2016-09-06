@@ -1,7 +1,7 @@
 package net.zerobuilder.examples.basic;
 
 import net.zerobuilder.Build;
-import net.zerobuilder.FloatLeft;
+import net.zerobuilder.Step;
 import net.zerobuilder.Goal;
 
 @Build(recycle = true)
@@ -12,7 +12,7 @@ final class Spaghetti {
   final boolean alDente;
 
   @Goal(toBuilder = true)
-  Spaghetti(String cheese, @FloatLeft String sauce, boolean alDente) {
+  Spaghetti(String cheese, @Step(0) String sauce, boolean alDente) {
     this.cheese = cheese;
     this.sauce = sauce;
     this.alDente = alDente;

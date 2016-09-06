@@ -35,6 +35,15 @@ final class Messages {
     static final String GOALNAME_EECC =
         "Multiple constructor goals found. Please add a goal name.";
 
+    static final String NEGATIVE_STEP_POSITION =
+        "Negative step position is not allowed.";
+
+    static final String STEP_POSITION_TOO_LARGE =
+        "Step position must be less than the number of arguments.";
+
+    static final String DUPLICATE_STEP_POSITION =
+        "Step position is specified twice.";
+
     /* empty, empty, method, constructor */
     static final String GOALNAME_EEMC =
         "There is already a constructor goal for this return type. Please add a goal name.";

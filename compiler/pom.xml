@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.zerobuilder</groupId>
-    <artifactId>zerobuilder-compiler</artifactId>
+    <artifactId>zerobuilder</artifactId>
     <version>${revision}</version>
 
     <properties>
@@ -15,12 +15,6 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>zerobuilder</artifactId>
-            <version>${revision}</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>com.google.auto</groupId>
             <artifactId>auto-common</artifactId>
@@ -57,18 +51,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava-testlib</artifactId>
-            <version>${guava.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>1.9.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.google.truth</groupId>
             <artifactId>truth</artifactId>
             <version>0.28</version>
@@ -102,7 +84,7 @@
                             <relocations>
                                 <relocation>
                                     <pattern>com.google</pattern>
-                                    <shadedPattern>isobuilder.shaded.com.google$</shadedPattern>
+                                    <shadedPattern>zerobuilder.shaded.com.google$</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>

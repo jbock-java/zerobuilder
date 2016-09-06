@@ -18,11 +18,6 @@
             <groupId>net.zerobuilder</groupId>
             <artifactId>zerobuilder</artifactId>
             <version>${revision}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.zerobuilder</groupId>
-            <artifactId>zerobuilder-compiler</artifactId>
-            <version>${revision}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

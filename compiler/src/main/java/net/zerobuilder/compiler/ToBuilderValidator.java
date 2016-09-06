@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.Step;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -18,6 +19,10 @@ import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
+import static javax.tools.Diagnostic.Kind.ERROR;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NEGATIVE_STEP_POSITION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class ToBuilderValidator {
@@ -92,15 +97,15 @@ final class ToBuilderValidator {
         builder.add(new ProjectionInfo(parameter, Optional.of(methodName)));
       }
     }
-    return builder.build();
+    return sortedParameters(builder.build());
   }
 
-  ImmutableList<ProjectionInfo> skip() {
+  ImmutableList<ProjectionInfo> skip() throws ValidationException {
     ImmutableList.Builder<ProjectionInfo> builder = ImmutableList.builder();
     for (VariableElement parameter : goal.getParameters()) {
       builder.add(new ProjectionInfo(parameter, Optional.<String>absent()));
     }
-    return builder.build();
+    return sortedParameters(builder.build());
   }
 
   static final class Factory {
@@ -128,6 +133,40 @@ final class ToBuilderValidator {
     ToBuilderValidator buildElement(TypeElement buildElement) {
       return createMatchValidator(buildElement, targetMethod, elements);
     }
+  }
+
+  private static ImmutableList<ProjectionInfo> sortedParameters(ImmutableList<ProjectionInfo> parameters) throws ValidationException {
+    ProjectionInfo[] builder = new ProjectionInfo[parameters.size()];
+    ImmutableList.Builder<ProjectionInfo> noAnnotation = ImmutableList.builder();
+    for (ProjectionInfo parameter : parameters) {
+      Step step = parameter.parameter.getAnnotation(Step.class);
+      if (step != null) {
+        int value = step.value();
+        if (value < 0) {
+          throw new ValidationException(ERROR,
+              NEGATIVE_STEP_POSITION, parameter.parameter);
+        }
+        if (value >= parameters.size()) {
+          throw new ValidationException(ERROR,
+              STEP_POSITION_TOO_LARGE, parameter.parameter);
+        }
+        if (builder[value] != null) {
+          throw new ValidationException(ERROR,
+              DUPLICATE_STEP_POSITION, parameter.parameter);
+        }
+        builder[value] = parameter;
+      } else {
+        noAnnotation.add(parameter);
+      }
+    }
+    int pos = 0;
+    for (ProjectionInfo parameter : noAnnotation.build()) {
+      while (builder[pos] != null) {
+        pos++;
+      }
+      builder[pos++] = parameter;
+    }
+    return ImmutableList.copyOf(builder);
   }
 
   static final class ProjectionInfo {

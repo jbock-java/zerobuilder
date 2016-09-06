@@ -5,13 +5,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Ordering;
-import com.google.common.primitives.Ints;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.FloatLeft;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.ToBuilderValidator.ProjectionInfo;
 
@@ -19,7 +16,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
-import java.util.Comparator;
 import java.util.Set;
 
 import static com.google.common.base.Optional.presentInstances;
@@ -68,49 +64,8 @@ final class GoalContext {
         new ContractContext(sharedContext), new UpdaterContext(sharedContext));
   }
 
-  private static class IndexedProjectionInfo {
-    private final ProjectionInfo projectionInfo;
-    private final int natural;
-    private final Integer index;
-    private IndexedProjectionInfo(ProjectionInfo projectionInfo, int natural, Integer index) {
-      this.projectionInfo = projectionInfo;
-      this.index = index;
-      this.natural = natural;
-    }
-  }
-
-  private static final Ordering<IndexedProjectionInfo> ORDERING
-      = Ordering.from(new Comparator<IndexedProjectionInfo>() {
-    @Override
-    public int compare(IndexedProjectionInfo p0, IndexedProjectionInfo p1) {
-      if (p0.index != null && p1.index != null) {
-        return Ints.compare(p0.index, p1.index);
-      }
-      if (p0.index == null && p1.index == null) {
-        return Ints.compare(p0.natural, p1.natural);
-      }
-      return p0.index != null ? -1 : 1;
-    }
-  });
-
-  private static ImmutableList<ProjectionInfo> sortedParameters(ImmutableList<ProjectionInfo> parameters) {
-    ImmutableList.Builder<IndexedProjectionInfo> sorted = ImmutableList.builder();
-    for (int i = 0; i < parameters.size(); i++) {
-      ProjectionInfo projectionInfo = parameters.get(i);
-      FloatLeft floatLeft = projectionInfo.parameter.getAnnotation(FloatLeft.class);
-      sorted.add(new IndexedProjectionInfo(projectionInfo, i,
-          floatLeft == null ? null : floatLeft.value()));
-    }
-    ImmutableList.Builder<ProjectionInfo> builder = ImmutableList.builder();
-    for (IndexedProjectionInfo info : ORDERING.sortedCopy(sorted.build())) {
-      builder.add(info.projectionInfo);
-    }
-    return builder.build();
-  }
-
   private static ImmutableList<ParameterContext> specs(ClassName contractType, TypeName goalType,
                                                        ImmutableList<ProjectionInfo> parameters) {
-    parameters = sortedParameters(parameters);
     ImmutableList.Builder<ParameterContext> stepSpecsBuilder = ImmutableList.builder();
     for (int i = parameters.size() - 1; i >= 0; i--) {
       ProjectionInfo parameter = parameters.get(i);
