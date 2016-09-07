@@ -38,14 +38,15 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.MULTIPLE_TOBUILDER
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class Analyser {
 
-  private static final Ordering<GoalContext> CONSTRUCTORS_FIRST = Ordering.from(new Comparator<GoalContext>() {
+  private static final Ordering<NamedGoal> CONSTRUCTORS_FIRST = Ordering.from(new Comparator<NamedGoal>() {
 
-    private int goalWeight(GoalContext goal) {
-      ElementKind kind = goal.innerContext.goal.getKind();
-      Goal annotation = goal.innerContext.goal.getAnnotation(Goal.class);
+    private int goalWeight(NamedGoal goal) {
+      ElementKind kind = goal.goal.getKind();
+      Goal annotation = goal.goal.getAnnotation(Goal.class);
       String name = annotation == null ? "" : annotation.name();
       return isNullOrEmpty(name)
           ? kind == CONSTRUCTOR ? 0 : 1
@@ -53,7 +54,7 @@ final class Analyser {
     }
 
     @Override
-    public int compare(GoalContext g0, GoalContext g1) {
+    public int compare(NamedGoal g0, NamedGoal g1) {
       return Ints.compare(goalWeight(g0), goalWeight(g1));
     }
   });
@@ -69,43 +70,44 @@ final class Analyser {
     ClassName annotatedType = ClassName.get(buildElement);
     BuildConfig config = createBuildConfig(buildElement);
     ImmutableList.Builder<GoalContext> builder = ImmutableList.builder();
-    for (ExecutableElement goal : goals(buildElement)) {
-      TypeName goalType = goal.getKind() == CONSTRUCTOR
+    ImmutableList<NamedGoal> goals = goals(annotatedType, buildElement);
+    checkMultipleToBuilder(goals);
+    checkNameConflict(goals);
+    for (NamedGoal goal : goals) {
+      TypeName goalType = goal.goal.getKind() == CONSTRUCTOR
           ? annotatedType
-          : TypeName.get(goal.getReturnType());
+          : TypeName.get(goal.goal.getReturnType());
       typeValidator.validateBuildType(buildElement);
       ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
-          .buildViaElement(goal).buildElement(buildElement);
-      Goal goalAnnotation = goal.getAnnotation(Goal.class);
+          .buildViaElement(goal.goal).buildElement(buildElement);
+      Goal goalAnnotation = goal.goal.getAnnotation(Goal.class);
       boolean toBuilder = goalAnnotation != null && goalAnnotation.toBuilder();
       ImmutableList<ValidParameter> validParameters =
           toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
-      builder.add(createGoalContext(goalType, config, validParameters, goal, toBuilder));
+      builder.add(createGoalContext(goalType, config, validParameters, goal.goal, toBuilder));
     }
-    ImmutableList<GoalContext> goals = builder.build();
-    checkMultipleToBuilder(goals);
-    checkNameConflict(goals);
-    return new AnalysisResult(config, goals);
+    return new AnalysisResult(config, builder.build());
   }
-  private void checkMultipleToBuilder(ImmutableList<GoalContext> goals) throws ValidationException {
-    ImmutableList<GoalContext> toBuilderGoals = FluentIterable.from(goals).filter(
-        new Predicate<GoalContext>() {
+
+  private void checkMultipleToBuilder(ImmutableList<NamedGoal> goals) throws ValidationException {
+    ImmutableList<NamedGoal> toBuilderGoals = FluentIterable.from(goals).filter(
+        new Predicate<NamedGoal>() {
           @Override
-          public boolean apply(GoalContext goal) {
-            return goal.innerContext.toBuilder;
+          public boolean apply(NamedGoal goal) {
+            return goal.goal.getAnnotation(Goal.class).toBuilder();
           }
         }).toList();
     if (toBuilderGoals.size() > 1) {
-      throw new ValidationException(MULTIPLE_TOBUILDER, toBuilderGoals.get(1).innerContext.goal);
+      throw new ValidationException(MULTIPLE_TOBUILDER, toBuilderGoals.get(1).goal);
     }
   }
 
-  private void checkNameConflict(ImmutableList<GoalContext> goals) throws ValidationException {
+  private void checkNameConflict(ImmutableList<NamedGoal> goals) throws ValidationException {
     goals = ImmutableList.copyOf(CONSTRUCTORS_FIRST.sortedCopy(goals));
     HashMap<Object, ExecutableElement> goalNames = new HashMap<>();
-    for (GoalContext goal : goals) {
-      String goalName = goal.innerContext.goalName();
-      ExecutableElement thisGoal = goal.innerContext.goal;
+    for (NamedGoal goal : goals) {
+      String goalName = goal.name;
+      ExecutableElement thisGoal = goal.goal;
       ExecutableElement otherGoal = goalNames.put(goalName, thisGoal);
       if (otherGoal != null) {
         String thisName = thisGoal.getAnnotation(Goal.class) == null ? ""
@@ -136,8 +138,8 @@ final class Analyser {
     }
   }
 
-  private ImmutableList<ExecutableElement> goals(TypeElement buildElement) throws ValidationException {
-    ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
+  private ImmutableList<NamedGoal> goals(ClassName annotatedType, TypeElement buildElement) throws ValidationException {
+    ImmutableList.Builder<NamedGoal> builder = ImmutableList.builder();
     for (ExecutableElement executableElement : concat(constructorsIn(buildElement.getEnclosedElements()),
         methodsIn(buildElement.getEnclosedElements()))) {
       if (executableElement.getAnnotation(Goal.class) != null) {
@@ -147,10 +149,11 @@ final class Analyser {
         if (executableElement.getParameters().isEmpty()) {
           throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
         }
-        builder.add(executableElement);
+        TypeName goalType = goalType(annotatedType, executableElement);
+        builder.add(new NamedGoal(goalName(goalType, executableElement), executableElement));
       }
     }
-    ImmutableList<ExecutableElement> goals = builder.build();
+    ImmutableList<NamedGoal> goals = builder.build();
     if (goals.isEmpty()) {
       throw new ValidationException(WARNING, NO_GOALS, buildElement);
     }
@@ -165,6 +168,35 @@ final class Analyser {
       this.config = config;
       this.goals = goals;
     }
+  }
+
+  private static final class NamedGoal {
+
+    private final String name;
+    private final ExecutableElement goal;
+
+    private NamedGoal(String name, ExecutableElement goal) {
+      this.name = name;
+      this.goal = goal;
+    }
+  }
+
+  private static String goalName(TypeName goalType, ExecutableElement goal) {
+    Goal goalAnnotation = goal.getAnnotation(Goal.class);
+    if (goalAnnotation == null || isNullOrEmpty(goalAnnotation.name())) {
+      return goalTypeName(goalType);
+    }
+    return upcase(goalAnnotation.name());
+  }
+
+  private static String goalTypeName(TypeName goalType) {
+    return ((ClassName) goalType.box()).simpleName();
+  }
+
+  private static TypeName goalType(ClassName annotatedType, ExecutableElement goal) {
+    return goal.getKind() == CONSTRUCTOR
+        ? annotatedType
+        : TypeName.get(goal.getReturnType());
   }
 
 }
