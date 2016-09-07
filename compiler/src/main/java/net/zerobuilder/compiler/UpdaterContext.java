@@ -6,28 +6,26 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.GoalContext.SharedGoalContext;
 
-import javax.lang.model.element.Name;
 
 import static com.google.common.base.Optional.absent;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
-import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.UberGoalContext.GoalKind.CONSTRUCTOR;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
 final class UpdaterContext {
 
   private static final String UPDATER_IMPL = "UpdaterImpl";
 
-  private final SharedGoalContext context;
+  private final GoalContext context;
 
-  UpdaterContext(SharedGoalContext context) {
+  UpdaterContext(GoalContext context) {
     this.context = context;
   }
 
@@ -42,7 +40,7 @@ final class UpdaterContext {
       ClassName r = receiver.get();
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
-    for (ParameterContext parameter : context.parameters) {
+    for (ParameterContext parameter : context.goalParameters) {
       String name = parameter.name;
       builder.add(FieldSpec.builder(parameter.type, name, PRIVATE).build());
     }
@@ -51,7 +49,7 @@ final class UpdaterContext {
 
   private ImmutableList<MethodSpec> updaterMethods() {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (ParameterContext parameter : context.parameters) {
+    for (ParameterContext parameter : context.goalParameters) {
       builder.add(methodBuilder(parameter.name)
           .addAnnotation(Override.class)
           .returns(context.contractUpdaterName())
@@ -67,16 +65,16 @@ final class UpdaterContext {
   private MethodSpec buildMethod() {
     MethodSpec.Builder builder = methodBuilder("build")
         .addAnnotation(Override.class)
-        .addExceptions(context.thrownTypes())
+        .addExceptions(context.thrownTypes)
         .addModifiers(PUBLIC)
         .returns(context.goalType);
-    Name buildVia = context.goal.getSimpleName();
+    String goal = context.methodName;
     Optional<ClassName> receiver = context.receiverType();
-    return (context.goal.getKind() == CONSTRUCTOR
-        ? builder.addStatement("return new $T($L)", context.goalType, context.goalParameters)
+    return (context.kind == CONSTRUCTOR
+        ? builder.addStatement("return new $T($L)", context.goalType, context.methodParameters)
         : receiver.isPresent()
-        ? builder.addStatement("return $N.$N($L)", "_" + downcase(receiver.get().simpleName()), buildVia, context.goalParameters)
-        : builder.addStatement("return $T.$N($L)", context.config.annotatedType, buildVia, context.goalParameters))
+        ? builder.addStatement("return $N.$N($L)", "_" + downcase(receiver.get().simpleName()), goal, context.methodParameters)
+        : builder.addStatement("return $T.$N($L)", context.config.annotatedType, goal, context.methodParameters))
         .build();
   }
 

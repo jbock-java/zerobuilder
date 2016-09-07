@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.GoalContext.SharedGoalContext;
 
 import javax.lang.model.element.Modifier;
 
@@ -26,20 +25,20 @@ import static javax.lang.model.element.Modifier.STATIC;
 
 final class ContractContext {
 
-  private final SharedGoalContext context;
+  private final GoalContext context;
 
-  ContractContext(SharedGoalContext context) {
+  ContractContext(GoalContext context) {
     this.context = context;
   }
 
   private ImmutableList<TypeSpec> stepInterfaces() {
     ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
-    for (int i = 0; i < context.parameters.size() - 1; i++) {
-      ParameterContext spec = context.parameters.get(i);
+    for (int i = 0; i < context.goalParameters.size() - 1; i++) {
+      ParameterContext spec = context.goalParameters.get(i);
       specs.add(spec.asStepInterface(context.maybeAddPublic()));
     }
-    ParameterContext spec = getLast(context.parameters);
-    specs.add(spec.asStepInterface(context.maybeAddPublic(), context.thrownTypes()));
+    ParameterContext spec = getLast(context.goalParameters);
+    specs.add(spec.asStepInterface(context.maybeAddPublic(), context.thrownTypes));
     return specs.build();
   }
 
@@ -50,7 +49,7 @@ final class ContractContext {
     MethodSpec buildMethod = methodBuilder("build")
         .returns(context.goalType)
         .addModifiers(PUBLIC, ABSTRACT)
-        .addExceptions(context.thrownTypes())
+        .addExceptions(context.thrownTypes)
         .build();
     return Optional.of(interfaceBuilder(context.contractUpdaterName())
         .addMethod(buildMethod)
@@ -62,7 +61,7 @@ final class ContractContext {
   private ImmutableList<MethodSpec> updateMethods() {
     ClassName updaterName = context.contractUpdaterName();
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (ParameterContext spec : context.parameters) {
+    for (ParameterContext spec : context.goalParameters) {
       builder.add(spec.asUpdaterInterfaceMethod(updaterName));
     }
     return builder.build();

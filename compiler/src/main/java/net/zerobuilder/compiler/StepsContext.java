@@ -6,29 +6,25 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.GoalContext.SharedGoalContext;
-
-import javax.lang.model.element.Name;
 
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
-import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.UberGoalContext.GoalKind.CONSTRUCTOR;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
 final class StepsContext {
 
-  private final SharedGoalContext context;
+  private final GoalContext context;
 
-  StepsContext(SharedGoalContext context) {
+  StepsContext(GoalContext context) {
     this.context = context;
   }
 
@@ -39,7 +35,7 @@ final class StepsContext {
       ClassName r = receiver.get();
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
-    for (ParameterContext parameter : context.parameters.subList(0, context.parameters.size() - 1)) {
+    for (ParameterContext parameter : context.goalParameters.subList(0, context.goalParameters.size() - 1)) {
       String name = parameter.name;
       builder.add(FieldSpec.builder(parameter.type, name, PRIVATE).build());
     }
@@ -54,7 +50,7 @@ final class StepsContext {
 
   private ImmutableList<MethodSpec> stepsButLast() {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (ParameterContext parameter : context.parameters.subList(0, context.parameters.size() - 1)) {
+    for (ParameterContext parameter : context.goalParameters.subList(0, context.goalParameters.size() - 1)) {
       builder.add(methodBuilder(parameter.name)
           .addAnnotation(Override.class)
           .returns(parameter.returnType)
@@ -68,18 +64,18 @@ final class StepsContext {
   }
 
   private MethodSpec lastStep() {
-    ParameterContext parameter = getLast(context.parameters);
+    ParameterContext parameter = getLast(context.goalParameters);
     MethodSpec.Builder builder = methodBuilder(parameter.name)
         .addAnnotation(Override.class)
         .addParameter(parameter.parameter())
-        .addExceptions(context.thrownTypes())
+        .addExceptions(context.thrownTypes)
         .addModifiers(PUBLIC)
         .returns(context.goalType);
-    Name goal = context.goal.getSimpleName();
+    String goal = context.methodName;
     String returnLiteral = TypeName.VOID.equals(context.goalType) ? "" : "return ";
     Optional<ClassName> receiver = context.receiverType();
-    CodeBlock parameters = context.goalParameters;
-    return (context.goal.getKind() == CONSTRUCTOR
+    CodeBlock parameters = context.methodParameters;
+    return (context.kind == CONSTRUCTOR
         ? builder.addStatement("return new $T($L)", context.goalType, parameters)
         : receiver.isPresent()
         ? builder.addStatement("$L$N.$N($L)", returnLiteral, "_" + downcase(receiver.get().simpleName()), goal, parameters)
