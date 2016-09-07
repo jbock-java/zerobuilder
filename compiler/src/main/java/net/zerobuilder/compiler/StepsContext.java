@@ -78,7 +78,7 @@ final class StepsContext {
     Name goal = context.goal.getSimpleName();
     String returnLiteral = TypeName.VOID.equals(context.goalType) ? "" : "return ";
     Optional<ClassName> receiver = context.receiverType();
-    CodeBlock parameters = context.goalParameters();
+    CodeBlock parameters = context.goalParameters;
     return (context.goal.getKind() == CONSTRUCTOR
         ? builder.addStatement("return new $T($L)", context.goalType, parameters)
         : receiver.isPresent()

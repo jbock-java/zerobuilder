@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
@@ -13,6 +14,7 @@ import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -38,6 +40,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.MULTIPLE_TOBUILDER
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.Utilities.joinCodeBlocks;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class Analyser {
@@ -84,7 +87,7 @@ final class Analyser {
       boolean toBuilder = goalAnnotation != null && goalAnnotation.toBuilder();
       ImmutableList<ValidParameter> validParameters =
           toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
-      builder.add(createGoalContext(goalType, config, validParameters, goal.goal, toBuilder));
+      builder.add(createGoalContext(goalType, config, validParameters, goal.goal, toBuilder, goalParameters(goal.goal)));
     }
     return new AnalysisResult(config, builder.build());
   }
@@ -197,6 +200,14 @@ final class Analyser {
     return goal.getKind() == CONSTRUCTOR
         ? annotatedType
         : TypeName.get(goal.getReturnType());
+  }
+
+  private static CodeBlock goalParameters(ExecutableElement goal) {
+    ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
+    for (VariableElement arg : goal.getParameters()) {
+      builder.add(CodeBlock.of("$L", arg.getSimpleName()));
+    }
+    return joinCodeBlocks(builder.build(), ", ");
   }
 
 }

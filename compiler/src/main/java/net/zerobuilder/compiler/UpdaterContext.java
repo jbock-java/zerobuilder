@@ -73,10 +73,10 @@ final class UpdaterContext {
     Name buildVia = context.goal.getSimpleName();
     Optional<ClassName> receiver = context.receiverType();
     return (context.goal.getKind() == CONSTRUCTOR
-        ? builder.addStatement("return new $T($L)", context.goalType, context.goalParameters())
+        ? builder.addStatement("return new $T($L)", context.goalType, context.goalParameters)
         : receiver.isPresent()
-        ? builder.addStatement("return $N.$N($L)", "_" + downcase(receiver.get().simpleName()), buildVia, context.goalParameters())
-        : builder.addStatement("return $T.$N($L)", context.config.annotatedType, buildVia, context.goalParameters()))
+        ? builder.addStatement("return $N.$N($L)", "_" + downcase(receiver.get().simpleName()), buildVia, context.goalParameters)
+        : builder.addStatement("return $T.$N($L)", context.config.annotatedType, buildVia, context.goalParameters))
         .build();
   }
 

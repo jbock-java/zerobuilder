@@ -14,7 +14,6 @@ import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.Set;
 
@@ -28,7 +27,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.SharedGoalContext.goalName;
-import static net.zerobuilder.compiler.Utilities.joinCodeBlocks;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class GoalContext {
@@ -54,12 +52,13 @@ final class GoalContext {
 
   static GoalContext createGoalContext(TypeName goalType, BuildConfig config,
                                        ImmutableList<ValidParameter> validParameters,
-                                       ExecutableElement goal, boolean toBuilder) {
+                                       ExecutableElement goal, boolean toBuilder,
+                                       CodeBlock goalParameters) {
     String builderTypeName = goalName(goalType, goal) + "Builder";
     ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);
     ImmutableList<ParameterContext> parameters = parameters(contractType, goalType, validParameters);
-    SharedGoalContext shared = new SharedGoalContext(goalType, builderType, config, toBuilder, goal, parameters);
+    SharedGoalContext shared = new SharedGoalContext(goalType, builderType, config, toBuilder, goal, parameters, goalParameters);
     return new GoalContext(shared, new StepsContext(shared),
         new ContractContext(shared), new UpdaterContext(shared));
   }
@@ -99,19 +98,25 @@ final class GoalContext {
     final ExecutableElement goal;
 
     /**
-     * parameters of the {@link #goal}
+     * blueprint for steps: parameters of the {@link #goal}, possibly in changed order
      */
     final ImmutableList<ParameterContext> parameters;
 
+    /**
+     * real parameters of the {@link #goal}
+     */
+    final CodeBlock goalParameters;
+
     private SharedGoalContext(TypeName goalType, ClassName builderType, BuildConfig config,
                               boolean toBuilder, ExecutableElement goal,
-                              ImmutableList<ParameterContext> parameters) {
+                              ImmutableList<ParameterContext> parameters, CodeBlock goalParameters) {
       this.goalType = goalType;
       this.builderType = builderType;
       this.config = config;
       this.toBuilder = toBuilder;
       this.goal = goal;
       this.parameters = parameters;
+      this.goalParameters = goalParameters;
     }
 
     ImmutableList<ClassName> stepInterfaceNames() {
@@ -150,14 +155,6 @@ final class GoalContext {
     ClassName contractUpdaterName() {
       return contractName()
           .nestedClass(goalName() + UPDATER_SUFFIX);
-    }
-
-    CodeBlock goalParameters() {
-      ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
-      for (VariableElement arg : goal.getParameters()) {
-        builder.add(CodeBlock.of("$L", arg.getSimpleName()));
-      }
-      return joinCodeBlocks(builder.build(), ", ");
     }
 
     String goalName() {
