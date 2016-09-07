@@ -39,9 +39,9 @@ final class StepsContext {
       ClassName r = receiver.get();
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
-    for (ParameterContext stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
-      String name = stepSpec.parameter.parameter.getSimpleName().toString();
-      builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.parameter.asType()), name, PRIVATE).build());
+    for (ParameterContext parameter : context.parameters.subList(0, context.parameters.size() - 1)) {
+      String name = parameter.name;
+      builder.add(FieldSpec.builder(parameter.type, name, PRIVATE).build());
     }
     return builder.build();
   }
@@ -54,12 +54,11 @@ final class StepsContext {
 
   private ImmutableList<MethodSpec> stepsButLast() {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (ParameterContext stepSpec : context.stepSpecs.subList(0, context.stepSpecs.size() - 1)) {
-      ParameterSpec parameter = stepSpec.parameter();
+    for (ParameterContext parameter : context.parameters.subList(0, context.parameters.size() - 1)) {
       builder.add(methodBuilder(parameter.name)
           .addAnnotation(Override.class)
-          .returns(stepSpec.returnType)
-          .addParameter(parameter)
+          .returns(parameter.returnType)
+          .addParameter(parameter.parameter())
           .addStatement("this.$N = $N", parameter.name, parameter.name)
           .addStatement("return this")
           .addModifiers(PUBLIC)
@@ -69,10 +68,10 @@ final class StepsContext {
   }
 
   private MethodSpec lastStep() {
-    ParameterContext stepSpec = getLast(context.stepSpecs);
-    MethodSpec.Builder builder = methodBuilder(stepSpec.parameter.parameter.getSimpleName().toString())
+    ParameterContext parameter = getLast(context.parameters);
+    MethodSpec.Builder builder = methodBuilder(parameter.name)
         .addAnnotation(Override.class)
-        .addParameter(stepSpec.parameter())
+        .addParameter(parameter.parameter())
         .addExceptions(context.thrownTypes())
         .addModifiers(PUBLIC)
         .returns(context.goalType);

@@ -5,8 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.GoalContext.SharedGoalContext;
 
@@ -44,21 +42,20 @@ final class UpdaterContext {
       ClassName r = receiver.get();
       builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
     }
-    for (ParameterContext stepSpec : context.stepSpecs) {
-      String name = stepSpec.parameter.parameter.getSimpleName().toString();
-      builder.add(FieldSpec.builder(TypeName.get(stepSpec.parameter.parameter.asType()), name, PRIVATE).build());
+    for (ParameterContext parameter : context.parameters) {
+      String name = parameter.name;
+      builder.add(FieldSpec.builder(parameter.type, name, PRIVATE).build());
     }
     return builder.build();
   }
 
   private ImmutableList<MethodSpec> updaterMethods() {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (ParameterContext stepSpec : context.stepSpecs) {
-      ParameterSpec parameter = stepSpec.parameter();
+    for (ParameterContext parameter : context.parameters) {
       builder.add(methodBuilder(parameter.name)
           .addAnnotation(Override.class)
           .returns(context.contractUpdaterName())
-          .addParameter(parameter)
+          .addParameter(parameter.parameter())
           .addStatement("this.$N = $N", parameter.name, parameter.name)
           .addStatement("return this")
           .addModifiers(PUBLIC)

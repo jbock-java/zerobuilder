@@ -58,23 +58,23 @@ final class GoalContext {
     String builderTypeName = goalName(goalType, goal) + "Builder";
     ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);
-    ImmutableList<ParameterContext> specs = specs(contractType, goalType, validParameters);
-    SharedGoalContext sharedContext = new SharedGoalContext(goalType, builderType, config, toBuilder, goal, specs);
-    return new GoalContext(sharedContext, new StepsContext(sharedContext),
-        new ContractContext(sharedContext), new UpdaterContext(sharedContext));
+    ImmutableList<ParameterContext> parameters = parameters(contractType, goalType, validParameters);
+    SharedGoalContext shared = new SharedGoalContext(goalType, builderType, config, toBuilder, goal, parameters);
+    return new GoalContext(shared, new StepsContext(shared),
+        new ContractContext(shared), new UpdaterContext(shared));
   }
 
-  private static ImmutableList<ParameterContext> specs(ClassName contract, TypeName returnType,
-                                                       ImmutableList<ValidParameter> parameters) {
-    ImmutableList.Builder<ParameterContext> stepSpecsBuilder = ImmutableList.builder();
+  private static ImmutableList<ParameterContext> parameters(ClassName contract, TypeName returnType,
+                                                            ImmutableList<ValidParameter> parameters) {
+    ImmutableList.Builder<ParameterContext> builder = ImmutableList.builder();
     for (int i = parameters.size() - 1; i >= 0; i--) {
       ValidParameter parameter = parameters.get(i);
       ClassName stepContract = contract.nestedClass(
-          upcase(parameter.parameter.getSimpleName().toString()));
-      stepSpecsBuilder.add(new ParameterContext(stepContract, parameter, returnType));
+          upcase(parameter.name));
+      builder.add(new ParameterContext(stepContract, parameter, returnType));
       returnType = stepContract;
     }
-    return stepSpecsBuilder.build().reverse();
+    return builder.build().reverse();
   }
 
   static final class SharedGoalContext {
@@ -99,24 +99,24 @@ final class GoalContext {
     final ExecutableElement goal;
 
     /**
-     * arguments of the {@link #goal}
+     * parameters of the {@link #goal}
      */
-    final ImmutableList<ParameterContext> stepSpecs;
+    final ImmutableList<ParameterContext> parameters;
 
     private SharedGoalContext(TypeName goalType, ClassName builderType, BuildConfig config,
                               boolean toBuilder, ExecutableElement goal,
-                              ImmutableList<ParameterContext> stepSpecs) {
+                              ImmutableList<ParameterContext> parameters) {
       this.goalType = goalType;
       this.builderType = builderType;
       this.config = config;
       this.toBuilder = toBuilder;
       this.goal = goal;
-      this.stepSpecs = stepSpecs;
+      this.parameters = parameters;
     }
 
     ImmutableList<ClassName> stepInterfaceNames() {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
-      for (ParameterContext spec : stepSpecs) {
+      for (ParameterContext spec : parameters) {
         specs.add(spec.stepContract);
       }
       return specs.build();

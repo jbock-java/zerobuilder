@@ -108,13 +108,13 @@ final class Generator {
       builder.addStatement("$T $L = new $T()", updaterType, varUpdater,
           updaterType);
     }
-    for (ParameterContext stepSpec : goal.innerContext.stepSpecs) {
-      if (stepSpec.parameter.projectionMethodName.isPresent()) {
-        builder.addStatement("$N.$N = $N.$N()", varUpdater, stepSpec.parameter.parameter.getSimpleName(),
-            parameterName, stepSpec.parameter.projectionMethodName.get());
+    for (ParameterContext parameter : goal.innerContext.parameters) {
+      if (parameter.projectionMethodName.isPresent()) {
+        builder.addStatement("$N.$N = $N.$N()", varUpdater, parameter.name,
+            parameterName, parameter.projectionMethodName.get());
       } else {
-        builder.addStatement("$N.$N = $N.$N", varUpdater, stepSpec.parameter.parameter.getSimpleName(),
-            parameterName, stepSpec.parameter.parameter.getSimpleName());
+        builder.addStatement("$N.$N = $N.$N", varUpdater, parameter.name,
+            parameterName, parameter.name);
       }
     }
     builder.addStatement("return $L", varUpdater);
@@ -126,7 +126,7 @@ final class Generator {
   private ImmutableList<MethodSpec> builderMethods(AnalysisResult analysisResult) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     for (GoalContext goal : analysisResult.goals) {
-      ParameterContext firstStep = goal.innerContext.stepSpecs.get(0);
+      ParameterContext firstStep = goal.innerContext.parameters.get(0);
       Optional<ClassName> maybeReceiver = goal.innerContext.receiverType();
       MethodSpec.Builder spec = methodBuilder(
           downcase(goal.innerContext.goalName() + "Builder"));

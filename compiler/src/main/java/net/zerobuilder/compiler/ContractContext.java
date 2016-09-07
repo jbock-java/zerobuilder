@@ -34,11 +34,11 @@ final class ContractContext {
 
   private ImmutableList<TypeSpec> stepInterfaces() {
     ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
-    for (int i = 0; i < context.stepSpecs.size() - 1; i++) {
-      ParameterContext spec = context.stepSpecs.get(i);
+    for (int i = 0; i < context.parameters.size() - 1; i++) {
+      ParameterContext spec = context.parameters.get(i);
       specs.add(spec.asStepInterface(context.maybeAddPublic()));
     }
-    ParameterContext spec = getLast(context.stepSpecs);
+    ParameterContext spec = getLast(context.parameters);
     specs.add(spec.asStepInterface(context.maybeAddPublic(), context.thrownTypes()));
     return specs.build();
   }
@@ -62,7 +62,7 @@ final class ContractContext {
   private ImmutableList<MethodSpec> updateMethods() {
     ClassName updaterName = context.contractUpdaterName();
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (ParameterContext spec : context.stepSpecs) {
+    for (ParameterContext spec : context.parameters) {
       builder.add(spec.asUpdaterInterfaceMethod(updaterName));
     }
     return builder.build();

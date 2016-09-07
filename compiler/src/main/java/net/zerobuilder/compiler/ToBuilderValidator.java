@@ -73,11 +73,11 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> validate() throws ValidationException {
-    ImmutableList.Builder<ValidParameter> builder = ImmutableList.builder();
+    ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
     for (VariableElement parameter : goal.getParameters()) {
       VariableElement field = fields.get(parameter.getSimpleName().toString());
       if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
-        builder.add(new ValidParameter(parameter, Optional.<String>absent()));
+        builder.add(new TmpValidParameter(parameter, Optional.<String>absent()));
       } else {
         String methodName = "get" + upcase(parameter.getSimpleName().toString());
         ExecutableElement method = methods.get(methodName);
@@ -94,16 +94,16 @@ final class ToBuilderValidator {
           throw new ValidationException("Could not find projection for parameter: "
               + parameter.getSimpleName(), goal);
         }
-        builder.add(new ValidParameter(parameter, Optional.of(methodName)));
+        builder.add(new TmpValidParameter(parameter, Optional.of(methodName)));
       }
     }
     return sortedParameters(builder.build());
   }
 
   ImmutableList<ValidParameter> skip() throws ValidationException {
-    ImmutableList.Builder<ValidParameter> builder = ImmutableList.builder();
+    ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
     for (VariableElement parameter : goal.getParameters()) {
-      builder.add(new ValidParameter(parameter, Optional.<String>absent()));
+      builder.add(new TmpValidParameter(parameter, Optional.<String>absent()));
     }
     return sortedParameters(builder.build());
   }
@@ -135,11 +135,11 @@ final class ToBuilderValidator {
     }
   }
 
-  private static ImmutableList<ValidParameter> sortedParameters(ImmutableList<ValidParameter> parameters)
+  private static ImmutableList<ValidParameter> sortedParameters(ImmutableList<TmpValidParameter> parameters)
       throws ValidationException {
     ValidParameter[] builder = new ValidParameter[parameters.size()];
-    ImmutableList.Builder<ValidParameter> noAnnotation = ImmutableList.builder();
-    for (ValidParameter parameter : parameters) {
+    ImmutableList.Builder<TmpValidParameter> noAnnotation = ImmutableList.builder();
+    for (TmpValidParameter parameter : parameters) {
       Step step = parameter.parameter.getAnnotation(Step.class);
       if (step != null) {
         int value = step.value();
@@ -155,30 +155,46 @@ final class ToBuilderValidator {
           throw new ValidationException(ERROR,
               DUPLICATE_STEP_POSITION, parameter.parameter);
         }
-        builder[value] = parameter;
+        builder[value] = parameter.toValidParameter();
       } else {
         noAnnotation.add(parameter);
       }
     }
     int pos = 0;
-    for (ValidParameter parameter : noAnnotation.build()) {
+    for (TmpValidParameter parameter : noAnnotation.build()) {
       while (builder[pos] != null) {
         pos++;
       }
-      builder[pos++] = parameter;
+      builder[pos++] = parameter.toValidParameter();
     }
     return ImmutableList.copyOf(builder);
   }
 
-  static final class ValidParameter {
+  static final class TmpValidParameter {
     final VariableElement parameter;
     final Optional<String> projectionMethodName;
 
-    private ValidParameter(VariableElement parameter, Optional<String> projectionMethodName) {
+    private TmpValidParameter(VariableElement parameter, Optional<String> projectionMethodName) {
       this.parameter = parameter;
       this.projectionMethodName = projectionMethodName;
     }
+    ValidParameter toValidParameter() {
+      return new ValidParameter(parameter.getSimpleName().toString(),
+          TypeName.get(parameter.asType()), projectionMethodName);
+    }
+  }
 
+  static final class ValidParameter {
+    final String name;
+    final TypeName type;
+    final Optional<String> projectionMethodName;
+
+
+    ValidParameter(String name, TypeName type, Optional<String> projectionMethodName) {
+      this.name = name;
+      this.type = type;
+      this.projectionMethodName = projectionMethodName;
+    }
   }
 
 }
