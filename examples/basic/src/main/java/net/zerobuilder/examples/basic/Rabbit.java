@@ -1,9 +1,9 @@
 package net.zerobuilder.examples.basic;
 
-import net.zerobuilder.Build;
+import net.zerobuilder.Builder;
 import net.zerobuilder.Goal;
 
-@Build
+@Builder
 final class Rabbit {
 
   final String name;

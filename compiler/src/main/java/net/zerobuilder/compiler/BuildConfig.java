@@ -2,7 +2,7 @@ package net.zerobuilder.compiler;
 
 import com.google.common.base.Joiner;
 import com.squareup.javapoet.ClassName;
-import net.zerobuilder.Build;
+import net.zerobuilder.Builder;
 
 import javax.lang.model.element.TypeElement;
 
@@ -23,7 +23,7 @@ final class BuildConfig {
   }
 
   static BuildConfig createBuildConfig(TypeElement buildElement) {
-    boolean nogc = buildElement.getAnnotation(Build.class).recycle();
+    boolean nogc = buildElement.getAnnotation(Builder.class).recycle();
     boolean isPublic = buildElement.getModifiers().contains(PUBLIC);
     ClassName generatedType = generatedClassName(buildElement);
     ClassName annotatedType = ClassName.get(buildElement);

@@ -16,10 +16,10 @@ public class ZeroProcessorTest {
   public void simpleCube() {
     JavaFileObject cube = forSourceLines("cube.Cube",
         "package cube;",
-        "import net.zerobuilder.Build;",
+        "import net.zerobuilder.Builder;",
         "import net.zerobuilder.Goal;",
         "",
-        "@Build(recycle = true)",
+        "@Builder(recycle = true)",
         "abstract class Cube {",
         "  abstract double height();",
         "  abstract double length();",

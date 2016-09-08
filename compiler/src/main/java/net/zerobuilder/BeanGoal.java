@@ -10,16 +10,17 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * <p>
  * Marks the <em>type</em> of this field as a build goal.
  * The field <em>value</em> is not considered and may be {@code null}.
- * There will always be a generated {@code toBuilder} method for this goal.
+ * </p><p>
+ * The field must be {@code static} and may be {@code private}.
+ * </p><p>
+ * This goal will always attempt to generate a {@code toBuilder} method.
  * </p><p>
  * There will be one generated step for each <em>setter</em> of the target type.
  * </p><p>
- * The target field must be {@code static}.
- * </p><p>
- * It is an error if the enclosing type doesn't carry the {@link Build} annotation.
+ * It is an error if the enclosing type doesn't carry the {@link Builder} annotation.
  * </p>
  *
- * @see Build
+ * @see Builder
  */
 @Retention(SOURCE)
 @Target({FIELD})

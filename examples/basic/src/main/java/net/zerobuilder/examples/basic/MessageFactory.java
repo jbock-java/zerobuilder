@@ -1,9 +1,9 @@
 package net.zerobuilder.examples.basic;
 
-import net.zerobuilder.Build;
+import net.zerobuilder.Builder;
 import net.zerobuilder.Goal;
 
-@Build(recycle = true)
+@Builder(recycle = true)
 final class MessageFactory {
 
   final String sender;
@@ -22,7 +22,7 @@ final class MessageFactory {
         .subject(subject);
   }
 
-  @Build(recycle = true)
+  @Builder(recycle = true)
   static final class Message {
     final String sender;
     final String body;

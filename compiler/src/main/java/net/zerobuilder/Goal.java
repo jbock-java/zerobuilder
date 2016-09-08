@@ -9,9 +9,9 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * Marks this method or constructor as a build goal.
- * It is an error if the enclosing type doesn't carry the {@link Build} annotation.
+ * It is an error if the enclosing type doesn't carry the {@link Builder} annotation.
  *
- * @see Build
+ * @see Builder
  */
 @Retention(SOURCE)
 @Target({METHOD, CONSTRUCTOR})
@@ -31,9 +31,12 @@ public @interface Goal {
   String name() default "";
 
   /**
-   * If {@code true}, declares that a {@code static toBuilder} method
-   * should be generated for this goal. Additional rules apply;
-   * see the javadoc of {@link Build}.
+   * <p>If {@code true}, declares that a {@code static toBuilder} method
+   * should be generated for this goal.
+   * </p><p>
+   * The goal may be a constructor or static method,
+   * but not an instance method.
+   * </p>
    */
   boolean toBuilder() default false;
 }

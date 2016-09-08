@@ -9,7 +9,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 /**
  * <p>
  * Declares that a class named {@code some.package.MyObjectBuilders} should be generated,
- * where {@code some.package.MyObject} is the name of the class that carries the {@link Build} annotation.
+ * where {@code some.package.MyObject} is the name of the class that carries the {@link Builder} annotation.
  * The generated builders' job will be to invoke those methods or constructors
  * which carry the {@link Goal} annotation. These &quot;goals&quot; may not be {@code private}.
  * </p><p>
@@ -17,20 +17,11 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * the generated {@code static someGoalBuilder} method will take a parameter of type {@code MyObject}.
  * </p><p>
  * A goal method may return anything, including {@code void}.
- * </p><p>
- * Only one goal per {@link Build} may have the {@link Goal#toBuilder} flag set to {@code true}.
- * Additional rules apply in this case:
- * <ul>
- * <li>The goal must either be a constructor,
- * or a static method that returns the type which carries the {@link Build} annotation.</li>
- * <li>Each parameter of the goal must have a corresponding projection,
- * i.e. a non-private &quot;getter&quot; or instance field of the same type and name.</li>
- * </ul>
  * </p>
  */
 @Retention(SOURCE)
 @Target(TYPE)
-public @interface Build {
+public @interface Builder {
 
   /**
    * When this flag is set to {@code true},

@@ -1,11 +1,11 @@
 package net.zerobuilder.examples.basic;
 
-import net.zerobuilder.Build;
+import net.zerobuilder.Builder;
 import net.zerobuilder.Goal;
 
 import java.io.IOException;
 
-@Build
+@Builder
 final class Throw {
 
   @Goal

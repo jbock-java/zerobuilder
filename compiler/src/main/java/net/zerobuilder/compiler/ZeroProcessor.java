@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.Build;
+import net.zerobuilder.Builder;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.Analyser.AnalysisResult;
 
@@ -36,7 +36,7 @@ public final class ZeroProcessor extends AbstractProcessor {
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
-    return ImmutableSet.of(Goal.class.getName(), Build.class.getName());
+    return ImmutableSet.of(Goal.class.getName(), Builder.class.getName());
   }
 
   @Override
@@ -54,7 +54,7 @@ public final class ZeroProcessor extends AbstractProcessor {
     }
     Analyser transformer = new Analyser(processingEnv.getElementUtils());
     Generator generator = new Generator(processingEnv.getElementUtils());
-    Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Build.class));
+    Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builder.class));
     for (TypeElement annotatedType : types) {
       try {
         AnalysisResult analysisResult = transformer.parse(annotatedType);
@@ -84,7 +84,7 @@ public final class ZeroProcessor extends AbstractProcessor {
     Set<ExecutableElement> executableElements =
         ImmutableSet.copyOf(union(constructorsIn(elements), methodsIn(elements)));
     for (ExecutableElement executableElement : executableElements) {
-      if (executableElement.getEnclosingElement().getAnnotation(Build.class) == null) {
+      if (executableElement.getEnclosingElement().getAnnotation(Builder.class) == null) {
         return Optional.of(executableElement);
       }
     }

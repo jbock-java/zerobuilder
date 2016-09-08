@@ -14,13 +14,13 @@ final class Messages {
         "The goal may not be private.";
 
     static final String PRIVATE_TYPE =
-        "The @Build annotated type may not be private.";
+        "The @Builder annotated type may not be private.";
 
     static final String NOT_ENOUGH_PARAMETERS =
         "The goal must have at least one parameter.";
 
     static final String NESTING_KIND =
-        "The @Build annotation can only be used on top level and non-private static inner classes.";
+        "The @Builder annotation can only be used on top level and non-private static inner classes.";
 
     static final String NO_GOALS =
         "No goals were found.";
@@ -29,7 +29,7 @@ final class Messages {
         "Only one goal can have the toBuilder flag set.";
 
     static final String GOAL_NOT_IN_BUILD =
-        "The @Goal annotation may not appear outside a class that carries the @Build annotation.";
+        "The @Goal annotation may not appear outside a class that carries the @Builder annotation.";
 
     /* empty, empty, constructor, constructor */
     static final String GOALNAME_EECC =
