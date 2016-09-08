@@ -18,6 +18,9 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * </p><p>
  * A goal method may return anything, including {@code void}.
  * </p>
+ *
+ * @see Goal
+ * @see Step
  */
 @Retention(SOURCE)
 @Target(TYPE)
