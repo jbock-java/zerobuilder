@@ -1,12 +1,12 @@
 package net.zerobuilder.compiler;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.UberGoalContext.GoalKind;
 
 import javax.lang.model.element.Modifier;
 import java.util.Set;
@@ -25,17 +25,15 @@ final class GoalContext {
    */
   final ClassName builderType;
 
-  final BuildConfig config;
+  final BuilderContext config;
 
   final boolean toBuilder;
 
   final String goalName;
 
-  final String methodName;
+  final GoalKind kind;
 
-  final UberGoalContext.GoalKind kind;
-
-  final UberGoalContext.Visibility visibility;
+  private final UberGoalContext.Visibility visibility;
 
   final ImmutableList<TypeName> thrownTypes;
 
@@ -44,31 +42,29 @@ final class GoalContext {
    */
   final ImmutableList<ParameterContext> goalParameters;
 
-  final CodeBlock methodParameters;
+  final CodeBlock goalCall;
 
   @VisibleForTesting
   GoalContext(TypeName goalType,
               ClassName builderType,
-              BuildConfig config,
+              BuilderContext config,
               boolean toBuilder,
               String goalName,
-              String methodName,
-              UberGoalContext.GoalKind kind,
+              GoalKind kind,
               UberGoalContext.Visibility visibility,
               ImmutableList<TypeName> thrownTypes,
               ImmutableList<ParameterContext> goalParameters,
-              CodeBlock methodParameters) {
+              CodeBlock goalCall) {
     this.goalType = goalType;
     this.builderType = builderType;
     this.config = config;
     this.toBuilder = toBuilder;
     this.goalName = goalName;
-    this.methodName = methodName;
     this.kind = kind;
     this.visibility = visibility;
     this.thrownTypes = thrownTypes;
     this.goalParameters = goalParameters;
-    this.methodParameters = methodParameters;
+    this.goalCall = goalCall;
   }
 
   ImmutableList<ClassName> stepInterfaceNames() {
@@ -77,12 +73,6 @@ final class GoalContext {
       specs.add(spec.stepContract);
     }
     return specs.build();
-  }
-
-  Optional<ClassName> receiverType() {
-    return kind == UberGoalContext.GoalKind.INSTANCE_METHOD
-        ? Optional.of(config.annotatedType)
-        : Optional.<ClassName>absent();
   }
 
   ClassName contractName() {

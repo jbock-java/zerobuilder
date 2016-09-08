@@ -8,26 +8,26 @@ import javax.lang.model.element.TypeElement;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-final class BuildConfig {
+final class BuilderContext {
 
   final boolean nogc;
   final boolean isPublic;
   final ClassName annotatedType;
   final ClassName generatedType;
 
-  private BuildConfig(boolean nogc, boolean isPublic, ClassName annotatedType, ClassName generatedType) {
+  private BuilderContext(boolean nogc, boolean isPublic, ClassName annotatedType, ClassName generatedType) {
     this.nogc = nogc;
     this.isPublic = isPublic;
     this.annotatedType = annotatedType;
     this.generatedType = generatedType;
   }
 
-  static BuildConfig createBuildConfig(TypeElement buildElement) {
+  static BuilderContext createBuildConfig(TypeElement buildElement) {
     boolean nogc = buildElement.getAnnotation(Builder.class).recycle();
     boolean isPublic = buildElement.getModifiers().contains(PUBLIC);
     ClassName generatedType = generatedClassName(buildElement);
     ClassName annotatedType = ClassName.get(buildElement);
-    return new BuildConfig(nogc, isPublic, annotatedType, generatedType);
+    return new BuilderContext(nogc, isPublic, annotatedType, generatedType);
   }
 
   private static ClassName generatedClassName(TypeElement buildElement) {

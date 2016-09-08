@@ -7,7 +7,6 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
-
 import static com.google.common.base.Optional.absent;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -16,7 +15,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.UberGoalContext.GoalKind.CONSTRUCTOR;
+import static net.zerobuilder.compiler.UberGoalContext.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
 final class UpdaterContext {
@@ -35,10 +34,9 @@ final class UpdaterContext {
 
   private ImmutableList<FieldSpec> fields() {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    Optional<ClassName> receiver = context.receiverType();
-    if (receiver.isPresent()) {
-      ClassName r = receiver.get();
-      builder.add(FieldSpec.builder(r, "_" + downcase(r.simpleName()), PRIVATE).build());
+    if (context.kind == INSTANCE_METHOD) {
+      ClassName receiverType = context.config.annotatedType;
+      builder.add(FieldSpec.builder(receiverType, '_' + downcase(receiverType.simpleName()), PRIVATE).build());
     }
     for (ParameterContext parameter : context.goalParameters) {
       String name = parameter.name;
@@ -63,19 +61,12 @@ final class UpdaterContext {
   }
 
   private MethodSpec buildMethod() {
-    MethodSpec.Builder builder = methodBuilder("build")
+    return methodBuilder("build")
         .addAnnotation(Override.class)
         .addExceptions(context.thrownTypes)
         .addModifiers(PUBLIC)
-        .returns(context.goalType);
-    String goal = context.methodName;
-    Optional<ClassName> receiver = context.receiverType();
-    return (context.kind == CONSTRUCTOR
-        ? builder.addStatement("return new $T($L)", context.goalType, context.methodParameters)
-        : receiver.isPresent()
-        ? builder.addStatement("return $N.$N($L)", "_" + downcase(receiver.get().simpleName()), goal, context.methodParameters)
-        : builder.addStatement("return $T.$N($L)", context.config.annotatedType, goal, context.methodParameters))
-        .build();
+        .returns(context.goalType)
+        .addCode(context.goalCall).build();
   }
 
   Optional<TypeSpec> buildUpdaterImpl() {

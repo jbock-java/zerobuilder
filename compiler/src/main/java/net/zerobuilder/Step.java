@@ -17,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 public @interface Step {
 
   /**
-   * <p>Override the default position in the generated sequence of steps
+   * <p>Overrides the default position in the generated sequence of steps
    * for this parameter.</p>
    */
   int value();

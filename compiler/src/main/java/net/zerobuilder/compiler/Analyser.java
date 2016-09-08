@@ -27,7 +27,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static javax.tools.Diagnostic.Kind.WARNING;
-import static net.zerobuilder.compiler.BuildConfig.createBuildConfig;
+import static net.zerobuilder.compiler.BuilderContext.createBuildConfig;
 import static net.zerobuilder.compiler.UberGoalContext.createGoalContext;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMC;
@@ -71,7 +71,7 @@ final class Analyser {
 
   AnalysisResult parse(TypeElement buildElement) throws ValidationException {
     ClassName annotatedType = ClassName.get(buildElement);
-    BuildConfig config = createBuildConfig(buildElement);
+    BuilderContext config = createBuildConfig(buildElement);
     ImmutableList.Builder<UberGoalContext> builder = ImmutableList.builder();
     ImmutableList<NamedGoal> goals = goals(annotatedType, buildElement);
     checkMultipleToBuilder(goals);
@@ -164,10 +164,10 @@ final class Analyser {
   }
 
   static final class AnalysisResult {
-    final BuildConfig config;
+    final BuilderContext config;
     final ImmutableList<UberGoalContext> goals;
 
-    AnalysisResult(BuildConfig config, ImmutableList<UberGoalContext> goals) {
+    AnalysisResult(BuilderContext config, ImmutableList<UberGoalContext> goals) {
       this.config = config;
       this.goals = goals;
     }

@@ -31,6 +31,9 @@ import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.maybeAddPublic;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
+import static net.zerobuilder.compiler.UberGoalContext.GoalKind.CONSTRUCTOR;
+import static net.zerobuilder.compiler.UberGoalContext.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.UberGoalContext.GoalKind.STATIC_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
 final class Generator {
@@ -64,7 +67,7 @@ final class Generator {
     return builder.build();
   }
 
-  private Optional<FieldSpec> threadLocalField(BuildConfig config) {
+  private Optional<FieldSpec> threadLocalField(BuilderContext config) {
     if (!config.nogc) {
       return absent();
     }
@@ -131,13 +134,12 @@ final class Generator {
     for (UberGoalContext context : analysisResult.goals) {
       GoalContext goal = context.goal;
       ParameterContext firstStep = goal.goalParameters.get(0);
-      Optional<ClassName> maybeReceiver = goal.receiverType();
       MethodSpec.Builder spec = methodBuilder(
           downcase(goal.goalName + "Builder"));
-      if (maybeReceiver.isPresent()) {
-        ClassName receiver = maybeReceiver.get();
-        spec.addParameter(ParameterSpec.builder(receiver,
-            downcase(receiver.simpleName())).build());
+      if (goal.kind == INSTANCE_METHOD) {
+        ClassName receiverType = goal.config.annotatedType;
+        spec.addParameter(ParameterSpec.builder(receiverType,
+            downcase(receiverType.simpleName())).build());
         if (analysisResult.config.nogc) {
           spec.addStatement("$T $N = $N.get().$N", goal.stepsImplTypeName(),
               downcase(goal.stepsImplTypeName().simpleName()),
@@ -148,17 +150,19 @@ final class Generator {
               goal.stepsImplTypeName());
         }
         spec.addStatement("$N.$N = $N", downcase(goal.stepsImplTypeName().simpleName()),
-            "_" + downcase(receiver.simpleName()),
-            downcase(receiver.simpleName()));
+            '_' + downcase(receiverType.simpleName()),
+            downcase(receiverType.simpleName()));
         spec.addStatement("return $N",
             downcase(goal.stepsImplTypeName().simpleName()));
-      } else {
+      } else if (goal.kind == CONSTRUCTOR || goal.kind == STATIC_METHOD) {
         if (analysisResult.config.nogc) {
           spec.addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE,
               stepsField(context));
         } else {
           spec.addStatement("return new $T()", goal.stepsImplTypeName());
         }
+      } else {
+        throw new IllegalStateException("not implemented: " + goal.kind);
       }
       builder.add(spec.returns(firstStep.stepContract)
           .addModifiers(goal.maybeAddPublic(STATIC))

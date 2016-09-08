@@ -24,6 +24,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.goalTypeName;
+import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class UberGoalContext {
@@ -47,27 +48,36 @@ final class UberGoalContext {
     this.updaterContext = updaterContext;
   }
 
-  static UberGoalContext createGoalContext(TypeName goalType, BuildConfig config,
+  static UberGoalContext createGoalContext(TypeName goalType, BuilderContext config,
                                            ImmutableList<ValidParameter> validParameters,
                                            ExecutableElement goal, boolean toBuilder,
-                                           CodeBlock goalParameters) {
+                                           CodeBlock methodParameters) {
     String builderTypeName = goalName(goalType, goal) + "Builder";
     ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);
     ImmutableList<ParameterContext> parameters = parameters(contractType, goalType, validParameters);
+    GoalKind kind = goalKind(goal);
+    String methodName = goal.getSimpleName().toString();
+    CodeBlock goalCall = goalCall(goalType, methodParameters, kind, config, methodName);
+    Visibility visibility = goal.getModifiers().contains(PUBLIC)
+        ? Visibility.PUBLIC
+        : Visibility.PACKAGE;
     GoalContext shared = new GoalContext(goalType, builderType, config, toBuilder,
-        goalName(goalType, goal), goal.getSimpleName().toString(),
-        goal.getKind() == CONSTRUCTOR
-            ? GoalKind.CONSTRUCTOR
-            : goal.getModifiers().contains(STATIC)
-            ? GoalKind.STATIC_METHOD
-            : GoalKind.INSTANCE_METHOD,
-        goal.getModifiers().contains(PUBLIC)
-            ? Visibility.PUBLIC
-            : Visibility.PACKAGE,
-        thrownTypes(goal), parameters, goalParameters);
+        goalName(goalType, goal),
+        kind,
+        visibility,
+        thrownTypes(goal), parameters,
+        goalCall);
     return new UberGoalContext(shared, new StepsContext(shared),
         new ContractContext(shared), new UpdaterContext(shared));
+  }
+
+  private static GoalKind goalKind(ExecutableElement goal) {
+    return goal.getKind() == CONSTRUCTOR
+        ? GoalKind.CONSTRUCTOR
+        : goal.getModifiers().contains(STATIC)
+        ? GoalKind.STATIC_METHOD
+        : GoalKind.INSTANCE_METHOD;
   }
 
   private static String goalName(TypeName goalType, ExecutableElement goal) {
@@ -76,6 +86,26 @@ final class UberGoalContext {
       return goalTypeName(goalType);
     }
     return upcase(goalAnnotation.name());
+  }
+
+  static CodeBlock goalCall(TypeName goalType, CodeBlock methodParameters, GoalKind kind,
+                            BuilderContext config, String methodName) {
+    String returnLiteral = TypeName.VOID.equals(goalType) ? "" : "return ";
+    switch (kind) {
+      case CONSTRUCTOR:
+        return CodeBlock.of("return new $T($L);",
+            goalType, methodParameters);
+      case INSTANCE_METHOD:
+        return CodeBlock.of("$L$N.$N($L);",
+            returnLiteral, "_" + downcase(config.annotatedType.simpleName()), methodName, methodParameters);
+      case STATIC_METHOD:
+        return CodeBlock.of("$L$T.$N($L);",
+            returnLiteral, config.annotatedType, methodName, methodParameters);
+      case FIELD:
+        throw new IllegalStateException("not implemented");
+      default:
+        throw new IllegalStateException("unknown kind: " + kind);
+    }
   }
 
   private static ImmutableList<ParameterContext> parameters(ClassName contract, TypeName returnType,
@@ -92,7 +122,7 @@ final class UberGoalContext {
   }
 
   enum GoalKind {
-    CONSTRUCTOR, STATIC_METHOD, INSTANCE_METHOD
+    CONSTRUCTOR, STATIC_METHOD, INSTANCE_METHOD, FIELD
   }
 
   enum Visibility {
@@ -118,5 +148,5 @@ final class UberGoalContext {
         })
         .toList();
   }
-  
+
 }
