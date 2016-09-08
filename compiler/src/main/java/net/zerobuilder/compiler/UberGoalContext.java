@@ -32,16 +32,16 @@ final class UberGoalContext {
   static final String CONTRACT = "Contract";
   static final String STEPS_IMPL = "StepsImpl";
 
-  final GoalContext innerContext;
+  final GoalContext goal;
   final StepsContext stepsContext;
   final ContractContext contractContext;
   final UpdaterContext updaterContext;
 
-  private UberGoalContext(GoalContext innerContext,
+  private UberGoalContext(GoalContext goal,
                           StepsContext stepsContext,
                           ContractContext contractContext,
                           UpdaterContext updaterContext) {
-    this.innerContext = innerContext;
+    this.goal = goal;
     this.stepsContext = stepsContext;
     this.contractContext = contractContext;
     this.updaterContext = updaterContext;
@@ -100,11 +100,11 @@ final class UberGoalContext {
   }
 
   TypeSpec builderImpl() {
-    return classBuilder(innerContext.builderType)
+    return classBuilder(goal.builderType)
         .addTypes(presentInstances(of(updaterContext.buildUpdaterImpl())))
         .addType(stepsContext.buildStepsImpl())
         .addType(contractContext.buildContract())
-        .addModifiers(toArray(innerContext.maybeAddPublic(FINAL, STATIC), Modifier.class))
+        .addModifiers(toArray(goal.maybeAddPublic(FINAL, STATIC), Modifier.class))
         .build();
   }
 

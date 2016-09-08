@@ -13,7 +13,7 @@ public class GettersTest {
     assertThat(getters.getLenght(), is(12d));
     assertThat(getters.getWidth(), is(10d));
     assertThat(getters.getHeight(), is(11d));
-    getters = GettersBuilders.toBuilder(getters).lenght(0).build();
+    getters = GettersBuilders.gettersToBuilder(getters).lenght(0).build();
     assertThat(getters.getLenght(), is(0d));
     assertThat(getters.getWidth(), is(10d));
     assertThat(getters.getHeight(), is(11d));

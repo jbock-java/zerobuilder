@@ -7,20 +7,16 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.Goal;
 
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import java.util.Set;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class GoalContext {
 
   /**
-   * return type (or enclosing class in case of constructor)
+   * return type (or type of enclosing class, for constructor goals)
    */
   final TypeName goalType;
 

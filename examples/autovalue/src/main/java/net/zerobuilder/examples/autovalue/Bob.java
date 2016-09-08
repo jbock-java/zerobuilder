@@ -4,6 +4,8 @@ import com.google.auto.value.AutoValue;
 import net.zerobuilder.Build;
 import net.zerobuilder.Goal;
 
+import static net.zerobuilder.examples.autovalue.BobBuilders.bobToBuilder;
+
 @AutoValue
 @Build
 abstract class Bob {
@@ -18,7 +20,7 @@ abstract class Bob {
   }
 
   BobBuilders.BobBuilder.Contract.BobUpdater toBuilder() {
-    return BobBuilders.toBuilder(this);
+    return bobToBuilder(this);
   }
 
   Bob withChantal(String chantal) {

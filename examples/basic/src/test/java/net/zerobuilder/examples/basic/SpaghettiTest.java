@@ -2,6 +2,7 @@ package net.zerobuilder.examples.basic;
 
 import org.junit.Test;
 
+import static net.zerobuilder.examples.basic.SpaghettiBuilders.spaghettiToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
@@ -15,7 +16,7 @@ public class SpaghettiTest {
     assertTrue(spaghetti.alDente);
     assertThat(spaghetti.cheese, is("reggiano"));
     assertThat(spaghetti.sauce, is("tomato"));
-    spaghetti = SpaghettiBuilders.toBuilder(spaghetti)
+    spaghetti = spaghettiToBuilder(spaghetti)
         .sauce("hot salsa")
         .cheese("cheddar")
         .alDente(false).build();

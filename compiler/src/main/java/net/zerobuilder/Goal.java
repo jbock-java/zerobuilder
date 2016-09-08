@@ -8,7 +8,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Marks this method or constructor explicitly as a build goal.
+ * Marks this method or constructor as a build goal.
  * It is an error if the enclosing type doesn't carry the {@link Build} annotation.
  *
  * @see Build

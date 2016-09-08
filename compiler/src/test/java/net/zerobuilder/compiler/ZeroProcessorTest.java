@@ -49,7 +49,7 @@ public class ZeroProcessorTest {
             "",
             "  static CuboidBuilder.Contract.Height cuboidBuilder() { return INSTANCE.get().cuboidSteps; }",
             "",
-            "  static CuboidBuilder.Contract.CuboidUpdater toBuilder(Cube cube) {",
+            "  static CuboidBuilder.Contract.CuboidUpdater cuboidToBuilder(Cube cube) {",
             "    CuboidBuilder.UpdaterImpl updater = INSTANCE.get().cuboidUpdater;",
             "    updater.height = cube.height();",
             "    updater.length = cube.length(),",
