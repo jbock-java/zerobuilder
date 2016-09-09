@@ -212,4 +212,32 @@ final class Analyser {
     return joinCodeBlocks(builder.build(), ", ");
   }
 
+  static abstract class GoalElement {
+    interface Cases<R> {
+      R executable(ExecutableElement element);
+      R field(VariableElement field);
+    }
+    abstract <R> R accept(Cases<R> cases);
+  }
+
+  static final class ExecutableGoal extends GoalElement {
+    private final ExecutableElement element;
+    ExecutableGoal(ExecutableElement element) {
+      this.element = element;
+    }
+    <R> R accept(Cases<R> cases) {
+      return cases.executable(element);
+    }
+  }
+
+  static final class FieldGoal extends GoalElement {
+    private final VariableElement field;
+    FieldGoal(VariableElement field) {
+      this.field = field;
+    }
+    <R> R accept(Cases<R> cases) {
+      return cases.field(field);
+    }
+  }
+
 }
