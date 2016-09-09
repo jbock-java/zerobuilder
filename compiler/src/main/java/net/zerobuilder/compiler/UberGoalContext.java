@@ -48,10 +48,10 @@ final class UberGoalContext {
     this.updaterContext = updaterContext;
   }
 
-  static UberGoalContext createGoalContext(TypeName goalType, BuilderContext config,
-                                           ImmutableList<ValidParameter> validParameters,
-                                           ExecutableElement goal, boolean toBuilder,
-                                           CodeBlock methodParameters) {
+  static UberGoalContext context(TypeName goalType, BuilderContext config,
+                                 ImmutableList<ValidParameter> validParameters,
+                                 ExecutableElement goal, boolean toBuilder,
+                                 CodeBlock methodParameters) {
     String builderTypeName = goalName(goalType, goal) + "Builder";
     ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);

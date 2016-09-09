@@ -28,7 +28,6 @@ import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static net.zerobuilder.compiler.BuilderContext.createBuildConfig;
-import static net.zerobuilder.compiler.UberGoalContext.createGoalContext;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMM;
@@ -40,6 +39,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.MULTIPLE_TOBUILDER
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.UberGoalContext.context;
 import static net.zerobuilder.compiler.Utilities.joinCodeBlocks;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -70,16 +70,12 @@ final class Analyser {
   }
 
   AnalysisResult parse(TypeElement buildElement) throws ValidationException {
-    ClassName annotatedType = ClassName.get(buildElement);
     BuilderContext config = createBuildConfig(buildElement);
     ImmutableList.Builder<UberGoalContext> builder = ImmutableList.builder();
-    ImmutableList<NamedGoal> goals = goals(annotatedType, buildElement);
+    ImmutableList<NamedGoal> goals = goals(buildElement);
     checkMultipleToBuilder(goals);
     checkNameConflict(goals);
     for (NamedGoal goal : goals) {
-      TypeName goalType = goal.goal.getKind() == CONSTRUCTOR
-          ? annotatedType
-          : TypeName.get(goal.goal.getReturnType());
       typeValidator.validateBuildType(buildElement);
       ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
           .buildViaElement(goal.goal).buildElement(buildElement);
@@ -87,7 +83,8 @@ final class Analyser {
       boolean toBuilder = goalAnnotation != null && goalAnnotation.toBuilder();
       ImmutableList<ValidParameter> validParameters =
           toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
-      builder.add(createGoalContext(goalType, config, validParameters, goal.goal, toBuilder, goalParameters(goal.goal)));
+      CodeBlock methodParameters = goalParameters(goal.goal);
+      builder.add(context(goal.goalType, config, validParameters, goal.goal, toBuilder, methodParameters));
     }
     return new AnalysisResult(config, builder.build());
   }
@@ -109,39 +106,37 @@ final class Analyser {
     goals = ImmutableList.copyOf(CONSTRUCTORS_FIRST.sortedCopy(goals));
     HashMap<Object, ExecutableElement> goalNames = new HashMap<>();
     for (NamedGoal goal : goals) {
-      String goalName = goal.name;
-      ExecutableElement thisGoal = goal.goal;
-      ExecutableElement otherGoal = goalNames.put(goalName, thisGoal);
+      ExecutableElement otherGoal = goalNames.put(goal.name, goal.goal);
       if (otherGoal != null) {
-        String thisName = thisGoal.getAnnotation(Goal.class) == null ? ""
-            : thisGoal.getAnnotation(Goal.class).name();
+        String thisName = goal.goal.getAnnotation(Goal.class) == null ? ""
+            : goal.goal.getAnnotation(Goal.class).name();
         String otherName = otherGoal.getAnnotation(Goal.class) == null ? ""
             : otherGoal.getAnnotation(Goal.class).name();
-        ElementKind thisKind = thisGoal.getKind();
+        ElementKind thisKind = goal.goal.getKind();
         ElementKind otherKind = otherGoal.getKind();
         if (isNullOrEmpty(thisName)) {
           if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EECC, thisGoal);
+            throw new ValidationException(GOALNAME_EECC, goal.goal);
           }
           if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EEMC, thisGoal);
+            throw new ValidationException(GOALNAME_EEMC, goal.goal);
           }
-          throw new ValidationException(GOALNAME_EEMM, thisGoal);
+          throw new ValidationException(GOALNAME_EEMM, goal.goal);
         } else if (isNullOrEmpty(otherName)) {
           if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NECC, thisGoal);
+            throw new ValidationException(GOALNAME_NECC, goal.goal);
           }
           if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NEMC, thisGoal);
+            throw new ValidationException(GOALNAME_NEMC, goal.goal);
           }
-          throw new ValidationException(GOALNAME_NEMM, thisGoal);
+          throw new ValidationException(GOALNAME_NEMM, goal.goal);
         }
-        throw new ValidationException(GOALNAME_NN, thisGoal);
+        throw new ValidationException(GOALNAME_NN, goal.goal);
       }
     }
   }
 
-  private ImmutableList<NamedGoal> goals(ClassName annotatedType, TypeElement buildElement) throws ValidationException {
+  private ImmutableList<NamedGoal> goals(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<NamedGoal> builder = ImmutableList.builder();
     for (ExecutableElement executableElement : concat(constructorsIn(buildElement.getEnclosedElements()),
         methodsIn(buildElement.getEnclosedElements()))) {
@@ -152,8 +147,9 @@ final class Analyser {
         if (executableElement.getParameters().isEmpty()) {
           throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
         }
-        TypeName goalType = goalType(annotatedType, executableElement);
-        builder.add(new NamedGoal(goalName(goalType, executableElement), executableElement));
+        TypeName goalType = goalType(executableElement);
+        String name = goalName(goalType, executableElement);
+        builder.add(new NamedGoal(name, executableElement, goalType));
       }
     }
     ImmutableList<NamedGoal> goals = builder.build();
@@ -177,11 +173,14 @@ final class Analyser {
 
     private final String name;
     private final ExecutableElement goal;
+    private final TypeName goalType;
 
-    private NamedGoal(String name, ExecutableElement goal) {
+    private NamedGoal(String name, ExecutableElement goal, TypeName goalType) {
       this.name = name;
       this.goal = goal;
+      this.goalType = goalType;
     }
+
   }
 
   private static String goalName(TypeName goalType, ExecutableElement goal) {
@@ -196,10 +195,13 @@ final class Analyser {
     return ((ClassName) goalType.box()).simpleName();
   }
 
-  private static TypeName goalType(ClassName annotatedType, ExecutableElement goal) {
-    return goal.getKind() == CONSTRUCTOR
-        ? annotatedType
-        : TypeName.get(goal.getReturnType());
+  private static TypeName goalType(ExecutableElement goal) {
+    switch (goal.getKind()) {
+      case CONSTRUCTOR:
+        return ClassName.get(goal.getEnclosingElement().asType());
+      default:
+        return TypeName.get(goal.getReturnType());
+    }
   }
 
   private static CodeBlock goalParameters(ExecutableElement goal) {

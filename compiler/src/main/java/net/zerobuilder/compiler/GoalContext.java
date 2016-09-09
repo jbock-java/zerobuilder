@@ -7,6 +7,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.UberGoalContext.GoalKind;
+import net.zerobuilder.compiler.UberGoalContext.Visibility;
 
 import javax.lang.model.element.Modifier;
 import java.util.Set;
@@ -33,7 +34,7 @@ final class GoalContext {
 
   final GoalKind kind;
 
-  private final UberGoalContext.Visibility visibility;
+  private final Visibility visibility;
 
   final ImmutableList<TypeName> thrownTypes;
 
@@ -51,7 +52,7 @@ final class GoalContext {
               boolean toBuilder,
               String goalName,
               GoalKind kind,
-              UberGoalContext.Visibility visibility,
+              Visibility visibility,
               ImmutableList<TypeName> thrownTypes,
               ImmutableList<ParameterContext> goalParameters,
               CodeBlock goalCall) {
@@ -97,7 +98,7 @@ final class GoalContext {
   }
 
   Set<Modifier> maybeAddPublic(Modifier... modifiers) {
-    return maybeAddPublic(visibility == UberGoalContext.Visibility.PUBLIC, modifiers);
+    return maybeAddPublic(visibility == Visibility.PUBLIC, modifiers);
   }
 
   static Set<Modifier> maybeAddPublic(boolean add, Modifier... modifiers) {

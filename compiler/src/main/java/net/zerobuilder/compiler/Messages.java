@@ -66,7 +66,7 @@ final class Messages {
 
     /* named, named */
     static final String GOALNAME_NN =
-        "There is another goal name with this goal name.";
+        "There is another goal with this goal name.";
 
     private ErrorMessages() {
     }

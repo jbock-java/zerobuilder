@@ -39,7 +39,7 @@ final class ToBuilderValidator {
     this.goal = goal;
   }
 
-  private static ToBuilderValidator createMatchValidator(TypeElement buildElement, ExecutableElement goal, Elements elements) {
+  private static ToBuilderValidator create(TypeElement buildElement, ExecutableElement goal, Elements elements) {
     ImmutableSet<ExecutableElement> methods = getLocalAndInheritedMethods(buildElement, elements);
     ImmutableMap<String, ExecutableElement> methodsByName = FluentIterable.from(methods)
         .filter(new Predicate<ExecutableElement>() {
@@ -131,7 +131,7 @@ final class ToBuilderValidator {
       return this;
     }
     ToBuilderValidator buildElement(TypeElement buildElement) {
-      return createMatchValidator(buildElement, targetMethod, elements);
+      return create(buildElement, targetMethod, elements);
     }
   }
 
