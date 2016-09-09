@@ -9,6 +9,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
+import net.zerobuilder.compiler.Analyser.AbstractGoalElement;
+import net.zerobuilder.compiler.Analyser.GoalElement;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -29,17 +31,17 @@ final class ToBuilderValidator {
 
   private final ImmutableMap<String, ExecutableElement> methods;
   private final ImmutableMap<String, VariableElement> fields;
-  private final ExecutableElement goal;
+  private final GoalElement goal;
 
   private ToBuilderValidator(ImmutableMap<String, ExecutableElement> methodsByName,
                              ImmutableMap<String, VariableElement> fieldsByName,
-                             ExecutableElement goal) {
+                             GoalElement goal) {
     this.methods = methodsByName;
     this.fields = fieldsByName;
     this.goal = goal;
   }
 
-  private static ToBuilderValidator create(TypeElement buildElement, ExecutableElement goal, Elements elements) {
+  private static ToBuilderValidator create(TypeElement buildElement, GoalElement goal, Elements elements) {
     ImmutableSet<ExecutableElement> methods = getLocalAndInheritedMethods(buildElement, elements);
     ImmutableMap<String, ExecutableElement> methodsByName = FluentIterable.from(methods)
         .filter(new Predicate<ExecutableElement>() {
@@ -114,16 +116,16 @@ final class ToBuilderValidator {
     Factory(Elements elements) {
       this.elements = elements;
     }
-    Builder buildViaElement(ExecutableElement buildVia) {
-      return new Builder().elements(elements).buildViaElement(buildVia);
+    Builder goalElement(GoalElement goalElement) {
+      return new Builder().elements(elements).goalElement(goalElement);
     }
   }
 
   static final class Builder {
-    private ExecutableElement targetMethod;
+    private GoalElement goalElement;
     private Elements elements;
-    private Builder buildViaElement(ExecutableElement targetMethod) {
-      this.targetMethod = targetMethod;
+    private Builder goalElement(GoalElement goalElement) {
+      this.goalElement = goalElement;
       return this;
     }
     private Builder elements(Elements elements) {
@@ -131,7 +133,7 @@ final class ToBuilderValidator {
       return this;
     }
     ToBuilderValidator buildElement(TypeElement buildElement) {
-      return create(buildElement, targetMethod, elements);
+      return create(buildElement, goalElement, elements);
     }
   }
 
@@ -170,15 +172,15 @@ final class ToBuilderValidator {
     return ImmutableList.copyOf(builder);
   }
 
-  static final class TmpValidParameter {
-    final VariableElement parameter;
-    final Optional<String> projectionMethodName;
+  private static final class TmpValidParameter {
+    private final VariableElement parameter;
+    private final Optional<String> projectionMethodName;
 
     private TmpValidParameter(VariableElement parameter, Optional<String> projectionMethodName) {
       this.parameter = parameter;
       this.projectionMethodName = projectionMethodName;
     }
-    ValidParameter toValidParameter() {
+    private ValidParameter toValidParameter() {
       return new ValidParameter(parameter.getSimpleName().toString(),
           TypeName.get(parameter.asType()), projectionMethodName);
     }

@@ -1,7 +1,8 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
@@ -10,7 +11,9 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
+import net.zerobuilder.compiler.UberGoalContext.GoalKind;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -24,7 +27,9 @@ import static com.google.common.collect.Iterables.concat;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
+import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static net.zerobuilder.compiler.BuilderContext.createBuildConfig;
@@ -35,7 +40,6 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.MULTIPLE_TOBUILDER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
@@ -48,9 +52,9 @@ final class Analyser {
   private static final Ordering<NamedGoal> CONSTRUCTORS_FIRST = Ordering.from(new Comparator<NamedGoal>() {
 
     private int goalWeight(NamedGoal goal) {
-      ElementKind kind = goal.goal.getKind();
-      Goal annotation = goal.goal.getAnnotation(Goal.class);
-      String name = annotation == null ? "" : annotation.name();
+      ElementKind kind = goal.goal.element.getKind();
+      Optional<Goal> annotation = goal.goal.goalAnnotation;
+      String name = annotation.transform(GOAL_NAME).or("");
       return isNullOrEmpty(name)
           ? kind == CONSTRUCTOR ? 0 : 1
           : kind == CONSTRUCTOR ? 2 : 3;
@@ -73,14 +77,12 @@ final class Analyser {
     BuilderContext config = createBuildConfig(buildElement);
     ImmutableList.Builder<UberGoalContext> builder = ImmutableList.builder();
     ImmutableList<NamedGoal> goals = goals(buildElement);
-    checkMultipleToBuilder(goals);
     checkNameConflict(goals);
     for (NamedGoal goal : goals) {
       typeValidator.validateBuildType(buildElement);
       ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
-          .buildViaElement(goal.goal).buildElement(buildElement);
-      Goal goalAnnotation = goal.goal.getAnnotation(Goal.class);
-      boolean toBuilder = goalAnnotation != null && goalAnnotation.toBuilder();
+          .goalElement(goal.goal).buildElement(buildElement);
+      boolean toBuilder = GOAL_TOBUILDER.apply(goal.goal);
       ImmutableList<ValidParameter> validParameters =
           toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
       CodeBlock methodParameters = goalParameters(goal.goal);
@@ -89,49 +91,34 @@ final class Analyser {
     return new AnalysisResult(config, builder.build());
   }
 
-  private void checkMultipleToBuilder(ImmutableList<NamedGoal> goals) throws ValidationException {
-    ImmutableList<NamedGoal> toBuilderGoals = FluentIterable.from(goals).filter(
-        new Predicate<NamedGoal>() {
-          @Override
-          public boolean apply(NamedGoal goal) {
-            return goal.goal.getAnnotation(Goal.class).toBuilder();
-          }
-        }).toList();
-    if (toBuilderGoals.size() > 1) {
-      throw new ValidationException(MULTIPLE_TOBUILDER, toBuilderGoals.get(1).goal);
-    }
-  }
-
   private void checkNameConflict(ImmutableList<NamedGoal> goals) throws ValidationException {
     goals = ImmutableList.copyOf(CONSTRUCTORS_FIRST.sortedCopy(goals));
-    HashMap<Object, ExecutableElement> goalNames = new HashMap<>();
+    HashMap<Object, NamedGoal> goalNames = new HashMap<>();
     for (NamedGoal goal : goals) {
-      ExecutableElement otherGoal = goalNames.put(goal.name, goal.goal);
+      NamedGoal otherGoal = goalNames.put(goal.name, goal);
       if (otherGoal != null) {
-        String thisName = goal.goal.getAnnotation(Goal.class) == null ? ""
-            : goal.goal.getAnnotation(Goal.class).name();
-        String otherName = otherGoal.getAnnotation(Goal.class) == null ? ""
-            : otherGoal.getAnnotation(Goal.class).name();
-        ElementKind thisKind = goal.goal.getKind();
-        ElementKind otherKind = otherGoal.getKind();
+        String thisName = goal.name;
+        String otherName = otherGoal.name;
+        ElementKind thisKind = goal.goal.element.getKind();
+        ElementKind otherKind = otherGoal.goal.element.getKind();
         if (isNullOrEmpty(thisName)) {
           if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EECC, goal.goal);
+            throw new ValidationException(GOALNAME_EECC, goal.goal.element);
           }
           if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EEMC, goal.goal);
+            throw new ValidationException(GOALNAME_EEMC, goal.goal.element);
           }
-          throw new ValidationException(GOALNAME_EEMM, goal.goal);
+          throw new ValidationException(GOALNAME_EEMM, goal.goal.element);
         } else if (isNullOrEmpty(otherName)) {
           if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NECC, goal.goal);
+            throw new ValidationException(GOALNAME_NECC, goal.goal.element);
           }
           if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NEMC, goal.goal);
+            throw new ValidationException(GOALNAME_NEMC, goal.goal.element);
           }
-          throw new ValidationException(GOALNAME_NEMM, goal.goal);
+          throw new ValidationException(GOALNAME_NEMM, goal.goal.element);
         }
-        throw new ValidationException(GOALNAME_NN, goal.goal);
+        throw new ValidationException(GOALNAME_NN, goal.goal.element);
       }
     }
   }
@@ -149,8 +136,11 @@ final class Analyser {
         }
         TypeName goalType = goalType(executableElement);
         String name = goalName(goalType, executableElement);
-        builder.add(new NamedGoal(name, executableElement, goalType));
+        builder.add(new NamedGoal(name, new ExecutableGoal(executableElement), goalType));
       }
+    }
+    for (VariableElement field : fieldsIn(buildElement.getEnclosedElements())) {
+      throw new IllegalStateException("todo");
     }
     ImmutableList<NamedGoal> goals = builder.build();
     if (goals.isEmpty()) {
@@ -172,10 +162,10 @@ final class Analyser {
   private static final class NamedGoal {
 
     private final String name;
-    private final ExecutableElement goal;
+    private final GoalElement goal;
     private final TypeName goalType;
 
-    private NamedGoal(String name, ExecutableElement goal, TypeName goalType) {
+    private NamedGoal(String name, GoalElement goal, TypeName goalType) {
       this.name = name;
       this.goal = goal;
       this.goalType = goalType;
@@ -204,7 +194,7 @@ final class Analyser {
     }
   }
 
-  private static CodeBlock goalParameters(ExecutableElement goal) {
+  private static CodeBlock goalParameters(GoalElement goal) {
     ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
     for (VariableElement arg : goal.getParameters()) {
       builder.add(CodeBlock.of("$L", arg.getSimpleName()));
@@ -212,32 +202,75 @@ final class Analyser {
     return joinCodeBlocks(builder.build(), ", ");
   }
 
-  static abstract class GoalElement {
-    interface Cases<R> {
+  static abstract class AbstractGoalElement {
+    interface Cases<R extends Element> {
       R executable(ExecutableElement element);
       R field(VariableElement field);
     }
-    abstract <R> R accept(Cases<R> cases);
+    abstract <R extends Element> R accept(Cases<R> cases);
   }
 
-  static final class ExecutableGoal extends GoalElement {
-    private final ExecutableElement element;
-    ExecutableGoal(ExecutableElement element) {
+  static abstract class GoalElement<E extends Element> extends AbstractGoalElement {
+    final E element;
+    Optional<Goal> goalAnnotation;
+    GoalElement(E element) {
       this.element = element;
+      this.goalAnnotation = Optional.fromNullable(element.getAnnotation(Goal.class));
     }
-    <R> R accept(Cases<R> cases) {
+    abstract GoalKind goalKind();
+
+  }
+
+  static final class ExecutableGoal extends GoalElement<ExecutableElement> {
+    ExecutableGoal(ExecutableElement element) {
+      super(element);
+    }
+    GoalKind goalKind() {
+      return element.getKind() == CONSTRUCTOR
+          ? GoalKind.CONSTRUCTOR
+          : element.getModifiers().contains(STATIC)
+          ? GoalKind.STATIC_METHOD
+          : GoalKind.INSTANCE_METHOD;
+
+    }
+    <R extends Element> R accept(Cases<R> cases) {
       return cases.executable(element);
     }
   }
 
-  static final class FieldGoal extends GoalElement {
-    private final VariableElement field;
+  static final class FieldGoal extends GoalElement<VariableElement> {
     FieldGoal(VariableElement field) {
-      this.field = field;
+      super(field);
     }
-    <R> R accept(Cases<R> cases) {
-      return cases.field(field);
+    @Override
+    GoalKind goalKind() {
+      return GoalKind.FIELD;
+    }
+    <R extends Element> R accept(Cases<R> cases) {
+      return cases.field(element);
     }
   }
+
+  static final Function<Goal, String> GOAL_NAME = new Function<Goal, String>() {
+    @Override
+    public String apply(Goal goal) {
+      return goal.name();
+    }
+  };
+
+  static final Function<NamedGoal, GoalElement> GET_GOAL = new Function<NamedGoal, GoalElement>() {
+    @Override
+    public GoalElement apply(NamedGoal namedGoal) {
+      return namedGoal.goal;
+    }
+  }
+
+  static final Predicate<GoalElement> GOAL_TOBUILDER = new Predicate<GoalElement>() {
+    @Override
+    public boolean apply(GoalElement goal) {
+      Optional<Goal> goalAnnotation = goal.goalAnnotation;
+      return goalAnnotation.isPresent() && goalAnnotation.get().toBuilder();
+    }
+  };
 
 }

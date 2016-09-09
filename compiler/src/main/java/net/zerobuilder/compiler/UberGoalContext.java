@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
@@ -8,6 +9,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.Analyser.GoalElement;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 
 import javax.lang.model.element.ExecutableElement;
@@ -19,10 +21,10 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Iterables.toArray;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
-import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.Analyser.GOAL_NAME;
 import static net.zerobuilder.compiler.GoalContext.goalTypeName;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -50,16 +52,16 @@ final class UberGoalContext {
 
   static UberGoalContext context(TypeName goalType, BuilderContext config,
                                  ImmutableList<ValidParameter> validParameters,
-                                 ExecutableElement goal, boolean toBuilder,
+                                 GoalElement goal, boolean toBuilder,
                                  CodeBlock methodParameters) {
     String builderTypeName = goalName(goalType, goal) + "Builder";
     ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);
     ImmutableList<ParameterContext> parameters = parameters(contractType, goalType, validParameters);
-    GoalKind kind = goalKind(goal);
-    String methodName = goal.getSimpleName().toString();
+    GoalKind kind = goal.goalKind();
+    String methodName = goal.element.getSimpleName().toString();
     CodeBlock goalCall = goalCall(goalType, methodParameters, kind, config, methodName);
-    Visibility visibility = goal.getModifiers().contains(PUBLIC)
+    Visibility visibility = goal.element.getModifiers().contains(PUBLIC)
         ? Visibility.PUBLIC
         : Visibility.PACKAGE;
     GoalContext shared = new GoalContext(goalType, builderType, config, toBuilder,
@@ -72,20 +74,12 @@ final class UberGoalContext {
         new ContractContext(shared), new UpdaterContext(shared));
   }
 
-  private static GoalKind goalKind(ExecutableElement goal) {
-    return goal.getKind() == CONSTRUCTOR
-        ? GoalKind.CONSTRUCTOR
-        : goal.getModifiers().contains(STATIC)
-        ? GoalKind.STATIC_METHOD
-        : GoalKind.INSTANCE_METHOD;
-  }
-
-  private static String goalName(TypeName goalType, ExecutableElement goal) {
-    Goal goalAnnotation = goal.getAnnotation(Goal.class);
-    if (goalAnnotation == null || isNullOrEmpty(goalAnnotation.name())) {
-      return goalTypeName(goalType);
-    }
-    return upcase(goalAnnotation.name());
+  private static String goalName(TypeName goalType, GoalElement goal) {
+    Optional<Goal> goalAnnotation = goal.goalAnnotation;
+    String goalName = goalAnnotation.transform(GOAL_NAME).or("");
+    return isNullOrEmpty(goalName)
+        ? goalTypeName(goalType)
+        : upcase(goalName);
   }
 
   static CodeBlock goalCall(TypeName goalType, CodeBlock methodParameters, GoalKind kind,
