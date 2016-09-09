@@ -9,12 +9,15 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.Analyser.AbstractGoalElement.Cases;
 import net.zerobuilder.compiler.Analyser.GoalElement;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import java.util.List;
 
 import static com.google.common.base.Optional.presentInstances;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -53,7 +56,7 @@ final class UberGoalContext {
   static UberGoalContext context(TypeName goalType, BuilderContext config,
                                  ImmutableList<ValidParameter> validParameters,
                                  GoalElement goal, boolean toBuilder,
-                                 CodeBlock methodParameters) {
+                                 CodeBlock methodParameters) throws ValidationException {
     String builderTypeName = goalName(goalType, goal) + "Builder";
     ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);
@@ -132,8 +135,18 @@ final class UberGoalContext {
         .build();
   }
 
-  private static ImmutableList<TypeName> thrownTypes(ExecutableElement goal) {
-    return FluentIterable.from(goal.getThrownTypes())
+  private static ImmutableList<TypeName> thrownTypes(GoalElement goal) throws ValidationException {
+    return FluentIterable
+        .from(goal.accept(new Cases<List<? extends TypeMirror>>() {
+          @Override
+          public List<? extends TypeMirror> executable(ExecutableElement element) throws ValidationException {
+            return element.getThrownTypes();
+          }
+          @Override
+          public List<? extends TypeMirror> field(VariableElement field) throws ValidationException {
+            return ImmutableList.of();
+          }
+        }))
         .transform(new Function<TypeMirror, TypeName>() {
           @Override
           public TypeName apply(TypeMirror thrownType) {

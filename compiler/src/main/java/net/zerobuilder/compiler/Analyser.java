@@ -10,6 +10,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.Analyser.AbstractGoalElement.Cases;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 import net.zerobuilder.compiler.UberGoalContext.GoalKind;
 
@@ -97,8 +98,10 @@ final class Analyser {
     for (NamedGoal goal : goals) {
       NamedGoal otherGoal = goalNames.put(goal.name, goal);
       if (otherGoal != null) {
-        String thisName = goal.name;
-        String otherName = otherGoal.name;
+        Optional<Goal> goalAnnotation = goal.goal.goalAnnotation;
+        Optional<Goal> otherAnnotation = otherGoal.goal.goalAnnotation;
+        String thisName = goalAnnotation.transform(GOAL_NAME).or("");
+        String otherName = otherAnnotation.transform(GOAL_NAME).or("");
         ElementKind thisKind = goal.goal.element.getKind();
         ElementKind otherKind = otherGoal.goal.element.getKind();
         if (isNullOrEmpty(thisName)) {
@@ -140,7 +143,9 @@ final class Analyser {
       }
     }
     for (VariableElement field : fieldsIn(buildElement.getEnclosedElements())) {
-      throw new IllegalStateException("todo");
+      if (field.getAnnotation(Goal.class) != null) {
+        throw new IllegalStateException("not implemented");
+      }
     }
     ImmutableList<NamedGoal> goals = builder.build();
     if (goals.isEmpty()) {
@@ -194,20 +199,29 @@ final class Analyser {
     }
   }
 
-  private static CodeBlock goalParameters(GoalElement goal) {
-    ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
-    for (VariableElement arg : goal.getParameters()) {
-      builder.add(CodeBlock.of("$L", arg.getSimpleName()));
-    }
-    return joinCodeBlocks(builder.build(), ", ");
+  private static CodeBlock goalParameters(GoalElement goal) throws ValidationException {
+    return goal.accept(new Cases<CodeBlock>() {
+      @Override
+      public CodeBlock executable(ExecutableElement goal) throws ValidationException {
+        ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
+        for (VariableElement arg : goal.getParameters()) {
+          builder.add(CodeBlock.of("$L", arg.getSimpleName()));
+        }
+        return joinCodeBlocks(builder.build(), ", ");
+      }
+      @Override
+      public CodeBlock field(VariableElement field) throws ValidationException {
+        throw new IllegalStateException("not implemented");
+      }
+    });
   }
 
   static abstract class AbstractGoalElement {
-    interface Cases<R extends Element> {
-      R executable(ExecutableElement element);
-      R field(VariableElement field);
+    interface Cases<R> {
+      R executable(ExecutableElement element) throws ValidationException;
+      R field(VariableElement field) throws ValidationException;
     }
-    abstract <R extends Element> R accept(Cases<R> cases);
+    abstract <R> R accept(Cases<R> cases) throws ValidationException;
   }
 
   static abstract class GoalElement<E extends Element> extends AbstractGoalElement {
@@ -233,7 +247,7 @@ final class Analyser {
           : GoalKind.INSTANCE_METHOD;
 
     }
-    <R extends Element> R accept(Cases<R> cases) {
+    <R> R accept(Cases<R> cases) throws ValidationException {
       return cases.executable(element);
     }
   }
@@ -246,7 +260,7 @@ final class Analyser {
     GoalKind goalKind() {
       return GoalKind.FIELD;
     }
-    <R extends Element> R accept(Cases<R> cases) {
+    <R> R accept(Cases<R> cases) throws ValidationException {
       return cases.field(element);
     }
   }
@@ -263,7 +277,7 @@ final class Analyser {
     public GoalElement apply(NamedGoal namedGoal) {
       return namedGoal.goal;
     }
-  }
+  };
 
   static final Predicate<GoalElement> GOAL_TOBUILDER = new Predicate<GoalElement>() {
     @Override

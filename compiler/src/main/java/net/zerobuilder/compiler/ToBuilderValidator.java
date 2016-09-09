@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.Analyser.AbstractGoalElement;
+import net.zerobuilder.compiler.Analyser.AbstractGoalElement.Cases;
 import net.zerobuilder.compiler.Analyser.GoalElement;
 
 import javax.lang.model.element.ExecutableElement;
@@ -75,39 +75,57 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> validate() throws ValidationException {
-    ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
-    for (VariableElement parameter : goal.getParameters()) {
-      VariableElement field = fields.get(parameter.getSimpleName().toString());
-      if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
-        builder.add(new TmpValidParameter(parameter, Optional.<String>absent()));
-      } else {
-        String methodName = "get" + upcase(parameter.getSimpleName().toString());
-        ExecutableElement method = methods.get(methodName);
-        if (method == null
-            && TypeName.get(parameter.asType()) == TypeName.BOOLEAN) {
-          methodName = "is" + upcase(parameter.getSimpleName().toString());
-          method = methods.get(methodName);
+    return sortedParameters(goal.accept(new Cases<ImmutableList<TmpValidParameter>>() {
+      @Override
+      public ImmutableList<TmpValidParameter> executable(ExecutableElement goal) throws ValidationException {
+        ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
+        for (VariableElement parameter : goal.getParameters()) {
+          VariableElement field = fields.get(parameter.getSimpleName().toString());
+          if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
+            builder.add(new TmpValidParameter(parameter, Optional.<String>absent()));
+          } else {
+            String methodName = "get" + upcase(parameter.getSimpleName().toString());
+            ExecutableElement method = methods.get(methodName);
+            if (method == null
+                && TypeName.get(parameter.asType()) == TypeName.BOOLEAN) {
+              methodName = "is" + upcase(parameter.getSimpleName().toString());
+              method = methods.get(methodName);
+            }
+            if (method == null) {
+              methodName = parameter.getSimpleName().toString();
+              method = methods.get(methodName);
+            }
+            if (method == null) {
+              throw new ValidationException("Could not find projection for parameter: "
+                  + parameter.getSimpleName(), goal);
+            }
+            builder.add(new TmpValidParameter(parameter, Optional.of(methodName)));
+          }
         }
-        if (method == null) {
-          methodName = parameter.getSimpleName().toString();
-          method = methods.get(methodName);
-        }
-        if (method == null) {
-          throw new ValidationException("Could not find projection for parameter: "
-              + parameter.getSimpleName(), goal);
-        }
-        builder.add(new TmpValidParameter(parameter, Optional.of(methodName)));
+        return builder.build();
       }
-    }
-    return sortedParameters(builder.build());
+      @Override
+      public ImmutableList<TmpValidParameter> field(VariableElement field) {
+        throw new IllegalStateException("not implemented");
+      }
+    }));
   }
 
   ImmutableList<ValidParameter> skip() throws ValidationException {
-    ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
-    for (VariableElement parameter : goal.getParameters()) {
-      builder.add(new TmpValidParameter(parameter, Optional.<String>absent()));
-    }
-    return sortedParameters(builder.build());
+    return sortedParameters(goal.accept(new Cases<ImmutableList<TmpValidParameter>>() {
+      @Override
+      public ImmutableList<TmpValidParameter> executable(ExecutableElement goal) throws ValidationException {
+        ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
+        for (VariableElement parameter : goal.getParameters()) {
+          builder.add(new TmpValidParameter(parameter, Optional.<String>absent()));
+        }
+        return builder.build();
+      }
+      @Override
+      public ImmutableList<TmpValidParameter> field(VariableElement field) throws ValidationException {
+        throw new IllegalStateException("not implemented");
+      }
+    }));
   }
 
   static final class Factory {
