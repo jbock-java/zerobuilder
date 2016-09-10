@@ -88,7 +88,7 @@ final class Analyser {
       ImmutableList<ValidParameter> validParameters = toBuilder
           ? toBuilderValidator.validate()
           : toBuilderValidator.skip();
-      CodeBlock goalCall = goalCall(goal, context.annotatedType, validParameters);
+      CodeBlock goalCall = goalCall(goal, context.annotatedType);
       builder.add(context(goal, context, validParameters, toBuilder, goalCall));
     }
     return new AnalysisResult(context, builder.build());
@@ -183,8 +183,7 @@ final class Analyser {
   }
 
   private static CodeBlock goalCall(final GoalElement goal,
-                                    final ClassName annotatedType,
-                                    final ImmutableList<ValidParameter> validParameters) throws ValidationException {
+                                    final ClassName annotatedType) throws ValidationException {
     return goal.accept(new AbstractGoalElement.Cases<CodeBlock>() {
       @Override
       public CodeBlock executable(ExecutableElement element, GoalKind kind) throws ValidationException {
@@ -193,13 +192,13 @@ final class Analyser {
         String returnLiteral = TypeName.VOID.equals(goal.goalType) ? "" : "return ";
         switch (kind) {
           case CONSTRUCTOR:
-            return CodeBlock.of("return new $T($L);",
+            return CodeBlock.of("return new $T($L);\n",
                 goal.goalType, methodParameters);
           case INSTANCE_METHOD:
-            return CodeBlock.of("$L$N.$N($L);",
+            return CodeBlock.of("$L$N.$N($L);\n",
                 returnLiteral, "_" + downcase(annotatedType.simpleName()), methodName, methodParameters);
           case STATIC_METHOD:
-            return CodeBlock.of("$L$T.$N($L);",
+            return CodeBlock.of("$L$T.$N($L);\n",
                 returnLiteral, annotatedType, methodName, methodParameters);
           default:
             throw new IllegalStateException("unknown kind: " + kind);
@@ -207,15 +206,7 @@ final class Analyser {
       }
       @Override
       public CodeBlock field(VariableElement field) throws ValidationException {
-        CodeBlock.Builder builder = CodeBlock.builder();
-        TypeName type = goal.goalType;
-        String varName = downcase(type.toString());
-        builder.addStatement("$T $L = new $T()", type, varName, type);
-        for (ValidParameter parameter : validParameters) {
-          builder.addStatement("$L.set$L($L)", varName, upcase(parameter.name), parameter.name);
-        }
-        builder.addStatement("return $L", varName);
-        return builder.build();
+        return CodeBlock.of("return $L;\n", downcase(((ClassName) goal.goalType).simpleName()));
       }
     });
   }
@@ -249,7 +240,6 @@ final class Analyser {
       this.goalType = goalType;
       this.name = name;
     }
-    abstract Optional<GoalKind> goalKind();
   }
 
   static final class ExecutableGoal extends GoalElement {
@@ -273,9 +263,6 @@ final class Analyser {
     <R> R accept(Cases<R> cases) throws ValidationException {
       return cases.executable(executableElement, kind);
     }
-    Optional<GoalKind> goalKind() {
-      return Optional.of(kind);
-    }
   }
 
   static final class FieldGoal extends GoalElement {
@@ -288,9 +275,6 @@ final class Analyser {
       TypeName goalType = TypeName.get(field.asType());
       String name = goalName(field.getAnnotation(Goal.class), goalType);
       return new FieldGoal(field, goalType, name);
-    }
-    Optional<GoalKind> goalKind() {
-      return Optional.absent();
     }
     <R> R accept(Cases<R> cases) throws ValidationException {
       return cases.field(field);

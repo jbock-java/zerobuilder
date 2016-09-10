@@ -6,6 +6,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
@@ -13,6 +14,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.Analyser.AnalysisResult;
+import net.zerobuilder.compiler.UberGoalContext.GoalKind;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
@@ -33,12 +35,13 @@ import static net.zerobuilder.compiler.GoalContext.maybeAddPublic;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.UberGoalContext.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class Generator {
 
   private final Elements elements;
 
-  private static final String STATIC_FIELD_INSTANCE = "INSTANCE";
+  private static final String TL = "INSTANCE";
 
   Generator(Elements elements) {
     this.elements = elements;
@@ -78,7 +81,7 @@ final class Generator {
         .returns(generatedTypeName)
         .addStatement("return new $T()", generatedTypeName)
         .build();
-    return Optional.of(FieldSpec.builder(threadLocal, STATIC_FIELD_INSTANCE)
+    return Optional.of(FieldSpec.builder(threadLocal, TL)
         .initializer("$L", anonymousClassBuilder("")
             .addSuperinterface(threadLocal)
             .addMethod(initialValue)
@@ -96,77 +99,95 @@ final class Generator {
     }).transform(new Function<UberGoalContext, MethodSpec>() {
       @Override
       public MethodSpec apply(UberGoalContext context) {
-        GoalContext goal = context.goal;
-        String parameterName = downcase(goal.goalTypeName());
+        final GoalContext goal = context.goal;
+        final String instance = downcase(goal.goalTypeName());
         String methodName = downcase(goal.goalName + "ToBuilder");
-        MethodSpec.Builder builder = methodBuilder(methodName)
-            .addParameter(goal.goalType, parameterName);
-        String varUpdater = "updater";
+        final MethodSpec.Builder method = methodBuilder(methodName)
+            .addParameter(goal.goalType, instance);
+        final String varUpdater = "updater";
         ClassName updaterType = context.updaterContext.typeName();
         if (analysisResult.config.recycle) {
-          builder.addStatement("$T $L = $L.get().$N", updaterType, varUpdater,
-              STATIC_FIELD_INSTANCE, updaterField(context));
+          method.addStatement("$T $L = $L.get().$N", updaterType, varUpdater,
+              TL, updaterField(context));
         } else {
-          builder.addStatement("$T $L = new $T()", updaterType, varUpdater,
+          method.addStatement("$T $L = new $T()", updaterType, varUpdater,
               updaterType);
         }
-        for (ParameterContext parameter : goal.goalParameters) {
-          if (parameter.projectionMethodName.isPresent()) {
-            builder.addStatement("$N.$N = $N.$N()", varUpdater, parameter.name,
-                parameterName, parameter.projectionMethodName.get());
-          } else {
-            builder.addStatement("$N.$N = $N.$N", varUpdater, parameter.name,
-                parameterName, parameter.name);
+        CodeBlock statements = goal.accept(new GoalContext.Cases<CodeBlock>() {
+          @Override
+          CodeBlock regularGoal(GoalKind kind) {
+            CodeBlock.Builder builder = CodeBlock.builder();
+            for (ParameterContext parameter : goal.goalParameters) {
+              if (parameter.validParameter.projectionMethodName.isPresent()) {
+                builder.addStatement("$N.$N = $N.$N()", varUpdater, parameter.validParameter.name,
+                    instance, parameter.validParameter.projectionMethodName.get());
+              } else {
+                builder.addStatement("$N.$N = $N.$N", varUpdater, parameter.validParameter.name,
+                    instance, parameter.validParameter.name);
+              }
+            }
+            return builder.build();
           }
-        }
-        builder.addStatement("return $L", varUpdater);
-        return builder
+          @Override
+          CodeBlock fieldGoal(ClassName goalType) {
+            CodeBlock.Builder builder = CodeBlock.builder();
+            for (ParameterContext parameter : goal.goalParameters) {
+              String parameterName = upcase(parameter.validParameter.name);
+              builder.addStatement("$N.$N.set$L($N.get$L())", varUpdater,
+                  downcase(goalType.simpleName()),
+                  parameterName,
+                  instance,
+                  parameterName);
+            }
+            return builder.build();
+          }
+        });
+        method.addCode(statements);
+        method.addStatement("return $L", varUpdater);
+        return method
             .returns(goal.contractUpdaterName())
             .addModifiers(goal.maybeAddPublic(STATIC)).build();
       }
     }).toList();
   }
 
-  private ImmutableList<MethodSpec> builderMethods(AnalysisResult analysisResult) {
-    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (UberGoalContext context : analysisResult.goals) {
-      GoalContext goal = context.goal;
-      ParameterContext firstStep = goal.goalParameters.get(0);
-      MethodSpec.Builder spec = methodBuilder(
-          downcase(goal.goalName + "Builder"));
-      if (goal.kind.isPresent() && goal.kind.get() == INSTANCE_METHOD) {
-        ClassName receiverType = goal.config.annotatedType;
-        spec.addParameter(ParameterSpec.builder(receiverType,
-            downcase(receiverType.simpleName())).build());
-        if (analysisResult.config.recycle) {
-          spec.addStatement("$T $N = $N.get().$N", goal.stepsImplTypeName(),
-              downcase(goal.stepsImplTypeName().simpleName()),
-              STATIC_FIELD_INSTANCE, stepsField(context));
-        } else {
-          spec.addStatement("$T $N = new $T()", goal.stepsImplTypeName(),
-              downcase(goal.stepsImplTypeName().simpleName()),
-              goal.stepsImplTypeName());
-        }
-        spec.addStatement("$N.$N = $N", downcase(goal.stepsImplTypeName().simpleName()),
-            '_' + downcase(receiverType.simpleName()),
-            downcase(receiverType.simpleName()));
-        spec.addStatement("return $N",
-            downcase(goal.stepsImplTypeName().simpleName()));
-      } else if (goal.kind.isPresent()) {
-        if (analysisResult.config.recycle) {
-          spec.addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE,
-              stepsField(context));
-        } else {
-          spec.addStatement("return new $T()", goal.stepsImplTypeName());
-        }
-      } else {
-        throw new IllegalStateException("not implemented: " + goal.kind);
-      }
-      builder.add(spec.returns(firstStep.stepContract)
-          .addModifiers(goal.maybeAddPublic(STATIC))
-          .build());
-    }
-    return builder.build();
+  private ImmutableList<MethodSpec> builderMethods(final AnalysisResult analysisResult) {
+    return FluentIterable.from(analysisResult.goals)
+        .transform(new Function<UberGoalContext, MethodSpec>() {
+          public MethodSpec apply(UberGoalContext context) {
+            final GoalContext goal = context.goal;
+            final ClassName stepsType = goal.stepsImplTypeName();
+            final MethodSpec.Builder method = methodBuilder(
+                downcase(goal.goalName + "Builder"))
+                .returns(goal.goalParameters.get(0).stepContract)
+                .addModifiers(goal.maybeAddPublic(STATIC));
+            final String steps = downcase(stepsType.simpleName());
+            method.addCode(analysisResult.config.recycle
+                ? CodeBlock.of("$T $N = $N.get().$N;\n", stepsType, steps, TL, stepsField(context))
+                : CodeBlock.of("$T $N = new $T();\n", stepsType, steps, stepsType));
+            return goal
+                .accept(new GoalContext.Cases<MethodSpec.Builder>() {
+                  @Override
+                  MethodSpec.Builder regularGoal(GoalKind kind) {
+                    if (kind != INSTANCE_METHOD) {
+                      return method;
+                    }
+                    ClassName instanceType = goal.config.annotatedType;
+                    String instance = downcase(instanceType.simpleName());
+                    return method
+                        .addParameter(ParameterSpec.builder(instanceType, instance).build())
+                        .addStatement("$N.$N = $N", steps, '_' + instance, instance);
+                  }
+                  @Override
+                  MethodSpec.Builder fieldGoal(ClassName goalType) {
+                    return method.addStatement("$N.$N = new $T()", steps, downcase(goalType.simpleName()), goalType);
+                  }
+                })
+                .addStatement("return $N", steps)
+                .build();
+          }
+        })
+        .toList();
   }
 
   private ImmutableList<FieldSpec> instanceFields(AnalysisResult analysisResult) {

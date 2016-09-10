@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
@@ -18,24 +17,25 @@ import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
+/**
+ * <p>method, constructor goal: parameter</p>
+ * <p>field goal: setter</p>
+ */
 final class ParameterContext {
 
-  final String name;
-  final TypeName type;
+  final ValidParameter validParameter;
+
   final ClassName stepContract;
-  final Optional<String> projectionMethodName;
   final TypeName returnType;
 
   ParameterContext(ClassName stepContract, ValidParameter validParameter, TypeName returnType) {
     this.stepContract = stepContract;
-    this.name = validParameter.name;
-    this.type = validParameter.type;
-    this.projectionMethodName = validParameter.projectionMethodName;
+    this.validParameter = validParameter;
     this.returnType = returnType;
   }
 
   TypeSpec asStepInterface(Set<Modifier> modifiers, ImmutableList<TypeName> declaredExceptions) {
-    MethodSpec methodSpec = methodBuilder(name)
+    MethodSpec methodSpec = methodBuilder(validParameter.name)
         .returns(returnType)
         .addParameter(parameter())
         .addExceptions(declaredExceptions)
@@ -52,11 +52,11 @@ final class ParameterContext {
   }
 
   ParameterSpec parameter() {
-    return ParameterSpec.builder(type, name).build();
+    return ParameterSpec.builder(validParameter.type, validParameter.name).build();
   }
 
   MethodSpec asUpdaterInterfaceMethod(ClassName updaterName) {
-    return methodBuilder(name)
+    return methodBuilder(validParameter.name)
         .returns(updaterName)
         .addParameter(parameter())
         .addModifiers(PUBLIC, ABSTRACT)

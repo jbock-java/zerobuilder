@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
@@ -48,23 +47,43 @@ final class UberGoalContext {
     this.updaterContext = updaterContext;
   }
 
-  static UberGoalContext context(GoalElement namedGoal, BuilderContext config,
+  static UberGoalContext context(final GoalElement namedGoal, final BuilderContext config,
                                  ImmutableList<ValidParameter> validParameters,
-                                 boolean toBuilder, CodeBlock goalCall) throws ValidationException {
+                                 final boolean toBuilder, final CodeBlock goalCall) throws ValidationException {
     String builderTypeName = namedGoal.name + "Builder";
-    ClassName builderType = config.generatedType.nestedClass(builderTypeName);
+    final ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);
-    ImmutableList<ParameterContext> parameters = parameters(contractType, namedGoal.goalType, validParameters);
-    Optional<GoalKind> kind = namedGoal.goalKind();
-    Visibility visibility = namedGoal.element.getModifiers().contains(PUBLIC)
+    final ImmutableList<ParameterContext> parameters = parameters(contractType, namedGoal.goalType, validParameters);
+    final Visibility visibility = namedGoal.element.getModifiers().contains(PUBLIC)
         ? Visibility.PUBLIC
         : Visibility.PACKAGE;
-    GoalContext shared = new GoalContext(namedGoal.goalType, builderType, config, toBuilder,
-        namedGoal.name,
-        kind,
-        visibility,
-        thrownTypes(namedGoal), parameters,
-        goalCall);
+    GoalContext shared = namedGoal.accept(new Cases<GoalContext>() {
+      @Override
+      public GoalContext executable(ExecutableElement element, GoalKind kind) throws ValidationException {
+        return new GoalContext.RegularGoalContext(
+            namedGoal.goalType,
+            builderType,
+            config,
+            toBuilder,
+            kind,
+            namedGoal.name,
+            visibility,
+            thrownTypes(namedGoal),
+            parameters,
+            goalCall);
+      }
+      @Override
+      public GoalContext field(VariableElement field) throws ValidationException {
+        return new GoalContext.FieldGoalContext(
+            (ClassName) namedGoal.goalType,
+            builderType,
+            config,
+            toBuilder,
+            namedGoal.name,
+            parameters,
+            goalCall);
+      }
+    });
     return new UberGoalContext(shared, new StepsContext(shared),
         new ContractContext(shared), new UpdaterContext(shared));
   }

@@ -152,7 +152,11 @@ final class ToBuilderValidator {
               && getter.getModifiers().contains(PUBLIC)
               && getter.getParameters().isEmpty()
               && getter.getReturnType().equals(setter.getParameters().get(0).asType())) {
-            builder.add(TmpValidParameter.create(setter, Optional.of(getterName)));
+            if (getter.getThrownTypes().isEmpty()) {
+              builder.add(TmpValidParameter.create(setter, Optional.of(getterName)));
+            } else {
+              throw new ValidationException("Getter may not declare exception: " + getterName, field);
+            }
           } else {
             throw new ValidationException("Could not find method "
                 + getterName + "()", field);
@@ -191,6 +195,9 @@ final class ToBuilderValidator {
     if (!parameterlessConstructor(type).isPresent()) {
       throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, field);
     }
+    if (!type.getModifiers().contains(PUBLIC)) {
+      throw new ValidationException("Target type must be public", field);
+    }
     ImmutableList<ExecutableElement> methods = ImmutableList.copyOf(getLocalAndInheritedMethods(type, elements));
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (int i = 0; i < methods.size(); i++) {
@@ -202,7 +209,11 @@ final class ToBuilderValidator {
           && method.getSimpleName().toString().startsWith("set")
           && method.getParameters().size() == 1
           && method.getReturnType().getKind() == TypeKind.VOID) {
-        builder.add(method);
+        if (method.getThrownTypes().isEmpty()) {
+          builder.add(method);
+        } else {
+          throw new ValidationException("Setter may not declare exception: " + method.getSimpleName(), field);
+        }
       }
     }
     ImmutableList<ExecutableElement> setters = builder.build();
@@ -312,7 +323,7 @@ final class ToBuilderValidator {
     static TmpValidParameter create(ExecutableElement setter, Optional<String> projectionMethodName) {
       return new TmpValidParameter(setter,
           downcase(setter.getSimpleName().toString().substring(3)),
-          TypeName.get(setter.asType()),
+          TypeName.get(setter.getParameters().get(0).asType()),
           Optional.fromNullable(setter.getAnnotation(Step.class)),
           projectionMethodName);
     }
@@ -322,13 +333,15 @@ final class ToBuilderValidator {
     }
   }
 
-  /**
-   * <p>constructor / method goals: goal parameter</p>
-   * <p>field goals: setter (projectionMethodName == getter, if toBuilder is true)</p>
-   */
   static final class ValidParameter {
+
     final String name;
     final TypeName type;
+
+    /**
+     * <p>method, constructor goal: getter name (absence -> !toBuilder or field access)</p>
+     * <p>field goal: getter (absence -> !toBuilder)</p>
+     */
     final Optional<String> projectionMethodName;
 
 
