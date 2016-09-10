@@ -27,7 +27,7 @@ final class StepsContext {
 
   private ImmutableList<FieldSpec> fields() {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    if (context.kind == INSTANCE_METHOD) {
+    if (context.kind.isPresent() && context.kind.get() == INSTANCE_METHOD) {
       ClassName receiverType = context.config.annotatedType;
       builder.add(FieldSpec.builder(receiverType, '_' + downcase(receiverType.simpleName()), PRIVATE).build());
     }

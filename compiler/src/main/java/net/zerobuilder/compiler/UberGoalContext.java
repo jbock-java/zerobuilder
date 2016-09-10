@@ -8,7 +8,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.Analyser.AbstractGoalElement.Cases;
 import net.zerobuilder.compiler.Analyser.GoalElement;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
@@ -20,16 +19,12 @@ import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
 import static com.google.common.base.Optional.presentInstances;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Iterables.toArray;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Analyser.GOAL_NAME;
-import static net.zerobuilder.compiler.GoalContext.goalTypeName;
-import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class UberGoalContext {
@@ -53,56 +48,25 @@ final class UberGoalContext {
     this.updaterContext = updaterContext;
   }
 
-  static UberGoalContext context(TypeName goalType, BuilderContext config,
+  static UberGoalContext context(GoalElement namedGoal, BuilderContext config,
                                  ImmutableList<ValidParameter> validParameters,
-                                 GoalElement goal, boolean toBuilder,
-                                 CodeBlock methodParameters) throws ValidationException {
-    String builderTypeName = goalName(goalType, goal) + "Builder";
+                                 boolean toBuilder, CodeBlock goalCall) throws ValidationException {
+    String builderTypeName = namedGoal.name + "Builder";
     ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);
-    ImmutableList<ParameterContext> parameters = parameters(contractType, goalType, validParameters);
-    GoalKind kind = goal.goalKind();
-    String methodName = goal.element.getSimpleName().toString();
-    CodeBlock goalCall = goalCall(goalType, methodParameters, kind, config, methodName);
-    Visibility visibility = goal.element.getModifiers().contains(PUBLIC)
+    ImmutableList<ParameterContext> parameters = parameters(contractType, namedGoal.goalType, validParameters);
+    Optional<GoalKind> kind = namedGoal.goalKind();
+    Visibility visibility = namedGoal.element.getModifiers().contains(PUBLIC)
         ? Visibility.PUBLIC
         : Visibility.PACKAGE;
-    GoalContext shared = new GoalContext(goalType, builderType, config, toBuilder,
-        goalName(goalType, goal),
+    GoalContext shared = new GoalContext(namedGoal.goalType, builderType, config, toBuilder,
+        namedGoal.name,
         kind,
         visibility,
-        thrownTypes(goal), parameters,
+        thrownTypes(namedGoal), parameters,
         goalCall);
     return new UberGoalContext(shared, new StepsContext(shared),
         new ContractContext(shared), new UpdaterContext(shared));
-  }
-
-  private static String goalName(TypeName goalType, GoalElement goal) {
-    Optional<Goal> goalAnnotation = goal.goalAnnotation;
-    String goalName = goalAnnotation.transform(GOAL_NAME).or("");
-    return isNullOrEmpty(goalName)
-        ? goalTypeName(goalType)
-        : upcase(goalName);
-  }
-
-  static CodeBlock goalCall(TypeName goalType, CodeBlock methodParameters, GoalKind kind,
-                            BuilderContext config, String methodName) {
-    String returnLiteral = TypeName.VOID.equals(goalType) ? "" : "return ";
-    switch (kind) {
-      case CONSTRUCTOR:
-        return CodeBlock.of("return new $T($L);",
-            goalType, methodParameters);
-      case INSTANCE_METHOD:
-        return CodeBlock.of("$L$N.$N($L);",
-            returnLiteral, "_" + downcase(config.annotatedType.simpleName()), methodName, methodParameters);
-      case STATIC_METHOD:
-        return CodeBlock.of("$L$T.$N($L);",
-            returnLiteral, config.annotatedType, methodName, methodParameters);
-      case FIELD:
-        throw new IllegalStateException("not implemented");
-      default:
-        throw new IllegalStateException("unknown kind: " + kind);
-    }
   }
 
   private static ImmutableList<ParameterContext> parameters(ClassName contract, TypeName returnType,
@@ -118,8 +82,9 @@ final class UberGoalContext {
     return builder.build().reverse();
   }
 
+  // field goals don't have a kind
   enum GoalKind {
-    CONSTRUCTOR, STATIC_METHOD, INSTANCE_METHOD, FIELD
+    CONSTRUCTOR, STATIC_METHOD, INSTANCE_METHOD
   }
 
   enum Visibility {
@@ -139,7 +104,7 @@ final class UberGoalContext {
     return FluentIterable
         .from(goal.accept(new Cases<List<? extends TypeMirror>>() {
           @Override
-          public List<? extends TypeMirror> executable(ExecutableElement element) throws ValidationException {
+          public List<? extends TypeMirror> executable(ExecutableElement element, GoalKind kind) throws ValidationException {
             return element.getThrownTypes();
           }
           @Override

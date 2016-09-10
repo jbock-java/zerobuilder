@@ -9,8 +9,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.Analyser.AbstractGoalElement.Cases;
 import net.zerobuilder.compiler.Analyser.GoalElement;
+import net.zerobuilder.compiler.UberGoalContext.GoalKind;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -18,9 +18,12 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
+import java.util.List;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
+import static com.google.common.base.Ascii.isUpperCase;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -28,7 +31,10 @@ import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NEGATIVE_STEP_POSITION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_SETTERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
+import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class ToBuilderValidator {
@@ -81,9 +87,9 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> validate() throws ValidationException {
-    return sortedParameters(goal.accept(new Cases<ImmutableList<TmpValidParameter>>() {
+    return sortedParameters(goal.accept(new GoalElement.Cases<ImmutableList<TmpValidParameter>>() {
       @Override
-      public ImmutableList<TmpValidParameter> executable(ExecutableElement goal) throws ValidationException {
+      public ImmutableList<TmpValidParameter> executable(ExecutableElement goal, GoalKind kind) throws ValidationException {
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
         for (VariableElement parameter : goal.getParameters()) {
           VariableElement field = fields.get(parameter.getSimpleName().toString());
@@ -111,17 +117,19 @@ final class ToBuilderValidator {
         return builder.build();
       }
       @Override
-      public ImmutableList<TmpValidParameter> field(VariableElement field) {
+      public ImmutableList<TmpValidParameter> field(VariableElement field) throws ValidationException {
         TypeName typeName = TypeName.get(field.asType());
         TypeElement type = elements.getTypeElement(typeName.toString());
-        ImmutableList<ExecutableElement> setters = setters(type);
-        ImmutableMap<String, ExecutableElement> methodsByName
+        ImmutableList<ExecutableElement> setters = setters(field, type);
+        ImmutableMap<String, ExecutableElement> getters
             = FluentIterable.from(getLocalAndInheritedMethods(type, elements))
             .filter(new Predicate<ExecutableElement>() {
               @Override
               public boolean apply(ExecutableElement method) {
                 return method.getParameters().isEmpty()
-                    && !method.getModifiers().contains(PRIVATE) && !method.getModifiers().contains(STATIC);
+                    && method.getModifiers().contains(PUBLIC)
+                    && !method.getModifiers().contains(STATIC)
+                    && method.getSimpleName().toString().startsWith("get");
               }
             })
             .uniqueIndex(new Function<ExecutableElement, String>() {
@@ -133,13 +141,21 @@ final class ToBuilderValidator {
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
         for (ExecutableElement setter : setters) {
           String getterName = "get" + setter.getSimpleName().toString().substring(3);
-          ExecutableElement getter = methodsByName.get(getterName);
+          ExecutableElement getter = getters.get(getterName);
+          if (getter == null
+              && TypeName.get(setter.getParameters().get(0).asType()) == TypeName.BOOLEAN) {
+            getterName = "is" + setter.getSimpleName().toString().substring(3);
+            getter = getters.get(getterName);
+          }
           if (getter != null
               && getter.getKind() == ElementKind.METHOD
               && getter.getModifiers().contains(PUBLIC)
               && getter.getParameters().isEmpty()
               && getter.getReturnType().equals(setter.getParameters().get(0).asType())) {
             builder.add(TmpValidParameter.create(setter, Optional.of(getterName)));
+          } else {
+            throw new ValidationException("Could not find method "
+                + getterName + "()", field);
           }
         }
         return builder.build();
@@ -148,9 +164,9 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> skip() throws ValidationException {
-    return sortedParameters(goal.accept(new Cases<ImmutableList<TmpValidParameter>>() {
+    return sortedParameters(goal.accept(new Analyser.AbstractGoalElement.Cases<ImmutableList<TmpValidParameter>>() {
       @Override
-      public ImmutableList<TmpValidParameter> executable(ExecutableElement goal) throws ValidationException {
+      public ImmutableList<TmpValidParameter> executable(ExecutableElement goal, GoalKind kind) throws ValidationException {
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
         for (VariableElement parameter : goal.getParameters()) {
           builder.add(TmpValidParameter.create(parameter, Optional.<String>absent()));
@@ -161,7 +177,7 @@ final class ToBuilderValidator {
       public ImmutableList<TmpValidParameter> field(VariableElement field) throws ValidationException {
         TypeName typeName = TypeName.get(field.asType());
         TypeElement type = elements.getTypeElement(typeName.toString());
-        ImmutableList<ExecutableElement> setters = setters(type);
+        ImmutableList<ExecutableElement> setters = setters(field, type);
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
         for (ExecutableElement setter : setters) {
           builder.add(TmpValidParameter.create(setter, Optional.<String>absent()));
@@ -171,20 +187,40 @@ final class ToBuilderValidator {
     }));
   }
 
-  private ImmutableList<ExecutableElement> setters(TypeElement type) {
+  private ImmutableList<ExecutableElement> setters(VariableElement field, TypeElement type) throws ValidationException {
+    if (!parameterlessConstructor(type).isPresent()) {
+      throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, field);
+    }
     ImmutableList<ExecutableElement> methods = ImmutableList.copyOf(getLocalAndInheritedMethods(type, elements));
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (int i = 0; i < methods.size(); i++) {
       ExecutableElement method = methods.get(i);
       if (method.getKind() == ElementKind.METHOD
           && method.getModifiers().contains(PUBLIC)
+          && method.getSimpleName().length() >= 4
+          && isUpperCase(method.getSimpleName().charAt(3))
           && method.getSimpleName().toString().startsWith("set")
           && method.getParameters().size() == 1
           && method.getReturnType().getKind() == TypeKind.VOID) {
         builder.add(method);
       }
     }
-    return builder.build();
+    ImmutableList<ExecutableElement> setters = builder.build();
+    if (setters.isEmpty()) {
+      throw new ValidationException(NO_SETTERS, field);
+    }
+    return setters;
+  }
+
+  private Optional<ExecutableElement> parameterlessConstructor(TypeElement type) {
+    List<ExecutableElement> constructors = ElementFilter.constructorsIn(type.getEnclosedElements());
+    for (ExecutableElement constructor : constructors) {
+      if (constructor.getParameters().isEmpty()
+          && constructor.getModifiers().contains(PUBLIC)) {
+        return Optional.of(constructor);
+      }
+    }
+    return Optional.absent();
   }
 
   static final class Factory {
@@ -249,7 +285,7 @@ final class ToBuilderValidator {
     return ImmutableList.copyOf(builder);
   }
 
-  static final class TmpValidParameter {
+  private static final class TmpValidParameter {
 
     private final Element element;
     private final String name;
@@ -265,17 +301,19 @@ final class ToBuilderValidator {
       this.projectionMethodName = projectionMethodName;
     }
 
-    static TmpValidParameter create(VariableElement element, Optional<String> projectionMethodName) {
-      return new TmpValidParameter(element, element.getSimpleName().toString(),
-          TypeName.get(element.asType()),
-          Optional.fromNullable(element.getAnnotation(Step.class)),
+    static TmpValidParameter create(VariableElement parameter, Optional<String> projectionMethodName) {
+      return new TmpValidParameter(parameter,
+          parameter.getSimpleName().toString(),
+          TypeName.get(parameter.asType()),
+          Optional.fromNullable(parameter.getAnnotation(Step.class)),
           projectionMethodName);
     }
 
-    static TmpValidParameter create(ExecutableElement element, Optional<String> projectionMethodName) {
-      return new TmpValidParameter(element, element.getSimpleName().toString(),
-          TypeName.get(element.asType()),
-          Optional.fromNullable(element.getAnnotation(Step.class)),
+    static TmpValidParameter create(ExecutableElement setter, Optional<String> projectionMethodName) {
+      return new TmpValidParameter(setter,
+          downcase(setter.getSimpleName().toString().substring(3)),
+          TypeName.get(setter.asType()),
+          Optional.fromNullable(setter.getAnnotation(Step.class)),
           projectionMethodName);
     }
 

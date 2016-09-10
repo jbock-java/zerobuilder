@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
@@ -32,7 +33,10 @@ final class GoalContext {
 
   final String goalName;
 
-  final GoalKind kind;
+  /**
+   * absent iff field goal
+   */
+  final Optional<GoalKind> kind;
 
   private final Visibility visibility;
 
@@ -51,7 +55,7 @@ final class GoalContext {
               BuilderContext config,
               boolean toBuilder,
               String goalName,
-              GoalKind kind,
+              Optional<GoalKind> kind,
               Visibility visibility,
               ImmutableList<TypeName> thrownTypes,
               ImmutableList<ParameterContext> goalParameters,

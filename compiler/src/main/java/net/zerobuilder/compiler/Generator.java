@@ -31,9 +31,7 @@ import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.maybeAddPublic;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
-import static net.zerobuilder.compiler.UberGoalContext.GoalKind.CONSTRUCTOR;
 import static net.zerobuilder.compiler.UberGoalContext.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.UberGoalContext.GoalKind.STATIC_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
 final class Generator {
@@ -68,7 +66,7 @@ final class Generator {
   }
 
   private Optional<FieldSpec> threadLocalField(BuilderContext config) {
-    if (!config.nogc) {
+    if (!config.recycle) {
       return absent();
     }
     ClassName generatedTypeName = config.generatedType;
@@ -105,7 +103,7 @@ final class Generator {
             .addParameter(goal.goalType, parameterName);
         String varUpdater = "updater";
         ClassName updaterType = context.updaterContext.typeName();
-        if (analysisResult.config.nogc) {
+        if (analysisResult.config.recycle) {
           builder.addStatement("$T $L = $L.get().$N", updaterType, varUpdater,
               STATIC_FIELD_INSTANCE, updaterField(context));
         } else {
@@ -136,11 +134,11 @@ final class Generator {
       ParameterContext firstStep = goal.goalParameters.get(0);
       MethodSpec.Builder spec = methodBuilder(
           downcase(goal.goalName + "Builder"));
-      if (goal.kind == INSTANCE_METHOD) {
+      if (goal.kind.isPresent() && goal.kind.get() == INSTANCE_METHOD) {
         ClassName receiverType = goal.config.annotatedType;
         spec.addParameter(ParameterSpec.builder(receiverType,
             downcase(receiverType.simpleName())).build());
-        if (analysisResult.config.nogc) {
+        if (analysisResult.config.recycle) {
           spec.addStatement("$T $N = $N.get().$N", goal.stepsImplTypeName(),
               downcase(goal.stepsImplTypeName().simpleName()),
               STATIC_FIELD_INSTANCE, stepsField(context));
@@ -154,8 +152,8 @@ final class Generator {
             downcase(receiverType.simpleName()));
         spec.addStatement("return $N",
             downcase(goal.stepsImplTypeName().simpleName()));
-      } else if (goal.kind == CONSTRUCTOR || goal.kind == STATIC_METHOD) {
-        if (analysisResult.config.nogc) {
+      } else if (goal.kind.isPresent()) {
+        if (analysisResult.config.recycle) {
           spec.addStatement("return $N.get().$N", STATIC_FIELD_INSTANCE,
               stepsField(context));
         } else {
@@ -172,7 +170,7 @@ final class Generator {
   }
 
   private ImmutableList<FieldSpec> instanceFields(AnalysisResult analysisResult) {
-    if (!analysisResult.config.nogc) {
+    if (!analysisResult.config.recycle) {
       return ImmutableList.of();
     }
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();

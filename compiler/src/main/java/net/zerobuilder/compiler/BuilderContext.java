@@ -10,13 +10,21 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 final class BuilderContext {
 
-  final boolean nogc;
+  final boolean recycle;
   final boolean isPublic;
+
+  /**
+   * The type that carries the {@link net.zerobuilder.Builder} annotation
+   */
   final ClassName annotatedType;
+
+  /**
+   * The type that will be generated: {@code annotatedType + "Builders"}
+   */
   final ClassName generatedType;
 
-  private BuilderContext(boolean nogc, boolean isPublic, ClassName annotatedType, ClassName generatedType) {
-    this.nogc = nogc;
+  private BuilderContext(boolean recycle, boolean isPublic, ClassName annotatedType, ClassName generatedType) {
+    this.recycle = recycle;
     this.isPublic = isPublic;
     this.annotatedType = annotatedType;
     this.generatedType = generatedType;

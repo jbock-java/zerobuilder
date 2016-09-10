@@ -68,6 +68,12 @@ final class Messages {
     static final String GOALNAME_NN =
         "There is another goal with this goal name.";
 
+    static final String NO_DEFAULT_CONSTRUCTOR
+        = "No public default constructor found on target type.";
+
+    static final String NO_SETTERS
+        = "No setters found on target type.";
+
     private ErrorMessages() {
     }
 
