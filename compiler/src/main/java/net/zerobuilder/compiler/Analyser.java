@@ -44,6 +44,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.UberGoalContext.GoalKind.FIELD;
 import static net.zerobuilder.compiler.UberGoalContext.context;
 import static net.zerobuilder.compiler.Utilities.joinCodeBlocks;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -79,15 +80,18 @@ final class Analyser {
     ImmutableList.Builder<UberGoalContext> builder = ImmutableList.builder();
     ImmutableList<NamedGoal> goals = goals(buildElement);
     checkNameConflict(goals);
-    for (NamedGoal goal : goals) {
+    for (NamedGoal namedGoal : goals) {
       typeValidator.validateBuildType(buildElement);
+      GoalElement goal = namedGoal.goal;
+      GoalKind goalKind = goal.goalKind();
       ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
-          .goalElement(goal.goal).buildElement(buildElement);
-      boolean toBuilder = GOAL_TOBUILDER.apply(goal.goal);
-      ImmutableList<ValidParameter> validParameters =
-          toBuilder ? toBuilderValidator.validate() : toBuilderValidator.skip();
-      CodeBlock methodParameters = goalParameters(goal.goal);
-      builder.add(context(goal.goalType, config, validParameters, goal.goal, toBuilder, methodParameters));
+          .goalElement(goal).buildElement(buildElement);
+      boolean toBuilder = GOAL_TOBUILDER.apply(goal);
+      ImmutableList<ValidParameter> validParameters = toBuilder
+          ? toBuilderValidator.validate()
+          : toBuilderValidator.skip();
+      CodeBlock methodParameters = goalParameters(goal);
+      builder.add(context(namedGoal.goalType, config, validParameters, goal, toBuilder, methodParameters));
     }
     return new AnalysisResult(config, builder.build());
   }
@@ -258,7 +262,7 @@ final class Analyser {
     }
     @Override
     GoalKind goalKind() {
-      return GoalKind.FIELD;
+      return FIELD;
     }
     <R> R accept(Cases<R> cases) throws ValidationException {
       return cases.field(element);
