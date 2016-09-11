@@ -5,6 +5,7 @@ import org.derive4j.Data;
 
 import net.zerobuilder.Goal;
 
+// see RequestTest
 @Data
 @Builder(recycle = true)
 abstract class Request {

@@ -7,6 +7,7 @@ import net.zerobuilder.examples.beans.Employee;
 import net.zerobuilder.examples.beans.Manager;
 import net.zerobuilder.examples.beans.User;
 
+// see BeansTest
 @Builder
 @SuppressWarnings("unused")
 final class Beans {

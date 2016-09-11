@@ -6,6 +6,7 @@ import net.zerobuilder.Goal;
 
 import static net.zerobuilder.examples.autovalue.BobBuilders.bobToBuilder;
 
+// see BobTest
 @Builder
 @AutoValue
 abstract class Bob {
