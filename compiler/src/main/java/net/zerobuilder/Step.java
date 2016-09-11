@@ -22,8 +22,10 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 public @interface Step {
 
   /**
-   * <p>Overrides the default position in the generated sequence of steps
+   * <p>Overrides the default position in the generated chain of builder steps
    * for this parameter.</p>
+   *
+   * @return the position that this step should occupy in the step chain
    */
   int value();
 

@@ -17,6 +17,9 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * the generated {@code static someGoalBuilder} method will take a parameter of type {@code MyObject}.
  * </p><p>
  * A goal method may return anything, including {@code void}.
+ * </p><p>
+ * When the {@code recycle} flag is set to {@code true},
+ * the generated code will cache builder instances in a {@link ThreadLocal}.
  * </p>
  *
  * @see Goal
@@ -26,10 +29,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @Target(TYPE)
 public @interface Builders {
 
-  /**
-   * When this flag is set to {@code true},
-   * the generated code will cache builder instances in a {@link ThreadLocal}.
-   */
   boolean recycle() default false;
 
 }

@@ -42,6 +42,8 @@ public @interface Goal {
    * a constructor by its enclosing class, and a field goal by its type.
    * It is an error if two goals have the same name.
    * </p>
+   *
+   * @return goal name, or empty string to indicate that the default goal name should be used
    */
   String name() default "";
 
@@ -52,6 +54,8 @@ public @interface Goal {
    * In this case, the goal may be a constructor, field or static method,
    * but not an instance method.
    * </p>
+   *
+   * @return toBuilder flag, defaults to {@code false}
    */
   boolean toBuilder() default false;
 }
