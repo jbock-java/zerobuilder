@@ -1,13 +1,13 @@
 package net.zerobuilder.examples.derive4j;
 
-import net.zerobuilder.Builder;
+import net.zerobuilder.Builders;
 import org.derive4j.Data;
 
 import net.zerobuilder.Goal;
 
 // see RequestTest
 @Data
-@Builder(recycle = true)
+@Builders(recycle = true)
 abstract class Request {
 
   interface Cases<R> {

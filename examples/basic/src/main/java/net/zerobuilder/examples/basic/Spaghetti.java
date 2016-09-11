@@ -1,10 +1,10 @@
 package net.zerobuilder.examples.basic;
 
-import net.zerobuilder.Builder;
+import net.zerobuilder.Builders;
 import net.zerobuilder.Step;
 import net.zerobuilder.Goal;
 
-@Builder(recycle = true)
+@Builders(recycle = true)
 final class Spaghetti {
 
   final String cheese;

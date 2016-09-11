@@ -15,7 +15,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * </p>
  *
  * @see Goal
- * @see Builder
+ * @see Builders
  */
 @Retention(SOURCE)
 @Target({PARAMETER, METHOD})

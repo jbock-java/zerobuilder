@@ -1,9 +1,9 @@
 package net.zerobuilder.examples.basic;
 
-import net.zerobuilder.Builder;
+import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
-@Builder(recycle = true)
+@Builders(recycle = true)
 final class FieldAccess {
 
   final double length;

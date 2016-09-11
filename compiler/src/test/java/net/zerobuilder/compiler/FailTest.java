@@ -36,7 +36,7 @@ public class FailTest {
     ImmutableList<String> sourceLines = ImmutableList.of(
         "package test;",
         "import net.zerobuilder.*;",
-        "@Builder class Centipede {",
+        "@Builders class Centipede {",
         "  @Goal Centipede(int a, int b) {}",
         badLine,
         "}");
@@ -56,7 +56,7 @@ public class FailTest {
     ImmutableList<String> sourceLines = ImmutableList.of(
         "package test;",
         "import net.zerobuilder.*;",
-        "@Builder class Centipede {",
+        "@Builders class Centipede {",
         "  @Goal Centipede(int a) {}",
         badLine,
         "}");

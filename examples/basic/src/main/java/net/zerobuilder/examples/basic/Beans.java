@@ -1,6 +1,6 @@
 package net.zerobuilder.examples.basic;
 
-import net.zerobuilder.Builder;
+import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.examples.beans.Accountant;
 import net.zerobuilder.examples.beans.Employee;
@@ -8,7 +8,7 @@ import net.zerobuilder.examples.beans.Manager;
 import net.zerobuilder.examples.beans.User;
 
 // see BeansTest
-@Builder
+@Builders
 @SuppressWarnings("unused")
 final class Beans {
 
@@ -18,7 +18,7 @@ final class Beans {
   @Goal
   private static final Employee EMPLOYEE = null;
 
-  @Builder(recycle = true)
+  @Builders(recycle = true)
   final static class MoreBeans {
 
     @Goal(toBuilder = true)

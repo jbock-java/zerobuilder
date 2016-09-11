@@ -11,7 +11,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 /**
  * <p>
  * Marks this method, constructor or field as a build goal.
- * It is an error if the enclosing type doesn't carry the {@link Builder} annotation.
+ * It is an error if the enclosing type doesn't carry the {@link Builders} annotation.
  * </p><p>
  * If this annotation appears on a constructor or field, then the annotated element may not be {@code private}.
  * If it appears on a field, the following rules apply:
@@ -26,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * The target type must have a public no-argument constructor.
  * </li></ul>
  *
- * @see Builder
+ * @see Builders
  * @see Step
  */
 @Retention(SOURCE)

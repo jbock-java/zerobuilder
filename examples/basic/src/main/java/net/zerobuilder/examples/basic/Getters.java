@@ -1,9 +1,9 @@
 package net.zerobuilder.examples.basic;
 
-import net.zerobuilder.Builder;
+import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
-@Builder
+@Builders
 final class Getters {
 
   private final double lenght;

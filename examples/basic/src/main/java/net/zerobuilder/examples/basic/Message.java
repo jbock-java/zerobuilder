@@ -1,9 +1,10 @@
 package net.zerobuilder.examples.basic;
 
-import net.zerobuilder.Builder;
+import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
-@Builder(recycle = true)
+// see MessageTest
+@Builders(recycle = true)
 final class Message {
 
   final String sender;

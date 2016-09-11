@@ -2,7 +2,7 @@ package net.zerobuilder.compiler;
 
 import com.google.common.base.Joiner;
 import com.squareup.javapoet.ClassName;
-import net.zerobuilder.Builder;
+import net.zerobuilder.Builders;
 
 import javax.lang.model.element.TypeElement;
 
@@ -14,7 +14,7 @@ final class BuilderContext {
   final boolean isPublic;
 
   /**
-   * The type that carries the {@link net.zerobuilder.Builder} annotation
+   * The type that carries the {@link Builders} annotation
    */
   final ClassName annotatedType;
 
@@ -31,7 +31,7 @@ final class BuilderContext {
   }
 
   static BuilderContext createBuildConfig(TypeElement buildElement) {
-    boolean nogc = buildElement.getAnnotation(Builder.class).recycle();
+    boolean nogc = buildElement.getAnnotation(Builders.class).recycle();
     boolean isPublic = buildElement.getModifiers().contains(PUBLIC);
     ClassName generatedType = generatedClassName(buildElement);
     ClassName annotatedType = ClassName.get(buildElement);

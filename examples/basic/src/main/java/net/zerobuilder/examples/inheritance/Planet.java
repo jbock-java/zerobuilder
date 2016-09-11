@@ -1,11 +1,11 @@
 package net.zerobuilder.examples.inheritance;
 
-import net.zerobuilder.Builder;
+import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
 import java.math.BigInteger;
 
-@Builder
+@Builders
 final class Planet extends CelestialBody {
   final int numberOfMoons;
   private final boolean habitable;

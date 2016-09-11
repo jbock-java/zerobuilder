@@ -1,13 +1,13 @@
 package net.zerobuilder.examples.autovalue;
 
 import com.google.auto.value.AutoValue;
-import net.zerobuilder.Builder;
+import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
 import static net.zerobuilder.examples.autovalue.BobBuilders.bobToBuilder;
 
 // see BobTest
-@Builder
+@Builders
 @AutoValue
 abstract class Bob {
 
