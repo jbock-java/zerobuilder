@@ -1,10 +1,12 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.GoalContext.GoalCases;
 
 import javax.lang.model.element.Modifier;
 
@@ -22,58 +24,70 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.GoalContext.always;
+import static net.zerobuilder.compiler.GoalContext.contractName;
+import static net.zerobuilder.compiler.GoalContext.contractUpdaterName;
 
 final class ContractContext {
 
-  private final GoalContext context;
-
-  ContractContext(GoalContext context) {
-    this.context = context;
-  }
-
-  private ImmutableList<TypeSpec> stepInterfaces() {
-    ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
-    for (int i = 0; i < context.goalParameters.size() - 1; i++) {
-      ParameterContext spec = context.goalParameters.get(i);
-      specs.add(spec.asStepInterface(context.maybeAddPublic()));
+  private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces
+      = always(new Function<GoalContext, ImmutableList<TypeSpec>>() {
+    @Override
+    public ImmutableList<TypeSpec> apply(GoalContext goal) {
+      ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
+      for (int i = 0; i < goal.goalParameters.size() - 1; i++) {
+        ParameterContext spec = goal.goalParameters.get(i);
+        specs.add(spec.asStepInterface(goal.maybeAddPublic()));
+      }
+      ParameterContext spec = getLast(goal.goalParameters);
+      specs.add(spec.asStepInterface(goal.maybeAddPublic(), goal.thrownTypes));
+      return specs.build();
     }
-    ParameterContext spec = getLast(context.goalParameters);
-    specs.add(spec.asStepInterface(context.maybeAddPublic(), context.thrownTypes));
-    return specs.build();
-  }
+  });
 
-  private Optional<TypeSpec> updaterInterface() {
-    if (!context.toBuilder) {
-      return absent();
+  private static final GoalCases<Optional<TypeSpec>> updaterInterface
+      = always(new Function<GoalContext, Optional<TypeSpec>>() {
+    @Override
+    public Optional<TypeSpec> apply(GoalContext goal) {
+      if (!goal.toBuilder) {
+        return absent();
+      }
+      MethodSpec buildMethod = methodBuilder("build")
+          .returns(goal.goalType)
+          .addModifiers(PUBLIC, ABSTRACT)
+          .addExceptions(goal.thrownTypes)
+          .build();
+      return Optional.of(interfaceBuilder(goal.accept(contractUpdaterName))
+          .addMethod(buildMethod)
+          .addMethods(goal.accept(updateMethods))
+          .addModifiers(toArray(goal.maybeAddPublic(), Modifier.class))
+          .build());
     }
-    MethodSpec buildMethod = methodBuilder("build")
-        .returns(context.goalType)
-        .addModifiers(PUBLIC, ABSTRACT)
-        .addExceptions(context.thrownTypes)
-        .build();
-    return Optional.of(interfaceBuilder(context.contractUpdaterName())
-        .addMethod(buildMethod)
-        .addMethods(updateMethods())
-        .addModifiers(toArray(context.maybeAddPublic(), Modifier.class))
-        .build());
-  }
+  });
 
-  private ImmutableList<MethodSpec> updateMethods() {
-    ClassName updaterName = context.contractUpdaterName();
-    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    for (ParameterContext spec : context.goalParameters) {
-      builder.add(spec.asUpdaterInterfaceMethod(updaterName));
+  private static final GoalCases<ImmutableList<MethodSpec>> updateMethods
+      = always(new Function<GoalContext, ImmutableList<MethodSpec>>() {
+    @Override
+    public ImmutableList<MethodSpec> apply(GoalContext goal) {
+      ClassName updaterName = goal.accept(contractUpdaterName);
+      ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+      for (ParameterContext spec : goal.goalParameters) {
+        builder.add(spec.asUpdaterInterfaceMethod(updaterName));
+      }
+      return builder.build();
     }
-    return builder.build();
-  }
+  });
 
-  TypeSpec buildContract() {
-    return classBuilder(context.contractName())
-        .addTypes(presentInstances(of(updaterInterface())))
-        .addTypes(stepInterfaces())
-        .addModifiers(toArray(context.maybeAddPublic(FINAL, STATIC), Modifier.class))
+  static TypeSpec buildContract(GoalContext goal) {
+    return classBuilder(goal.accept(contractName))
+        .addTypes(presentInstances(of(goal.accept(updaterInterface))))
+        .addTypes(goal.accept(stepInterfaces))
+        .addModifiers(toArray(goal.maybeAddPublic(FINAL, STATIC), Modifier.class))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
   }
 
+  private ContractContext() {
+    throw new UnsupportedOperationException("no instances");
+  }
 }

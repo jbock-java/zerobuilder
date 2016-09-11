@@ -1,12 +1,14 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.UberGoalContext.GoalKind;
-import net.zerobuilder.compiler.UberGoalContext.Visibility;
+import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
+import net.zerobuilder.compiler.GoalContextFactory.Visibility;
 
 import javax.lang.model.element.Modifier;
 import java.util.Set;
@@ -15,12 +17,25 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 abstract class GoalContext {
 
-  static abstract class Cases<R> {
-    abstract R regularGoal(GoalKind kind);
-    abstract R fieldGoal(ClassName goalType);
+  static abstract class GoalCases<R> {
+    abstract R regularGoal(GoalContext goal, GoalKind kind);
+    abstract R fieldGoal(GoalContext goal, ClassName goalType);
   }
 
-  abstract <R> R accept(Cases<R> cases);
+  abstract <R> R accept(GoalCases<R> cases);
+
+  static <R> GoalCases<R> always(final Function<GoalContext, R> function) {
+    return new GoalCases<R>() {
+      @Override
+      R regularGoal(GoalContext goal, GoalKind kind) {
+        return function.apply(goal);
+      }
+      @Override
+      R fieldGoal(GoalContext goal, ClassName goalType) {
+        return function.apply(goal);
+      }
+    };
+  }
 
   /**
    * <p>method goal: return type</p>
@@ -29,10 +44,7 @@ abstract class GoalContext {
    */
   final TypeName goalType;
 
-  /**
-   * enclosing type
-   */
-  final ClassName builderType;
+  final ClassName generatedType;
 
   final BuilderContext config;
 
@@ -46,21 +58,28 @@ abstract class GoalContext {
    */
   final ImmutableList<ParameterContext> goalParameters;
 
+  /**
+   * contents of {@code updaterImpl.build()} and {@code stepsImpl.build()}
+   */
   final CodeBlock goalCall;
 
+  /**
+   * thrown by {@code updaterImpl.build()} and {@code stepsImpl.build()}
+   */
   final ImmutableList<TypeName> thrownTypes;
 
   abstract Set<Modifier> maybeAddPublic(Modifier... modifiers);
 
-  private GoalContext(TypeName goalType,
-                      ClassName builderType,
+  @VisibleForTesting
+  GoalContext(TypeName goalType,
+                      ClassName generatedType,
                       BuilderContext config,
                       boolean toBuilder,
                       String goalName,
                       ImmutableList<ParameterContext> goalParameters,
                       CodeBlock goalCall, ImmutableList<TypeName> thrownTypes) {
     this.goalType = goalType;
-    this.builderType = builderType;
+    this.generatedType = generatedType;
     this.config = config;
     this.toBuilder = toBuilder;
     this.goalName = goalName;
@@ -69,34 +88,45 @@ abstract class GoalContext {
     this.thrownTypes = thrownTypes;
   }
 
-  ImmutableList<ClassName> stepInterfaceNames() {
-    ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
-    for (ParameterContext spec : goalParameters) {
-      specs.add(spec.stepContract);
+  static final GoalCases<ImmutableList<ClassName>> stepInterfaceNames = always(new Function<GoalContext, ImmutableList<ClassName>>() {
+    @Override
+    public ImmutableList<ClassName> apply(GoalContext goal) {
+      ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
+      for (ParameterContext spec : goal.goalParameters) {
+        specs.add(spec.stepContract);
+      }
+      return specs.build();
     }
-    return specs.build();
-  }
+  });
 
-  ClassName contractName() {
-    return builderType.nestedClass(UberGoalContext.CONTRACT);
-  }
+  static final GoalCases<ClassName> contractName = always(new Function<GoalContext, ClassName>() {
+    @Override
+    public ClassName apply(GoalContext goal) {
+      return goal.generatedType.nestedClass(GoalContextFactory.CONTRACT);
+    }
+  });
 
-  ClassName stepsImplTypeName() {
-    return builderType.nestedClass(UberGoalContext.STEPS_IMPL);
-  }
+  static final GoalCases<ClassName> stepsImplTypeName = always(new Function<GoalContext, ClassName>() {
+    @Override
+    public ClassName apply(GoalContext goal) {
+      return goal.generatedType.nestedClass(GoalContextFactory.STEPS_IMPL);
+    }
+  });
 
-  ClassName contractUpdaterName() {
-    return contractName()
-        .nestedClass(goalName + UberGoalContext.UPDATER_SUFFIX);
-  }
+  static final GoalCases<ClassName> contractUpdaterName = always(new Function<GoalContext, ClassName>() {
+    @Override
+    public ClassName apply(GoalContext goal) {
+      return goal.accept(contractName)
+          .nestedClass(goal.goalName + GoalContextFactory.UPDATER_SUFFIX);
+    }
+  });
 
-  String goalTypeName() {
-    return goalTypeName(goalType);
-  }
-
-  static String goalTypeName(TypeName goalType) {
-    return ((ClassName) goalType.box()).simpleName();
-  }
+  static final GoalCases<String> goalTypeName = always(new Function<GoalContext, String>() {
+    @Override
+    public String apply(GoalContext goal) {
+      return ((ClassName) goal.goalType.box()).simpleName();
+    }
+  });
 
   static Set<Modifier> maybeAddPublic(boolean add, Modifier... modifiers) {
     ImmutableSet<Modifier> modifierSet = ImmutableSet.copyOf(modifiers);
@@ -129,8 +159,8 @@ abstract class GoalContext {
     Set<Modifier> maybeAddPublic(Modifier... modifiers) {
       return maybeAddPublic(visibility == Visibility.PUBLIC, modifiers);
     }
-    <R> R accept(Cases<R> cases) {
-      return cases.regularGoal(kind);
+    <R> R accept(GoalCases<R> cases) {
+      return cases.regularGoal(this, kind);
     }
   }
 
@@ -152,8 +182,8 @@ abstract class GoalContext {
     Set<Modifier> maybeAddPublic(Modifier... modifiers) {
       return maybeAddPublic(true, modifiers);
     }
-    <R> R accept(Cases<R> cases) {
-      return cases.fieldGoal(goalType);
+    <R> R accept(GoalCases<R> cases) {
+      return cases.fieldGoal(this, goalType);
     }
   }
 

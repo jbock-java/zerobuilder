@@ -7,8 +7,9 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.Analyser.AbstractGoalElement.Cases;
+import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.Analyser.GoalElement;
+import net.zerobuilder.compiler.GoalContext.GoalCases;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 
 import javax.lang.model.element.ExecutableElement;
@@ -24,68 +25,52 @@ import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.GoalContext.always;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
-final class UberGoalContext {
+final class GoalContextFactory {
 
   static final String UPDATER_SUFFIX = "Updater";
   static final String CONTRACT = "Contract";
   static final String STEPS_IMPL = "StepsImpl";
 
-  final GoalContext goal;
-  final StepsContext stepsContext;
-  final ContractContext contractContext;
-  final UpdaterContext updaterContext;
-
-  private UberGoalContext(GoalContext goal,
-                          StepsContext stepsContext,
-                          ContractContext contractContext,
-                          UpdaterContext updaterContext) {
-    this.goal = goal;
-    this.stepsContext = stepsContext;
-    this.contractContext = contractContext;
-    this.updaterContext = updaterContext;
-  }
-
-  static UberGoalContext context(final GoalElement namedGoal, final BuilderContext config,
-                                 ImmutableList<ValidParameter> validParameters,
-                                 final boolean toBuilder, final CodeBlock goalCall) throws ValidationException {
-    String builderTypeName = namedGoal.name + "Builder";
+  static GoalContext context(final GoalElement goal, final BuilderContext config,
+                             ImmutableList<ValidParameter> validParameters,
+                             final boolean toBuilder, final CodeBlock goalCall) throws ValidationException {
+    String builderTypeName = goal.name + "Builder";
     final ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     ClassName contractType = builderType.nestedClass(CONTRACT);
-    final ImmutableList<ParameterContext> parameters = parameters(contractType, namedGoal.goalType, validParameters);
-    final Visibility visibility = namedGoal.element.getModifiers().contains(PUBLIC)
+    final ImmutableList<ParameterContext> parameters = parameters(contractType, goal.goalType, validParameters);
+    final Visibility visibility = goal.element.getModifiers().contains(PUBLIC)
         ? Visibility.PUBLIC
         : Visibility.PACKAGE;
-    GoalContext shared = namedGoal.accept(new Cases<GoalContext>() {
+    return goal.accept(new GoalElementCases<GoalContext>() {
       @Override
       public GoalContext executable(ExecutableElement element, GoalKind kind) throws ValidationException {
         return new GoalContext.RegularGoalContext(
-            namedGoal.goalType,
+            goal.goalType,
             builderType,
             config,
             toBuilder,
             kind,
-            namedGoal.name,
+            goal.name,
             visibility,
-            thrownTypes(namedGoal),
+            thrownTypes(goal),
             parameters,
             goalCall);
       }
       @Override
       public GoalContext field(VariableElement field) throws ValidationException {
         return new GoalContext.FieldGoalContext(
-            (ClassName) namedGoal.goalType,
+            (ClassName) goal.goalType,
             builderType,
             config,
             toBuilder,
-            namedGoal.name,
+            goal.name,
             parameters,
             goalCall);
       }
     });
-    return new UberGoalContext(shared, new StepsContext(shared),
-        new ContractContext(shared), new UpdaterContext(shared));
   }
 
   private static ImmutableList<ParameterContext> parameters(ClassName contract, TypeName returnType,
@@ -110,18 +95,21 @@ final class UberGoalContext {
     PUBLIC, PACKAGE
   }
 
-  TypeSpec builderImpl() {
-    return classBuilder(goal.builderType)
-        .addTypes(presentInstances(of(updaterContext.buildUpdaterImpl())))
-        .addType(stepsContext.buildStepsImpl())
-        .addType(contractContext.buildContract())
-        .addModifiers(toArray(goal.maybeAddPublic(FINAL, STATIC), Modifier.class))
-        .build();
-  }
+  static GoalCases<TypeSpec> builderImpl = always(new Function<GoalContext, TypeSpec>() {
+    @Override
+    public TypeSpec apply(GoalContext goal) {
+      return classBuilder(goal.generatedType)
+          .addTypes(presentInstances(of(UpdaterContext.buildUpdaterImpl(goal))))
+          .addType(StepsContext.buildStepsImpl(goal))
+          .addType(ContractContext.buildContract(goal))
+          .addModifiers(toArray(goal.maybeAddPublic(FINAL, STATIC), Modifier.class))
+          .build();
+    }
+  });
 
   private static ImmutableList<TypeName> thrownTypes(GoalElement goal) throws ValidationException {
     return FluentIterable
-        .from(goal.accept(new Cases<List<? extends TypeMirror>>() {
+        .from(goal.accept(new GoalElementCases<List<? extends TypeMirror>>() {
           @Override
           public List<? extends TypeMirror> executable(ExecutableElement element, GoalKind kind) throws ValidationException {
             return element.getThrownTypes();
@@ -140,4 +128,7 @@ final class UberGoalContext {
         .toList();
   }
 
+  private GoalContextFactory() {
+    throw new UnsupportedOperationException("no instances");
+  }
 }

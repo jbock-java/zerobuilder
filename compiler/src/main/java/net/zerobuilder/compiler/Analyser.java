@@ -9,8 +9,9 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
-import net.zerobuilder.compiler.UberGoalContext.GoalKind;
+import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -43,9 +44,9 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.UberGoalContext.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.UberGoalContext.GoalKind.STATIC_METHOD;
-import static net.zerobuilder.compiler.UberGoalContext.context;
+import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.STATIC_METHOD;
+import static net.zerobuilder.compiler.GoalContextFactory.context;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -77,7 +78,7 @@ final class Analyser {
 
   AnalysisResult parse(TypeElement buildElement) throws ValidationException {
     BuilderContext context = createBuildConfig(buildElement);
-    ImmutableList.Builder<UberGoalContext> builder = ImmutableList.builder();
+    ImmutableList.Builder<GoalContext> builder = ImmutableList.builder();
     ImmutableList<GoalElement> goals = goals(buildElement);
     checkNameConflict(goals);
     for (GoalElement goal : goals) {
@@ -88,7 +89,7 @@ final class Analyser {
       ImmutableList<ValidParameter> validParameters = toBuilder
           ? toBuilderValidator.validate()
           : toBuilderValidator.skip();
-      CodeBlock goalCall = goalCall(goal, context.annotatedType);
+      CodeBlock goalCall = goalInvocation(goal, context.annotatedType);
       builder.add(context(goal, context, validParameters, toBuilder, goalCall));
     }
     return new AnalysisResult(context, builder.build());
@@ -159,9 +160,9 @@ final class Analyser {
 
   static final class AnalysisResult {
     final BuilderContext config;
-    final ImmutableList<UberGoalContext> goals;
+    final ImmutableList<GoalContext> goals;
 
-    AnalysisResult(BuilderContext config, ImmutableList<UberGoalContext> goals) {
+    AnalysisResult(BuilderContext config, ImmutableList<GoalContext> goals) {
       this.config = config;
       this.goals = goals;
     }
@@ -182,31 +183,37 @@ final class Analyser {
     }
   }
 
-  private static CodeBlock goalCall(final GoalElement goal,
-                                    final ClassName annotatedType) throws ValidationException {
-    return goal.accept(new AbstractGoalElement.Cases<CodeBlock>() {
+  private static CodeBlock goalInvocation(final GoalElement goal,
+                                          final ClassName annotatedType) throws ValidationException {
+    return goal.accept(new GoalElementCases<CodeBlock>() {
       @Override
       public CodeBlock executable(ExecutableElement element, GoalKind kind) throws ValidationException {
-        CodeBlock methodParameters = goalParameters(element);
-        String methodName = element.getSimpleName().toString();
+        CodeBlock parameters = goalParameters(element);
+        String method = element.getSimpleName().toString();
         String returnLiteral = TypeName.VOID.equals(goal.goalType) ? "" : "return ";
         switch (kind) {
           case CONSTRUCTOR:
-            return CodeBlock.of("return new $T($L);\n",
-                goal.goalType, methodParameters);
+            return CodeBlock.builder()
+                .addStatement("return new $T($L)", goal.goalType, parameters)
+                .build();
           case INSTANCE_METHOD:
-            return CodeBlock.of("$L$N.$N($L);\n",
-                returnLiteral, "_" + downcase(annotatedType.simpleName()), methodName, methodParameters);
+            String instance = downcase(annotatedType.simpleName());
+            return CodeBlock.builder()
+                .addStatement("$L$N.$N($L)", returnLiteral, "_" + instance, method, parameters)
+                .build();
           case STATIC_METHOD:
-            return CodeBlock.of("$L$T.$N($L);\n",
-                returnLiteral, annotatedType, methodName, methodParameters);
+            return CodeBlock.builder()
+                .addStatement("$L$T.$N($L)", returnLiteral, annotatedType, method, parameters)
+                .build();
           default:
             throw new IllegalStateException("unknown kind: " + kind);
         }
       }
       @Override
       public CodeBlock field(VariableElement field) throws ValidationException {
-        return CodeBlock.of("return $L;\n", downcase(((ClassName) goal.goalType).simpleName()));
+        return CodeBlock.builder()
+            .addStatement("return $L", downcase(((ClassName) goal.goalType).simpleName()))
+            .build();
       }
     });
   }
@@ -222,11 +229,11 @@ final class Analyser {
   }
 
   static abstract class AbstractGoalElement {
-    interface Cases<R> {
+    interface GoalElementCases<R> {
       R executable(ExecutableElement element, GoalKind kind) throws ValidationException;
       R field(VariableElement field) throws ValidationException;
     }
-    abstract <R> R accept(Cases<R> cases) throws ValidationException;
+    abstract <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException;
   }
 
   static abstract class GoalElement extends AbstractGoalElement {
@@ -260,8 +267,8 @@ final class Analyser {
           goalType(element), name);
 
     }
-    <R> R accept(Cases<R> cases) throws ValidationException {
-      return cases.executable(executableElement, kind);
+    <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
+      return goalElementCases.executable(executableElement, kind);
     }
   }
 
@@ -276,8 +283,8 @@ final class Analyser {
       String name = goalName(field.getAnnotation(Goal.class), goalType);
       return new FieldGoal(field, goalType, name);
     }
-    <R> R accept(Cases<R> cases) throws ValidationException {
-      return cases.field(field);
+    <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
+      return goalElementCases.field(field);
     }
   }
 

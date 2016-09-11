@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.Analyser.GoalElement;
-import net.zerobuilder.compiler.UberGoalContext.GoalKind;
+import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -87,7 +87,7 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> validate() throws ValidationException {
-    return sortedParameters(goal.accept(new GoalElement.Cases<ImmutableList<TmpValidParameter>>() {
+    return sortedParameters(goal.accept(new Analyser.AbstractGoalElement.GoalElementCases<ImmutableList<TmpValidParameter>>() {
       @Override
       public ImmutableList<TmpValidParameter> executable(ExecutableElement goal, GoalKind kind) throws ValidationException {
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
@@ -168,7 +168,7 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> skip() throws ValidationException {
-    return sortedParameters(goal.accept(new Analyser.AbstractGoalElement.Cases<ImmutableList<TmpValidParameter>>() {
+    return sortedParameters(goal.accept(new Analyser.AbstractGoalElement.GoalElementCases<ImmutableList<TmpValidParameter>>() {
       @Override
       public ImmutableList<TmpValidParameter> executable(ExecutableElement goal, GoalKind kind) throws ValidationException {
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();

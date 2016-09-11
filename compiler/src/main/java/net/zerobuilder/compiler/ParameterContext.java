@@ -35,9 +35,11 @@ final class ParameterContext {
   }
 
   TypeSpec asStepInterface(Set<Modifier> modifiers, ImmutableList<TypeName> declaredExceptions) {
-    MethodSpec methodSpec = methodBuilder(validParameter.name)
+    String name = validParameter.name;
+    TypeName type = validParameter.type;
+    MethodSpec methodSpec = methodBuilder(name)
         .returns(returnType)
-        .addParameter(parameter())
+        .addParameter(ParameterSpec.builder(type, name).build())
         .addExceptions(declaredExceptions)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
@@ -51,14 +53,12 @@ final class ParameterContext {
     return asStepInterface(modifiers, ImmutableList.<TypeName>of());
   }
 
-  ParameterSpec parameter() {
-    return ParameterSpec.builder(validParameter.type, validParameter.name).build();
-  }
-
   MethodSpec asUpdaterInterfaceMethod(ClassName updaterName) {
+    String name = validParameter.name;
+    TypeName type = validParameter.type;
     return methodBuilder(validParameter.name)
         .returns(updaterName)
-        .addParameter(parameter())
+        .addParameter(ParameterSpec.builder(type, name).build())
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
   }

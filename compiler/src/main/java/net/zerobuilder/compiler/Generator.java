@@ -14,7 +14,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.Analyser.AnalysisResult;
-import net.zerobuilder.compiler.UberGoalContext.GoalKind;
+import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
@@ -31,9 +31,13 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.GoalContext.contractUpdaterName;
+import static net.zerobuilder.compiler.GoalContext.goalTypeName;
 import static net.zerobuilder.compiler.GoalContext.maybeAddPublic;
+import static net.zerobuilder.compiler.GoalContext.stepsImplTypeName;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
-import static net.zerobuilder.compiler.UberGoalContext.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.GoalContextFactory.builderImpl;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -60,10 +64,10 @@ final class Generator {
         .build();
   }
 
-  private ImmutableList<TypeSpec> builderImpls(ImmutableList<UberGoalContext> goals) {
+  private ImmutableList<TypeSpec> builderImpls(ImmutableList<GoalContext> goals) {
     ImmutableList.Builder<TypeSpec> builder = ImmutableList.builder();
-    for (UberGoalContext goal : goals) {
-      builder.add(goal.builderImpl());
+    for (GoalContext goal : goals) {
+      builder.add(goal.accept(builderImpl));
     }
     return builder.build();
   }
@@ -91,31 +95,30 @@ final class Generator {
   }
 
   private ImmutableList<MethodSpec> toBuilderMethods(final AnalysisResult analysisResult) {
-    return FluentIterable.from(analysisResult.goals).filter(new Predicate<UberGoalContext>() {
+    return FluentIterable.from(analysisResult.goals).filter(new Predicate<GoalContext>() {
       @Override
-      public boolean apply(UberGoalContext context) {
-        return context.goal.toBuilder;
+      public boolean apply(GoalContext goal) {
+        return goal.toBuilder;
       }
-    }).transform(new Function<UberGoalContext, MethodSpec>() {
+    }).transform(new Function<GoalContext, MethodSpec>() {
       @Override
-      public MethodSpec apply(UberGoalContext context) {
-        final GoalContext goal = context.goal;
-        final String instance = downcase(goal.goalTypeName());
+      public MethodSpec apply(GoalContext goal) {
+        final String instance = downcase(goal.accept(goalTypeName));
         String methodName = downcase(goal.goalName + "ToBuilder");
         final MethodSpec.Builder method = methodBuilder(methodName)
             .addParameter(goal.goalType, instance);
         final String varUpdater = "updater";
-        ClassName updaterType = context.updaterContext.typeName();
+        ClassName updaterType = goal.accept(UpdaterContext.typeName);
         if (analysisResult.config.recycle) {
           method.addStatement("$T $L = $L.get().$N", updaterType, varUpdater,
-              TL, updaterField(context));
+              TL, updaterField(goal));
         } else {
           method.addStatement("$T $L = new $T()", updaterType, varUpdater,
               updaterType);
         }
-        CodeBlock statements = goal.accept(new GoalContext.Cases<CodeBlock>() {
+        CodeBlock statements = goal.accept(new GoalContext.GoalCases<CodeBlock>() {
           @Override
-          CodeBlock regularGoal(GoalKind kind) {
+          CodeBlock regularGoal(GoalContext goal, GoalKind kind) {
             CodeBlock.Builder builder = CodeBlock.builder();
             for (ParameterContext parameter : goal.goalParameters) {
               if (parameter.validParameter.projectionMethodName.isPresent()) {
@@ -129,7 +132,7 @@ final class Generator {
             return builder.build();
           }
           @Override
-          CodeBlock fieldGoal(ClassName goalType) {
+          CodeBlock fieldGoal(GoalContext goal, ClassName goalType) {
             CodeBlock.Builder builder = CodeBlock.builder();
             for (ParameterContext parameter : goal.goalParameters) {
               String parameterName = upcase(parameter.validParameter.name);
@@ -145,7 +148,7 @@ final class Generator {
         method.addCode(statements);
         method.addStatement("return $L", varUpdater);
         return method
-            .returns(goal.contractUpdaterName())
+            .returns(goal.accept(contractUpdaterName))
             .addModifiers(goal.maybeAddPublic(STATIC)).build();
       }
     }).toList();
@@ -153,22 +156,21 @@ final class Generator {
 
   private ImmutableList<MethodSpec> builderMethods(final AnalysisResult analysisResult) {
     return FluentIterable.from(analysisResult.goals)
-        .transform(new Function<UberGoalContext, MethodSpec>() {
-          public MethodSpec apply(UberGoalContext context) {
-            final GoalContext goal = context.goal;
-            final ClassName stepsType = goal.stepsImplTypeName();
+        .transform(new Function<GoalContext, MethodSpec>() {
+          public MethodSpec apply(GoalContext goal) {
+            final ClassName stepsType = goal.accept(stepsImplTypeName);
             final MethodSpec.Builder method = methodBuilder(
                 downcase(goal.goalName + "Builder"))
                 .returns(goal.goalParameters.get(0).stepContract)
                 .addModifiers(goal.maybeAddPublic(STATIC));
             final String steps = downcase(stepsType.simpleName());
             method.addCode(analysisResult.config.recycle
-                ? CodeBlock.of("$T $N = $N.get().$N;\n", stepsType, steps, TL, stepsField(context))
+                ? CodeBlock.of("$T $N = $N.get().$N;\n", stepsType, steps, TL, stepsField(goal))
                 : CodeBlock.of("$T $N = new $T();\n", stepsType, steps, stepsType));
             return goal
-                .accept(new GoalContext.Cases<MethodSpec.Builder>() {
+                .accept(new GoalContext.GoalCases<MethodSpec.Builder>() {
                   @Override
-                  MethodSpec.Builder regularGoal(GoalKind kind) {
+                  MethodSpec.Builder regularGoal(GoalContext goal, GoalKind kind) {
                     if (kind != INSTANCE_METHOD) {
                       return method;
                     }
@@ -179,7 +181,7 @@ final class Generator {
                         .addStatement("$N.$N = $N", steps, '_' + instance, instance);
                   }
                   @Override
-                  MethodSpec.Builder fieldGoal(ClassName goalType) {
+                  MethodSpec.Builder fieldGoal(GoalContext goal, ClassName goalType) {
                     return method.addStatement("$N.$N = new $T()", steps, downcase(goalType.simpleName()), goalType);
                   }
                 })
@@ -195,25 +197,28 @@ final class Generator {
       return ImmutableList.of();
     }
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    for (UberGoalContext goal : analysisResult.goals) {
-      if (goal.goal.toBuilder) {
-        builder.add(FieldSpec.builder(goal.updaterContext.typeName(),
-            downcase(goal.goal.goalName + "Updater"), PRIVATE, FINAL)
-            .initializer("new $T()", goal.updaterContext.typeName()).build());
+    for (GoalContext goal : analysisResult.goals) {
+      String goalName = goal.goalName;
+      if (goal.toBuilder) {
+        ClassName updaterType = goal.accept(UpdaterContext.typeName);
+        builder.add(FieldSpec.builder(updaterType,
+            downcase(goalName + "Updater"), PRIVATE, FINAL)
+            .initializer("new $T()", updaterType).build());
       }
-      builder.add(FieldSpec.builder(goal.goal.stepsImplTypeName(),
-          downcase(goal.goal.goalName + "Steps"), PRIVATE, FINAL)
-          .initializer("new $T()", goal.goal.stepsImplTypeName()).build());
+      ClassName stepsType = goal.accept(stepsImplTypeName);
+      builder.add(FieldSpec.builder(stepsType,
+          downcase(goalName + "Steps"), PRIVATE, FINAL)
+          .initializer("new $T()", stepsType).build());
     }
     return builder.build();
   }
 
-  private String updaterField(UberGoalContext context) {
-    return downcase(context.goal.goalName + "Updater");
+  private String updaterField(GoalContext goal) {
+    return downcase(goal.goalName + "Updater");
   }
 
-  private String stepsField(UberGoalContext context) {
-    return downcase(context.goal.goalName + "Steps");
+  private String stepsField(GoalContext goal) {
+    return downcase(goal.goalName + "Steps");
   }
 
 }
