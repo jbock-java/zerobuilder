@@ -25,9 +25,6 @@ final class Messages {
     static final String NO_GOALS =
         "No goals were found.";
 
-    static final String MULTIPLE_TOBUILDER =
-        "Only one goal can have the toBuilder flag set.";
-
     static final String GOAL_NOT_IN_BUILD =
         "The @Goal annotation may not appear outside a class that carries the @Builder annotation.";
 
@@ -74,9 +71,15 @@ final class Messages {
     static final String NO_SETTERS
         = "No setters found on target type.";
 
-    private ErrorMessages() {
-    }
+    static final String TARGET_NESTING_KIND
+        = "Target type must be top level or static inner class";
 
+    static final String TARGET_PUBLIC
+        = "Target type must be public";
+
+    private ErrorMessages() {
+      throw new UnsupportedOperationException("no instances");
+    }
   }
 
   static final class JavadocMessages {
@@ -95,11 +98,11 @@ final class Messages {
     }
 
     private JavadocMessages() {
+      throw new UnsupportedOperationException("no instances");
     }
-
   }
 
   private Messages() {
+    throw new UnsupportedOperationException("no instances");
   }
-
 }

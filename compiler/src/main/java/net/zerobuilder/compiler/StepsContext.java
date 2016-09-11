@@ -89,9 +89,9 @@ final class StepsContext {
     }
   };
 
-  private static final GoalCases<MethodSpec> lastStep = always(new Function<GoalContext, MethodSpec>() {
+  private static final GoalCases<MethodSpec> lastStep = new GoalCases<MethodSpec>() {
     @Override
-    public MethodSpec apply(GoalContext goal) {
+    MethodSpec regularGoal(GoalContext goal, GoalKind kind) {
       ParameterContext parameter = getLast(goal.goalParameters);
       String name = parameter.validParameter.name;
       TypeName type = parameter.validParameter.type;
@@ -103,7 +103,21 @@ final class StepsContext {
           .returns(goal.goalType)
           .addCode(goal.goalCall).build();
     }
-  });
+    @Override
+    MethodSpec fieldGoal(GoalContext goal, ClassName goalType) {
+      ParameterContext parameter = getLast(goal.goalParameters);
+      String name = parameter.validParameter.name;
+      TypeName type = parameter.validParameter.type;
+      return methodBuilder(parameter.validParameter.name)
+          .addAnnotation(Override.class)
+          .addParameter(ParameterSpec.builder(type, name).build())
+          .addExceptions(goal.thrownTypes)
+          .addModifiers(PUBLIC)
+          .returns(goal.goalType)
+          .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
+          .addCode(goal.goalCall).build();
+    }
+  };
 
   static TypeSpec buildStepsImpl(GoalContext goal) {
     return classBuilder(goal.accept(stepsImplTypeName))

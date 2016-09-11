@@ -27,6 +27,7 @@ import static com.google.common.base.Ascii.isUpperCase;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
@@ -34,6 +35,9 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.NEGATIVE_STEP_POSI
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_SETTERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_NESTING_KIND;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
+import static net.zerobuilder.compiler.TypeValidator.ALLOWED_NESTING_KINDS;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -87,7 +91,7 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> validate() throws ValidationException {
-    return sortedParameters(goal.accept(new Analyser.AbstractGoalElement.GoalElementCases<ImmutableList<TmpValidParameter>>() {
+    return shuffledParameters(goal.accept(new Analyser.AbstractGoalElement.GoalElementCases<ImmutableList<TmpValidParameter>>() {
       @Override
       public ImmutableList<TmpValidParameter> executable(ExecutableElement goal, GoalKind kind) throws ValidationException {
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
@@ -168,7 +172,7 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> skip() throws ValidationException {
-    return sortedParameters(goal.accept(new Analyser.AbstractGoalElement.GoalElementCases<ImmutableList<TmpValidParameter>>() {
+    return shuffledParameters(goal.accept(new Analyser.AbstractGoalElement.GoalElementCases<ImmutableList<TmpValidParameter>>() {
       @Override
       public ImmutableList<TmpValidParameter> executable(ExecutableElement goal, GoalKind kind) throws ValidationException {
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
@@ -196,7 +200,11 @@ final class ToBuilderValidator {
       throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, field);
     }
     if (!type.getModifiers().contains(PUBLIC)) {
-      throw new ValidationException("Target type must be public", field);
+      throw new ValidationException(TARGET_PUBLIC, field);
+    }
+    if (!ALLOWED_NESTING_KINDS.contains(type.getNestingKind())
+        || type.getNestingKind() == MEMBER && !type.getModifiers().contains(STATIC)) {
+      throw new ValidationException(TARGET_NESTING_KIND, type);
     }
     ImmutableList<ExecutableElement> methods = ImmutableList.copyOf(getLocalAndInheritedMethods(type, elements));
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
@@ -261,7 +269,7 @@ final class ToBuilderValidator {
     }
   }
 
-  private static ImmutableList<ValidParameter> sortedParameters(ImmutableList<TmpValidParameter> parameters)
+  private static ImmutableList<ValidParameter> shuffledParameters(ImmutableList<TmpValidParameter> parameters)
       throws ValidationException {
     ValidParameter[] builder = new ValidParameter[parameters.size()];
     ImmutableList.Builder<TmpValidParameter> noAnnotation = ImmutableList.builder();

@@ -10,8 +10,8 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
+import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -34,6 +34,9 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static net.zerobuilder.compiler.BuilderContext.createBuildConfig;
+import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.STATIC_METHOD;
+import static net.zerobuilder.compiler.GoalContextFactory.context;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMM;
@@ -44,23 +47,24 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.STATIC_METHOD;
-import static net.zerobuilder.compiler.GoalContextFactory.context;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class Analyser {
 
-  private static final Ordering<GoalElement> DEFAULT_NAME_FIRST = Ordering.from(new Comparator<GoalElement>() {
+  /**
+   * to generate better error messages
+   */
+  private static final Ordering<GoalElement> GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK
+      = Ordering.from(new Comparator<GoalElement>() {
 
     private int goalWeight(GoalElement goal) {
       ElementKind kind = goal.element.getKind();
       Optional<Goal> annotation = goal.goalAnnotation;
       String name = annotation.transform(GOAL_NAME).or("");
       return isNullOrEmpty(name)
-          ? kind == CONSTRUCTOR ? 0 : 1
-          : kind == CONSTRUCTOR ? 2 : 3;
+          ? (kind == CONSTRUCTOR ? 0 : (kind == METHOD ? 1 : 2))
+          : (kind == CONSTRUCTOR ? 3 : (kind == METHOD ? 4 : 5));
     }
 
     @Override
@@ -96,7 +100,7 @@ final class Analyser {
   }
 
   private void checkNameConflict(ImmutableList<GoalElement> goals) throws ValidationException {
-    goals = ImmutableList.copyOf(DEFAULT_NAME_FIRST.sortedCopy(goals));
+    goals = GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK.immutableSortedCopy(goals);
     HashMap<String, GoalElement> goalNames = new HashMap<>();
     for (GoalElement goal : goals) {
       GoalElement otherGoal = goalNames.put(goal.name, goal);

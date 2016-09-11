@@ -1,18 +1,12 @@
 package net.zerobuilder.examples.beans;
 
+import net.zerobuilder.Step;
+
 public class Employee {
 
   private int id;
-  private String name;
   private int salary;
-
-  public Employee() {
-  }
-
-  public Employee(String name, int salary) {
-    this.name = name;
-    this.salary = salary;
-  }
+  private String name;
 
   public int getId() {
     return id;
@@ -22,14 +16,6 @@ public class Employee {
     this.id = id;
   }
 
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
   public int getSalary() {
     return salary;
   }
@@ -37,5 +23,14 @@ public class Employee {
   public void setSalary(int salary) {
     this.salary = salary;
   }
-  
+
+  public String getName() {
+    return name;
+  }
+
+  @Step(1)
+  public void setName(String name) {
+    this.name = name;
+  }
+
 }

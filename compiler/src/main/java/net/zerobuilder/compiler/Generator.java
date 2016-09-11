@@ -107,13 +107,13 @@ final class Generator {
         String methodName = downcase(goal.goalName + "ToBuilder");
         final MethodSpec.Builder method = methodBuilder(methodName)
             .addParameter(goal.goalType, instance);
-        final String varUpdater = "updater";
+        final String updater = "updater";
         ClassName updaterType = goal.accept(UpdaterContext.typeName);
         if (analysisResult.config.recycle) {
-          method.addStatement("$T $L = $L.get().$N", updaterType, varUpdater,
+          method.addStatement("$T $L = $L.get().$N", updaterType, updater,
               TL, updaterField(goal));
         } else {
-          method.addStatement("$T $L = new $T()", updaterType, varUpdater,
+          method.addStatement("$T $L = new $T()", updaterType, updater,
               updaterType);
         }
         CodeBlock statements = goal.accept(new GoalContext.GoalCases<CodeBlock>() {
@@ -122,10 +122,10 @@ final class Generator {
             CodeBlock.Builder builder = CodeBlock.builder();
             for (ParameterContext parameter : goal.goalParameters) {
               if (parameter.validParameter.projectionMethodName.isPresent()) {
-                builder.addStatement("$N.$N = $N.$N()", varUpdater, parameter.validParameter.name,
+                builder.addStatement("$N.$N = $N.$N()", updater, parameter.validParameter.name,
                     instance, parameter.validParameter.projectionMethodName.get());
               } else {
-                builder.addStatement("$N.$N = $N.$N", varUpdater, parameter.validParameter.name,
+                builder.addStatement("$N.$N = $N.$N", updater, parameter.validParameter.name,
                     instance, parameter.validParameter.name);
               }
             }
@@ -134,10 +134,12 @@ final class Generator {
           @Override
           CodeBlock fieldGoal(GoalContext goal, ClassName goalType) {
             CodeBlock.Builder builder = CodeBlock.builder();
+            String instance = downcase(goalType.simpleName());
+            builder.addStatement("$N.$N = new $T()", updater, instance, goalType);
             for (ParameterContext parameter : goal.goalParameters) {
               String parameterName = upcase(parameter.validParameter.name);
-              builder.addStatement("$N.$N.set$L($N.get$L())", varUpdater,
-                  downcase(goalType.simpleName()),
+              builder.addStatement("$N.$N.set$L($N.get$L())", updater,
+                  instance,
                   parameterName,
                   instance,
                   parameterName);
@@ -146,7 +148,7 @@ final class Generator {
           }
         });
         method.addCode(statements);
-        method.addStatement("return $L", varUpdater);
+        method.addStatement("return $L", updater);
         return method
             .returns(goal.accept(contractUpdaterName))
             .addModifiers(goal.maybeAddPublic(STATIC)).build();
