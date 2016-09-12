@@ -123,3 +123,27 @@ By wrapping the beans, zerobuilder makes the following tasks easier:
 
 * To create new beans, by ensuring that each setter is invoked exactly once.
 * To "update" beans as if they were immutable, by making shallow copies via `toBuilder`.
+
+### Use it in your project
+
+This is a standard Java 7 annotation processor. No compiler plugin or special IDE is needed. 
+However, maven compiler plugin version `3.5.1` or greater is recommended.
+
+Your IDE may need some initial help, to recognize that `target/generated-sources/annotations` 
+now contains generated sources.
+
+To consumers of your project, the annotated classes, as well as the generated code, 
+will appear as normal classes.
+The annotations `@Builders`, `@Goal` and possibly `@Step` will never be present in your `.class` files,
+so no transitive dependency on zerobuilder arises.
+
+The maven coordinates:
+
+````xml
+<dependency>
+    <groupId>com.github.h908714124</groupId>
+    <artifactId>zerobuilder</artifactId>
+    <version>1.101</version>
+    <scope>provided</scope>
+</dependency>
+````
