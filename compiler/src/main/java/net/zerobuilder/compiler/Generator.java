@@ -35,9 +35,9 @@ import static net.zerobuilder.compiler.GoalContext.contractUpdaterName;
 import static net.zerobuilder.compiler.GoalContext.goalTypeName;
 import static net.zerobuilder.compiler.GoalContext.maybeAddPublic;
 import static net.zerobuilder.compiler.GoalContext.stepsImplTypeName;
-import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.GoalContextFactory.builderImpl;
+import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -138,11 +138,11 @@ final class Generator {
             builder.addStatement("$N.$N = new $T()", updater, instance, goalType);
             for (ParameterContext parameter : goal.goalParameters) {
               String parameterName = upcase(parameter.validParameter.name);
-              builder.addStatement("$N.$N.set$L($N.get$L())", updater,
+              builder.addStatement("$N.$N.set$L($N.$L())", updater,
                   instance,
                   parameterName,
                   instance,
-                  parameterName);
+                  parameter.validParameter.projectionMethodName.get());
             }
             return builder.build();
           }

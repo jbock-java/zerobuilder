@@ -34,14 +34,18 @@ public class BeansTest {
   public void testUser() {
     User ben = userBuilder()
         .id(10)
-        .name("Ben");
+        .name("Ben")
+        .power(false);
     User rosie = userToBuilder(ben)
         .name("Rosie")
+        .power(true)
         .build();
     assertThat(ben.getId(), is(10));
     assertThat(ben.getName(), is("Ben"));
+    assertThat(ben.isPower(), is(false));
     assertThat(rosie.getId(), is(10));
     assertThat(rosie.getName(), is("Rosie"));
+    assertThat(rosie.isPower(), is(true));
   }
 
   @Test

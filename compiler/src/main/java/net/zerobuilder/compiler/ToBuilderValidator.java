@@ -132,8 +132,7 @@ final class ToBuilderValidator {
               public boolean apply(ExecutableElement method) {
                 return method.getParameters().isEmpty()
                     && method.getModifiers().contains(PUBLIC)
-                    && !method.getModifiers().contains(STATIC)
-                    && method.getSimpleName().toString().startsWith("get");
+                    && !method.getModifiers().contains(STATIC);
               }
             })
             .uniqueIndex(new Function<ExecutableElement, String>() {
