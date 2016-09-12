@@ -11,7 +11,7 @@
         <relativePath></relativePath>
     </parent>
 
-    <groupId>net.zerobuilder</groupId>
+    <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
     <version>${revision}</version>
 

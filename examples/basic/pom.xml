@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.zerobuilder.examples</groupId>
-    <artifactId>basic</artifactId>
+    <groupId>com.github.h908714124</groupId>
+    <artifactId>zerobuilder-examples-basic</artifactId>
     <version>${revision}</version>
 
     <properties>
@@ -15,7 +15,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>net.zerobuilder</groupId>
+            <groupId>com.github.h908714124</groupId>
             <artifactId>zerobuilder</artifactId>
             <version>${revision}</version>
             <scope>provided</scope>
