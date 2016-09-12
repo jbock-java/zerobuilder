@@ -7,8 +7,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
+import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.Analyser.GoalElement;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 
@@ -91,7 +93,7 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> validate() throws ValidationException {
-    return shuffledParameters(goal.accept(new Analyser.AbstractGoalElement.GoalElementCases<ImmutableList<TmpValidParameter>>() {
+    return shuffledParameters(goal.accept(new GoalElementCases<ImmutableList<TmpValidParameter>>() {
       @Override
       public ImmutableList<TmpValidParameter> executable(ExecutableElement goal, GoalKind kind) throws ValidationException {
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
@@ -121,7 +123,7 @@ final class ToBuilderValidator {
         return builder.build();
       }
       @Override
-      public ImmutableList<TmpValidParameter> field(VariableElement field) throws ValidationException {
+      public ImmutableList<TmpValidParameter> field(Element field, TypeElement typeElement) throws ValidationException {
         TypeName typeName = TypeName.get(field.asType());
         TypeElement type = elements.getTypeElement(typeName.toString());
         ImmutableList<ExecutableElement> setters = setters(field, type);
@@ -171,7 +173,7 @@ final class ToBuilderValidator {
   }
 
   ImmutableList<ValidParameter> skip() throws ValidationException {
-    return shuffledParameters(goal.accept(new Analyser.AbstractGoalElement.GoalElementCases<ImmutableList<TmpValidParameter>>() {
+    return shuffledParameters(goal.accept(new GoalElementCases<ImmutableList<TmpValidParameter>>() {
       @Override
       public ImmutableList<TmpValidParameter> executable(ExecutableElement goal, GoalKind kind) throws ValidationException {
         ImmutableList.Builder<TmpValidParameter> builder = ImmutableList.builder();
@@ -181,7 +183,7 @@ final class ToBuilderValidator {
         return builder.build();
       }
       @Override
-      public ImmutableList<TmpValidParameter> field(VariableElement field) throws ValidationException {
+      public ImmutableList<TmpValidParameter> field(Element field, TypeElement typeElement) throws ValidationException {
         TypeName typeName = TypeName.get(field.asType());
         TypeElement type = elements.getTypeElement(typeName.toString());
         ImmutableList<ExecutableElement> setters = setters(field, type);
@@ -194,9 +196,9 @@ final class ToBuilderValidator {
     }));
   }
 
-  private ImmutableList<ExecutableElement> setters(VariableElement field, TypeElement type) throws ValidationException {
-    if (!parameterlessConstructor(type).isPresent()) {
-      throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, field);
+  private ImmutableList<ExecutableElement> setters(Element field, TypeElement type) throws ValidationException {
+    if (!hasParameterlessConstructor(type)) {
+      throw new ValidationException(NO_DEFAULT_CONSTRUCTOR + TypeName.get(type.asType()), field);
     }
     if (!type.getModifiers().contains(PUBLIC)) {
       throw new ValidationException(TARGET_PUBLIC, field);
@@ -230,15 +232,15 @@ final class ToBuilderValidator {
     return setters;
   }
 
-  private Optional<ExecutableElement> parameterlessConstructor(TypeElement type) {
+  private boolean hasParameterlessConstructor(TypeElement type) {
     List<ExecutableElement> constructors = ElementFilter.constructorsIn(type.getEnclosedElements());
     for (ExecutableElement constructor : constructors) {
       if (constructor.getParameters().isEmpty()
           && constructor.getModifiers().contains(PUBLIC)) {
-        return Optional.of(constructor);
+        return true;
       }
     }
-    return Optional.absent();
+    return false;
   }
 
   static final class Factory {

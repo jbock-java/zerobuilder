@@ -12,8 +12,10 @@ import net.zerobuilder.compiler.Analyser.GoalElement;
 import net.zerobuilder.compiler.GoalContext.GoalCases;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
@@ -60,7 +62,7 @@ final class GoalContextFactory {
             goalCall);
       }
       @Override
-      public GoalContext field(VariableElement field) throws ValidationException {
+      public GoalContext field(Element field, TypeElement typeElement) throws ValidationException {
         return new GoalContext.FieldGoalContext(
             (ClassName) goal.goalType,
             builderType,
@@ -115,7 +117,7 @@ final class GoalContextFactory {
             return element.getThrownTypes();
           }
           @Override
-          public List<? extends TypeMirror> field(VariableElement field) throws ValidationException {
+          public List<? extends TypeMirror> field(Element field, TypeElement typeElement) throws ValidationException {
             return ImmutableList.of();
           }
         }))

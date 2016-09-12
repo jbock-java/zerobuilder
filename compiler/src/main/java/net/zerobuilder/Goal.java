@@ -6,6 +6,7 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
@@ -25,12 +26,13 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * </li><li>
  * The target type must have a public no-argument constructor.
  * </li></ul>
+ * If this annotation appears on a type, it has the same effect as putting it on a field of that type.
  *
  * @see Builders
  * @see Step
  */
 @Retention(SOURCE)
-@Target({METHOD, CONSTRUCTOR, FIELD})
+@Target({METHOD, CONSTRUCTOR, FIELD, TYPE})
 public @interface Goal {
 
   /**

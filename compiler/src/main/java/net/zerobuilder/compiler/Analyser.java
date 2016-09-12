@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler;
 
+import com.google.auto.common.MoreTypes;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -25,6 +26,7 @@ import java.util.List;
 
 import static com.google.auto.common.MoreElements.asExecutable;
 import static com.google.auto.common.MoreElements.asVariable;
+import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Iterables.getLast;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
@@ -135,6 +137,9 @@ final class Analyser {
 
   private ImmutableList<GoalElement> goals(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<GoalElement> builder = ImmutableList.builder();
+    if (buildElement.getAnnotation(Goal.class) != null) {
+      builder.add(FieldGoal.create(buildElement));
+    }
     for (Element element : buildElement.getEnclosedElements()) {
       if (element.getAnnotation(Goal.class) != null) {
         ElementKind kind = element.getKind();
@@ -150,8 +155,6 @@ final class Analyser {
         } else if (kind == FIELD) {
           VariableElement field = asVariable(element);
           builder.add(FieldGoal.create(field));
-        } else {
-          throw new ValidationException("Not a goal", element);
         }
       }
     }
@@ -214,7 +217,7 @@ final class Analyser {
         }
       }
       @Override
-      public CodeBlock field(VariableElement field) throws ValidationException {
+      public CodeBlock field(Element field, TypeElement typeElement) throws ValidationException {
         return CodeBlock.builder()
             .addStatement("return $L", downcase(((ClassName) goal.goalType).simpleName()))
             .build();
@@ -235,7 +238,7 @@ final class Analyser {
   static abstract class AbstractGoalElement {
     interface GoalElementCases<R> {
       R executable(ExecutableElement element, GoalKind kind) throws ValidationException;
-      R field(VariableElement field) throws ValidationException;
+      R field(Element field, TypeElement typeElement) throws ValidationException;
     }
     abstract <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException;
   }
@@ -277,18 +280,25 @@ final class Analyser {
   }
 
   static final class FieldGoal extends GoalElement {
-    final VariableElement field;
-    private FieldGoal(VariableElement field, TypeName goalType, String name) {
+    final Element field;
+    final TypeElement typeElement;
+    private FieldGoal(Element field, TypeName goalType, String name, TypeElement typeElement) {
       super(field, goalType, name);
       this.field = field;
+      this.typeElement = typeElement;
     }
     private static GoalElement create(VariableElement field) {
       TypeName goalType = TypeName.get(field.asType());
       String name = goalName(field.getAnnotation(Goal.class), goalType);
-      return new FieldGoal(field, goalType, name);
+      return new FieldGoal(field, goalType, name, asTypeElement(field.asType()));
+    }
+    private static GoalElement create(TypeElement field) {
+      TypeName goalType = TypeName.get(field.asType());
+      String name = goalName(field.getAnnotation(Goal.class), goalType);
+      return new FieldGoal(field, goalType, name, field);
     }
     <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
-      return goalElementCases.field(field);
+      return goalElementCases.field(field, typeElement);
     }
   }
 

@@ -14,19 +14,22 @@ final class Messages {
         "The goal may not be private.";
 
     static final String PRIVATE_TYPE =
-        "The @Builder annotated type may not be private.";
+        "The @Builders annotated type may not be private.";
 
     static final String NOT_ENOUGH_PARAMETERS =
         "The goal must have at least one parameter.";
 
     static final String NESTING_KIND =
-        "The @Builder annotation can only be used on top level and non-private static inner classes.";
+        "The @Builders annotation can only be used on top level and non-private static inner classes.";
 
     static final String NO_GOALS =
         "No goals were found.";
 
     static final String GOAL_NOT_IN_BUILD =
-        "The @Goal annotation may not appear outside a class that carries the @Builder annotation.";
+        "The @Goal annotation may not appear outside a class that carries the @Builders annotation.";
+
+    static final String GOAL_WITHOUT_BUILDERS =
+        "A class that carries the @Goal annotation must also carry the @Builders annotation.";
 
     /* empty, empty, constructor, constructor */
     static final String GOALNAME_EECC =
@@ -66,7 +69,7 @@ final class Messages {
         "There is another goal with this goal name.";
 
     static final String NO_DEFAULT_CONSTRUCTOR
-        = "No public default constructor found on target type.";
+        = "Class not public or no public default constructor found: ";
 
     static final String NO_SETTERS
         = "No setters found on target type.";

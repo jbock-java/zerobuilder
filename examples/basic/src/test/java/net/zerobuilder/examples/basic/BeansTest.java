@@ -1,5 +1,6 @@
 package net.zerobuilder.examples.basic;
 
+import net.zerobuilder.examples.basic.Beans.MyCalendar;
 import net.zerobuilder.examples.beans.Accountant;
 import net.zerobuilder.examples.beans.Employee;
 import net.zerobuilder.examples.beans.Manager;
@@ -14,6 +15,8 @@ import static net.zerobuilder.examples.basic.Beans_MoreBeansBuilders.managerBuil
 import static net.zerobuilder.examples.basic.Beans_MoreBeansBuilders.managerToBuilder;
 import static net.zerobuilder.examples.basic.Beans_MoreBeansBuilders.otherAccountantBuilder;
 import static net.zerobuilder.examples.basic.Beans_MoreBeansBuilders.otherAccountantToBuilder;
+import static net.zerobuilder.examples.basic.Beans_MyCalendarBuilders.calendarBuilder;
+import static net.zerobuilder.examples.basic.Beans_MyCalendarBuilders.calendarToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -95,6 +98,25 @@ public class BeansTest {
     assertThat(tetsuo.getName(), is("Tetsuo"));
     assertThat(tetsuo.getSalary(), is(100 * 1000));
     assertThat(tetsuo.getAccount(), is("0159"));
+  }
+
+  @Test
+  public void testMyCalendar() {
+    MyCalendar calendar = calendarBuilder()
+        .unixTime(987128376)
+        .dst(true)
+        .currentYear("2015");
+    MyCalendar updatedCalendar = calendarToBuilder(calendar)
+        .unixTime(987128377)
+        .dst(false)
+        .currentYear("2017")
+        .build();
+    assertThat(calendar.getUnixTime(), is(987128376l));
+    assertThat(calendar.isDst(), is(true));
+    assertThat(calendar.getCurrentYear(), is("2015"));
+    assertThat(updatedCalendar.getUnixTime(), is(987128377l));
+    assertThat(updatedCalendar.isDst(), is(false));
+    assertThat(updatedCalendar.getCurrentYear(), is("2017"));
   }
 
 }

@@ -30,6 +30,7 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_NOT_IN_BUILD;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_WITHOUT_BUILDERS;
 
 @AutoService(Processor.class)
 public final class ZeroProcessor extends AbstractProcessor {
@@ -46,10 +47,8 @@ public final class ZeroProcessor extends AbstractProcessor {
 
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
-    Optional<ExecutableElement> goalNotInBuild = goalNotInBuild(env);
+    Optional<? extends Element> goalNotInBuild = goalNotInBuild(env);
     if (goalNotInBuild.isPresent()) {
-      processingEnv.getMessager().printMessage(ERROR,
-          GOAL_NOT_IN_BUILD, goalNotInBuild.get());
       return false;
     }
     Analyser transformer = new Analyser(processingEnv.getElementUtils());
@@ -79,13 +78,20 @@ public final class ZeroProcessor extends AbstractProcessor {
     return false;
   }
 
-  private Optional<ExecutableElement> goalNotInBuild(RoundEnvironment env) {
+  private Optional<? extends Element> goalNotInBuild(RoundEnvironment env) {
     Set<? extends Element> elements = env.getElementsAnnotatedWith(Goal.class);
-    Set<ExecutableElement> executableElements =
-        ImmutableSet.copyOf(union(constructorsIn(elements), methodsIn(elements)));
-    for (ExecutableElement executableElement : executableElements) {
+    for (ExecutableElement executableElement : union(constructorsIn(elements), methodsIn(elements))) {
       if (executableElement.getEnclosingElement().getAnnotation(Builders.class) == null) {
+        processingEnv.getMessager().printMessage(ERROR,
+            GOAL_NOT_IN_BUILD, executableElement);
         return Optional.of(executableElement);
+      }
+    }
+    for (TypeElement typeElement : typesIn(elements)) {
+      if (typeElement.getAnnotation(Builders.class) == null) {
+        processingEnv.getMessager().printMessage(ERROR,
+            GOAL_WITHOUT_BUILDERS, typeElement);
+        return Optional.of(typeElement);
       }
     }
     return Optional.absent();
