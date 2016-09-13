@@ -51,31 +51,21 @@ The following structure will be generated (some implementation details left out)
 ````java
 @Generated final class MessageBuilders {
 
-  static MessageBuilder.Contract.Sender messageBuilder();
-  static MessageBuilder.Contract.MessageUpdater messageToBuilder(Message message);
+  static MessageBuilder.Sender messageBuilder() { ... }
+  static MessageUpdater messageToBuilder(Message message) { ... }
 
+  static final class MessageUpdater {
+    MessageUpdater body(String body) { ... }
+    MessageUpdater recipient(String recipient) { ... }
+    MessageUpdater subject(String subject) { ... }
+    Message build() { ... }
+  }
+  
   static final class MessageBuilder {
-    static final class Contract {
-      interface MessageUpdater {
-        Message build();
-        MessageUpdater sender(String sender);
-        MessageUpdater body(String body);
-        MessageUpdater recipient(String recipient);
-        MessageUpdater subject(String subject);
-      }
-      interface Sender {
-        Body sender(String sender);
-      }
-      interface Body {
-        Recipient body(String body);
-      }
-      interface Recipient {
-        Subject recipient(String recipient);
-      }
-      interface Subject {
-        Message subject(String subject);
-      }
-    }
+    interface Sender { Body sender(String sender); }
+    interface Body { Recipient body(String body); }
+    interface Recipient { Subject recipient(String recipient); }
+    interface Subject { Message subject(String subject); }
   }
 }
 ````
@@ -86,7 +76,7 @@ in the `examples/basic/target/generated-sources/annotations` folder.
 Let's take a closer look at the generated code:
 
 * The `messageBuilder` and `messageToBuilder` methods return different things.
-* There is a `MessageUpdater` interface, which looks like the familiar builder pattern.
+* There is a `MessageUpdater` class, which looks like the familiar builder pattern.
   Each method can be called `0..n` times, and there is an extra `build()` method that returns `Message`.
 * For each of the four goal parameters, there is one corresponding "step" interface: `Sender`, `Body`, `Recipient` and `Subject`.
 * Each step interface has a single method.

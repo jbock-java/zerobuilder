@@ -102,22 +102,14 @@ abstract class GoalContext {
   static final GoalCases<ClassName> contractName = always(new Function<GoalContext, ClassName>() {
     @Override
     public ClassName apply(GoalContext goal) {
-      return goal.generatedType.nestedClass(GoalContextFactory.CONTRACT);
+      return goal.config.generatedType.nestedClass(goal.goalName + "Builder");
     }
   });
 
   static final GoalCases<ClassName> stepsImplTypeName = always(new Function<GoalContext, ClassName>() {
     @Override
     public ClassName apply(GoalContext goal) {
-      return goal.generatedType.nestedClass(GoalContextFactory.STEPS_IMPL);
-    }
-  });
-
-  static final GoalCases<ClassName> contractUpdaterName = always(new Function<GoalContext, ClassName>() {
-    @Override
-    public ClassName apply(GoalContext goal) {
-      return goal.accept(contractName)
-          .nestedClass(goal.goalName + GoalContextFactory.UPDATER_SUFFIX);
+      return goal.config.generatedType.nestedClass(goal.goalName + "BuilderImpl");
     }
   });
 

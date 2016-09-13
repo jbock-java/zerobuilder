@@ -20,7 +20,7 @@ abstract class Bob {
     return new AutoValue_Bob(kevin, chantal, justin);
   }
 
-  BobBuilders.BobBuilder.Contract.BobUpdater toBuilder() {
+  BobBuilders.BobUpdater toBuilder() {
     return bobToBuilder(this);
   }
 

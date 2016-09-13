@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -19,7 +18,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.GoalContext.always;
 import static net.zerobuilder.compiler.GoalContext.stepInterfaceNames;
 import static net.zerobuilder.compiler.GoalContext.stepsImplTypeName;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;

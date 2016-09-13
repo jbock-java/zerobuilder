@@ -40,7 +40,7 @@ final class MessageFactory {
 
   }
 
-  MessageFactoryBuilders.MessageBuilder.Contract.Body messageBuilder() {
+  MessageFactoryBuilders.MessageBuilder.Body messageBuilder() {
     return MessageFactoryBuilders.messageBuilder(this);
   }
 

@@ -18,22 +18,18 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.always;
-import static net.zerobuilder.compiler.GoalContext.contractUpdaterName;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class UpdaterContext {
 
-  private static final String UPDATER_IMPL = "UpdaterImpl";
-
   static final GoalCases<ClassName> typeName = always(new Function<GoalContext, ClassName>() {
     @Override
     public ClassName apply(GoalContext goal) {
-      return goal.generatedType.nestedClass(UPDATER_IMPL);
+      return goal.config.generatedType.nestedClass(goal.goalName + "Updater");
     }
   });
 
@@ -69,12 +65,11 @@ final class UpdaterContext {
         String name = parameter.validParameter.name;
         TypeName type = parameter.validParameter.type;
         builder.add(methodBuilder(name)
-            .addAnnotation(Override.class)
-            .returns(goal.accept(contractUpdaterName))
+            .returns(goal.accept(typeName))
             .addParameter(ParameterSpec.builder(type, name).build())
             .addStatement("this.$N = $N", name, name)
             .addStatement("return this")
-            .addModifiers(PUBLIC)
+            .addModifiers(goal.maybeAddPublic())
             .build());
       }
       return builder.build();
@@ -86,12 +81,11 @@ final class UpdaterContext {
         String name = parameter.validParameter.name;
         TypeName type = parameter.validParameter.type;
         builder.add(methodBuilder(name)
-            .addAnnotation(Override.class)
-            .returns(goal.accept(contractUpdaterName))
+            .returns(goal.accept(typeName))
             .addParameter(ParameterSpec.builder(type, name).build())
             .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
             .addStatement("return this")
-            .addModifiers(PUBLIC)
+            .addModifiers(goal.maybeAddPublic())
             .build());
       }
       return builder.build();
@@ -102,8 +96,7 @@ final class UpdaterContext {
     @Override
     public MethodSpec apply(GoalContext goal) {
       return methodBuilder("build")
-          .addAnnotation(Override.class)
-          .addModifiers(PUBLIC)
+          .addModifiers(goal.maybeAddPublic())
           .returns(goal.goalType)
           .addCode(goal.goalCall)
           .addExceptions(goal.thrownTypes)
@@ -116,7 +109,6 @@ final class UpdaterContext {
       return absent();
     }
     return Optional.of(classBuilder(goal.accept(typeName))
-        .addSuperinterface(goal.accept(contractUpdaterName))
         .addFields(goal.accept(fields))
         .addMethods(goal.accept(updaterMethods))
         .addMethod(goal.accept(buildMethod))

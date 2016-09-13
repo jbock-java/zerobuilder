@@ -31,13 +31,14 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.GoalContext.contractUpdaterName;
+import static net.zerobuilder.compiler.ContractContext.buildContract;
 import static net.zerobuilder.compiler.GoalContext.goalTypeName;
 import static net.zerobuilder.compiler.GoalContext.maybeAddPublic;
 import static net.zerobuilder.compiler.GoalContext.stepsImplTypeName;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.GoalContextFactory.builderImpl;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
+import static net.zerobuilder.compiler.StepsContext.buildStepsImpl;
+import static net.zerobuilder.compiler.UpdaterContext.buildUpdaterImpl;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -67,7 +68,9 @@ final class Generator {
   private ImmutableList<TypeSpec> builderImpls(ImmutableList<GoalContext> goals) {
     ImmutableList.Builder<TypeSpec> builder = ImmutableList.builder();
     for (GoalContext goal : goals) {
-      builder.add(goal.accept(builderImpl));
+      builder.addAll(presentInstances(of(buildUpdaterImpl(goal))));
+      builder.add(buildStepsImpl(goal));
+      builder.add(buildContract(goal));
     }
     return builder.build();
   }
@@ -150,7 +153,7 @@ final class Generator {
         method.addCode(statements);
         method.addStatement("return $L", updater);
         return method
-            .returns(goal.accept(contractUpdaterName))
+            .returns(goal.accept(UpdaterContext.typeName))
             .addModifiers(goal.maybeAddPublic(STATIC)).build();
       }
     }).toList();
@@ -200,16 +203,15 @@ final class Generator {
     }
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
     for (GoalContext goal : analysisResult.goals) {
-      String goalName = goal.goalName;
       if (goal.toBuilder) {
         ClassName updaterType = goal.accept(UpdaterContext.typeName);
         builder.add(FieldSpec.builder(updaterType,
-            downcase(goalName + "Updater"), PRIVATE, FINAL)
+            updaterField(goal), PRIVATE, FINAL)
             .initializer("new $T()", updaterType).build());
       }
       ClassName stepsType = goal.accept(stepsImplTypeName);
       builder.add(FieldSpec.builder(stepsType,
-          downcase(goalName + "Steps"), PRIVATE, FINAL)
+          stepsField(goal), PRIVATE, FINAL)
           .initializer("new $T()", stepsType).build());
     }
     return builder.build();
@@ -220,7 +222,7 @@ final class Generator {
   }
 
   private String stepsField(GoalContext goal) {
-    return downcase(goal.goalName + "Steps");
+    return downcase(goal.goalName + "BuilderImpl");
   }
 
 }
