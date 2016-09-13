@@ -55,6 +55,7 @@ The following structure will be generated (some implementation details left out)
   static MessageUpdater messageToBuilder(Message message) { ... }
 
   static final class MessageUpdater {
+    MessageUpdater sender(String sender) { ... }
     MessageUpdater body(String body) { ... }
     MessageUpdater recipient(String recipient) { ... }
     MessageUpdater subject(String subject) { ... }
