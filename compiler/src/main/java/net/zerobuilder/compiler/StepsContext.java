@@ -29,7 +29,7 @@ final class StepsContext {
   private static final GoalCases<ImmutableList<FieldSpec>> fields
       = new GoalCases<ImmutableList<FieldSpec>>() {
     @Override
-    ImmutableList<FieldSpec> regularGoal(GoalContext goal, GoalKind kind) {
+    ImmutableList<FieldSpec> regularGoal(GoalContext goal, TypeName goalType, GoalKind kind) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       if (kind == INSTANCE_METHOD) {
         ClassName receiverType = goal.config.annotatedType;
@@ -52,7 +52,7 @@ final class StepsContext {
   private static final GoalCases<ImmutableList<MethodSpec>> stepsButLast
       = new GoalCases<ImmutableList<MethodSpec>>() {
     @Override
-    ImmutableList<MethodSpec> regularGoal(GoalContext goal, GoalKind kind) {
+    ImmutableList<MethodSpec> regularGoal(GoalContext goal, TypeName goalType, GoalKind kind) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (ParameterContext parameter : goal.goalParameters.subList(0, goal.goalParameters.size() - 1)) {
         String name = parameter.validParameter.name;
@@ -89,7 +89,7 @@ final class StepsContext {
 
   private static final GoalCases<MethodSpec> lastStep = new GoalCases<MethodSpec>() {
     @Override
-    MethodSpec regularGoal(GoalContext goal, GoalKind kind) {
+    MethodSpec regularGoal(GoalContext goal, TypeName goalType, GoalKind kind) {
       ParameterContext parameter = getLast(goal.goalParameters);
       String name = parameter.validParameter.name;
       TypeName type = parameter.validParameter.type;
@@ -98,7 +98,7 @@ final class StepsContext {
           .addParameter(ParameterSpec.builder(type, name).build())
           .addExceptions(goal.thrownTypes)
           .addModifiers(PUBLIC)
-          .returns(goal.goalType)
+          .returns(goalType)
           .addCode(goal.goalCall).build();
     }
     @Override
@@ -111,7 +111,7 @@ final class StepsContext {
           .addParameter(ParameterSpec.builder(type, name).build())
           .addExceptions(goal.thrownTypes)
           .addModifiers(PUBLIC)
-          .returns(goal.goalType)
+          .returns(goalType)
           .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
           .addCode(goal.goalCall).build();
     }

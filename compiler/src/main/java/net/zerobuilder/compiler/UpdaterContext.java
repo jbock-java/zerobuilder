@@ -10,6 +10,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.GoalContext.GoalCases;
+import net.zerobuilder.compiler.GoalContext.GoalFunction;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 
 import static com.google.common.base.Optional.absent;
@@ -26,16 +27,16 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class UpdaterContext {
 
-  static final GoalCases<ClassName> typeName = always(new Function<GoalContext, ClassName>() {
+  static final GoalCases<ClassName> typeName = always(new GoalFunction<ClassName>() {
     @Override
-    public ClassName apply(GoalContext goal) {
+    public ClassName apply(GoalContext goal, TypeName goalType) {
       return goal.config.generatedType.nestedClass(goal.goalName + "Updater");
     }
   });
 
   private static final GoalCases<ImmutableList<FieldSpec>> fields = new GoalCases<ImmutableList<FieldSpec>>() {
     @Override
-    ImmutableList<FieldSpec> regularGoal(GoalContext goal, GoalKind kind) {
+    ImmutableList<FieldSpec> regularGoal(GoalContext goal, TypeName goalType, GoalKind kind) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       if (kind == INSTANCE_METHOD) {
         ClassName receiverType = goal.config.annotatedType;
@@ -50,7 +51,7 @@ final class UpdaterContext {
     }
     @Override
     ImmutableList<FieldSpec> fieldGoal(GoalContext goal, ClassName goalType) {
-      FieldSpec field = FieldSpec.builder(goal.goalType, downcase(goalType.simpleName()))
+      FieldSpec field = FieldSpec.builder(goalType, downcase(goalType.simpleName()))
           .build();
       return ImmutableList.of(field);
     }
@@ -59,7 +60,7 @@ final class UpdaterContext {
 
   private static final GoalCases<ImmutableList<MethodSpec>> updaterMethods = new GoalCases<ImmutableList<MethodSpec>>() {
     @Override
-    ImmutableList<MethodSpec> regularGoal(GoalContext goal, GoalKind kind) {
+    ImmutableList<MethodSpec> regularGoal(GoalContext goal, TypeName goalType, GoalKind kind) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (ParameterContext parameter : goal.goalParameters) {
         String name = parameter.validParameter.name;
@@ -92,12 +93,12 @@ final class UpdaterContext {
     }
   };
 
-  private static final GoalCases<MethodSpec> buildMethod = always(new Function<GoalContext, MethodSpec>() {
+  private static final GoalCases<MethodSpec> buildMethod = always(new GoalFunction<MethodSpec>() {
     @Override
-    public MethodSpec apply(GoalContext goal) {
+    public MethodSpec apply(GoalContext goal, TypeName goalType) {
       return methodBuilder("build")
           .addModifiers(goal.maybeAddPublic())
-          .returns(goal.goalType)
+          .returns(goalType)
           .addCode(goal.goalCall)
           .addExceptions(goal.thrownTypes)
           .build();

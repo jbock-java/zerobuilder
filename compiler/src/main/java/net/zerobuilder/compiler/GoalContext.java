@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 import net.zerobuilder.compiler.GoalContextFactory.Visibility;
 
@@ -18,38 +19,45 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 abstract class GoalContext {
 
   static abstract class GoalCases<R> {
-    abstract R regularGoal(GoalContext goal, GoalKind kind);
+    abstract R regularGoal(GoalContext goal, TypeName goalType, GoalKind kind);
     abstract R fieldGoal(GoalContext goal, ClassName goalType);
   }
 
   abstract <R> R accept(GoalCases<R> cases);
 
-  static <R> GoalCases<R> always(final Function<GoalContext, R> function) {
+  static abstract class GoalFunction<R> {
+    abstract R apply(GoalContext goal, TypeName goalType);
+  }
+
+  static <R> GoalCases<R> always(final GoalFunction<R> function) {
     return new GoalCases<R>() {
       @Override
-      R regularGoal(GoalContext goal, GoalKind kind) {
-        return function.apply(goal);
+      R regularGoal(GoalContext goal, TypeName goalType, GoalKind kind) {
+        return function.apply(goal, goalType);
       }
       @Override
       R fieldGoal(GoalContext goal, ClassName goalType) {
-        return function.apply(goal);
+        return function.apply(goal, goalType);
       }
     };
   }
 
-  /**
-   * <p>method goal: return type</p>
-   * <p>constructor goal: type of enclosing class</p>
-   * <p>field goal: type of field</p>
-   */
-  final TypeName goalType;
-
-  final ClassName generatedType;
+  static <R> Function<GoalContext, R> goalCasesFunction(final GoalCases<R> cases) {
+    return new Function<GoalContext, R>() {
+      @Override
+      public R apply(GoalContext goal) {
+        return goal.accept(cases);
+      }
+    };
+  }
 
   final BuilderContext config;
 
   final boolean toBuilder;
 
+  /**
+   * Always starts with a lower case character.
+   */
   final String goalName;
 
   /**
@@ -71,15 +79,11 @@ abstract class GoalContext {
   abstract Set<Modifier> maybeAddPublic(Modifier... modifiers);
 
   @VisibleForTesting
-  GoalContext(TypeName goalType,
-                      ClassName generatedType,
-                      BuilderContext config,
-                      boolean toBuilder,
-                      String goalName,
-                      ImmutableList<ParameterContext> goalParameters,
-                      CodeBlock goalCall, ImmutableList<TypeName> thrownTypes) {
-    this.goalType = goalType;
-    this.generatedType = generatedType;
+  GoalContext(BuilderContext config,
+              boolean toBuilder,
+              String goalName,
+              ImmutableList<ParameterContext> goalParameters,
+              CodeBlock goalCall, ImmutableList<TypeName> thrownTypes) {
     this.config = config;
     this.toBuilder = toBuilder;
     this.goalName = goalName;
@@ -88,9 +92,9 @@ abstract class GoalContext {
     this.thrownTypes = thrownTypes;
   }
 
-  static final GoalCases<ImmutableList<ClassName>> stepInterfaceNames = always(new Function<GoalContext, ImmutableList<ClassName>>() {
+  static final GoalCases<ImmutableList<ClassName>> stepInterfaceNames = always(new GoalFunction<ImmutableList<ClassName>>() {
     @Override
-    public ImmutableList<ClassName> apply(GoalContext goal) {
+    public ImmutableList<ClassName> apply(GoalContext goal, TypeName goalType) {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
       for (ParameterContext spec : goal.goalParameters) {
         specs.add(spec.stepContract);
@@ -99,24 +103,17 @@ abstract class GoalContext {
     }
   });
 
-  static final GoalCases<ClassName> contractName = always(new Function<GoalContext, ClassName>() {
+  static final GoalCases<ClassName> contractName = always(new GoalFunction<ClassName>() {
     @Override
-    public ClassName apply(GoalContext goal) {
+    public ClassName apply(GoalContext goal, TypeName goalType) {
       return goal.config.generatedType.nestedClass(goal.goalName + "Builder");
     }
   });
 
-  static final GoalCases<ClassName> stepsImplTypeName = always(new Function<GoalContext, ClassName>() {
+  static final GoalCases<ClassName> stepsImplTypeName = always(new GoalFunction<ClassName>() {
     @Override
-    public ClassName apply(GoalContext goal) {
+    public ClassName apply(GoalContext goal, TypeName goalType) {
       return goal.config.generatedType.nestedClass(goal.goalName + "BuilderImpl");
-    }
-  });
-
-  static final GoalCases<String> goalTypeName = always(new Function<GoalContext, String>() {
-    @Override
-    public String apply(GoalContext goal) {
-      return ((ClassName) goal.goalType.box()).simpleName();
     }
   });
 
@@ -133,8 +130,13 @@ abstract class GoalContext {
     final GoalKind kind;
     final Visibility visibility;
 
+    /**
+     * <p>method goal: return type</p>
+     * <p>constructor goal: type of enclosing class</p>
+     */
+    final TypeName goalType;
+
     RegularGoalContext(TypeName goalType,
-                       ClassName builderType,
                        BuilderContext config,
                        boolean toBuilder,
                        GoalKind kind,
@@ -143,16 +145,17 @@ abstract class GoalContext {
                        ImmutableList<TypeName> thrownTypes,
                        ImmutableList<ParameterContext> goalParameters,
                        CodeBlock goalCall) {
-      super(goalType, builderType, config, toBuilder, goalName, goalParameters, goalCall, thrownTypes);
+      super(config, toBuilder, goalName, goalParameters, goalCall, thrownTypes);
       this.visibility = visibility;
       this.kind = kind;
+      this.goalType = goalType;
     }
 
     Set<Modifier> maybeAddPublic(Modifier... modifiers) {
       return maybeAddPublic(visibility == Visibility.PUBLIC, modifiers);
     }
     <R> R accept(GoalCases<R> cases) {
-      return cases.regularGoal(this, kind);
+      return cases.regularGoal(this, goalType, kind);
     }
   }
 
@@ -161,13 +164,12 @@ abstract class GoalContext {
     final ClassName goalType;
 
     FieldGoalContext(ClassName goalType,
-                     ClassName builderType,
                      BuilderContext config,
                      boolean toBuilder,
                      String goalName,
                      ImmutableList<ParameterContext> goalParameters,
                      CodeBlock goalCall) {
-      super(goalType, builderType, config, toBuilder, goalName, goalParameters, goalCall, ImmutableList.<TypeName>of());
+      super(config, toBuilder, goalName, goalParameters, goalCall, ImmutableList.<TypeName>of());
       this.goalType = goalType;
     }
 

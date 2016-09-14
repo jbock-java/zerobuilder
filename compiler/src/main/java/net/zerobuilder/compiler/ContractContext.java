@@ -1,9 +1,10 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.GoalContext.GoalCases;
+import net.zerobuilder.compiler.GoalContext.GoalFunction;
 
 import javax.lang.model.element.Modifier;
 
@@ -19,10 +20,9 @@ import static net.zerobuilder.compiler.GoalContext.contractName;
 
 final class ContractContext {
 
-  private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces
-      = always(new Function<GoalContext, ImmutableList<TypeSpec>>() {
+  private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces = always(new GoalFunction<ImmutableList<TypeSpec>>() {
     @Override
-    public ImmutableList<TypeSpec> apply(GoalContext goal) {
+    public ImmutableList<TypeSpec> apply(GoalContext goal, TypeName goalType) {
       ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
       for (int i = 0; i < goal.goalParameters.size() - 1; i++) {
         ParameterContext spec = goal.goalParameters.get(i);

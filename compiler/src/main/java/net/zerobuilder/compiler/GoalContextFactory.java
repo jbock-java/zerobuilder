@@ -35,7 +35,6 @@ final class GoalContextFactory {
       public GoalContext executable(ExecutableElement element, GoalKind kind) throws ValidationException {
         return new GoalContext.RegularGoalContext(
             goal.goalType,
-            builderType,
             config,
             toBuilder,
             kind,
@@ -49,7 +48,6 @@ final class GoalContextFactory {
       public GoalContext field(Element field, TypeElement typeElement) throws ValidationException {
         return new GoalContext.FieldGoalContext(
             (ClassName) goal.goalType,
-            builderType,
             config,
             toBuilder,
             goal.name,
