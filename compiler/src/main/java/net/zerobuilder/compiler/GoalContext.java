@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 import net.zerobuilder.compiler.GoalContextFactory.Visibility;
 
@@ -54,6 +53,7 @@ abstract class GoalContext {
   final BuilderContext config;
 
   final boolean toBuilder;
+  final boolean builder;
 
   /**
    * Always starts with a lower case character.
@@ -81,11 +81,12 @@ abstract class GoalContext {
   @VisibleForTesting
   GoalContext(BuilderContext config,
               boolean toBuilder,
-              String goalName,
+              boolean builder, String goalName,
               ImmutableList<ParameterContext> goalParameters,
               CodeBlock goalCall, ImmutableList<TypeName> thrownTypes) {
     this.config = config;
     this.toBuilder = toBuilder;
+    this.builder = builder;
     this.goalName = goalName;
     this.goalParameters = goalParameters;
     this.goalCall = goalCall;
@@ -139,13 +140,14 @@ abstract class GoalContext {
     RegularGoalContext(TypeName goalType,
                        BuilderContext config,
                        boolean toBuilder,
+                       boolean builder,
                        GoalKind kind,
                        String goalName,
                        Visibility visibility,
                        ImmutableList<TypeName> thrownTypes,
                        ImmutableList<ParameterContext> goalParameters,
                        CodeBlock goalCall) {
-      super(config, toBuilder, goalName, goalParameters, goalCall, thrownTypes);
+      super(config, toBuilder, builder, goalName, goalParameters, goalCall, thrownTypes);
       this.visibility = visibility;
       this.kind = kind;
       this.goalType = goalType;
@@ -166,10 +168,11 @@ abstract class GoalContext {
     FieldGoalContext(ClassName goalType,
                      BuilderContext config,
                      boolean toBuilder,
+                     boolean builder,
                      String goalName,
                      ImmutableList<ParameterContext> goalParameters,
                      CodeBlock goalCall) {
-      super(config, toBuilder, goalName, goalParameters, goalCall, ImmutableList.<TypeName>of());
+      super(config, toBuilder, builder, goalName, goalParameters, goalCall, ImmutableList.<TypeName>of());
       this.goalType = goalType;
     }
 
