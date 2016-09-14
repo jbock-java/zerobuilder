@@ -91,11 +91,12 @@ final class Analyser {
       ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
           .goalElement(goal).buildElement(buildElement);
       boolean toBuilder = isToBuilder(goal);
+      boolean isBuilder = isBuilder(goal);
       ImmutableList<ValidParameter> validParameters = toBuilder
           ? toBuilderValidator.validate()
           : toBuilderValidator.skip();
       CodeBlock goalCall = goalInvocation(goal, context.annotatedType);
-      builder.add(context(goal, context, validParameters, toBuilder, goalCall));
+      builder.add(context(goal, context, validParameters, toBuilder, isBuilder, goalCall));
     }
     return new AnalysisResult(context, builder.build());
   }
@@ -311,6 +312,11 @@ final class Analyser {
   static final boolean isToBuilder(GoalElement goal) {
     Optional<Goal> goalAnnotation = goal.goalAnnotation;
     return goalAnnotation.isPresent() && goalAnnotation.get().toBuilder();
+  }
+
+  static final boolean isBuilder(GoalElement goal) {
+    Optional<Goal> goalAnnotation = goal.goalAnnotation;
+    return goalAnnotation.isPresent() && goalAnnotation.get().builder();
   }
 
 }

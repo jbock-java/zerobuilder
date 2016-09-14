@@ -105,17 +105,14 @@ final class UpdaterContext {
     }
   });
 
-  static Optional<TypeSpec> buildUpdaterImpl(GoalContext goal) {
-    if (!goal.toBuilder) {
-      return absent();
-    }
-    return Optional.of(classBuilder(goal.accept(typeName))
+  static TypeSpec buildUpdaterImpl(GoalContext goal) {
+    return classBuilder(goal.accept(typeName))
         .addFields(goal.accept(fields))
         .addMethods(goal.accept(updaterMethods))
         .addMethod(goal.accept(buildMethod))
         .addModifiers(FINAL, STATIC)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
-        .build());
+        .build();
   }
 
   private UpdaterContext() {

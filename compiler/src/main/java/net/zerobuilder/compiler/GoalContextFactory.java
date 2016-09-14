@@ -23,7 +23,8 @@ final class GoalContextFactory {
 
   static GoalContext context(final GoalElement goal, final BuilderContext config,
                              ImmutableList<ValidParameter> validParameters,
-                             final boolean toBuilder, final CodeBlock goalCall) throws ValidationException {
+                             final boolean toBuilder, final boolean builder,
+                             final CodeBlock goalCall) throws ValidationException {
     String builderTypeName = goal.name + "Builder";
     final ClassName builderType = config.generatedType.nestedClass(builderTypeName);
     final ImmutableList<ParameterContext> parameters = parameters(builderType, goal.goalType, validParameters);
@@ -37,6 +38,7 @@ final class GoalContextFactory {
             goal.goalType,
             config,
             toBuilder,
+            builder,
             kind,
             goal.name,
             visibility,
@@ -50,6 +52,7 @@ final class GoalContextFactory {
             (ClassName) goal.goalType,
             config,
             toBuilder,
+            builder,
             goal.name,
             parameters,
             goalCall);

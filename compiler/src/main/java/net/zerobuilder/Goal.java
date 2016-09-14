@@ -60,4 +60,15 @@ public @interface Goal {
    * @return toBuilder flag, defaults to {@code false}
    */
   boolean toBuilder() default false;
+
+  /**
+   * <p>Set to {@code false} if no builder should be generated.
+   * </p><p>
+   * <em>Note: if</em> {@link #toBuilder} <em>is also</em> {@code false}<em>, then nothing will be generated for this goal.</em>
+   * </p>
+   *
+   * @return builder flag, defaults to {@code true}
+   */
+  boolean builder() default true;
+
 }
