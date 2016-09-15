@@ -91,7 +91,7 @@ If for some reason you would like to call them in a different order, you still h
 * Change the order of arguments. 
   It is possible to have multiple versions of the same factory method or constructor, with different argument order.
   The `@Goal(name = ...)` attribute can resolve the potential goal name conflict.
-* Give the steps an order that is different from the order of arguments, by using `@Step`.
+* Give the steps an order that is different from the order of arguments or setters, by using `@Step`.
   See examples [Employee.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/beans/Employee.java) and 
   [Spaghetti.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/basic/Spaghetti.java).
 
