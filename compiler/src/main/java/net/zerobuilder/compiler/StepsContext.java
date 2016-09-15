@@ -18,8 +18,8 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.GoalContext.stepInterfaceNames;
 import static net.zerobuilder.compiler.GoalContext.builderImplName;
+import static net.zerobuilder.compiler.GoalContext.stepInterfaceNames;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -74,14 +74,33 @@ final class StepsContext {
       for (ParameterContext parameter : goal.goalParameters.subList(0, goal.goalParameters.size() - 1)) {
         String name = parameter.validParameter.name;
         TypeName type = parameter.validParameter.type;
-        builder.add(methodBuilder(name)
-            .addAnnotation(Override.class)
-            .returns(parameter.returnType)
-            .addParameter(ParameterSpec.builder(type, name).build())
-            .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
-            .addStatement("return this")
-            .addModifiers(PUBLIC)
-            .build());
+        if (parameter.validParameter.setterlessCollection.isPresent()) {
+          ClassName setterlessCollection = parameter.validParameter.setterlessCollection.get();
+          String iterationVarName = downcase(setterlessCollection.simpleName());
+          builder.add(methodBuilder(name)
+              .addAnnotation(Override.class)
+              .returns(parameter.returnType)
+              .addParameter(ParameterSpec.builder(type, name).build())
+              .beginControlFlow("for ($T $N : $N)",
+                  setterlessCollection, iterationVarName, name)
+              .addStatement("this.$N.$N().add($N)",
+                  downcase(goalType.simpleName()),
+                  parameter.validParameter.projectionMethodName.get(),
+                  iterationVarName)
+              .endControlFlow()
+              .addStatement("return this")
+              .addModifiers(PUBLIC)
+              .build());
+        } else {
+          builder.add(methodBuilder(name)
+              .addAnnotation(Override.class)
+              .returns(parameter.returnType)
+              .addParameter(ParameterSpec.builder(type, name).build())
+              .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
+              .addStatement("return this")
+              .addModifiers(PUBLIC)
+              .build());
+        }
       }
       return builder.build();
     }
@@ -106,14 +125,33 @@ final class StepsContext {
       ParameterContext parameter = getLast(goal.goalParameters);
       String name = parameter.validParameter.name;
       TypeName type = parameter.validParameter.type;
-      return methodBuilder(parameter.validParameter.name)
-          .addAnnotation(Override.class)
-          .addParameter(ParameterSpec.builder(type, name).build())
-          .addExceptions(goal.thrownTypes)
-          .addModifiers(PUBLIC)
-          .returns(goalType)
-          .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
-          .addCode(goal.goalCall).build();
+      if (parameter.validParameter.setterlessCollection.isPresent()) {
+        ClassName setterlessCollection = parameter.validParameter.setterlessCollection.get();
+        String iterationVarName = downcase(setterlessCollection.simpleName());
+        return methodBuilder(name)
+            .addAnnotation(Override.class)
+            .returns(parameter.returnType)
+            .addParameter(ParameterSpec.builder(type, name).build())
+            .beginControlFlow("for ($T $N : $N)",
+                setterlessCollection, iterationVarName, name)
+            .addStatement("this.$N.$N().add($N)",
+                downcase(goalType.simpleName()),
+                parameter.validParameter.projectionMethodName.get(),
+                iterationVarName)
+            .endControlFlow()
+            .addCode(goal.goalCall)
+            .addModifiers(PUBLIC)
+            .build();
+      } else {
+        return methodBuilder(parameter.validParameter.name)
+            .addAnnotation(Override.class)
+            .addParameter(ParameterSpec.builder(type, name).build())
+            .addExceptions(goal.thrownTypes)
+            .addModifiers(PUBLIC)
+            .returns(goalType)
+            .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
+            .addCode(goal.goalCall).build();
+      }
     }
   };
 

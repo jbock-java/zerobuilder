@@ -88,8 +88,7 @@ final class Analyser {
     checkNameConflict(goals);
     for (GoalElement goal : goals) {
       typeValidator.validateBuildType(buildElement);
-      ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory
-          .goalElement(goal).buildElement(buildElement);
+      ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory.goalElement(goal);
       boolean toBuilder = isToBuilder(goal);
       boolean isBuilder = isBuilder(goal);
       ImmutableList<ValidParameter> validParameters = toBuilder

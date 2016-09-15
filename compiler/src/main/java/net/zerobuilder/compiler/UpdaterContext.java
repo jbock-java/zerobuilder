@@ -1,10 +1,12 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.GoalContext.GoalCases;
@@ -78,13 +80,30 @@ final class UpdaterContext {
       for (ParameterContext parameter : goal.goalParameters) {
         String name = parameter.validParameter.name;
         TypeName type = parameter.validParameter.type;
-        builder.add(methodBuilder(name)
-            .returns(goal.accept(typeName))
-            .addParameter(ParameterSpec.builder(type, name).build())
-            .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
-            .addStatement("return this")
-            .addModifiers(goal.maybeAddPublic())
-            .build());
+        Optional<ClassName> setterlessCollection = parameter.validParameter.setterlessCollection;
+        if (setterlessCollection.isPresent()) {
+          String iterationVarName = downcase(setterlessCollection.get().simpleName());
+          builder.add(methodBuilder(name)
+              .returns(goal.accept(typeName))
+              .addParameter(ParameterSpec.builder(type, name).build())
+              .addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
+                  parameter.validParameter.projectionMethodName.get())
+              .beginControlFlow("for ($T $N : $N)", setterlessCollection.get(), iterationVarName, name)
+              .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
+                  parameter.validParameter.projectionMethodName.get(), iterationVarName)
+              .endControlFlow()
+              .addStatement("return this")
+              .addModifiers(goal.maybeAddPublic())
+              .build());
+        } else {
+          builder.add(methodBuilder(name)
+              .returns(goal.accept(typeName))
+              .addParameter(ParameterSpec.builder(type, name).build())
+              .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
+              .addStatement("return this")
+              .addModifiers(goal.maybeAddPublic())
+              .build());
+        }
       }
       return builder.build();
     }

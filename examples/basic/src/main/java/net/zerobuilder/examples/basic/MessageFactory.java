@@ -37,11 +37,9 @@ final class MessageFactory {
       this.recipient = recipient;
       this.subject = subject;
     }
-
   }
 
   MessageFactoryBuilders.MessageBuilder.Body messageBuilder() {
     return MessageFactoryBuilders.messageBuilder(this);
   }
-
 }

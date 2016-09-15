@@ -210,11 +210,24 @@ final class Generator {
       builder.addStatement("$N.$N = new $T()", updater, instance, goalType);
       for (ParameterContext parameter : goal.goalParameters) {
         String parameterName = upcase(parameter.validParameter.name);
-        builder.addStatement("$N.$N.set$L($N.$L())", updater,
-            instance,
-            parameterName,
-            instance,
-            parameter.validParameter.projectionMethodName.get());
+        Optional<ClassName> setterlessCollection = parameter.validParameter.setterlessCollection;
+        if (setterlessCollection.isPresent()) {
+          String iterationVarName = downcase(setterlessCollection.get().simpleName());
+          builder
+              .beginControlFlow("for ($T $N : $N.$N())",
+                  setterlessCollection.get(), iterationVarName, instance, parameter.validParameter.projectionMethodName.get())
+              .addStatement("$N.$N.$N().add($N)", updater,
+                  downcase(goalType.simpleName()),
+                  parameter.validParameter.projectionMethodName.get(),
+                  iterationVarName)
+              .endControlFlow();
+        } else {
+          builder.addStatement("$N.$N.set$L($N.$N())", updater,
+              instance,
+              parameterName,
+              instance,
+              parameter.validParameter.projectionMethodName.get());
+        }
       }
       method.addCode(builder.build());
       method.addStatement("return $L", updater);
