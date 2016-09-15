@@ -25,9 +25,8 @@ final class GoalContextFactory {
                              ImmutableList<ValidParameter> validParameters,
                              final boolean toBuilder, final boolean builder,
                              final CodeBlock goalCall) throws ValidationException {
-    String builderTypeName = goal.name + "Builder";
-    final ClassName builderType = config.generatedType.nestedClass(builderTypeName);
-    final ImmutableList<ParameterContext> parameters = parameters(builderType, goal.goalType, validParameters);
+    final ClassName contractName = config.generatedType.nestedClass(upcase(goal.name + "Builder"));
+    final ImmutableList<ParameterContext> parameters = parameters(contractName, goal.goalType, validParameters);
     final Visibility visibility = goal.element.getModifiers().contains(PUBLIC)
         ? Visibility.PUBLIC
         : Visibility.PACKAGE;
@@ -39,6 +38,7 @@ final class GoalContextFactory {
             config,
             toBuilder,
             builder,
+            contractName,
             kind,
             goal.name,
             visibility,
@@ -53,6 +53,7 @@ final class GoalContextFactory {
             config,
             toBuilder,
             builder,
+            contractName,
             goal.name,
             parameters,
             goalCall);

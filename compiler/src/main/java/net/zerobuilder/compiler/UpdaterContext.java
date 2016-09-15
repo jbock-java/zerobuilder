@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -13,7 +11,6 @@ import net.zerobuilder.compiler.GoalContext.GoalCases;
 import net.zerobuilder.compiler.GoalContext.GoalFunction;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 
-import static com.google.common.base.Optional.absent;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
@@ -30,7 +27,7 @@ final class UpdaterContext {
   static final GoalCases<ClassName> typeName = always(new GoalFunction<ClassName>() {
     @Override
     public ClassName apply(GoalContext goal, TypeName goalType) {
-      return goal.config.generatedType.nestedClass(goal.goalName + "Updater");
+      return goal.config.generatedType.nestedClass(upcase(goal.goalName + "Updater"));
     }
   });
 

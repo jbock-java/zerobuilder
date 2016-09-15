@@ -16,7 +16,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.always;
-import static net.zerobuilder.compiler.GoalContext.contractName;
 
 final class ContractContext {
 
@@ -35,7 +34,7 @@ final class ContractContext {
   });
 
   static TypeSpec buildContract(GoalContext goal) {
-    return classBuilder(goal.accept(contractName))
+    return classBuilder(goal.contractName)
         .addTypes(goal.accept(stepInterfaces))
         .addModifiers(toArray(goal.maybeAddPublic(FINAL, STATIC), Modifier.class))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())

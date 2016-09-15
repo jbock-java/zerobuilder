@@ -176,9 +176,10 @@ final class Analyser {
   }
 
   private static String goalName(Goal goalAnnotation, TypeName goalType) {
-    return isNullOrEmpty(goalAnnotation.name())
+    String name = isNullOrEmpty(goalAnnotation.name())
         ? ((ClassName) goalType.box()).simpleName()
-        : upcase(goalAnnotation.name());
+        : goalAnnotation.name();
+    return downcase(name);
   }
 
   private static TypeName goalType(ExecutableElement goal) {

@@ -35,7 +35,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.ContractContext.buildContract;
 import static net.zerobuilder.compiler.GoalContext.goalCasesFunction;
 import static net.zerobuilder.compiler.GoalContext.maybeAddPublic;
-import static net.zerobuilder.compiler.GoalContext.stepsImplTypeName;
+import static net.zerobuilder.compiler.GoalContext.builderImplName;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.StepsContext.buildStepsImpl;
@@ -150,7 +150,7 @@ final class Generator {
             .initializer("new $T()", updaterType).build());
       }
       if (goal.builder) {
-        ClassName stepsType = goal.accept(stepsImplTypeName);
+        ClassName stepsType = goal.accept(builderImplName);
         builder.add(FieldSpec.builder(stepsType,
             stepsField(goal), PRIVATE, FINAL)
             .initializer("new $T()", stepsType).build());
@@ -227,10 +227,9 @@ final class Generator {
   private static final GoalCases<MethodSpec> goalToBuilder = new GoalCases<MethodSpec>() {
     @Override
     MethodSpec regularGoal(GoalContext goal, TypeName goalType, GoalKind kind) {
-      ClassName stepsType = goal.accept(stepsImplTypeName);
-      MethodSpec.Builder method = methodBuilder(
-          downcase(goal.goalName + "Builder"))
-          .returns(goal.goalParameters.get(0).stepContract)
+      ClassName stepsType = goal.accept(builderImplName);
+      MethodSpec.Builder method = methodBuilder(goal.goalName + "Builder")
+          .returns(goal.goalParameters.get(0).typeName)
           .addModifiers(goal.maybeAddPublic(STATIC));
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.config.recycle
@@ -249,10 +248,9 @@ final class Generator {
     }
     @Override
     MethodSpec fieldGoal(GoalContext goal, ClassName goalType) {
-      ClassName stepsType = goal.accept(stepsImplTypeName);
-      MethodSpec.Builder method = methodBuilder(
-          downcase(goal.goalName + "Builder"))
-          .returns(goal.goalParameters.get(0).stepContract)
+      ClassName stepsType = goal.accept(builderImplName);
+      MethodSpec.Builder method = methodBuilder(goal.goalName + "Builder")
+          .returns(goal.goalParameters.get(0).typeName)
           .addModifiers(goal.maybeAddPublic(STATIC));
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.config.recycle

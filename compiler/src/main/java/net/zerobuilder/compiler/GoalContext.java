@@ -14,6 +14,7 @@ import javax.lang.model.element.Modifier;
 import java.util.Set;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.Utilities.upcase;
 
 abstract class GoalContext {
 
@@ -55,6 +56,8 @@ abstract class GoalContext {
   final boolean toBuilder;
   final boolean builder;
 
+  final ClassName contractName;
+
   /**
    * Always starts with a lower case character.
    */
@@ -81,12 +84,13 @@ abstract class GoalContext {
   @VisibleForTesting
   GoalContext(BuilderContext config,
               boolean toBuilder,
-              boolean builder, String goalName,
+              boolean builder, ClassName contractName, String goalName,
               ImmutableList<ParameterContext> goalParameters,
               CodeBlock goalCall, ImmutableList<TypeName> thrownTypes) {
     this.config = config;
     this.toBuilder = toBuilder;
     this.builder = builder;
+    this.contractName = contractName;
     this.goalName = goalName;
     this.goalParameters = goalParameters;
     this.goalCall = goalCall;
@@ -98,23 +102,16 @@ abstract class GoalContext {
     public ImmutableList<ClassName> apply(GoalContext goal, TypeName goalType) {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
       for (ParameterContext spec : goal.goalParameters) {
-        specs.add(spec.stepContract);
+        specs.add(spec.typeName);
       }
       return specs.build();
     }
   });
 
-  static final GoalCases<ClassName> contractName = always(new GoalFunction<ClassName>() {
+  static final GoalCases<ClassName> builderImplName = always(new GoalFunction<ClassName>() {
     @Override
     public ClassName apply(GoalContext goal, TypeName goalType) {
-      return goal.config.generatedType.nestedClass(goal.goalName + "Builder");
-    }
-  });
-
-  static final GoalCases<ClassName> stepsImplTypeName = always(new GoalFunction<ClassName>() {
-    @Override
-    public ClassName apply(GoalContext goal, TypeName goalType) {
-      return goal.config.generatedType.nestedClass(goal.goalName + "BuilderImpl");
+      return goal.config.generatedType.nestedClass(upcase(goal.goalName + "BuilderImpl"));
     }
   });
 
@@ -141,13 +138,14 @@ abstract class GoalContext {
                        BuilderContext config,
                        boolean toBuilder,
                        boolean builder,
+                       ClassName contractName,
                        GoalKind kind,
                        String goalName,
                        Visibility visibility,
                        ImmutableList<TypeName> thrownTypes,
                        ImmutableList<ParameterContext> goalParameters,
                        CodeBlock goalCall) {
-      super(config, toBuilder, builder, goalName, goalParameters, goalCall, thrownTypes);
+      super(config, toBuilder, builder, contractName, goalName, goalParameters, goalCall, thrownTypes);
       this.visibility = visibility;
       this.kind = kind;
       this.goalType = goalType;
@@ -169,10 +167,11 @@ abstract class GoalContext {
                      BuilderContext config,
                      boolean toBuilder,
                      boolean builder,
+                     ClassName contractName,
                      String goalName,
                      ImmutableList<ParameterContext> goalParameters,
                      CodeBlock goalCall) {
-      super(config, toBuilder, builder, goalName, goalParameters, goalCall, ImmutableList.<TypeName>of());
+      super(config, toBuilder, builder, contractName, goalName, goalParameters, goalCall, ImmutableList.<TypeName>of());
       this.goalType = goalType;
     }
 

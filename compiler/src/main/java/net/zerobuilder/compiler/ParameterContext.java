@@ -25,11 +25,14 @@ final class ParameterContext {
 
   final ValidParameter validParameter;
 
-  final ClassName stepContract;
+  /**
+   * Type of the "step" interface that corresponds to this parameter
+   */
+  final ClassName typeName;
   final TypeName returnType;
 
-  ParameterContext(ClassName stepContract, ValidParameter validParameter, TypeName returnType) {
-    this.stepContract = stepContract;
+  ParameterContext(ClassName typeName, ValidParameter validParameter, TypeName returnType) {
+    this.typeName = typeName;
     this.validParameter = validParameter;
     this.returnType = returnType;
   }
@@ -43,7 +46,7 @@ final class ParameterContext {
         .addExceptions(declaredExceptions)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
-    return interfaceBuilder(stepContract)
+    return interfaceBuilder(typeName)
         .addMethod(methodSpec)
         .addModifiers(toArray(modifiers, Modifier.class))
         .build();
@@ -51,16 +54,6 @@ final class ParameterContext {
 
   TypeSpec asStepInterface(Set<Modifier> modifiers) {
     return asStepInterface(modifiers, ImmutableList.<TypeName>of());
-  }
-
-  MethodSpec asUpdaterInterfaceMethod(ClassName updaterName) {
-    String name = validParameter.name;
-    TypeName type = validParameter.type;
-    return methodBuilder(validParameter.name)
-        .returns(updaterName)
-        .addParameter(ParameterSpec.builder(type, name).build())
-        .addModifiers(PUBLIC, ABSTRACT)
-        .build();
   }
 
 }

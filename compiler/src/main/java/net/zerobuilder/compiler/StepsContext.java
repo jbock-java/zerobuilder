@@ -19,7 +19,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.stepInterfaceNames;
-import static net.zerobuilder.compiler.GoalContext.stepsImplTypeName;
+import static net.zerobuilder.compiler.GoalContext.builderImplName;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -118,7 +118,7 @@ final class StepsContext {
   };
 
   static TypeSpec buildStepsImpl(GoalContext goal) {
-    return classBuilder(goal.accept(stepsImplTypeName))
+    return classBuilder(goal.accept(builderImplName))
         .addSuperinterfaces(goal.accept(stepInterfaceNames))
         .addFields(goal.accept(fields))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
