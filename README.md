@@ -83,6 +83,18 @@ Let's take a closer look at the generated code:
 * Each step interface has a single method.
   None of these methods returns the same step. It is a linear chain that leads to the goal type `Message`.
 
+### Fixed order of steps
+
+Just like the arguments of a method or constructor, the goal "steps" have a fixed order.
+If for some reason you would like to call them in a different order, you still have some options:
+
+* Change the order of arguments. 
+  It is possible to have multiple versions of the same factory method or constructor, with different argument order.
+  The `@Goal(name = ...)` attribute can resolve the potential goal name conflict.
+* Give the steps an order that is different from the order of arguments, by using `@Step`.
+  See examples [Employee.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/beans/Employee.java) and 
+  [Spaghetti.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/basic/Spaghetti.java).
+
 ### Factory methods
 
 In addition to constructors, the `@Goal` annotation can appear on methods, even non-static ones. 
