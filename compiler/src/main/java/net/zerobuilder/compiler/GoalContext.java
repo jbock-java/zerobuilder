@@ -9,8 +9,6 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 import net.zerobuilder.compiler.GoalContextFactory.Visibility;
-import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter.AccessorPair;
-import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter.Parameter;
 
 import javax.lang.model.element.Modifier;
 import java.util.Set;
@@ -96,7 +94,7 @@ abstract class GoalContext {
     public ImmutableList<ClassName> apply(GoalContext goal, TypeName goalType, ImmutableList<? extends ParameterContext> parameters) {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
       for (ParameterContext parameter : parameters) {
-        specs.add(parameter.typeName);
+        specs.add(parameter.typeThisStep);
       }
       return specs.build();
     }

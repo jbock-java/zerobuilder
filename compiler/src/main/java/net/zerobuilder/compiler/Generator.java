@@ -244,7 +244,7 @@ final class Generator {
     MethodSpec regularGoal(GoalContext goal, TypeName goalType, GoalKind kind, ImmutableList<RegularParameterContext> parameters) {
       ClassName stepsType = goal.accept(builderImplName);
       MethodSpec.Builder method = methodBuilder(goal.goalName + "Builder")
-          .returns(parameters.get(0).typeName)
+          .returns(parameters.get(0).typeThisStep)
           .addModifiers(goal.maybeAddPublic(STATIC));
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.config.recycle
@@ -265,7 +265,7 @@ final class Generator {
     MethodSpec fieldGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
       ClassName stepsType = goal.accept(builderImplName);
       MethodSpec.Builder method = methodBuilder(goal.goalName + "Builder")
-          .returns(parameters.get(0).typeName)
+          .returns(parameters.get(0).typeThisStep)
           .addModifiers(goal.maybeAddPublic(STATIC));
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.config.recycle

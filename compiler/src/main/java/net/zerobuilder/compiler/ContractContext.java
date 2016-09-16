@@ -8,7 +8,6 @@ import net.zerobuilder.compiler.GoalContext.GoalFunction;
 
 import javax.lang.model.element.Modifier;
 
-import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.toArray;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
@@ -24,12 +23,9 @@ final class ContractContext {
     @Override
     public ImmutableList<TypeSpec> apply(GoalContext goal, TypeName goalType, ImmutableList<? extends ParameterContext> parameters) {
       ImmutableList.Builder<TypeSpec> builder = ImmutableList.builder();
-      ParameterContext.ParameterCases<TypeSpec> asStep = asStepInterface(goal.maybeAddPublic());
-      for (ParameterContext parameter : parameters.subList(0, parameters.size() - 1)) {
-        builder.add(parameter.accept(asStep));
+      for (ParameterContext parameter : parameters) {
+        builder.add(parameter.accept(asStepInterface));
       }
-      ParameterContext parameter = getLast(parameters);
-      builder.add(parameter.accept(asStepInterface(goal.maybeAddPublic(), goal.thrownTypes)));
       return builder.build();
     }
   });

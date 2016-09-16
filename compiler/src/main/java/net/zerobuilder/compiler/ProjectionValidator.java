@@ -12,10 +12,8 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.Analyser.GoalElement;
-import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter.AccessorPair;
-import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter.Parameter;
+import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.AccessorPair;
+import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.Parameter;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -59,7 +57,7 @@ import static net.zerobuilder.compiler.TypeValidator.ALLOWED_NESTING_KINDS;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
-final class ToBuilderValidator {
+final class ProjectionValidator {
 
   private final Elements elements;
 
@@ -225,12 +223,12 @@ final class ToBuilderValidator {
     }
   };
 
-  private ToBuilderValidator(Elements elements) {
+  private ProjectionValidator(Elements elements) {
     this.elements = elements;
   }
 
-  static ToBuilderValidator create(Elements elements) {
-    return new ToBuilderValidator(elements);
+  static ProjectionValidator create(Elements elements) {
+    return new ProjectionValidator(elements);
   }
 
   private static ImmutableMap<String, ExecutableElement> setters(Element fieldOrType, TypeElement type) throws ValidationException {

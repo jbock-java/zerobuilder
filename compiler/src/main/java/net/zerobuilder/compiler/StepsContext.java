@@ -61,7 +61,7 @@ final class StepsContext {
         TypeName type = parameter.parameter.type;
         builder.add(methodBuilder(name)
             .addAnnotation(Override.class)
-            .returns(parameter.returnType)
+            .returns(parameter.typeNextStep)
             .addParameter(ParameterSpec.builder(type, name).build())
             .addStatement("this.$N = $N", name, name)
             .addStatement("return this")
@@ -81,7 +81,7 @@ final class StepsContext {
           String iterationVarName = downcase(setterlessCollection.simpleName());
           builder.add(methodBuilder(name)
               .addAnnotation(Override.class)
-              .returns(parameter.returnType)
+              .returns(parameter.typeNextStep)
               .addParameter(ParameterSpec.builder(type, name).build())
               .beginControlFlow("for ($T $N : $N)",
                   setterlessCollection, iterationVarName, name)
@@ -96,7 +96,7 @@ final class StepsContext {
         } else {
           builder.add(methodBuilder(name)
               .addAnnotation(Override.class)
-              .returns(parameter.returnType)
+              .returns(parameter.typeNextStep)
               .addParameter(ParameterSpec.builder(type, name).build())
               .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
               .addStatement("return this")
@@ -132,7 +132,7 @@ final class StepsContext {
         String iterationVarName = downcase(setterlessCollection.simpleName());
         return methodBuilder(name)
             .addAnnotation(Override.class)
-            .returns(parameter.returnType)
+            .returns(parameter.typeNextStep)
             .addParameter(ParameterSpec.builder(type, name).build())
             .beginControlFlow("for ($T $N : $N)",
                 setterlessCollection, iterationVarName, name)

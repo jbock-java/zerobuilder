@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
+import net.zerobuilder.compiler.ProjectionValidator.ValidParameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -16,14 +16,15 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class GoalContextFactory {
 
-  static GoalContext context(final ToBuilderValidator.ValidationResult validationResult, final BuilderContext config,
+  static GoalContext context(final ProjectionValidator.ValidationResult validationResult, final BuilderContext config,
                              final boolean toBuilder, final boolean builder,
                              final CodeBlock goalCall) throws ValidationException {
-    return validationResult.accept(new ToBuilderValidator.ValidationResult.ValidationResultCases<GoalContext>() {
+    return validationResult.accept(new ProjectionValidator.ValidationResult.ValidationResultCases<GoalContext>() {
       @Override
       GoalContext regularGoal(Analyser.ExecutableGoal goal, ImmutableList<ValidParameter.Parameter> validParameters) {
         ClassName contractName = config.generatedType.nestedClass(upcase(goal.name + "Builder"));
-        ImmutableList<ParameterContext.RegularParameterContext> parameters = parameters(contractName, goal.goalType, validParameters);
+        ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
+        ImmutableList<ParameterContext.RegularParameterContext> parameters = parameters(contractName, goal.goalType, validParameters, thrownTypes);
         Visibility visibility = goal.element.getModifiers().contains(PUBLIC)
             ? Visibility.PUBLIC
             : Visibility.PACKAGE;
@@ -36,7 +37,7 @@ final class GoalContextFactory {
             goal.kind,
             goal.name,
             visibility,
-            thrownTypes(goal.executableElement),
+            thrownTypes,
             parameters,
             goalCall);
       }
@@ -58,13 +59,13 @@ final class GoalContextFactory {
   }
 
   private static ImmutableList<ParameterContext.RegularParameterContext> parameters(ClassName builderType, TypeName returnType,
-                                                                                    ImmutableList<ValidParameter.Parameter> parameters) {
+                                                                                    ImmutableList<ValidParameter.Parameter> parameters, ImmutableList<TypeName> thrownTypes) {
     ImmutableList.Builder<ParameterContext.RegularParameterContext> builder = ImmutableList.builder();
     for (int i = parameters.size() - 1; i >= 0; i--) {
       ValidParameter.Parameter parameter = parameters.get(i);
       ClassName stepContract = builderType.nestedClass(
           upcase(parameter.name));
-      builder.add(new ParameterContext.RegularParameterContext(stepContract, returnType, parameter));
+      builder.add(new ParameterContext.RegularParameterContext(stepContract, returnType, parameter, thrownTypes));
       returnType = stepContract;
     }
     return builder.build().reverse();

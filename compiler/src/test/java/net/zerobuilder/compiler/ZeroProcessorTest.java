@@ -82,9 +82,9 @@ public class ZeroProcessorTest {
             "",
             "  static final class CuboidBuilder {",
             "    private CuboidBuilder() {}",
-            "    interface Height { Length height(double height); }",
-            "    interface Length { Width length(double length); }",
-            "    interface Width { Cube width(double width); }",
+            "    public interface Height { Length height(double height); }",
+            "    public interface Length { Width length(double length); }",
+            "    public interface Width { Cube width(double width); }",
             "  }",
             "}");
     assertAbout(javaSources()).that(ImmutableList.of(cube))

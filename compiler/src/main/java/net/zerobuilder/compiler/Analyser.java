@@ -11,8 +11,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
-import net.zerobuilder.compiler.ToBuilderValidator.ValidationResult;
+import net.zerobuilder.compiler.ProjectionValidator.ValidationResult;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -50,7 +49,6 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMET
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class Analyser {
 
@@ -76,10 +74,10 @@ final class Analyser {
   });
 
   private final TypeValidator typeValidator = new TypeValidator();
-  private final ToBuilderValidator toBuilderValidator;
+  private final ProjectionValidator projectionValidator;
 
   Analyser(Elements elements) {
-    this.toBuilderValidator = ToBuilderValidator.create(elements);
+    this.projectionValidator = ProjectionValidator.create(elements);
   }
 
   AnalysisResult parse(TypeElement buildElement) throws ValidationException {
@@ -92,8 +90,8 @@ final class Analyser {
       boolean toBuilder = isToBuilder(goal);
       boolean isBuilder = isBuilder(goal);
       ValidationResult validationResult = toBuilder
-          ? goal.accept(toBuilderValidator.validate)
-          : goal.accept(ToBuilderValidator.skip);
+          ? goal.accept(projectionValidator.validate)
+          : goal.accept(ProjectionValidator.skip);
       CodeBlock goalCall = goalInvocation(goal, context.annotatedType);
       builder.add(context(validationResult, context, toBuilder, isBuilder, goalCall));
     }
