@@ -21,13 +21,13 @@ final class ContractContext {
 
   private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces = always(new GoalFunction<ImmutableList<TypeSpec>>() {
     @Override
-    public ImmutableList<TypeSpec> apply(GoalContext goal, TypeName goalType) {
+    public ImmutableList<TypeSpec> apply(GoalContext goal, TypeName goalType, ImmutableList<? extends ParameterContext> parameters) {
       ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
-      for (int i = 0; i < goal.goalParameters.size() - 1; i++) {
-        ParameterContext spec = goal.goalParameters.get(i);
+      for (int i = 0; i < parameters.size() - 1; i++) {
+        ParameterContext spec = parameters.get(i);
         specs.add(spec.asStepInterface(goal.maybeAddPublic()));
       }
-      ParameterContext spec = getLast(goal.goalParameters);
+      ParameterContext spec = getLast(parameters);
       specs.add(spec.asStepInterface(goal.maybeAddPublic(), goal.thrownTypes));
       return specs.build();
     }

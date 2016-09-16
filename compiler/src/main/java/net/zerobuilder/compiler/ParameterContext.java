@@ -21,25 +21,47 @@ import static javax.lang.model.element.Modifier.PUBLIC;
  * <p>method, constructor goal: parameter</p>
  * <p>field goal: setter</p>
  */
-final class ParameterContext {
-
-  final ValidParameter validParameter;
+abstract class ParameterContext {
 
   /**
    * Type of the "step" interface that corresponds to this parameter
    */
   final ClassName typeName;
   final TypeName returnType;
+  abstract ValidParameter validParameter();
 
-  ParameterContext(ClassName typeName, ValidParameter validParameter, TypeName returnType) {
+  ParameterContext(ClassName typeName, TypeName returnType) {
     this.typeName = typeName;
-    this.validParameter = validParameter;
     this.returnType = returnType;
   }
 
+  final static class RegularParameterContext extends ParameterContext {
+    final ValidParameter.Parameter parameter;
+    RegularParameterContext(ClassName typeName, TypeName returnType, ValidParameter.Parameter parameter) {
+      super(typeName, returnType);
+      this.parameter = parameter;
+    }
+    @Override
+    ValidParameter validParameter() {
+      return parameter;
+    }
+  }
+
+  final static class BeansParameterContext extends ParameterContext {
+    final ValidParameter.AccessorPair parameter;
+    BeansParameterContext(ClassName typeName, TypeName returnType, ValidParameter.AccessorPair parameter) {
+      super(typeName, returnType);
+      this.parameter = parameter;
+    }
+    @Override
+    ValidParameter validParameter() {
+      return parameter;
+    }
+  }
+
   TypeSpec asStepInterface(Set<Modifier> modifiers, ImmutableList<TypeName> declaredExceptions) {
-    String name = validParameter.name;
-    TypeName type = validParameter.type;
+    String name = validParameter().name;
+    TypeName type = validParameter().type;
     MethodSpec methodSpec = methodBuilder(name)
         .returns(returnType)
         .addParameter(ParameterSpec.builder(type, name).build())

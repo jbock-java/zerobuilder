@@ -12,6 +12,7 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
+import net.zerobuilder.compiler.ToBuilderValidator.ValidationResult;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -75,10 +76,10 @@ final class Analyser {
   });
 
   private final TypeValidator typeValidator = new TypeValidator();
-  private final ToBuilderValidator.Factory toBuilderValidatorFactory;
+  private final ToBuilderValidator toBuilderValidator;
 
   Analyser(Elements elements) {
-    this.toBuilderValidatorFactory = new ToBuilderValidator.Factory(elements);
+    this.toBuilderValidator = ToBuilderValidator.create(elements);
   }
 
   AnalysisResult parse(TypeElement buildElement) throws ValidationException {
@@ -88,14 +89,13 @@ final class Analyser {
     checkNameConflict(goals);
     for (GoalElement goal : goals) {
       typeValidator.validateBuildType(buildElement);
-      ToBuilderValidator toBuilderValidator = toBuilderValidatorFactory.goalElement(goal);
       boolean toBuilder = isToBuilder(goal);
       boolean isBuilder = isBuilder(goal);
-      ImmutableList<ValidParameter> validParameters = toBuilder
-          ? toBuilderValidator.validate()
-          : toBuilderValidator.skip();
+      ValidationResult validationResult = toBuilder
+          ? goal.accept(toBuilderValidator.validate)
+          : goal.accept(ToBuilderValidator.skip);
       CodeBlock goalCall = goalInvocation(goal, context.annotatedType);
-      builder.add(context(goal, context, validParameters, toBuilder, isBuilder, goalCall));
+      builder.add(context(validationResult, context, toBuilder, isBuilder, goalCall));
     }
     return new AnalysisResult(context, builder.build());
   }
@@ -190,15 +190,15 @@ final class Analyser {
     }
   }
 
-  private static CodeBlock goalInvocation(final GoalElement goal,
+  private static CodeBlock goalInvocation(GoalElement goal,
                                           final ClassName annotatedType) throws ValidationException {
     return goal.accept(new GoalElementCases<CodeBlock>() {
       @Override
-      public CodeBlock executable(ExecutableElement element, GoalKind kind) throws ValidationException {
-        CodeBlock parameters = goalParameters(element);
-        String method = element.getSimpleName().toString();
+      public CodeBlock executable(ExecutableGoal goal) throws ValidationException {
+        CodeBlock parameters = goalParameters(goal.executableElement);
+        String method = goal.executableElement.getSimpleName().toString();
         String returnLiteral = TypeName.VOID.equals(goal.goalType) ? "" : "return ";
-        switch (kind) {
+        switch (goal.kind) {
           case CONSTRUCTOR:
             return CodeBlock.builder()
                 .addStatement("return new $T($L)", goal.goalType, parameters)
@@ -213,11 +213,11 @@ final class Analyser {
                 .addStatement("$L$T.$N($L)", returnLiteral, annotatedType, method, parameters)
                 .build();
           default:
-            throw new IllegalStateException("unknown kind: " + kind);
+            throw new IllegalStateException("unknown kind: " + goal.kind);
         }
       }
       @Override
-      public CodeBlock field(Element field, TypeElement typeElement) throws ValidationException {
+      public CodeBlock field(FieldGoal goal) throws ValidationException {
         return CodeBlock.builder()
             .addStatement("return $L", downcase(((ClassName) goal.goalType).simpleName()))
             .build();
@@ -237,8 +237,8 @@ final class Analyser {
 
   static abstract class AbstractGoalElement {
     interface GoalElementCases<R> {
-      R executable(ExecutableElement element, GoalKind kind) throws ValidationException;
-      R field(Element field, TypeElement typeElement) throws ValidationException;
+      R executable(ExecutableGoal executableGoal) throws ValidationException;
+      R field(FieldGoal fieldGoal) throws ValidationException;
     }
     abstract <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException;
   }
@@ -246,21 +246,21 @@ final class Analyser {
   static abstract class GoalElement extends AbstractGoalElement {
     final Element element;
     final Optional<Goal> goalAnnotation;
-    final TypeName goalType;
     final String name;
-    GoalElement(Element element, TypeName goalType, String name) {
+    GoalElement(Element element, String name) {
       this.element = element;
       this.goalAnnotation = Optional.fromNullable(element.getAnnotation(Goal.class));
-      this.goalType = goalType;
       this.name = name;
     }
   }
 
   static final class ExecutableGoal extends GoalElement {
     final GoalKind kind;
+    final TypeName goalType;
     final ExecutableElement executableElement;
     ExecutableGoal(ExecutableElement element, GoalKind kind, TypeName goalType, String name) {
-      super(element, goalType, name);
+      super(element, name);
+      this.goalType = goalType;
       this.kind = kind;
       this.executableElement = element;
     }
@@ -275,30 +275,32 @@ final class Analyser {
 
     }
     <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
-      return goalElementCases.executable(executableElement, kind);
+      return goalElementCases.executable(this);
     }
   }
 
   static final class FieldGoal extends GoalElement {
     final Element field;
+    final ClassName goalType;
     final TypeElement typeElement;
-    private FieldGoal(Element field, TypeName goalType, String name, TypeElement typeElement) {
-      super(field, goalType, name);
+    private FieldGoal(Element field, ClassName goalType, String name, TypeElement typeElement) {
+      super(field, name);
+      this.goalType = goalType;
       this.field = field;
       this.typeElement = typeElement;
     }
     private static GoalElement create(VariableElement field) {
-      TypeName goalType = TypeName.get(field.asType());
+      ClassName goalType = (ClassName) ClassName.get(field.asType());
       String name = goalName(field.getAnnotation(Goal.class), goalType);
       return new FieldGoal(field, goalType, name, asTypeElement(field.asType()));
     }
     private static GoalElement create(TypeElement field) {
-      TypeName goalType = TypeName.get(field.asType());
+      ClassName goalType = (ClassName) ClassName.get(field.asType());
       String name = goalName(field.getAnnotation(Goal.class), goalType);
       return new FieldGoal(field, goalType, name, field);
     }
     <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
-      return goalElementCases.field(field, typeElement);
+      return goalElementCases.field(this);
     }
   }
 

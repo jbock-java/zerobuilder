@@ -71,14 +71,29 @@ final class Messages {
     static final String NO_DEFAULT_CONSTRUCTOR
         = "Class not public or no public default constructor found: ";
 
-    static final String NO_SETTERS
-        = "No setters found on target type.";
-
     static final String TARGET_NESTING_KIND
         = "Target type must be top level or static inner class";
 
     static final String TARGET_PUBLIC
         = "Target type must be public";
+
+    static final String GETTER_EXCEPTION
+        = "Getter may not declare exception";
+
+    static final String GETTER_SETTER_TYPE_MISMATCH
+        = "Getter/setter type mismatch";
+
+    static final String BAD_GENERICS
+        = "Can't understand the generics of this field";
+
+    static final String COULD_NOT_FIND_SETTER
+        = "Could not find setter";
+
+    static final String NO_PROJECTION
+        = "Could not find projection";
+
+    static final String SETTER_EXCEPTION
+        = "Setter may not declare exception";
 
     private ErrorMessages() {
       throw new UnsupportedOperationException("no instances");

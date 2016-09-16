@@ -6,69 +6,78 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.Analyser.GoalElement;
 import net.zerobuilder.compiler.ToBuilderValidator.ValidParameter;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import java.util.List;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class GoalContextFactory {
 
-  static GoalContext context(final GoalElement goal, final BuilderContext config,
-                             ImmutableList<ValidParameter> validParameters,
+  static GoalContext context(final ToBuilderValidator.ValidationResult validationResult, final BuilderContext config,
                              final boolean toBuilder, final boolean builder,
                              final CodeBlock goalCall) throws ValidationException {
-    final ClassName contractName = config.generatedType.nestedClass(upcase(goal.name + "Builder"));
-    final ImmutableList<ParameterContext> parameters = parameters(contractName, goal.goalType, validParameters);
-    final Visibility visibility = goal.element.getModifiers().contains(PUBLIC)
-        ? Visibility.PUBLIC
-        : Visibility.PACKAGE;
-    return goal.accept(new GoalElementCases<GoalContext>() {
+    return validationResult.accept(new ToBuilderValidator.ValidationResult.ValidationResultCases<GoalContext>() {
       @Override
-      public GoalContext executable(ExecutableElement element, GoalKind kind) throws ValidationException {
+      GoalContext regularGoal(Analyser.ExecutableGoal goal, ImmutableList<ValidParameter.Parameter> validParameters) {
+        ClassName contractName = config.generatedType.nestedClass(upcase(goal.name + "Builder"));
+        ImmutableList<ParameterContext.RegularParameterContext> parameters = parameters(contractName, goal.goalType, validParameters);
+        Visibility visibility = goal.element.getModifiers().contains(PUBLIC)
+            ? Visibility.PUBLIC
+            : Visibility.PACKAGE;
         return new GoalContext.RegularGoalContext(
             goal.goalType,
             config,
             toBuilder,
             builder,
             contractName,
-            kind,
+            goal.kind,
             goal.name,
             visibility,
-            thrownTypes(goal),
+            thrownTypes(goal.executableElement),
             parameters,
             goalCall);
       }
       @Override
-      public GoalContext field(Element field, TypeElement typeElement) throws ValidationException {
+      GoalContext fieldGoal(Analyser.FieldGoal fieldGoal, ImmutableList<ValidParameter.AccessorPair> accessorPairs) {
+        ClassName contractName = config.generatedType.nestedClass(upcase(fieldGoal.name + "Builder"));
+        ImmutableList<ParameterContext.BeansParameterContext> parameters = beanParameters(contractName, fieldGoal.goalType, accessorPairs);
         return new GoalContext.FieldGoalContext(
-            (ClassName) goal.goalType,
+            fieldGoal.goalType,
             config,
             toBuilder,
             builder,
             contractName,
-            goal.name,
+            fieldGoal.name,
             parameters,
             goalCall);
       }
     });
   }
 
-  private static ImmutableList<ParameterContext> parameters(ClassName builderType, TypeName returnType,
-                                                            ImmutableList<ValidParameter> parameters) {
-    ImmutableList.Builder<ParameterContext> builder = ImmutableList.builder();
+  private static ImmutableList<ParameterContext.RegularParameterContext> parameters(ClassName builderType, TypeName returnType,
+                                                                                    ImmutableList<ValidParameter.Parameter> parameters) {
+    ImmutableList.Builder<ParameterContext.RegularParameterContext> builder = ImmutableList.builder();
     for (int i = parameters.size() - 1; i >= 0; i--) {
-      ValidParameter parameter = parameters.get(i);
+      ValidParameter.Parameter parameter = parameters.get(i);
       ClassName stepContract = builderType.nestedClass(
           upcase(parameter.name));
-      builder.add(new ParameterContext(stepContract, parameter, returnType));
+      builder.add(new ParameterContext.RegularParameterContext(stepContract, returnType, parameter));
+      returnType = stepContract;
+    }
+    return builder.build().reverse();
+  }
+
+  private static ImmutableList<ParameterContext.BeansParameterContext> beanParameters(ClassName builderType, TypeName returnType,
+                                                                                      ImmutableList<ValidParameter.AccessorPair> parameters) {
+    ImmutableList.Builder<ParameterContext.BeansParameterContext> builder = ImmutableList.builder();
+    for (int i = parameters.size() - 1; i >= 0; i--) {
+      ValidParameter.AccessorPair parameter = parameters.get(i);
+      ClassName stepContract = builderType.nestedClass(
+          upcase(parameter.name));
+      builder.add(new ParameterContext.BeansParameterContext(stepContract, returnType, parameter));
       returnType = stepContract;
     }
     return builder.build().reverse();
@@ -83,18 +92,9 @@ final class GoalContextFactory {
     PUBLIC, PACKAGE
   }
 
-  private static ImmutableList<TypeName> thrownTypes(GoalElement goal) throws ValidationException {
+  private static ImmutableList<TypeName> thrownTypes(ExecutableElement executableElement) {
     return FluentIterable
-        .from(goal.accept(new GoalElementCases<List<? extends TypeMirror>>() {
-          @Override
-          public List<? extends TypeMirror> executable(ExecutableElement element, GoalKind kind) throws ValidationException {
-            return element.getThrownTypes();
-          }
-          @Override
-          public List<? extends TypeMirror> field(Element field, TypeElement typeElement) throws ValidationException {
-            return ImmutableList.of();
-          }
-        }))
+        .from(executableElement.getThrownTypes())
         .transform(new Function<TypeMirror, TypeName>() {
           @Override
           public TypeName apply(TypeMirror thrownType) {
