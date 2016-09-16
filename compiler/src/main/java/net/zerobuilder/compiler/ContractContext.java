@@ -16,20 +16,21 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.always;
+import static net.zerobuilder.compiler.ParameterContext.asStepInterface;
 
 final class ContractContext {
 
   private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces = always(new GoalFunction<ImmutableList<TypeSpec>>() {
     @Override
     public ImmutableList<TypeSpec> apply(GoalContext goal, TypeName goalType, ImmutableList<? extends ParameterContext> parameters) {
-      ImmutableList.Builder<TypeSpec> specs = ImmutableList.builder();
-      for (int i = 0; i < parameters.size() - 1; i++) {
-        ParameterContext spec = parameters.get(i);
-        specs.add(spec.asStepInterface(goal.maybeAddPublic()));
+      ImmutableList.Builder<TypeSpec> builder = ImmutableList.builder();
+      ParameterContext.ParameterCases<TypeSpec> asStep = asStepInterface(goal.maybeAddPublic());
+      for (ParameterContext parameter : parameters.subList(0, parameters.size() - 1)) {
+        builder.add(parameter.accept(asStep));
       }
-      ParameterContext spec = getLast(parameters);
-      specs.add(spec.asStepInterface(goal.maybeAddPublic(), goal.thrownTypes));
-      return specs.build();
+      ParameterContext parameter = getLast(parameters);
+      builder.add(parameter.accept(asStepInterface(goal.maybeAddPublic(), goal.thrownTypes)));
+      return builder.build();
     }
   });
 

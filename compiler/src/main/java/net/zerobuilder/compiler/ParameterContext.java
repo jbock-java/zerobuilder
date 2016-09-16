@@ -24,11 +24,21 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 abstract class ParameterContext {
 
   /**
-   * Type of the "step" interface that corresponds to this parameter
+   * Type of this step
    */
   final ClassName typeName;
+
+  /**
+   * Type of the next step
+   */
   final TypeName returnType;
-  abstract ValidParameter validParameter();
+
+  abstract static class ParameterCases<R> {
+    abstract R regularParameter(ClassName typeName, TypeName returnType, ValidParameter.Parameter parameter);
+    abstract R beansParameter(ClassName typeName, TypeName returnType, ValidParameter.AccessorPair parameter);
+  }
+
+  abstract <R> R accept(ParameterCases<R> cases);
 
   ParameterContext(ClassName typeName, TypeName returnType) {
     this.typeName = typeName;
@@ -42,8 +52,8 @@ abstract class ParameterContext {
       this.parameter = parameter;
     }
     @Override
-    ValidParameter validParameter() {
-      return parameter;
+    <R> R accept(ParameterCases<R> cases) {
+      return cases.regularParameter(typeName, returnType, parameter);
     }
   }
 
@@ -54,27 +64,49 @@ abstract class ParameterContext {
       this.parameter = parameter;
     }
     @Override
-    ValidParameter validParameter() {
-      return parameter;
+    <R> R accept(ParameterCases<R> cases) {
+      return cases.beansParameter(typeName, returnType, parameter);
     }
   }
 
-  TypeSpec asStepInterface(Set<Modifier> modifiers, ImmutableList<TypeName> declaredExceptions) {
-    String name = validParameter().name;
-    TypeName type = validParameter().type;
-    MethodSpec methodSpec = methodBuilder(name)
-        .returns(returnType)
-        .addParameter(ParameterSpec.builder(type, name).build())
-        .addExceptions(declaredExceptions)
-        .addModifiers(PUBLIC, ABSTRACT)
-        .build();
-    return interfaceBuilder(typeName)
-        .addMethod(methodSpec)
-        .addModifiers(toArray(modifiers, Modifier.class))
-        .build();
+  abstract static class ParameterFunction<R> {
+    abstract R apply(ClassName typeName, TypeName returnType, ValidParameter parameter);
   }
 
-  TypeSpec asStepInterface(Set<Modifier> modifiers) {
+  static <R> ParameterCases<R> parameterCasesFunction(final ParameterFunction<R> parameterFunction) {
+    return new ParameterCases<R>() {
+      @Override
+      R regularParameter(ClassName typeName, TypeName returnType, ValidParameter.Parameter parameter) {
+        return parameterFunction.apply(typeName, returnType, parameter);
+      }
+      @Override
+      R beansParameter(ClassName typeName, TypeName returnType, ValidParameter.AccessorPair parameter) {
+        return parameterFunction.apply(typeName, returnType, parameter);
+      }
+    };
+  }
+
+  static ParameterCases<TypeSpec> asStepInterface(final Set<Modifier> modifiers, final ImmutableList<TypeName> declaredExceptions) {
+    return parameterCasesFunction(new ParameterFunction<TypeSpec>() {
+      @Override
+      TypeSpec apply(ClassName typeName, TypeName returnType, ValidParameter parameter) {
+        String name = parameter.name;
+        TypeName type = parameter.type;
+        MethodSpec methodSpec = methodBuilder(name)
+            .returns(returnType)
+            .addParameter(ParameterSpec.builder(type, name).build())
+            .addExceptions(declaredExceptions)
+            .addModifiers(PUBLIC, ABSTRACT)
+            .build();
+        return interfaceBuilder(typeName)
+            .addMethod(methodSpec)
+            .addModifiers(toArray(modifiers, Modifier.class))
+            .build();
+      }
+    });
+  }
+
+  static ParameterCases<TypeSpec> asStepInterface(Set<Modifier> modifiers) {
     return asStepInterface(modifiers, ImmutableList.<TypeName>of());
   }
 
