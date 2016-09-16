@@ -119,13 +119,17 @@ Putting the `@Goal` annotation on a
 [type](../master/examples/basic/src/main/java/net/zerobuilder/examples/basic/Bean.java) will create "wrapping" 
 builders for standard JavaBeans.
 
-The ancient JavaBeans standard cannot be avoided in certain environments, due to framework restrictions. 
-For example, [JAXB](https://jaxb.java.net/) requires the bean standard.
+The ancient JavaBeans standard cannot be avoided in certain environments, due to framework constraints. 
+For example, [JAXB](https://jaxb.java.net/) and 
+[JPA](https://en.wikipedia.org/wiki/Java_Persistence_API) require the bean standard.
 
 By wrapping the beans, zerobuilder makes the following tasks easier:
 
 * To create new beans, by ensuring that each setter is invoked exactly once.
 * To "update" beans as if they were immutable, by making shallow copies via `toBuilder`.
+
+By treating beans as immutable, they become usable as data in 
+[Java 8 Streams](https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html).
 
 ### Use it in your project
 
