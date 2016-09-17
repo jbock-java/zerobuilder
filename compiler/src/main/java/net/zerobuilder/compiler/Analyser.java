@@ -26,6 +26,7 @@ import java.util.List;
 import static com.google.auto.common.MoreElements.asExecutable;
 import static com.google.auto.common.MoreElements.asVariable;
 import static com.google.auto.common.MoreTypes.asTypeElement;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Iterables.getLast;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
@@ -60,8 +61,8 @@ final class Analyser {
 
     private int goalWeight(GoalElement goal) {
       ElementKind kind = goal.element.getKind();
-      Optional<Goal> annotation = goal.goalAnnotation;
-      String name = annotation.transform(GOAL_NAME).or("");
+      Goal annotation = goal.goalAnnotation;
+      String name = annotation.name();
       return isNullOrEmpty(name)
           ? (kind == CONSTRUCTOR ? 0 : (kind == METHOD ? 1 : 2))
           : (kind == CONSTRUCTOR ? 3 : (kind == METHOD ? 4 : 5));
@@ -87,8 +88,8 @@ final class Analyser {
     checkNameConflict(goals);
     for (GoalElement goal : goals) {
       typeValidator.validateBuildType(buildElement);
-      boolean toBuilder = isToBuilder(goal);
-      boolean isBuilder = isBuilder(goal);
+      boolean toBuilder = goal.goalAnnotation.toBuilder();
+      boolean isBuilder = goal.goalAnnotation.builder();
       ValidationResult validationResult = toBuilder
           ? goal.accept(projectionValidator.validate)
           : goal.accept(ProjectionValidator.skip);
@@ -104,10 +105,10 @@ final class Analyser {
     for (GoalElement goal : goals) {
       GoalElement otherGoal = goalNames.put(goal.name, goal);
       if (otherGoal != null) {
-        Optional<Goal> goalAnnotation = goal.goalAnnotation;
-        Optional<Goal> otherAnnotation = otherGoal.goalAnnotation;
-        String thisName = goalAnnotation.transform(GOAL_NAME).or("");
-        String otherName = otherAnnotation.transform(GOAL_NAME).or("");
+        Goal goalAnnotation = goal.goalAnnotation;
+        Goal otherAnnotation = otherGoal.goalAnnotation;
+        String thisName = goalAnnotation.name();
+        String otherName = otherAnnotation.name();
         ElementKind thisKind = goal.element.getKind();
         ElementKind otherKind = otherGoal.element.getKind();
         if (isNullOrEmpty(thisName)) {
@@ -243,12 +244,15 @@ final class Analyser {
 
   static abstract class GoalElement extends AbstractGoalElement {
     final Element element;
-    final Optional<Goal> goalAnnotation;
+    final Goal goalAnnotation;
     final String name;
+    GoalElement(Element element, Goal goalAnnotation, String name) {
+      this.element = checkNotNull(element, "element");
+      this.goalAnnotation = checkNotNull(goalAnnotation, "goalAnnotation");
+      this.name = checkNotNull(name, "name");
+    }
     GoalElement(Element element, String name) {
-      this.element = element;
-      this.goalAnnotation = Optional.fromNullable(element.getAnnotation(Goal.class));
-      this.name = name;
+      this(element, element.getAnnotation(Goal.class), name);
     }
   }
 
@@ -281,7 +285,7 @@ final class Analyser {
     final ClassName goalType;
     final TypeElement typeElement;
     private BeanGoal(Element field, ClassName goalType, String name, TypeElement beanType) {
-      super(field, name);
+      super(field, field.getAnnotation(Goal.class), name);
       this.goalType = goalType;
       this.typeElement = beanType;
     }
@@ -299,22 +303,4 @@ final class Analyser {
       return goalElementCases.field(this);
     }
   }
-
-  static final Function<Goal, String> GOAL_NAME = new Function<Goal, String>() {
-    @Override
-    public String apply(Goal goal) {
-      return goal.name();
-    }
-  };
-
-  static final boolean isToBuilder(GoalElement goal) {
-    Optional<Goal> goalAnnotation = goal.goalAnnotation;
-    return goalAnnotation.isPresent() && goalAnnotation.get().toBuilder();
-  }
-
-  static final boolean isBuilder(GoalElement goal) {
-    Optional<Goal> goalAnnotation = goal.goalAnnotation;
-    return goalAnnotation.isPresent() && goalAnnotation.get().builder();
-  }
-
 }
