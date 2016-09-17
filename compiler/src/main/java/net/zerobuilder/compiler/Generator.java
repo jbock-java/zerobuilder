@@ -9,7 +9,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -19,13 +18,11 @@ import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 import net.zerobuilder.compiler.ParameterContext.BeansParameterContext;
 import net.zerobuilder.compiler.ParameterContext.RegularParameterContext;
 
-import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.presentInstances;
 import static com.google.common.collect.ImmutableList.of;
-import static com.google.common.collect.Iterables.toArray;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.anonymousClassBuilder;
@@ -33,16 +30,18 @@ import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
+import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.ContractContext.buildContract;
-import static net.zerobuilder.compiler.GoalContext.goalCasesFunction;
-import static net.zerobuilder.compiler.GoalContext.maybeAddPublic;
 import static net.zerobuilder.compiler.GoalContext.builderImplName;
+import static net.zerobuilder.compiler.GoalContext.goalCasesFunction;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.StepsContext.buildStepsImpl;
 import static net.zerobuilder.compiler.UpdaterContext.buildUpdaterImpl;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 /**
@@ -69,7 +68,7 @@ final class Generator {
         .addMethods(builderMethods(analysisResult))
         .addMethods(toBuilderMethods(analysisResult))
         .addAnnotations(generatedAnnotations(elements))
-        .addModifiers(toArray(maybeAddPublic(analysisResult.config.isPublic, FINAL), Modifier.class))
+        .addModifiers(PUBLIC, FINAL)
         .addTypes(nestedGoalTypes(analysisResult.goals))
         .build();
   }
@@ -163,7 +162,9 @@ final class Generator {
 
   private static final GoalCases<MethodSpec> goalToToBuilder = new GoalCases<MethodSpec>() {
     @Override
-    MethodSpec regularGoal(GoalContext goal, TypeName goalType, GoalKind kind, ImmutableList<RegularParameterContext> parameters) {
+    MethodSpec regularGoal(GoalContext goal, TypeName goalType, GoalKind kind,
+                           ImmutableList<RegularParameterContext> parameters,
+                           ImmutableList<TypeName> thrownTypes) {
       String instance = downcase(((ClassName) goalType.box()).simpleName());
       String methodName = downcase(goal.goalName + "ToBuilder");
       MethodSpec.Builder method = methodBuilder(methodName)
@@ -191,7 +192,7 @@ final class Generator {
       method.addStatement("return $L", updater);
       return method
           .returns(goal.accept(UpdaterContext.typeName))
-          .addModifiers(goal.maybeAddPublic(STATIC)).build();
+          .addModifiers(PUBLIC, STATIC).build();
     }
     @Override
     MethodSpec fieldGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
@@ -235,28 +236,30 @@ final class Generator {
       method.addStatement("return $L", updater);
       return method
           .returns(goal.accept(UpdaterContext.typeName))
-          .addModifiers(goal.maybeAddPublic(STATIC)).build();
+          .addModifiers(PUBLIC, STATIC).build();
     }
   };
 
   private static final GoalCases<MethodSpec> goalToBuilder = new GoalCases<MethodSpec>() {
     @Override
-    MethodSpec regularGoal(GoalContext goal, TypeName goalType, GoalKind kind, ImmutableList<RegularParameterContext> parameters) {
+    MethodSpec regularGoal(GoalContext goal, TypeName goalType, GoalKind kind,
+                           ImmutableList<RegularParameterContext> parameters,
+                           ImmutableList<TypeName> thrownTypes) {
       ClassName stepsType = goal.accept(builderImplName);
       MethodSpec.Builder method = methodBuilder(goal.goalName + "Builder")
           .returns(parameters.get(0).typeThisStep)
-          .addModifiers(goal.maybeAddPublic(STATIC));
+          .addModifiers(PUBLIC, STATIC);
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.config.recycle
-          ? CodeBlock.of("$T $N = $N.get().$N;\n", stepsType, steps, TL, stepsField(goal))
-          : CodeBlock.of("$T $N = new $T();\n", stepsType, steps, stepsType));
+          ? statement("$T $N = $N.get().$N", stepsType, steps, TL, stepsField(goal))
+          : statement("$T $N = new $T()", stepsType, steps, stepsType));
       if (kind != INSTANCE_METHOD) {
         return method.addStatement("return $N", steps).build();
       }
       ClassName instanceType = goal.config.annotatedType;
       String instance = downcase(instanceType.simpleName());
       return method
-          .addParameter(ParameterSpec.builder(instanceType, instance).build())
+          .addParameter(parameterSpec(instanceType, instance))
           .addStatement("$N.$N = $N", steps, '_' + instance, instance)
           .addStatement("return $N", steps)
           .build();
@@ -266,11 +269,11 @@ final class Generator {
       ClassName stepsType = goal.accept(builderImplName);
       MethodSpec.Builder method = methodBuilder(goal.goalName + "Builder")
           .returns(parameters.get(0).typeThisStep)
-          .addModifiers(goal.maybeAddPublic(STATIC));
+          .addModifiers(PUBLIC, STATIC);
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.config.recycle
-          ? CodeBlock.of("$T $N = $N.get().$N;\n", stepsType, steps, TL, stepsField(goal))
-          : CodeBlock.of("$T $N = new $T();\n", stepsType, steps, stepsType));
+          ? statement("$T $N = $N.get().$N", stepsType, steps, TL, stepsField(goal))
+          : statement("$T $N = new $T()", stepsType, steps, stepsType));
       return method.addStatement("$N.$N = new $T()", steps, downcase(goalType.simpleName()), goalType)
           .addStatement("return $N", steps)
           .build();

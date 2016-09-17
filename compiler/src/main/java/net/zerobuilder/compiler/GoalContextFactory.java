@@ -36,7 +36,6 @@ final class GoalContextFactory {
             contractName,
             goal.kind,
             goal.name,
-            visibility,
             thrownTypes,
             parameters,
             goalCall);

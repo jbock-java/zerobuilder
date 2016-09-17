@@ -13,7 +13,9 @@ public class BusinessAnalyst {
   private String name;
   private int age;
 
-  private List<String> strings;
+  private List<String> notes;
+
+  private boolean isExecutive;
 
   public String getName() {
     return name;
@@ -31,10 +33,17 @@ public class BusinessAnalyst {
     this.age = age;
   }
 
-  public List<String> getStrings() {
-    if (strings == null) {
-      strings = new ArrayList<>();
+  public List<String> getNotes() {
+    if (notes == null) {
+      notes = new ArrayList<>();
     }
-    return strings;
+    return notes;
+  }
+
+  public boolean isExecutive() {
+    return isExecutive;
+  }
+  public void setExecutive(boolean executive) {
+    isExecutive = executive;
   }
 }

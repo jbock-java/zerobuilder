@@ -19,7 +19,9 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 abstract class GoalContext {
 
   static abstract class GoalCases<R> {
-    abstract R regularGoal(GoalContext goal, TypeName goalType, GoalKind kind, ImmutableList<ParameterContext.RegularParameterContext> parameters);
+    abstract R regularGoal(GoalContext goal, TypeName goalType, GoalKind kind,
+                           ImmutableList<ParameterContext.RegularParameterContext> parameters,
+                           ImmutableList<TypeName> thrownTypes);
     abstract R fieldGoal(GoalContext goal, ClassName goalType, ImmutableList<ParameterContext.BeansParameterContext> parameters);
   }
 
@@ -32,7 +34,9 @@ abstract class GoalContext {
   static <R> GoalCases<R> always(final GoalFunction<R> function) {
     return new GoalCases<R>() {
       @Override
-      R regularGoal(GoalContext goal, TypeName goalType, GoalKind kind, ImmutableList<ParameterContext.RegularParameterContext> parameters) {
+      R regularGoal(GoalContext goal, TypeName goalType, GoalKind kind,
+                    ImmutableList<ParameterContext.RegularParameterContext> parameters,
+                    ImmutableList<TypeName> thrownTypes) {
         return function.apply(goal, goalType, parameters);
       }
       @Override
@@ -68,25 +72,17 @@ abstract class GoalContext {
    */
   final CodeBlock goalCall;
 
-  /**
-   * thrown by {@code updaterImpl.build()} and {@code stepsImpl.build()}
-   */
-  final ImmutableList<TypeName> thrownTypes;
-
-  abstract Set<Modifier> maybeAddPublic(Modifier... modifiers);
-
   @VisibleForTesting
   GoalContext(BuilderContext config,
               boolean toBuilder,
               boolean builder, ClassName contractName, String goalName,
-              CodeBlock goalCall, ImmutableList<TypeName> thrownTypes) {
+              CodeBlock goalCall) {
     this.config = config;
     this.toBuilder = toBuilder;
     this.builder = builder;
     this.contractName = contractName;
     this.goalName = goalName;
     this.goalCall = goalCall;
-    this.thrownTypes = thrownTypes;
   }
 
   static final GoalCases<ImmutableList<ClassName>> stepInterfaceNames = always(new GoalFunction<ImmutableList<ClassName>>() {
@@ -107,18 +103,9 @@ abstract class GoalContext {
     }
   });
 
-  static Set<Modifier> maybeAddPublic(boolean add, Modifier... modifiers) {
-    ImmutableSet<Modifier> modifierSet = ImmutableSet.copyOf(modifiers);
-    if (add && !modifierSet.contains(PUBLIC)) {
-      return new ImmutableSet.Builder<Modifier>().addAll(modifierSet).add(PUBLIC).build();
-    }
-    return modifierSet;
-  }
-
   final static class RegularGoalContext extends GoalContext {
 
     final GoalKind kind;
-    final Visibility visibility;
 
     /**
      * <p>method goal: return type</p>
@@ -131,6 +118,8 @@ abstract class GoalContext {
      */
     final ImmutableList<ParameterContext.RegularParameterContext> goalParameters;
 
+    final ImmutableList<TypeName> thrownTypes;
+
     RegularGoalContext(TypeName goalType,
                        BuilderContext config,
                        boolean toBuilder,
@@ -138,22 +127,18 @@ abstract class GoalContext {
                        ClassName contractName,
                        GoalKind kind,
                        String goalName,
-                       Visibility visibility,
                        ImmutableList<TypeName> thrownTypes,
                        ImmutableList<ParameterContext.RegularParameterContext> goalParameters,
                        CodeBlock goalCall) {
-      super(config, toBuilder, builder, contractName, goalName, goalCall, thrownTypes);
+      super(config, toBuilder, builder, contractName, goalName, goalCall);
+      this.thrownTypes = thrownTypes;
       this.goalParameters = goalParameters;
-      this.visibility = visibility;
       this.kind = kind;
       this.goalType = goalType;
     }
 
-    Set<Modifier> maybeAddPublic(Modifier... modifiers) {
-      return maybeAddPublic(visibility == Visibility.PUBLIC, modifiers);
-    }
     <R> R accept(GoalCases<R> cases) {
-      return cases.regularGoal(this, goalType, kind, goalParameters);
+      return cases.regularGoal(this, goalType, kind, goalParameters, thrownTypes);
     }
   }
 
@@ -173,14 +158,11 @@ abstract class GoalContext {
                      String goalName,
                      ImmutableList<ParameterContext.BeansParameterContext> goalParameters,
                      CodeBlock goalCall) {
-      super(config, toBuilder, builder, contractName, goalName, goalCall, ImmutableList.<TypeName>of());
+      super(config, toBuilder, builder, contractName, goalName, goalCall);
       this.goalParameters = goalParameters;
       this.goalType = goalType;
     }
 
-    Set<Modifier> maybeAddPublic(Modifier... modifiers) {
-      return maybeAddPublic(true, modifiers);
-    }
     <R> R accept(GoalCases<R> cases) {
       return cases.fieldGoal(this, goalType, goalParameters);
     }

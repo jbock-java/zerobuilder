@@ -2,9 +2,11 @@ package net.zerobuilder.compiler;
 
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.GoalContext.GoalCases;
@@ -24,6 +26,7 @@ import static net.zerobuilder.compiler.GoalContext.builderImplName;
 import static net.zerobuilder.compiler.GoalContext.stepInterfaceNames;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class StepsContext {
@@ -31,7 +34,9 @@ final class StepsContext {
   private static final GoalCases<ImmutableList<FieldSpec>> fields
       = new GoalCases<ImmutableList<FieldSpec>>() {
     @Override
-    ImmutableList<FieldSpec> regularGoal(GoalContext goal, TypeName goalType, GoalKind kind, ImmutableList<RegularParameterContext> parameters) {
+    ImmutableList<FieldSpec> regularGoal(GoalContext goal, TypeName goalType, GoalKind kind,
+                                         ImmutableList<RegularParameterContext> parameters,
+                                         ImmutableList<TypeName> thrownTypes) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       if (kind == INSTANCE_METHOD) {
         ClassName receiverType = goal.config.annotatedType;
@@ -54,105 +59,55 @@ final class StepsContext {
   private static final GoalCases<ImmutableList<MethodSpec>> stepsButLast
       = new GoalCases<ImmutableList<MethodSpec>>() {
     @Override
-    ImmutableList<MethodSpec> regularGoal(GoalContext goal, TypeName goalType, GoalKind kind, ImmutableList<RegularParameterContext> parameters) {
+    ImmutableList<MethodSpec> regularGoal(GoalContext goal, TypeName goalType, GoalKind kind,
+                                          ImmutableList<RegularParameterContext> parameters,
+                                          ImmutableList<TypeName> thrownTypes) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (RegularParameterContext parameter : parameters.subList(0, parameters.size() - 1)) {
         String name = parameter.parameter.name;
-        TypeName type = parameter.parameter.type;
-        builder.add(methodBuilder(name)
-            .addAnnotation(Override.class)
-            .returns(parameter.typeNextStep)
-            .addParameter(ParameterSpec.builder(type, name).build())
+        CodeBlock finalBlock = CodeBlock.builder()
             .addStatement("this.$N = $N", name, name)
             .addStatement("return this")
-            .addModifiers(PUBLIC)
-            .build());
+            .build();
+        builder.add(regularMethod(parameter, finalBlock, ImmutableList.<TypeName>of()));
       }
       return builder.build();
     }
     @Override
     ImmutableList<MethodSpec> fieldGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+      CodeBlock finalBlock = CodeBlock.builder().addStatement("return this").build();
       for (BeansParameterContext parameter : parameters.subList(0, parameters.size() - 1)) {
-        String name = parameter.parameter.name;
-        TypeName type = parameter.parameter.type;
         if (parameter.parameter.setterlessCollection.isPresent()) {
-          ClassName setterlessCollection = parameter.parameter.setterlessCollection.get();
-          String iterationVarName = downcase(setterlessCollection.simpleName());
-          builder.add(methodBuilder(name)
-              .addAnnotation(Override.class)
-              .returns(parameter.typeNextStep)
-              .addParameter(ParameterSpec.builder(type, name).build())
-              .beginControlFlow("for ($T $N : $N)",
-                  setterlessCollection, iterationVarName, name)
-              .addStatement("this.$N.$N().add($N)",
-                  downcase(goalType.simpleName()),
-                  parameter.parameter.projectionMethodName,
-                  iterationVarName)
-              .endControlFlow()
-              .addStatement("return this")
-              .addModifiers(PUBLIC)
-              .build());
+          builder.add(beanCollectionMethod(parameter, goalType, finalBlock));
+          builder.add(beanSingleInstanceMethod(parameter, goalType, finalBlock));
         } else {
-          builder.add(methodBuilder(name)
-              .addAnnotation(Override.class)
-              .returns(parameter.typeNextStep)
-              .addParameter(ParameterSpec.builder(type, name).build())
-              .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
-              .addStatement("return this")
-              .addModifiers(PUBLIC)
-              .build());
+          builder.add(beanRegularMethod(parameter, goalType, finalBlock));
         }
       }
       return builder.build();
     }
   };
 
-  private static final GoalCases<MethodSpec> lastStep = new GoalCases<MethodSpec>() {
+  private static final GoalCases<ImmutableList<MethodSpec>> lastStep = new GoalCases<ImmutableList<MethodSpec>>() {
     @Override
-    MethodSpec regularGoal(GoalContext goal, TypeName goalType, GoalKind kind, ImmutableList<RegularParameterContext> parameters) {
+    ImmutableList<MethodSpec> regularGoal(GoalContext goal, TypeName goalType, GoalKind kind,
+                                          ImmutableList<RegularParameterContext> parameters,
+                                          ImmutableList<TypeName> thrownTypes) {
       RegularParameterContext parameter = getLast(parameters);
-      String name = parameter.parameter.name;
-      TypeName type = parameter.parameter.type;
-      return methodBuilder(parameter.parameter.name)
-          .addAnnotation(Override.class)
-          .addParameter(ParameterSpec.builder(type, name).build())
-          .addExceptions(goal.thrownTypes)
-          .addModifiers(PUBLIC)
-          .returns(goalType)
-          .addCode(goal.goalCall).build();
+      return ImmutableList.of(regularMethod(parameter, goal.goalCall, thrownTypes));
     }
+
     @Override
-    MethodSpec fieldGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
+    ImmutableList<MethodSpec> fieldGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
       BeansParameterContext parameter = getLast(parameters);
-      String name = parameter.parameter.name;
-      TypeName type = parameter.parameter.type;
       if (parameter.parameter.setterlessCollection.isPresent()) {
-        ClassName setterlessCollection = parameter.parameter.setterlessCollection.get();
-        String iterationVarName = downcase(setterlessCollection.simpleName());
-        return methodBuilder(name)
-            .addAnnotation(Override.class)
-            .returns(parameter.typeNextStep)
-            .addParameter(ParameterSpec.builder(type, name).build())
-            .beginControlFlow("for ($T $N : $N)",
-                setterlessCollection, iterationVarName, name)
-            .addStatement("this.$N.$N().add($N)",
-                downcase(goalType.simpleName()),
-                parameter.parameter.projectionMethodName,
-                iterationVarName)
-            .endControlFlow()
-            .addCode(goal.goalCall)
-            .addModifiers(PUBLIC)
-            .build();
+        ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+        builder.add(beanCollectionMethod(parameter, goalType, goal.goalCall));
+        builder.add(beanSingleInstanceMethod(parameter, goalType, goal.goalCall));
+        return builder.build();
       } else {
-        return methodBuilder(parameter.parameter.name)
-            .addAnnotation(Override.class)
-            .addParameter(ParameterSpec.builder(type, name).build())
-            .addExceptions(goal.thrownTypes)
-            .addModifiers(PUBLIC)
-            .returns(goalType)
-            .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
-            .addCode(goal.goalCall).build();
+        return ImmutableList.of(beanRegularMethod(parameter, goalType, goal.goalCall));
       }
     }
   };
@@ -163,9 +118,68 @@ final class StepsContext {
         .addFields(goal.accept(fields))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .addMethods(goal.accept(stepsButLast))
-        .addMethod(goal.accept(lastStep))
+        .addMethods(goal.accept(lastStep))
         .addModifiers(FINAL, STATIC)
         .build();
+  }
+
+  private static MethodSpec regularMethod(RegularParameterContext parameter,
+                                          CodeBlock finalBlock, ImmutableList<TypeName> thrownTypes) {
+    String name = parameter.parameter.name;
+    TypeName type = parameter.parameter.type;
+    return methodBuilder(parameter.parameter.name)
+        .addAnnotation(Override.class)
+        .addParameter(parameterSpec(type, name))
+        .addExceptions(thrownTypes)
+        .addModifiers(PUBLIC)
+        .returns(parameter.typeNextStep)
+        .addCode(finalBlock).build();
+  }
+
+  private static MethodSpec beanCollectionMethod(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
+    String name = parameter.parameter.name;
+    ClassName collectionType = parameter.parameter.setterlessCollection.get();
+    String iterationVarName = downcase(collectionType.simpleName());
+    ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class), collectionType);
+    return methodBuilder(name)
+        .addAnnotation(Override.class)
+        .returns(parameter.typeNextStep)
+        .addParameter(parameterSpec(iterable, name))
+        .beginControlFlow("for ($T $N : $N)",
+            collectionType, iterationVarName, name)
+        .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
+            parameter.parameter.projectionMethodName,
+            iterationVarName)
+        .endControlFlow()
+        .addCode(finalBlock)
+        .addModifiers(PUBLIC)
+        .build();
+  }
+
+  private static MethodSpec beanSingleInstanceMethod(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
+    String name = parameter.parameter.name;
+    ClassName collectionType = parameter.parameter.setterlessCollection.get();
+    return methodBuilder(name)
+        .addAnnotation(Override.class)
+        .returns(parameter.typeNextStep)
+        .addParameter(parameterSpec(collectionType, name))
+        .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
+            parameter.parameter.projectionMethodName, name)
+        .addCode(finalBlock)
+        .addModifiers(PUBLIC)
+        .build();
+  }
+
+  private static MethodSpec beanRegularMethod(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
+    String name = parameter.parameter.name;
+    TypeName type = parameter.parameter.type;
+    return methodBuilder(parameter.parameter.name)
+        .addAnnotation(Override.class)
+        .addParameter(parameterSpec(type, name))
+        .addModifiers(PUBLIC)
+        .returns(parameter.typeNextStep)
+        .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
+        .addCode(finalBlock).build();
   }
 
   private StepsContext() {

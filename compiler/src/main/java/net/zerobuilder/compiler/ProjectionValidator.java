@@ -391,7 +391,12 @@ final class ProjectionValidator {
 
     static final class AccessorPair extends ValidParameter {
       final String projectionMethodName;
+
+      /**
+       * if {@link #type} is {@code List<String>}, this would be {@code String}
+       */
       final Optional<ClassName> setterlessCollection;
+
       AccessorPair(TypeName type, String projectionMethodName, Optional<ClassName> setterlessCollection) {
         super(name(projectionMethodName), type);
         this.projectionMethodName = projectionMethodName;

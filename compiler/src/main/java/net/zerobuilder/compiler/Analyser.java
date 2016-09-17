@@ -217,7 +217,7 @@ final class Analyser {
       @Override
       public CodeBlock field(FieldGoal goal) throws ValidationException {
         return CodeBlock.builder()
-            .addStatement("return $L", downcase(((ClassName) goal.goalType).simpleName()))
+            .addStatement("return $L", downcase(goal.goalType.simpleName()))
             .build();
       }
     });
