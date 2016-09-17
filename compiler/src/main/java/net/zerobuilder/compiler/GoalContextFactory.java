@@ -41,16 +41,16 @@ final class GoalContextFactory {
             goalCall);
       }
       @Override
-      GoalContext fieldGoal(Analyser.FieldGoal fieldGoal, ImmutableList<ValidParameter.AccessorPair> accessorPairs) {
-        ClassName contractName = config.generatedType.nestedClass(upcase(fieldGoal.name + "Builder"));
-        ImmutableList<ParameterContext.BeansParameterContext> parameters = beanParameters(contractName, fieldGoal.goalType, accessorPairs);
+      GoalContext fieldGoal(Analyser.BeanGoal beanGoal, ImmutableList<ValidParameter.AccessorPair> accessorPairs) {
+        ClassName contractName = config.generatedType.nestedClass(upcase(beanGoal.name + "Builder"));
+        ImmutableList<ParameterContext.BeansParameterContext> parameters = beanParameters(contractName, beanGoal.goalType, accessorPairs);
         return new GoalContext.FieldGoalContext(
-            fieldGoal.goalType,
+            beanGoal.goalType,
             config,
             toBuilder,
             builder,
             contractName,
-            fieldGoal.name,
+            beanGoal.name,
             parameters,
             goalCall);
       }

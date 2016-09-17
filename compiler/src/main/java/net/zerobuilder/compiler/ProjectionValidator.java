@@ -134,13 +134,13 @@ final class ProjectionValidator {
           FluentIterable.from(shuffled).transform(TmpValidParameter.RegularTmpValidParameter.toValidParameter).toList());
     }
     @Override
-    public ValidationResult field(Analyser.FieldGoal goal) throws ValidationException {
+    public ValidationResult field(Analyser.BeanGoal goal) throws ValidationException {
       return validateBean(goal);
     }
   };
 
-  private static ValidationResult validateBean(Analyser.FieldGoal goal) throws ValidationException {
-    ImmutableMap<String, ExecutableElement> setters = setters(goal.field, goal.typeElement);
+  private static ValidationResult validateBean(Analyser.BeanGoal goal) throws ValidationException {
+    ImmutableMap<String, ExecutableElement> setters = setters(goal.typeElement);
     ImmutableList<ExecutableElement> getters
         = FluentIterable.from(methodsIn(goal.typeElement.getEnclosedElements()))
         .filter(new Predicate<ExecutableElement>() {
@@ -231,7 +231,7 @@ final class ProjectionValidator {
           FluentIterable.from(shuffled).transform(TmpValidParameter.RegularTmpValidParameter.toValidParameter).toList());
     }
     @Override
-    public ValidationResult field(Analyser.FieldGoal goal) throws ValidationException {
+    public ValidationResult field(Analyser.BeanGoal goal) throws ValidationException {
       return validateBean(goal);
     }
   };
@@ -244,18 +244,18 @@ final class ProjectionValidator {
     return new ProjectionValidator(elements);
   }
 
-  private static ImmutableMap<String, ExecutableElement> setters(Element fieldOrType, TypeElement type) throws ValidationException {
-    if (!hasParameterlessConstructor(type)) {
-      throw new ValidationException(NO_DEFAULT_CONSTRUCTOR + TypeName.get(type.asType()), fieldOrType);
+  private static ImmutableMap<String, ExecutableElement> setters(TypeElement beanType) throws ValidationException {
+    if (!hasParameterlessConstructor(beanType)) {
+      throw new ValidationException(NO_DEFAULT_CONSTRUCTOR + TypeName.get(beanType.asType()), beanType);
     }
-    if (!type.getModifiers().contains(PUBLIC)) {
-      throw new ValidationException(TARGET_PUBLIC, fieldOrType);
+    if (!beanType.getModifiers().contains(PUBLIC)) {
+      throw new ValidationException(TARGET_PUBLIC, beanType);
     }
-    if (!ALLOWED_NESTING_KINDS.contains(type.getNestingKind())
-        || type.getNestingKind() == MEMBER && !type.getModifiers().contains(STATIC)) {
-      throw new ValidationException(TARGET_NESTING_KIND, type);
+    if (!ALLOWED_NESTING_KINDS.contains(beanType.getNestingKind())
+        || beanType.getNestingKind() == MEMBER && !beanType.getModifiers().contains(STATIC)) {
+      throw new ValidationException(TARGET_NESTING_KIND, beanType);
     }
-    ImmutableList<ExecutableElement> methods = ImmutableList.copyOf(methodsIn(type.getEnclosedElements()));
+    ImmutableList<ExecutableElement> methods = ImmutableList.copyOf(methodsIn(beanType.getEnclosedElements()));
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (int i = 0; i < methods.size(); i++) {
       ExecutableElement method = methods.get(i);
@@ -417,7 +417,7 @@ final class ProjectionValidator {
   static abstract class ValidationResult {
     static abstract class ValidationResultCases<R> {
       abstract R regularGoal(Analyser.ExecutableGoal goal, ImmutableList<Parameter> parameters);
-      abstract R fieldGoal(Analyser.FieldGoal fieldGoal, ImmutableList<AccessorPair> accessorPairs);
+      abstract R fieldGoal(Analyser.BeanGoal beanGoal, ImmutableList<AccessorPair> accessorPairs);
     }
     abstract <R> R accept(ValidationResultCases<R> cases);
     static final class RegularValidationResult extends ValidationResult {
@@ -434,9 +434,9 @@ final class ProjectionValidator {
     }
 
     static final class BeanValidationResult extends ValidationResult {
-      private final Analyser.FieldGoal goal;
+      private final Analyser.BeanGoal goal;
       private final ImmutableList<AccessorPair> accessorPairs;
-      BeanValidationResult(Analyser.FieldGoal goal, ImmutableList<AccessorPair> accessorPairs) {
+      BeanValidationResult(Analyser.BeanGoal goal, ImmutableList<AccessorPair> accessorPairs) {
         this.goal = goal;
         this.accessorPairs = accessorPairs;
       }

@@ -135,7 +135,7 @@ final class Analyser {
   private ImmutableList<GoalElement> goals(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<GoalElement> builder = ImmutableList.builder();
     if (buildElement.getAnnotation(Goal.class) != null) {
-      builder.add(FieldGoal.create(buildElement));
+      builder.add(BeanGoal.create(buildElement));
     }
     for (Element element : buildElement.getEnclosedElements()) {
       if (element.getAnnotation(Goal.class) != null) {
@@ -151,7 +151,7 @@ final class Analyser {
           builder.add(ExecutableGoal.create(executableElement));
         } else if (kind == FIELD) {
           VariableElement field = asVariable(element);
-          builder.add(FieldGoal.create(field));
+          builder.add(BeanGoal.create(field));
         }
       }
     }
@@ -215,7 +215,7 @@ final class Analyser {
         }
       }
       @Override
-      public CodeBlock field(FieldGoal goal) throws ValidationException {
+      public CodeBlock field(BeanGoal goal) throws ValidationException {
         return CodeBlock.builder()
             .addStatement("return $L", downcase(goal.goalType.simpleName()))
             .build();
@@ -236,7 +236,7 @@ final class Analyser {
   static abstract class AbstractGoalElement {
     interface GoalElementCases<R> {
       R executable(ExecutableGoal executableGoal) throws ValidationException;
-      R field(FieldGoal fieldGoal) throws ValidationException;
+      R field(BeanGoal beanGoal) throws ValidationException;
     }
     abstract <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException;
   }
@@ -277,25 +277,23 @@ final class Analyser {
     }
   }
 
-  static final class FieldGoal extends GoalElement {
-    final Element field;
+  static final class BeanGoal extends GoalElement {
     final ClassName goalType;
     final TypeElement typeElement;
-    private FieldGoal(Element field, ClassName goalType, String name, TypeElement typeElement) {
+    private BeanGoal(Element field, ClassName goalType, String name, TypeElement beanType) {
       super(field, name);
       this.goalType = goalType;
-      this.field = field;
-      this.typeElement = typeElement;
+      this.typeElement = beanType;
     }
     private static GoalElement create(VariableElement field) {
       ClassName goalType = (ClassName) ClassName.get(field.asType());
       String name = goalName(field.getAnnotation(Goal.class), goalType);
-      return new FieldGoal(field, goalType, name, asTypeElement(field.asType()));
+      return new BeanGoal(field, goalType, name, asTypeElement(field.asType()));
     }
-    private static GoalElement create(TypeElement field) {
-      ClassName goalType = (ClassName) ClassName.get(field.asType());
-      String name = goalName(field.getAnnotation(Goal.class), goalType);
-      return new FieldGoal(field, goalType, name, field);
+    private static GoalElement create(TypeElement beanType) {
+      ClassName goalType = (ClassName) ClassName.get(beanType.asType());
+      String name = goalName(beanType.getAnnotation(Goal.class), goalType);
+      return new BeanGoal(beanType, goalType, name, beanType);
     }
     <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
       return goalElementCases.field(this);
