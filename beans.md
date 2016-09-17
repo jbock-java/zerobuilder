@@ -66,7 +66,7 @@ If you clone this project and do a `mvn install`, you will find the complete sou
 in the `examples/basic/target/generated-sources/annotations` folder.
 
 To see how the generated class is used, have a look at
-[BusinessAnalystTest](blob/master/examples/basic/src/test/java/net/zerobuilder/examples/beans/more/BusinessAnalystTest.java).
+[BusinessAnalystTest](examples/basic/src/test/java/net/zerobuilder/examples/beans/more/BusinessAnalystTest.java).
 
 ### Recycle
 
