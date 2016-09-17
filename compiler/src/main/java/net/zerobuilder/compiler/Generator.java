@@ -213,7 +213,7 @@ final class Generator {
       builder.addStatement("$N.$N = new $T()", updater, instance, goalType);
       for (BeansParameterContext parameter : parameters) {
         String parameterName = upcase(parameter.parameter.name);
-        Optional<ClassName> setterlessCollection = parameter.parameter.setterlessCollection;
+        Optional<ClassName> setterlessCollection = parameter.parameter.collectionType;
         if (setterlessCollection.isPresent()) {
           String iterationVarName = downcase(setterlessCollection.get().simpleName());
           builder

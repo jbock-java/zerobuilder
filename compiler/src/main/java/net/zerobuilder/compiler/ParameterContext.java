@@ -3,7 +3,6 @@ package net.zerobuilder.compiler;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -94,8 +93,8 @@ abstract class ParameterContext {
     @Override
     TypeSpec beansParameter(ClassName typeName, TypeName returnType, AccessorPair parameter) {
       String name = parameter.name;
-      if (parameter.setterlessCollection.isPresent()) {
-        ClassName collectionType = parameter.setterlessCollection.get();
+      if (parameter.collectionType.isPresent()) {
+        ClassName collectionType = parameter.collectionType.get();
         ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class), collectionType);
         return interfaceBuilder(typeName)
             .addMethod(methodBuilder(name)

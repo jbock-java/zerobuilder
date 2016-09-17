@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -88,9 +87,9 @@ final class UpdaterContext {
       for (BeansParameterContext parameter : parameters) {
         String name = parameter.parameter.name;
         TypeName type = parameter.parameter.type;
-        Optional<ClassName> setterlessCollection = parameter.parameter.setterlessCollection;
+        Optional<ClassName> setterlessCollection = parameter.parameter.collectionType;
         if (setterlessCollection.isPresent()) {
-          ClassName collectionType = parameter.parameter.setterlessCollection.get();
+          ClassName collectionType = parameter.parameter.collectionType.get();
           ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class), collectionType);
           String iterationVarName = downcase(setterlessCollection.get().simpleName());
           builder.add(methodBuilder(name)

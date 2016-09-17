@@ -393,14 +393,15 @@ final class ProjectionValidator {
       final String projectionMethodName;
 
       /**
-       * if {@link #type} is {@code List<String>}, this would be {@code String}
+       * Only present if there is no setter for the collection.
+       * If {@link #type} is {@code List<String>}, this would be {@code String}
        */
-      final Optional<ClassName> setterlessCollection;
+      final Optional<ClassName> collectionType;
 
-      AccessorPair(TypeName type, String projectionMethodName, Optional<ClassName> setterlessCollection) {
+      AccessorPair(TypeName type, String projectionMethodName, Optional<ClassName> collectionType) {
         super(name(projectionMethodName), type);
         this.projectionMethodName = projectionMethodName;
-        this.setterlessCollection = setterlessCollection;
+        this.collectionType = collectionType;
       }
 
       private static String name(String projectionMethodName) {
