@@ -316,61 +316,48 @@ final class ProjectionValidator {
 
   abstract static class TmpValidParameter {
 
-    final String name;
-    final TypeName type;
     final Element element;
     final Optional<Step> annotation;
 
     final static class RegularTmpValidParameter extends TmpValidParameter {
-      private final Optional<String> projectionMethodName;
-      private RegularTmpValidParameter(Element element, String name, TypeName type, Optional<Step> annotation, Optional<String> projectionMethodName) {
-        super(element, name, type, annotation);
-        this.projectionMethodName = projectionMethodName;
+      private final Parameter parameter;
+      private RegularTmpValidParameter(Element element, Optional<Step> annotation, Parameter parameter) {
+        super(element, annotation);
+        this.parameter = parameter;
       }
       static final Function<RegularTmpValidParameter, Parameter> toValidParameter = new Function<RegularTmpValidParameter, Parameter>() {
         @Override
         public Parameter apply(RegularTmpValidParameter parameter) {
-          return new Parameter(parameter.name, parameter.type, parameter.projectionMethodName);
+          return parameter.parameter;
         }
       };
-      static RegularTmpValidParameter create(VariableElement parameter, Optional<String> projectionMethodName) {
-        return new RegularTmpValidParameter(parameter,
-            parameter.getSimpleName().toString(),
-            TypeName.get(parameter.asType()),
-            fromNullable(parameter.getAnnotation(Step.class)),
-            projectionMethodName);
+      static RegularTmpValidParameter create(VariableElement element, Optional<String> projectionMethodName) {
+        Parameter parameter = new Parameter(element.getSimpleName().toString(), TypeName.get(element.asType()), projectionMethodName);
+        Optional<Step> annotation = fromNullable(element.getAnnotation(Step.class));
+        return new RegularTmpValidParameter(element, annotation, parameter);
       }
     }
 
     private static final class AccessorPairTmpValidParameter extends TmpValidParameter {
-      private final String projectionMethodName;
-      private final Optional<ClassName> setterlessCollection;
-      private AccessorPairTmpValidParameter(Element element, String name, TypeName type, Optional<Step> annotation, String projectionMethodName, Optional<ClassName> setterlessCollection) {
-        super(element, name, type, annotation);
-        this.projectionMethodName = projectionMethodName;
-        this.setterlessCollection = setterlessCollection;
+      private final AccessorPair accessorPair;
+      private AccessorPairTmpValidParameter(Element element, Optional<Step> annotation, AccessorPair accessorPair) {
+        super(element, annotation);
+        this.accessorPair = accessorPair;
       }
       static final Function<AccessorPairTmpValidParameter, AccessorPair> toValidParameter = new Function<AccessorPairTmpValidParameter, AccessorPair>() {
         @Override
         public AccessorPair apply(AccessorPairTmpValidParameter parameter) {
-          return new AccessorPair(parameter.type, parameter.projectionMethodName, parameter.setterlessCollection);
+          return parameter.accessorPair;
         }
       };
       static AccessorPairTmpValidParameter create(ExecutableElement getter, Optional<ClassName> setterlessCollection) {
-        String name = getter.getSimpleName().toString();
-        return new AccessorPairTmpValidParameter(getter,
-            downcase(name.substring(name.startsWith("get") ? 3 : 2)),
-            TypeName.get(getter.getReturnType()),
-            Optional.fromNullable(getter.getAnnotation(Step.class)),
-            getter.getSimpleName().toString(),
-            setterlessCollection);
+        AccessorPair accessorPair = new AccessorPair(TypeName.get(getter.getReturnType()), getter.getSimpleName().toString(), setterlessCollection);
+        return new AccessorPairTmpValidParameter(getter, Optional.fromNullable(getter.getAnnotation(Step.class)), accessorPair);
       }
     }
 
-    private TmpValidParameter(Element element, String name, TypeName type, Optional<Step> annotation) {
+    private TmpValidParameter(Element element, Optional<Step> annotation) {
       this.element = element;
-      this.name = name;
-      this.type = type;
       this.annotation = annotation;
     }
 
