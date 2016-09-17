@@ -140,9 +140,9 @@ final class ProjectionValidator {
   };
 
   private static ValidationResult validateBean(Analyser.BeanGoal goal) throws ValidationException {
-    ImmutableMap<String, ExecutableElement> setters = setters(goal.typeElement);
+    ImmutableMap<String, ExecutableElement> setters = setters(goal.beanTypeElement);
     ImmutableList<ExecutableElement> getters
-        = FluentIterable.from(methodsIn(goal.typeElement.getEnclosedElements()))
+        = FluentIterable.from(methodsIn(goal.beanTypeElement.getEnclosedElements()))
         .filter(new Predicate<ExecutableElement>() {
           @Override
           public boolean apply(ExecutableElement method) {

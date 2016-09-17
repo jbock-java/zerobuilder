@@ -95,6 +95,9 @@ final class Messages {
     static final String SETTER_EXCEPTION
         = "Setter may not declare exception";
 
+    static final String NOT_A_BEAN
+        = "This type cannot be a bean";
+
     private ErrorMessages() {
       throw new UnsupportedOperationException("no instances");
     }

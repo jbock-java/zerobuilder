@@ -25,9 +25,6 @@ final class GoalContextFactory {
         ClassName contractName = config.generatedType.nestedClass(upcase(goal.name + "Builder"));
         ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
         ImmutableList<ParameterContext.RegularParameterContext> parameters = parameters(contractName, goal.goalType, validParameters, thrownTypes);
-        Visibility visibility = goal.element.getModifiers().contains(PUBLIC)
-            ? Visibility.PUBLIC
-            : Visibility.PACKAGE;
         return new GoalContext.RegularGoalContext(
             goal.goalType,
             config,

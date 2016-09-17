@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
@@ -28,6 +26,7 @@ import static com.google.auto.common.MoreElements.asVariable;
 import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Iterables.getLast;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.FIELD;
@@ -46,6 +45,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_A_BEAN;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
@@ -54,13 +54,13 @@ import static net.zerobuilder.compiler.Utilities.downcase;
 final class Analyser {
 
   /**
-   * to generate better error messages
+   * to generate better error messages, in case of goal name conflict
    */
   private static final Ordering<GoalElement> GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK
       = Ordering.from(new Comparator<GoalElement>() {
 
-    private int goalWeight(GoalElement goal) {
-      ElementKind kind = goal.element.getKind();
+    private int goalWeight(GoalElement goal) throws ValidationException {
+      ElementKind kind = goal.accept(getElement).getKind();
       Goal annotation = goal.goalAnnotation;
       String name = annotation.name();
       return isNullOrEmpty(name)
@@ -70,7 +70,12 @@ final class Analyser {
 
     @Override
     public int compare(GoalElement g0, GoalElement g1) {
-      return Ints.compare(goalWeight(g0), goalWeight(g1));
+      try {
+        return Ints.compare(goalWeight(g0), goalWeight(g1));
+      } catch (ValidationException e) {
+        propagate(e);
+        return 0;
+      }
     }
   });
 
@@ -109,26 +114,26 @@ final class Analyser {
         Goal otherAnnotation = otherGoal.goalAnnotation;
         String thisName = goalAnnotation.name();
         String otherName = otherAnnotation.name();
-        ElementKind thisKind = goal.element.getKind();
-        ElementKind otherKind = otherGoal.element.getKind();
+        ElementKind thisKind = goal.accept(getElement).getKind();
+        ElementKind otherKind = otherGoal.accept(getElement).getKind();
         if (isNullOrEmpty(thisName)) {
           if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EECC, goal.element);
+            throw new ValidationException(GOALNAME_EECC, goal.accept(getElement));
           }
           if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EEMC, goal.element);
+            throw new ValidationException(GOALNAME_EEMC, goal.accept(getElement));
           }
-          throw new ValidationException(GOALNAME_EEMM, goal.element);
+          throw new ValidationException(GOALNAME_EEMM, goal.accept(getElement));
         } else if (isNullOrEmpty(otherName)) {
           if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NECC, goal.element);
+            throw new ValidationException(GOALNAME_NECC, goal.accept(getElement));
           }
           if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NEMC, goal.element);
+            throw new ValidationException(GOALNAME_NEMC, goal.accept(getElement));
           }
-          throw new ValidationException(GOALNAME_NEMM, goal.element);
+          throw new ValidationException(GOALNAME_NEMM, goal.accept(getElement));
         }
-        throw new ValidationException(GOALNAME_NN, goal.element);
+        throw new ValidationException(GOALNAME_NN, goal.accept(getElement));
       }
     }
   }
@@ -243,11 +248,9 @@ final class Analyser {
   }
 
   static abstract class GoalElement extends AbstractGoalElement {
-    final Element element;
     final Goal goalAnnotation;
     final String name;
-    GoalElement(Element element, Goal goalAnnotation, String name) {
-      this.element = checkNotNull(element, "element");
+    GoalElement(Goal goalAnnotation, String name) {
       this.goalAnnotation = checkNotNull(goalAnnotation, "goalAnnotation");
       this.name = checkNotNull(name, "name");
     }
@@ -258,7 +261,7 @@ final class Analyser {
     final TypeName goalType;
     final ExecutableElement executableElement;
     ExecutableGoal(ExecutableElement element, GoalKind kind, TypeName goalType, String name) {
-      super(element, element.getAnnotation(Goal.class), name);
+      super(element.getAnnotation(Goal.class), name);
       this.goalType = goalType;
       this.kind = kind;
       this.executableElement = element;
@@ -280,19 +283,24 @@ final class Analyser {
 
   static final class BeanGoal extends GoalElement {
     final ClassName goalType;
-    final TypeElement typeElement;
-    private BeanGoal(Element field, ClassName goalType, String name, TypeElement beanType) {
-      super(beanType, field.getAnnotation(Goal.class), name);
+    final TypeElement beanTypeElement;
+    private BeanGoal(Element field, ClassName goalType, String name, TypeElement beanTypeElement) {
+      super(field.getAnnotation(Goal.class), name);
       this.goalType = goalType;
-      this.typeElement = beanType;
+      this.beanTypeElement = beanTypeElement;
     }
-    private static GoalElement create(VariableElement field) {
-      ClassName goalType = (ClassName) ClassName.get(field.asType());
+    private static GoalElement create(VariableElement field) throws ValidationException {
+      TypeName typeName = ClassName.get(field.asType());
+      if (!(typeName instanceof ClassName)) {
+        throw new ValidationException(NOT_A_BEAN, field);
+      }
+      @SuppressWarnings("unchecked")
+      ClassName goalType = (ClassName) typeName;
       String name = goalName(field.getAnnotation(Goal.class), goalType);
       return new BeanGoal(field, goalType, name, asTypeElement(field.asType()));
     }
-    private static GoalElement create(TypeElement beanType) {
-      ClassName goalType = (ClassName) ClassName.get(beanType.asType());
+    private static GoalElement create(TypeElement beanType) throws ValidationException {
+      ClassName goalType = ClassName.get(beanType);
       String name = goalName(beanType.getAnnotation(Goal.class), goalType);
       return new BeanGoal(beanType, goalType, name, beanType);
     }
@@ -300,4 +308,15 @@ final class Analyser {
       return goalElementCases.field(this);
     }
   }
+
+  static final GoalElementCases<Element> getElement = new GoalElementCases<Element>() {
+    @Override
+    public Element executable(ExecutableGoal executableGoal) throws ValidationException {
+      return executableGoal.executableElement;
+    }
+    @Override
+    public Element field(BeanGoal beanGoal) throws ValidationException {
+      return beanGoal.beanTypeElement;
+    }
+  };
 }
