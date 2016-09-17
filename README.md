@@ -150,7 +150,7 @@ The maven coordinates:
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
-    <version>1.211</version>
+    <version>1.301</version>
     <scope>provided</scope>
 </dependency>
 ````

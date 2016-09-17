@@ -5,3 +5,8 @@
 ### 2016-09-14 zerobuilder 1.211 released
 
 * added build option, default is true
+
+### 2016-09-17 zerobuilder 1.301 released
+
+* beans: support for setterless collections
+* beans: default step order is now alphabetic (breaking) 
