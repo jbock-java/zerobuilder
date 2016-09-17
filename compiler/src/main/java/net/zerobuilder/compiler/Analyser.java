@@ -251,9 +251,6 @@ final class Analyser {
       this.goalAnnotation = checkNotNull(goalAnnotation, "goalAnnotation");
       this.name = checkNotNull(name, "name");
     }
-    GoalElement(Element element, String name) {
-      this(element, element.getAnnotation(Goal.class), name);
-    }
   }
 
   static final class ExecutableGoal extends GoalElement {
@@ -261,7 +258,7 @@ final class Analyser {
     final TypeName goalType;
     final ExecutableElement executableElement;
     ExecutableGoal(ExecutableElement element, GoalKind kind, TypeName goalType, String name) {
-      super(element, name);
+      super(element, element.getAnnotation(Goal.class), name);
       this.goalType = goalType;
       this.kind = kind;
       this.executableElement = element;
@@ -285,7 +282,7 @@ final class Analyser {
     final ClassName goalType;
     final TypeElement typeElement;
     private BeanGoal(Element field, ClassName goalType, String name, TypeElement beanType) {
-      super(field, field.getAnnotation(Goal.class), name);
+      super(beanType, field.getAnnotation(Goal.class), name);
       this.goalType = goalType;
       this.typeElement = beanType;
     }
