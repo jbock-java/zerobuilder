@@ -3,7 +3,7 @@
 ### Why?
 
 Immutable types, also known as values, are gaining in popularity.
-Their constructors tend to have a lot of arguments, which leads to code that's hard to read.
+Their constructors tend to have a lot of arguments, which can lead to code that's hard to read.
 
 Replacing the constructor with a classic builder pattern improves things, but it comes at a price:
 
