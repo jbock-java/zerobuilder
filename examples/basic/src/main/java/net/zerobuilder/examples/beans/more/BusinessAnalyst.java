@@ -12,9 +12,7 @@ public class BusinessAnalyst {
 
   private String name;
   private int age;
-
   private List<String> notes;
-
   private boolean isExecutive;
 
   public String getName() {
