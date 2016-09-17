@@ -8,10 +8,12 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
+import net.zerobuilder.compiler.ProjectionValidator.TmpValidParameter.AccessorPairTmpValidParameter;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.AccessorPair;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.Parameter;
 
@@ -26,6 +28,7 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
@@ -58,6 +61,14 @@ import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class ProjectionValidator {
+
+  private static final Ordering<AccessorPairTmpValidParameter> ACCESSOR_PAIR_ORDERING
+      = Ordering.from(new Comparator<AccessorPairTmpValidParameter>() {
+    @Override
+    public int compare(AccessorPairTmpValidParameter pair0, AccessorPairTmpValidParameter pair1) {
+      return pair0.accessorPair.name.compareTo(pair1.accessorPair.name);
+    }
+  });
 
   private final Elements elements;
 
@@ -145,7 +156,7 @@ final class ProjectionValidator {
           }
         })
         .toList();
-    ImmutableList.Builder<TmpValidParameter.AccessorPairTmpValidParameter> builder = ImmutableList.builder();
+    ImmutableList.Builder<AccessorPairTmpValidParameter> builder = ImmutableList.builder();
     for (ExecutableElement getter : getters) {
       String name = getter.getSimpleName().toString();
       String setterName = name.substring(name.startsWith("get") ? 3 : 2);
@@ -157,17 +168,17 @@ final class ProjectionValidator {
         if (!getter.getThrownTypes().isEmpty()) {
           throw new ValidationException(GETTER_EXCEPTION, getter);
         }
-        builder.add(TmpValidParameter.AccessorPairTmpValidParameter.create(getter, Optional.<ClassName>absent()));
+        builder.add(AccessorPairTmpValidParameter.create(getter, Optional.<ClassName>absent()));
       } else if (isCollection(getter.getReturnType())) {
         ImmutableSet<TypeElement> referenced = MoreTypes.referencedTypes(getter.getReturnType());
         if (referenced.size() == 1) {
-          builder.add(TmpValidParameter.AccessorPairTmpValidParameter.create(getter, Optional.of(ClassName.get(Object.class))));
+          builder.add(AccessorPairTmpValidParameter.create(getter, Optional.of(ClassName.get(Object.class))));
         } else if (referenced.size() == 2) {
           boolean found = false;
           for (TypeElement element : referenced) {
             if (!isCollection(element.asType())) {
               ClassName generic = ClassName.get(element);
-              builder.add(TmpValidParameter.AccessorPairTmpValidParameter.create(getter, Optional.of(generic)));
+              builder.add(AccessorPairTmpValidParameter.create(getter, Optional.of(generic)));
               found = true;
             }
           }
@@ -181,9 +192,11 @@ final class ProjectionValidator {
         throw new ValidationException(COULD_NOT_FIND_SETTER, getter);
       }
     }
-    ImmutableList<TmpValidParameter.AccessorPairTmpValidParameter> shuffled = shuffledParameters(builder.build());
+    ImmutableList<AccessorPairTmpValidParameter> parameters = ACCESSOR_PAIR_ORDERING.immutableSortedCopy(builder.build());
+    ImmutableList<AccessorPairTmpValidParameter> shuffled = shuffledParameters(
+        parameters);
     return new ValidationResult.BeanValidationResult(goal,
-        FluentIterable.from(shuffled).transform(TmpValidParameter.AccessorPairTmpValidParameter.toValidParameter).toList());
+        FluentIterable.from(shuffled).transform(AccessorPairTmpValidParameter.toValidParameter).toList());
   }
 
   private static boolean isCollection(TypeMirror typeMirror) {
@@ -338,7 +351,7 @@ final class ProjectionValidator {
       }
     }
 
-    private static final class AccessorPairTmpValidParameter extends TmpValidParameter {
+    static final class AccessorPairTmpValidParameter extends TmpValidParameter {
       private final AccessorPair accessorPair;
       private AccessorPairTmpValidParameter(Element element, Optional<Step> annotation, AccessorPair accessorPair) {
         super(element, annotation);

@@ -22,8 +22,8 @@ public class BeansTest {
   public void testEmployee() {
     Employee employee = employeeBuilder()
         .id(4711)
-        .salary(60 * 1000)
-        .name("Herbert");
+        .name("Herbert")
+        .salary(60 * 1000);
     assertThat(employee.getId(), is(4711));
     assertThat(employee.getName(), is("Herbert"));
     assertThat(employee.getSalary(), is(60 * 1000));
@@ -65,9 +65,9 @@ public class BeansTest {
   @Test
   public void testMyCalendar() {
     MyCalendar calendar = calendarBuilder()
-        .unixTime(987128376)
+        .currentYear("2015")
         .dst(true)
-        .currentYear("2015");
+        .unixTime(987128376);
     MyCalendar updatedCalendar = calendarToBuilder(calendar)
         .unixTime(987128377)
         .dst(false)

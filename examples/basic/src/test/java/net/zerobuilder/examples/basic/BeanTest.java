@@ -12,10 +12,10 @@ public class BeanTest {
   @Test
   public void testBean() throws Exception {
     Bean bean = beanBuilder()
-        .variety("MyBean")
         .height(12)
-        .width(10)
-        .length(11);
+        .length(11)
+        .variety("MyBean")
+        .width(10);
     Bean otherBean = beanToBuilder(bean)
         .variety("YourBean")
         .height(180)

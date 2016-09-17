@@ -14,8 +14,8 @@ public class BusinessAnalystTest {
   @Test
   public void testToBuilder() throws Exception {
     BusinessAnalyst peter = businessAnalystBuilder()
-        .name("Peter")
         .age(36)
+        .name("Peter")
         .strings(Arrays.asList("entry"));
     peter.setName("Peter");
     peter.setAge(36);
