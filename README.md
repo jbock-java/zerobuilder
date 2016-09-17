@@ -8,6 +8,18 @@ This project has two different use cases:
   so that they can be used with confidence as data in Java 8 streams.
   See the [documentation for beans](beans.md).
 
+### Use it in your project
+
+This is a standard annotation processor, compatible with Java 7 and higher.
+No compiler plugin or special IDE is needed.
+However, maven compiler plugin version `3.5.1` or greater is recommended.
+
+Your IDE may need some initial help, to recognize that `target/generated-sources/annotations`
+now contains generated sources.
+
+<em>Tip for intellij users:</em> If you do a `mvn install` before opening one of the example projects,
+intellij will recognize `target/generated-sources/annotations` automatically.
+
 ### Maven
 
 ````xml
