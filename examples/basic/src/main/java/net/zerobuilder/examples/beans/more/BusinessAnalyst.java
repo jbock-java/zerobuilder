@@ -6,8 +6,9 @@ import net.zerobuilder.Goal;
 import java.util.ArrayList;
 import java.util.List;
 
-@Builders
-@Goal(toBuilder = true)
+// see BusinessAnalystTest
+@Builders(recycle = true)
+@Goal(builder = true, toBuilder = true)
 public class BusinessAnalyst {
 
   private String name;
