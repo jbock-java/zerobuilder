@@ -55,6 +55,7 @@ If zerobuilder is in the classpath, a class `BusinessAnalystBuilders` will be ge
 This class has two static methods that can be used to create and "update" instances of `BusinessAnalystBuilder`.
 
 ````java
+@Generated
 public final class BusinessAnalystBuilders {
   public static BusinessAnalystBuilder.Age businessAnalystBuilder() { ... }
   public static BusinessAnalystUpdater businessAnalystToBuilder(BusinessAnalyst businessAnalyst) { ... }
