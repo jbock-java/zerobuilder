@@ -10,3 +10,7 @@
 
 * beans: support for setterless collections
 * beans: default step order is now alphabetic (breaking) 
+
+### 2016-09-18 zerobuilder 1.311 released
+
+* remove field goal option (breaking)
