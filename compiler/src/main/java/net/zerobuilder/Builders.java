@@ -13,11 +13,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * The generated builders' job will be to invoke those methods or constructors
  * which carry the {@link Goal} annotation. These &quot;goals&quot; may not be {@code private}.
  * </p><p>
- * If the {@link Goal} annotation is present on a non-static method,
- * the generated {@code static someGoalBuilder} method will take a parameter of type {@code MyObject}.
- * </p><p>
- * A goal method may return anything, including {@code void}.
- * </p><p>
  * When the {@code recycle} flag is set to {@code true},
  * the generated code will cache builder instances in a {@link ThreadLocal}.
  * </p>

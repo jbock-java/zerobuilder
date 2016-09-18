@@ -11,28 +11,23 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * <p>
- * Marks this method, constructor or field as a build goal.
- * It is an error if the enclosing type doesn't carry the {@link Builders} annotation.
+ * Marks this method, constructor or class as a build goal.
  * </p><p>
  * If this annotation appears on a constructor or field, then the annotated element may not be {@code private}.
- * If it appears on a field, the following rules apply:
+ * </p><p>
+ * If this annotation is present on a non-static method,
+ * the generated {@code static someGoalBuilder} method will take a parameter of type {@code MyObject}.
+ * </p><p>
+ * If this annotation appears on a class, it marks the class as a bean goal.
+ * In this case, the class must also have the {@link Builders} annotation.
+ * It must also have public accessor pairs and a public default constructor.
  * </p>
- * <ul><li>
- * The <em>type</em> of the field is marked as a build goal. The field <em>value</em> is not considered and may be {@code null}.
- * </li><li>
- * The field may or may not have any modifiers, including {@code static}, {@code final} and {@code private}.
- * </li><li>
- * There will be one generated step for each <em>setter</em> of the target type.
- * </li><li>
- * The target type must have a public no-argument constructor.
- * </li></ul>
- * If this annotation appears on a type, it has the same effect as putting it on a field of that type.
  *
  * @see Builders
  * @see Step
  */
 @Retention(SOURCE)
-@Target({METHOD, CONSTRUCTOR, FIELD, TYPE})
+@Target({METHOD, CONSTRUCTOR, TYPE})
 public @interface Goal {
 
   /**
@@ -41,7 +36,7 @@ public @interface Goal {
    * This is necessary if there are multiple goals that would normally have the same name.
    * </p><p>
    * By default, a method goal is named by its return type,
-   * a constructor by its enclosing class, and a field goal by its type.
+   * a constructor by the type it creates, and a "bean" goal by the bean class.
    * It is an error if two goals have the same name.
    * </p>
    *
@@ -62,10 +57,8 @@ public @interface Goal {
   boolean toBuilder() default false;
 
   /**
-   * <p>Set to {@code false} if no builder should be generated.
-   * </p><p>
-   * <em>Note: if</em> {@link #toBuilder} <em>is also</em> {@code false}<em>, then nothing will be generated for this goal.</em>
-   * </p>
+   * <p>Set to {@code false} if no {@code static builder} method
+   * should be generated for this goal.</p>
    *
    * @return builder flag, defaults to {@code true}
    */

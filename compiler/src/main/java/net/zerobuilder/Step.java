@@ -11,7 +11,8 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * <p>
  * An optional annotation on {@link Goal} parameters.
  * </p><p>
- * In the case of a <em>field</em> goal, this annotation goes on the <em>setters</em> of the target type.
+ * In the case of a bean goal, this annotation goes on the getters of the target type.
+ * By default, bean steps are in alphabetic order.
  * </p>
  *
  * @see Goal
