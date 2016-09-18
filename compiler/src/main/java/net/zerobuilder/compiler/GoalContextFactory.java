@@ -21,7 +21,7 @@ final class GoalContextFactory {
                              final CodeBlock goalCall) throws ValidationException {
     return validationResult.accept(new ProjectionValidator.ValidationResult.ValidationResultCases<GoalContext>() {
       @Override
-      GoalContext regularGoal(Analyser.ExecutableGoal goal, ImmutableList<ValidParameter.Parameter> validParameters) {
+      GoalContext executableGoal(Analyser.ExecutableGoal goal, ImmutableList<ValidParameter.Parameter> validParameters) {
         ClassName contractName = config.generatedType.nestedClass(upcase(goal.name + "Builder"));
         ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
         ImmutableList<ParameterContext.RegularParameterContext> parameters = parameters(contractName, goal.goalType, validParameters, thrownTypes);
@@ -38,7 +38,7 @@ final class GoalContextFactory {
             goalCall);
       }
       @Override
-      GoalContext fieldGoal(Analyser.BeanGoal beanGoal, ImmutableList<ValidParameter.AccessorPair> accessorPairs) {
+      GoalContext beanGoal(Analyser.BeanGoal beanGoal, ImmutableList<ValidParameter.AccessorPair> accessorPairs) {
         ClassName contractName = config.generatedType.nestedClass(upcase(beanGoal.name + "Builder"));
         ImmutableList<ParameterContext.BeansParameterContext> parameters = beanParameters(contractName, beanGoal.goalType, accessorPairs);
         return new GoalContext.FieldGoalContext(
@@ -80,7 +80,7 @@ final class GoalContextFactory {
     return builder.build().reverse();
   }
 
-  // field goals don't have a kind
+  // beanGoal goals don't have a kind
   enum GoalKind {
     CONSTRUCTOR, STATIC_METHOD, INSTANCE_METHOD
   }

@@ -84,7 +84,7 @@ final class Messages {
         = "Getter/setter type mismatch";
 
     static final String BAD_GENERICS
-        = "Can't understand the generics of this field";
+        = "Can't understand the generics of this beanGoal";
 
     static final String COULD_NOT_FIND_SETTER
         = "Could not find setter";

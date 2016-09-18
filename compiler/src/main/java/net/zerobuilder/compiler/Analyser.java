@@ -22,14 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.google.auto.common.MoreElements.asExecutable;
-import static com.google.auto.common.MoreElements.asVariable;
-import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Iterables.getLast;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
-import static javax.lang.model.element.ElementKind.FIELD;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -45,7 +42,6 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_A_BEAN;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
@@ -155,9 +151,6 @@ final class Analyser {
             throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
           }
           builder.add(ExecutableGoal.create(executableElement));
-        } else if (kind == FIELD) {
-          VariableElement field = asVariable(element);
-          builder.add(BeanGoal.create(field));
         }
       }
     }
@@ -198,7 +191,7 @@ final class Analyser {
                                           final ClassName annotatedType) throws ValidationException {
     return goal.accept(new GoalElementCases<CodeBlock>() {
       @Override
-      public CodeBlock executable(ExecutableGoal goal) throws ValidationException {
+      public CodeBlock executableGoal(ExecutableGoal goal) throws ValidationException {
         CodeBlock parameters = goalParameters(goal.executableElement);
         String method = goal.executableElement.getSimpleName().toString();
         String returnLiteral = TypeName.VOID.equals(goal.goalType) ? "" : "return ";
@@ -221,7 +214,7 @@ final class Analyser {
         }
       }
       @Override
-      public CodeBlock field(BeanGoal goal) throws ValidationException {
+      public CodeBlock beanGoal(BeanGoal goal) throws ValidationException {
         return CodeBlock.builder()
             .addStatement("return $L", downcase(goal.goalType.simpleName()))
             .build();
@@ -241,8 +234,8 @@ final class Analyser {
 
   static abstract class AbstractGoalElement {
     interface GoalElementCases<R> {
-      R executable(ExecutableGoal executableGoal) throws ValidationException;
-      R field(BeanGoal beanGoal) throws ValidationException;
+      R executableGoal(ExecutableGoal executableGoal) throws ValidationException;
+      R beanGoal(BeanGoal beanGoal) throws ValidationException;
     }
     abstract <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException;
   }
@@ -277,7 +270,7 @@ final class Analyser {
 
     }
     <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
-      return goalElementCases.executable(this);
+      return goalElementCases.executableGoal(this);
     }
   }
 
@@ -289,33 +282,23 @@ final class Analyser {
       this.goalType = goalType;
       this.beanTypeElement = beanTypeElement;
     }
-    private static GoalElement create(VariableElement field) throws ValidationException {
-      TypeName typeName = ClassName.get(field.asType());
-      if (!(typeName instanceof ClassName)) {
-        throw new ValidationException(NOT_A_BEAN, field);
-      }
-      @SuppressWarnings("unchecked")
-      ClassName goalType = (ClassName) typeName;
-      String name = goalName(field.getAnnotation(Goal.class), goalType);
-      return new BeanGoal(field, goalType, name, asTypeElement(field.asType()));
-    }
     private static GoalElement create(TypeElement beanType) throws ValidationException {
       ClassName goalType = ClassName.get(beanType);
       String name = goalName(beanType.getAnnotation(Goal.class), goalType);
       return new BeanGoal(beanType, goalType, name, beanType);
     }
     <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
-      return goalElementCases.field(this);
+      return goalElementCases.beanGoal(this);
     }
   }
 
   static final GoalElementCases<Element> getElement = new GoalElementCases<Element>() {
     @Override
-    public Element executable(ExecutableGoal executableGoal) throws ValidationException {
+    public Element executableGoal(ExecutableGoal executableGoal) throws ValidationException {
       return executableGoal.executableElement;
     }
     @Override
-    public Element field(BeanGoal beanGoal) throws ValidationException {
+    public Element beanGoal(BeanGoal beanGoal) throws ValidationException {
       return beanGoal.beanTypeElement;
     }
   };

@@ -13,14 +13,14 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * <p>
  * Marks this method, constructor or class as a build goal.
  * </p><p>
- * If this annotation appears on a constructor or field, then the annotated element may not be {@code private}.
+ * An annotated constructor or method may not be {@code private}.
  * </p><p>
  * If this annotation is present on a non-static method,
  * the generated {@code static someGoalBuilder} method will take a parameter of type {@code MyObject}.
  * </p><p>
  * If this annotation appears on a class, it marks the class as a bean goal.
  * In this case, the class must also have the {@link Builders} annotation.
- * It must also have public accessor pairs and a public default constructor.
+ * It must have public accessor pairs and a public default constructor.
  * </p>
  *
  * @see Builders
@@ -48,7 +48,7 @@ public @interface Goal {
    * <p>If {@code true}, declares that a {@code static toBuilder} method
    * should be generated for this goal.
    * </p><p>
-   * In this case, the goal may be a constructor, field or static method,
+   * In this case, the goal may be a constructor, beanGoal or static method,
    * but not an instance method.
    * </p>
    *

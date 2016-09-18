@@ -74,7 +74,7 @@ final class ProjectionValidator {
 
   final GoalElementCases<ValidationResult> validate = new GoalElementCases<ValidationResult>() {
     @Override
-    public ValidationResult executable(Analyser.ExecutableGoal goal) throws ValidationException {
+    public ValidationResult executableGoal(Analyser.ExecutableGoal goal) throws ValidationException {
       TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
       ImmutableMap<String, ExecutableElement> methods = FluentIterable.from(getLocalAndInheritedMethods(type, elements))
           .filter(new Predicate<ExecutableElement>() {
@@ -134,7 +134,7 @@ final class ProjectionValidator {
           FluentIterable.from(shuffled).transform(TmpValidParameter.RegularTmpValidParameter.toValidParameter).toList());
     }
     @Override
-    public ValidationResult field(Analyser.BeanGoal goal) throws ValidationException {
+    public ValidationResult beanGoal(Analyser.BeanGoal goal) throws ValidationException {
       return validateBean(goal);
     }
   };
@@ -221,7 +221,7 @@ final class ProjectionValidator {
 
   static final GoalElementCases<ValidationResult> skip = new GoalElementCases<ValidationResult>() {
     @Override
-    public ValidationResult executable(Analyser.ExecutableGoal goal) throws ValidationException {
+    public ValidationResult executableGoal(Analyser.ExecutableGoal goal) throws ValidationException {
       ImmutableList.Builder<TmpValidParameter.RegularTmpValidParameter> builder = ImmutableList.builder();
       for (VariableElement parameter : goal.executableElement.getParameters()) {
         builder.add(TmpValidParameter.RegularTmpValidParameter.create(parameter, Optional.<String>absent()));
@@ -231,7 +231,7 @@ final class ProjectionValidator {
           FluentIterable.from(shuffled).transform(TmpValidParameter.RegularTmpValidParameter.toValidParameter).toList());
     }
     @Override
-    public ValidationResult field(Analyser.BeanGoal goal) throws ValidationException {
+    public ValidationResult beanGoal(Analyser.BeanGoal goal) throws ValidationException {
       return validateBean(goal);
     }
   };
@@ -417,8 +417,8 @@ final class ProjectionValidator {
 
   static abstract class ValidationResult {
     static abstract class ValidationResultCases<R> {
-      abstract R regularGoal(Analyser.ExecutableGoal goal, ImmutableList<Parameter> parameters);
-      abstract R fieldGoal(Analyser.BeanGoal beanGoal, ImmutableList<AccessorPair> accessorPairs);
+      abstract R executableGoal(Analyser.ExecutableGoal goal, ImmutableList<Parameter> parameters);
+      abstract R beanGoal(Analyser.BeanGoal beanGoal, ImmutableList<AccessorPair> accessorPairs);
     }
     abstract <R> R accept(ValidationResultCases<R> cases);
     static final class RegularValidationResult extends ValidationResult {
@@ -430,7 +430,7 @@ final class ProjectionValidator {
       }
       @Override
       <R> R accept(ValidationResultCases<R> cases) {
-        return cases.regularGoal(goal, parameters);
+        return cases.executableGoal(goal, parameters);
       }
     }
 
@@ -443,7 +443,7 @@ final class ProjectionValidator {
       }
       @Override
       <R> R accept(ValidationResultCases<R> cases) {
-        return cases.fieldGoal(goal, accessorPairs);
+        return cases.beanGoal(goal, accessorPairs);
       }
     }
   }
