@@ -9,10 +9,10 @@ Replacing the constructor with a classic builder pattern improves things, but it
 
 * Creating and maintaining the builder class involves lots of boilerplate and repetition.
 * It is now possible to "forget" a constructor argument. 
-  This is especially a problem when existing code still compiles after the constructor gets an extra argument.
+  This is especially a problem when existing code still compiles after an argument is added to the constructor.
 
-Zerobuilder generates the builder pattern for you, so there's no boilerplate,
-and the generated code is updated instantly when the constructor changes.
+Zerobuilder takes care of the boilerplate by generating the builder pattern for you.
+The generated code is updated instantly when the constructor changes.
 
 Moreover, a slightly more elaborate variant of the builder pattern is generated,
 which makes it a compile error to not specify one of the constructor arguments.
@@ -83,7 +83,7 @@ Let's take a closer look at the generated code:
 * Each step interface has a single method.
   None of these methods returns the same step. It is a linear chain that leads to the goal type `Message`.
 
-### Fixed order of steps
+### Order of steps
 
 Just like the arguments of a method or constructor, the goal "steps" have a fixed order.
 By default, they are in the original order of the goal arguments.
