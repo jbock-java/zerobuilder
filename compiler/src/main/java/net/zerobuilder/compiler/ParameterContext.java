@@ -6,12 +6,14 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.AccessorPair;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.Parameter;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
+import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
@@ -93,22 +95,25 @@ abstract class ParameterContext {
     @Override
     TypeSpec beansParameter(ClassName typeName, TypeName returnType, AccessorPair parameter) {
       String name = parameter.name;
-      if (parameter.collectionType.isPresent()) {
-        ClassName collectionType = parameter.collectionType.get();
-        ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class), collectionType);
-        return interfaceBuilder(typeName)
+      if (parameter.collectionType.type.isPresent()) {
+        TypeName collectionType = parameter.collectionType.type.get();
+        ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
+            subtypeOf(collectionType));
+        TypeSpec.Builder builder = interfaceBuilder(typeName)
+            .addModifiers(PUBLIC)
             .addMethod(methodBuilder(name)
                 .returns(returnType)
                 .addParameter(parameterSpec(iterable, name))
                 .addModifiers(PUBLIC, ABSTRACT)
-                .build())
-            .addMethod(methodBuilder(name)
-                .returns(returnType)
-                .addParameter(parameterSpec(collectionType, name))
-                .addModifiers(PUBLIC, ABSTRACT)
-                .build())
-            .addModifiers(PUBLIC)
-            .build();
+                .build());
+        if (parameter.collectionType.allowShortcut) {
+          builder.addMethod(methodBuilder(name)
+              .returns(returnType)
+              .addParameter(parameterSpec(collectionType, name))
+              .addModifiers(PUBLIC, ABSTRACT)
+              .build());
+        }
+        return builder.build();
       } else {
         return regularStepInterface(typeName, returnType, parameter, ImmutableList.<TypeName>of());
       }

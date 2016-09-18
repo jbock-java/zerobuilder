@@ -8,6 +8,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
 import net.zerobuilder.compiler.GoalContext.GoalCases;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
 import net.zerobuilder.compiler.ParameterContext.BeansParameterContext;
@@ -17,6 +18,7 @@ import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -77,9 +79,11 @@ final class StepsContext {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       CodeBlock finalBlock = CodeBlock.builder().addStatement("return this").build();
       for (BeansParameterContext parameter : parameters.subList(0, parameters.size() - 1)) {
-        if (parameter.parameter.collectionType.isPresent()) {
+        if (parameter.parameter.collectionType.type.isPresent()) {
           builder.add(beanCollectionMethod(parameter, goalType, finalBlock));
-          builder.add(beanSingleInstanceMethod(parameter, goalType, finalBlock));
+          if (parameter.parameter.collectionType.allowShortcut) {
+            builder.add(beanSingleInstanceMethod(parameter, goalType, finalBlock));
+          }
         } else {
           builder.add(beanRegularMethod(parameter, goalType, finalBlock));
         }
@@ -100,10 +104,12 @@ final class StepsContext {
     @Override
     ImmutableList<MethodSpec> fieldGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
       BeansParameterContext parameter = getLast(parameters);
-      if (parameter.parameter.collectionType.isPresent()) {
+      if (parameter.parameter.collectionType.type.isPresent()) {
         ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
         builder.add(beanCollectionMethod(parameter, goalType, goal.goalCall));
-        builder.add(beanSingleInstanceMethod(parameter, goalType, goal.goalCall));
+        if (parameter.parameter.collectionType.allowShortcut) {
+          builder.add(beanSingleInstanceMethod(parameter, goalType, goal.goalCall));
+        }
         return builder.build();
       } else {
         return ImmutableList.of(beanRegularMethod(parameter, goalType, goal.goalCall));
@@ -137,9 +143,10 @@ final class StepsContext {
 
   private static MethodSpec beanCollectionMethod(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
     String name = parameter.parameter.name;
-    ClassName collectionType = parameter.parameter.collectionType.get();
-    String iterationVarName = downcase(collectionType.simpleName());
-    ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class), collectionType);
+    TypeName collectionType = parameter.parameter.collectionType.type.get();
+    String iterationVarName = "v";
+    ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
+        subtypeOf(collectionType));
     return methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(parameter.typeNextStep)
@@ -157,7 +164,7 @@ final class StepsContext {
 
   private static MethodSpec beanSingleInstanceMethod(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
     String name = parameter.parameter.name;
-    ClassName collectionType = parameter.parameter.collectionType.get();
+    TypeName collectionType = parameter.parameter.collectionType.type.get();
     return methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(parameter.typeNextStep)

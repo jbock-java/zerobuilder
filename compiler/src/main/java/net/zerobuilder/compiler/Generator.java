@@ -213,12 +213,12 @@ final class Generator {
       builder.addStatement("$N.$N = new $T()", updater, instance, goalType);
       for (BeansParameterContext parameter : parameters) {
         String parameterName = upcase(parameter.parameter.name);
-        Optional<ClassName> setterlessCollection = parameter.parameter.collectionType;
-        if (setterlessCollection.isPresent()) {
-          String iterationVarName = downcase(setterlessCollection.get().simpleName());
+        if (parameter.parameter.collectionType.type.isPresent()) {
+          TypeName collectionType = parameter.parameter.collectionType.type.get();
+          String iterationVarName = "v";
           builder
               .beginControlFlow("for ($T $N : $N.$N())",
-                  setterlessCollection.get(), iterationVarName, instance, parameter.parameter.projectionMethodName)
+                  collectionType, iterationVarName, instance, parameter.parameter.projectionMethodName)
               .addStatement("$N.$N.$N().add($N)", updater,
                   downcase(goalType.simpleName()),
                   parameter.parameter.projectionMethodName,

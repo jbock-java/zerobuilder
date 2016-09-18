@@ -83,6 +83,9 @@ final class Messages {
     static final String BAD_GENERICS
         = "Can't understand the generics of this beanGoal";
 
+    static final String RAW_COLLECTION
+        = "Raw collection is currently not supported";
+
     static final String COULD_NOT_FIND_SETTER
         = "Could not find setter";
 

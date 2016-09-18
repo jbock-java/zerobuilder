@@ -8,6 +8,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
 import net.zerobuilder.compiler.GoalContext.GoalCases;
 import net.zerobuilder.compiler.GoalContext.GoalFunction;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
@@ -17,6 +18,7 @@ import net.zerobuilder.compiler.ParameterContext.RegularParameterContext;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -87,33 +89,35 @@ final class UpdaterContext {
       for (BeansParameterContext parameter : parameters) {
         String name = parameter.parameter.name;
         TypeName type = parameter.parameter.type;
-        Optional<ClassName> setterlessCollection = parameter.parameter.collectionType;
-        if (setterlessCollection.isPresent()) {
-          ClassName collectionType = parameter.parameter.collectionType.get();
-          ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class), collectionType);
-          String iterationVarName = downcase(setterlessCollection.get().simpleName());
+        if (parameter.parameter.collectionType.type.isPresent()) {
+          TypeName collectionType = parameter.parameter.collectionType.type.get();
+          ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
+              subtypeOf(collectionType));
+          String iterationVarName = "v";
           builder.add(methodBuilder(name)
               .returns(goal.accept(typeName))
               .addParameter(parameterSpec(iterable, name))
               .addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
                   parameter.parameter.projectionMethodName)
-              .beginControlFlow("for ($T $N : $N)", setterlessCollection.get(), iterationVarName, name)
+              .beginControlFlow("for ($T $N : $N)", collectionType, iterationVarName, name)
               .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
                   parameter.parameter.projectionMethodName, iterationVarName)
               .endControlFlow()
               .addStatement("return this")
               .addModifiers(PUBLIC)
               .build());
-          builder.add(methodBuilder(name)
-              .returns(goal.accept(typeName))
-              .addParameter(parameterSpec(collectionType, name))
-              .addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
-                  parameter.parameter.projectionMethodName)
-              .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
-                  parameter.parameter.projectionMethodName, name)
-              .addStatement("return this")
-              .addModifiers(PUBLIC)
-              .build());
+          if (parameter.parameter.collectionType.allowShortcut) {
+            builder.add(methodBuilder(name)
+                .returns(goal.accept(typeName))
+                .addParameter(parameterSpec(collectionType, name))
+                .addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
+                    parameter.parameter.projectionMethodName)
+                .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
+                    parameter.parameter.projectionMethodName, name)
+                .addStatement("return this")
+                .addModifiers(PUBLIC)
+                .build());
+          }
         } else {
           builder.add(methodBuilder(name)
               .returns(goal.accept(typeName))

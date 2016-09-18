@@ -6,9 +6,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
@@ -31,10 +31,11 @@ import java.util.Comparator;
 import java.util.List;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
+import static com.google.auto.common.MoreTypes.asDeclared;
 import static com.google.auto.common.MoreTypes.asTypeElement;
-import static com.google.auto.common.MoreTypes.referencedTypes;
 import static com.google.common.base.Ascii.isUpperCase;
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static java.util.Collections.nCopies;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -164,33 +165,30 @@ final class ProjectionValidator {
         if (!getter.getThrownTypes().isEmpty()) {
           throw new ValidationException(GETTER_EXCEPTION, getter);
         }
-        builder.add(AccessorPairTmpValidParameter.create(getter, Optional.<ClassName>absent()));
-      } else if (isCollection(getter.getReturnType())) {
+        builder.add(AccessorPairTmpValidParameter.create(getter, CollectionType.absent));
+      } else if (isImplementationOf(getter.getReturnType(), ClassName.get(Collection.class))) {
         // no setter but we have a getter that returns something like List<E>
-        // in this case we need to find what E is ("collectionType"); is referencedTypes the correct way?
-        ImmutableSet<TypeElement> referenced = referencedTypes(getter.getReturnType());
-        if (referenced.size() == 1) {
-          // raw collection type
-          builder.add(AccessorPairTmpValidParameter.create(getter, Optional.of(ClassName.get(Object.class))));
-        } else {
-          if (referenced.size() == 2) {
-            boolean found = false;
-            for (TypeElement element : referenced) {
-              if (!isCollection(element.asType())) {
-                // if it's not a collection, it should be the E we're looking for
-                ClassName collectionType = ClassName.get(element);
-                builder.add(AccessorPairTmpValidParameter.create(getter, Optional.of(collectionType)));
-                found = true;
-              }
-            }
-            if (!found) {
-              throw new ValidationException(BAD_GENERICS, getter);
-            }
+        // in this case we need to find what E is ("collectionType")
+        List<? extends TypeMirror> referenced = asDeclared(getter.getReturnType()).getTypeArguments();
+        if (referenced.isEmpty()) {
+          // raw collection
+          ClassName collectionType = ClassName.get(Object.class);
+          builder.add(AccessorPairTmpValidParameter.create(getter, CollectionType.of(collectionType, false)));
+        } else if (referenced.size() == 1) {
+          // one type parameter
+          TypeMirror parameter = getOnlyElement(referenced);
+          boolean allowShortcut = !ClassName.get(asTypeElement(parameter)).equals(Iterable.class);
+          List<? extends TypeMirror> typeArguments = asDeclared(parameter).getTypeArguments();
+          if (typeArguments.isEmpty()) {
+            TypeName collectionType = ClassName.get(parameter);
+            builder.add(AccessorPairTmpValidParameter.create(getter, CollectionType.of(collectionType, allowShortcut)));
           } else {
-            // referencedTypes has returned a set with more than 2 elements;
-            // we don't know how to handle this (yet)
-            throw new ValidationException(BAD_GENERICS, getter);
+            TypeName collectionType = ParameterizedTypeName.get(parameter);
+            builder.add(AccessorPairTmpValidParameter.create(getter, CollectionType.of(collectionType, allowShortcut)));
           }
+        } else {
+          // unlikely: Collection should not have more than one type parameter
+          throw new ValidationException(BAD_GENERICS, getter);
         }
       } else {
         throw new ValidationException(COULD_NOT_FIND_SETTER, getter);
@@ -202,20 +200,20 @@ final class ProjectionValidator {
         FluentIterable.from(parameters).transform(toValidParameter).toList());
   }
 
-  private static boolean isCollection(TypeMirror typeMirror) {
+  private static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {
     if (!typeMirror.getKind().equals(TypeKind.DECLARED)) {
       return false;
     }
     TypeElement element = asTypeElement(typeMirror);
     TypeName className = ClassName.get(element);
-    if (className.equals(ClassName.get(Collection.class))) {
+    if (className.equals(test)) {
       return true;
     }
     if (className.equals(ClassName.get(Object.class))) {
       return false;
     }
     for (TypeMirror anInterface : element.getInterfaces()) {
-      if (isCollection(anInterface)) {
+      if (isImplementationOf(anInterface, test)) {
         return true;
       }
     }
@@ -355,7 +353,7 @@ final class ProjectionValidator {
           return parameter.accessorPair;
         }
       };
-      static AccessorPairTmpValidParameter create(ExecutableElement getter, Optional<ClassName> collectionType) {
+      static AccessorPairTmpValidParameter create(ExecutableElement getter, CollectionType collectionType) {
         AccessorPair accessorPair = new AccessorPair(TypeName.get(getter.getReturnType()), getter.getSimpleName().toString(), collectionType);
         return new AccessorPairTmpValidParameter(getter, Optional.fromNullable(getter.getAnnotation(Step.class)), accessorPair);
       }
@@ -388,9 +386,9 @@ final class ProjectionValidator {
        * Only present if there is no setter for the collection.
        * If {@link #type} is {@code List<String>}, this would be {@code String}
        */
-      final Optional<ClassName> collectionType;
+      final CollectionType collectionType;
 
-      AccessorPair(TypeName type, String projectionMethodName, Optional<ClassName> collectionType) {
+      AccessorPair(TypeName type, String projectionMethodName, CollectionType collectionType) {
         super(name(projectionMethodName), type);
         this.projectionMethodName = projectionMethodName;
         this.collectionType = collectionType;
@@ -437,6 +435,20 @@ final class ProjectionValidator {
       <R> R accept(ValidationResultCases<R> cases) {
         return cases.beanGoal(goal, accessorPairs);
       }
+    }
+  }
+
+  static final class CollectionType {
+    final Optional<? extends TypeName> type;
+    final boolean allowShortcut;
+
+    private CollectionType(Optional<? extends TypeName> type, boolean allowShortcut) {
+      this.type = type;
+      this.allowShortcut = allowShortcut;
+    }
+    private static final CollectionType absent = new CollectionType(Optional.<TypeName>absent(), false);
+    private static CollectionType of(TypeName type, boolean allowShortcut) {
+      return new CollectionType(Optional.of(type), allowShortcut);
     }
   }
 
