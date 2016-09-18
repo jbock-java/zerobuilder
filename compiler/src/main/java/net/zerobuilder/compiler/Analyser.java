@@ -45,6 +45,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.TypeValidator.validateBuildersType;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
 final class Analyser {
@@ -75,11 +76,10 @@ final class Analyser {
     }
   });
 
-  private final TypeValidator typeValidator = new TypeValidator();
-  private final ProjectionValidator projectionValidator;
+  private final Elements elements;
 
   Analyser(Elements elements) {
-    this.projectionValidator = ProjectionValidator.create(elements);
+    this.elements = elements;
   }
 
   AnalysisResult parse(TypeElement buildElement) throws ValidationException {
@@ -88,11 +88,11 @@ final class Analyser {
     ImmutableList<GoalElement> goals = goals(buildElement);
     checkNameConflict(goals);
     for (GoalElement goal : goals) {
-      typeValidator.validateBuildType(buildElement);
+      validateBuildersType(buildElement);
       boolean toBuilder = goal.goalAnnotation.toBuilder();
       boolean isBuilder = goal.goalAnnotation.builder();
       ValidationResult validationResult = toBuilder
-          ? goal.accept(projectionValidator.validate)
+          ? goal.accept(ProjectionValidator.validate)
           : goal.accept(ProjectionValidator.skip);
       CodeBlock goalCall = goalInvocation(goal, context.annotatedType);
       builder.add(context(validationResult, context, toBuilder, isBuilder, goalCall));
@@ -137,7 +137,7 @@ final class Analyser {
   private ImmutableList<GoalElement> goals(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<GoalElement> builder = ImmutableList.builder();
     if (buildElement.getAnnotation(Goal.class) != null) {
-      builder.add(BeanGoal.create(buildElement));
+      builder.add(BeanGoal.create(buildElement, elements));
     }
     for (Element element : buildElement.getEnclosedElements()) {
       if (element.getAnnotation(Goal.class) != null) {
@@ -150,7 +150,7 @@ final class Analyser {
           if (executableElement.getParameters().isEmpty()) {
             throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
           }
-          builder.add(ExecutableGoal.create(executableElement));
+          builder.add(ExecutableGoal.create(executableElement, elements));
         }
       }
     }
@@ -243,9 +243,11 @@ final class Analyser {
   static abstract class GoalElement extends AbstractGoalElement {
     final Goal goalAnnotation;
     final String name;
-    GoalElement(Goal goalAnnotation, String name) {
+    final Elements elements;
+    GoalElement(Goal goalAnnotation, String name, Elements elements) {
       this.goalAnnotation = checkNotNull(goalAnnotation, "goalAnnotation");
       this.name = checkNotNull(name, "name");
+      this.elements = elements;
     }
   }
 
@@ -253,20 +255,21 @@ final class Analyser {
     final GoalKind kind;
     final TypeName goalType;
     final ExecutableElement executableElement;
-    ExecutableGoal(ExecutableElement element, GoalKind kind, TypeName goalType, String name) {
-      super(element.getAnnotation(Goal.class), name);
+    ExecutableGoal(ExecutableElement element, GoalKind kind, TypeName goalType, String name,
+                   Elements elements) {
+      super(element.getAnnotation(Goal.class), name, elements);
       this.goalType = goalType;
       this.kind = kind;
       this.executableElement = element;
     }
-    static GoalElement create(ExecutableElement element) {
+    static GoalElement create(ExecutableElement element, Elements elements) {
       TypeName goalType = goalType(element);
       String name = goalName(element.getAnnotation(Goal.class), goalType);
       return new ExecutableGoal(element,
           element.getKind() == CONSTRUCTOR
               ? GoalKind.CONSTRUCTOR
               : element.getModifiers().contains(STATIC) ? STATIC_METHOD : INSTANCE_METHOD,
-          goalType(element), name);
+          goalType(element), name, elements);
 
     }
     <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
@@ -277,22 +280,22 @@ final class Analyser {
   static final class BeanGoal extends GoalElement {
     final ClassName goalType;
     final TypeElement beanTypeElement;
-    private BeanGoal(Element field, ClassName goalType, String name, TypeElement beanTypeElement) {
-      super(field.getAnnotation(Goal.class), name);
+    private BeanGoal(Element field, ClassName goalType, String name, TypeElement beanTypeElement, Elements elements) {
+      super(field.getAnnotation(Goal.class), name, elements);
       this.goalType = goalType;
       this.beanTypeElement = beanTypeElement;
     }
-    private static GoalElement create(TypeElement beanType) throws ValidationException {
+    private static GoalElement create(TypeElement beanType, Elements elements) throws ValidationException {
       ClassName goalType = ClassName.get(beanType);
       String name = goalName(beanType.getAnnotation(Goal.class), goalType);
-      return new BeanGoal(beanType, goalType, name, beanType);
+      return new BeanGoal(beanType, goalType, name, beanType, elements);
     }
     <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
       return goalElementCases.beanGoal(this);
     }
   }
 
-  static final GoalElementCases<Element> getElement = new GoalElementCases<Element>() {
+  private static final GoalElementCases<Element> getElement = new GoalElementCases<Element>() {
     @Override
     public Element executableGoal(ExecutableGoal executableGoal) throws ValidationException {
       return executableGoal.executableElement;

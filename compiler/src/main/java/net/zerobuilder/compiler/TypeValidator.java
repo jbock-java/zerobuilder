@@ -17,9 +17,10 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_TYPE;
 
 final class TypeValidator {
 
-  static final ImmutableSet<NestingKind> ALLOWED_NESTING_KINDS = immutableEnumSet(ImmutableSet.of(TOP_LEVEL, MEMBER));
+  private static final ImmutableSet<NestingKind> ALLOWED_NESTING_KINDS
+      = immutableEnumSet(ImmutableSet.of(TOP_LEVEL, MEMBER));
 
-  void validateBuildType(TypeElement type) throws ValidationException {
+  static void validateBuildersType(TypeElement type) throws ValidationException {
     Set<Modifier> modifiers = type.getModifiers();
     NestingKind nestingKind = type.getNestingKind();
     if (modifiers.contains(PRIVATE)) {
@@ -31,4 +32,7 @@ final class TypeValidator {
     }
   }
 
+  private TypeValidator() {
+    throw new UnsupportedOperationException("no instances");
+  }
 }

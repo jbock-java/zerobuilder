@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.google.auto.common.MoreTypes;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -16,6 +15,7 @@ import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.ProjectionValidator.TmpValidParameter.AccessorPairTmpValidParameter;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.AccessorPair;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.Parameter;
+import net.zerobuilder.compiler.ProjectionValidator.ValidationResult.BeanValidationResult;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -25,7 +25,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -33,6 +32,7 @@ import java.util.List;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 import static com.google.auto.common.MoreTypes.asTypeElement;
+import static com.google.auto.common.MoreTypes.referencedTypes;
 import static com.google.common.base.Ascii.isUpperCase;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.Maps.uniqueIndex;
@@ -40,9 +40,7 @@ import static java.util.Collections.nCopies;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
-import static javax.lang.model.util.ElementFilter.methodsIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BAD_GENERICS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_FIND_SETTER;
@@ -54,9 +52,8 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRU
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_NESTING_KIND;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
-import static net.zerobuilder.compiler.TypeValidator.ALLOWED_NESTING_KINDS;
+import static net.zerobuilder.compiler.ProjectionValidator.TmpValidParameter.AccessorPairTmpValidParameter.toValidParameter;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -70,13 +67,11 @@ final class ProjectionValidator {
     }
   });
 
-  private final Elements elements;
-
-  final GoalElementCases<ValidationResult> validate = new GoalElementCases<ValidationResult>() {
+  static final GoalElementCases<ValidationResult> validate = new GoalElementCases<ValidationResult>() {
     @Override
     public ValidationResult executableGoal(Analyser.ExecutableGoal goal) throws ValidationException {
       TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
-      ImmutableMap<String, ExecutableElement> methods = FluentIterable.from(getLocalAndInheritedMethods(type, elements))
+      ImmutableMap<String, ExecutableElement> methods = FluentIterable.from(getLocalAndInheritedMethods(type, goal.elements))
           .filter(new Predicate<ExecutableElement>() {
             @Override
             public boolean apply(ExecutableElement method) {
@@ -140,9 +135,9 @@ final class ProjectionValidator {
   };
 
   private static ValidationResult validateBean(Analyser.BeanGoal goal) throws ValidationException {
-    ImmutableMap<String, ExecutableElement> setters = setters(goal.beanTypeElement);
+    ImmutableMap<String, ExecutableElement> setters = setters(goal);
     ImmutableList<ExecutableElement> getters
-        = FluentIterable.from(methodsIn(goal.beanTypeElement.getEnclosedElements()))
+        = FluentIterable.from(getLocalAndInheritedMethods(goal.beanTypeElement, goal.elements))
         .filter(new Predicate<ExecutableElement>() {
           @Override
           public boolean apply(ExecutableElement method) {
@@ -152,7 +147,8 @@ final class ProjectionValidator {
                 && !method.getModifiers().contains(STATIC)
                 && !method.getReturnType().getKind().equals(TypeKind.VOID)
                 && !method.getReturnType().getKind().equals(TypeKind.NONE)
-                && (name.startsWith("get") || name.startsWith("is"));
+                && (name.startsWith("get") || name.startsWith("is"))
+                && !"getClass".equals(name);
           }
         })
         .toList();
@@ -170,33 +166,40 @@ final class ProjectionValidator {
         }
         builder.add(AccessorPairTmpValidParameter.create(getter, Optional.<ClassName>absent()));
       } else if (isCollection(getter.getReturnType())) {
-        ImmutableSet<TypeElement> referenced = MoreTypes.referencedTypes(getter.getReturnType());
+        // no setter but we have a getter that returns something like List<E>
+        // in this case we need to find what E is ("collectionType"); is referencedTypes the correct way?
+        ImmutableSet<TypeElement> referenced = referencedTypes(getter.getReturnType());
         if (referenced.size() == 1) {
+          // raw collection type
           builder.add(AccessorPairTmpValidParameter.create(getter, Optional.of(ClassName.get(Object.class))));
-        } else if (referenced.size() == 2) {
-          boolean found = false;
-          for (TypeElement element : referenced) {
-            if (!isCollection(element.asType())) {
-              ClassName generic = ClassName.get(element);
-              builder.add(AccessorPairTmpValidParameter.create(getter, Optional.of(generic)));
-              found = true;
+        } else {
+          if (referenced.size() == 2) {
+            boolean found = false;
+            for (TypeElement element : referenced) {
+              if (!isCollection(element.asType())) {
+                // if it's not a collection, it should be the E we're looking for
+                ClassName collectionType = ClassName.get(element);
+                builder.add(AccessorPairTmpValidParameter.create(getter, Optional.of(collectionType)));
+                found = true;
+              }
             }
-          }
-          if (!found) {
+            if (!found) {
+              throw new ValidationException(BAD_GENERICS, getter);
+            }
+          } else {
+            // referencedTypes has returned a set with more than 2 elements;
+            // we don't know how to handle this (yet)
             throw new ValidationException(BAD_GENERICS, getter);
           }
-        } else {
-          throw new ValidationException(BAD_GENERICS, getter);
         }
       } else {
         throw new ValidationException(COULD_NOT_FIND_SETTER, getter);
       }
     }
-    ImmutableList<AccessorPairTmpValidParameter> parameters = ACCESSOR_PAIR_ORDERING.immutableSortedCopy(builder.build());
-    ImmutableList<AccessorPairTmpValidParameter> shuffled = shuffledParameters(
-        parameters);
-    return new ValidationResult.BeanValidationResult(goal,
-        FluentIterable.from(shuffled).transform(AccessorPairTmpValidParameter.toValidParameter).toList());
+    ImmutableList<AccessorPairTmpValidParameter> parameters
+        = shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(builder.build()));
+    return new BeanValidationResult(goal,
+        FluentIterable.from(parameters).transform(toValidParameter).toList());
   }
 
   private static boolean isCollection(TypeMirror typeMirror) {
@@ -236,26 +239,15 @@ final class ProjectionValidator {
     }
   };
 
-  private ProjectionValidator(Elements elements) {
-    this.elements = elements;
-  }
-
-  static ProjectionValidator create(Elements elements) {
-    return new ProjectionValidator(elements);
-  }
-
-  private static ImmutableMap<String, ExecutableElement> setters(TypeElement beanType) throws ValidationException {
+  private static ImmutableMap<String, ExecutableElement> setters(Analyser.BeanGoal goal) throws ValidationException {
+    TypeElement beanType = goal.beanTypeElement;
     if (!hasParameterlessConstructor(beanType)) {
       throw new ValidationException(NO_DEFAULT_CONSTRUCTOR + TypeName.get(beanType.asType()), beanType);
     }
     if (!beanType.getModifiers().contains(PUBLIC)) {
       throw new ValidationException(TARGET_PUBLIC, beanType);
     }
-    if (!ALLOWED_NESTING_KINDS.contains(beanType.getNestingKind())
-        || beanType.getNestingKind() == MEMBER && !beanType.getModifiers().contains(STATIC)) {
-      throw new ValidationException(TARGET_NESTING_KIND, beanType);
-    }
-    ImmutableList<ExecutableElement> methods = ImmutableList.copyOf(methodsIn(beanType.getEnclosedElements()));
+    ImmutableList<ExecutableElement> methods = ImmutableList.copyOf(getLocalAndInheritedMethods(beanType, goal.elements));
     ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
     for (int i = 0; i < methods.size(); i++) {
       ExecutableElement method = methods.get(i);
@@ -363,8 +355,8 @@ final class ProjectionValidator {
           return parameter.accessorPair;
         }
       };
-      static AccessorPairTmpValidParameter create(ExecutableElement getter, Optional<ClassName> setterlessCollection) {
-        AccessorPair accessorPair = new AccessorPair(TypeName.get(getter.getReturnType()), getter.getSimpleName().toString(), setterlessCollection);
+      static AccessorPairTmpValidParameter create(ExecutableElement getter, Optional<ClassName> collectionType) {
+        AccessorPair accessorPair = new AccessorPair(TypeName.get(getter.getReturnType()), getter.getSimpleName().toString(), collectionType);
         return new AccessorPairTmpValidParameter(getter, Optional.fromNullable(getter.getAnnotation(Step.class)), accessorPair);
       }
     }
@@ -446,5 +438,9 @@ final class ProjectionValidator {
         return cases.beanGoal(goal, accessorPairs);
       }
     }
+  }
+
+  private ProjectionValidator() {
+    throw new UnsupportedOperationException("no instances");
   }
 }

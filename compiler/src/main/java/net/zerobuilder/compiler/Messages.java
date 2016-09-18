@@ -31,10 +31,6 @@ final class Messages {
     static final String GOAL_WITHOUT_BUILDERS =
         "A class that carries the @Goal annotation must also carry the @Builders annotation.";
 
-    /* empty, empty, constructor, constructor */
-    static final String GOALNAME_EECC =
-        "Multiple constructor goals found. Please add a goal name.";
-
     static final String NEGATIVE_STEP_POSITION =
         "Negative step position is not allowed.";
 
@@ -43,6 +39,10 @@ final class Messages {
 
     static final String DUPLICATE_STEP_POSITION =
         "Step position is specified twice.";
+
+    /* empty, empty, constructor, constructor */
+    static final String GOALNAME_EECC =
+        "Multiple constructor goals found. Please add a goal name.";
 
     /* empty, empty, method, constructor */
     static final String GOALNAME_EEMC =
@@ -70,9 +70,6 @@ final class Messages {
 
     static final String NO_DEFAULT_CONSTRUCTOR
         = "Class not public or no public default constructor found: ";
-
-    static final String TARGET_NESTING_KIND
-        = "Target type must be top level or static inner class";
 
     static final String TARGET_PUBLIC
         = "Target type must be public";
