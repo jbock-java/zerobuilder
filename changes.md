@@ -18,3 +18,7 @@
 ### 2016-09-18 zerobuilder 1.312 released
 
 * allow inheritance for beans
+
+### 2016-09-18 zerobuilder 1.313 released
+
+* beans: bugfix setterless collection w/generics
