@@ -14,3 +14,7 @@
 ### 2016-09-18 zerobuilder 1.311 released
 
 * remove field goal option (breaking)
+
+### 2016-09-18 zerobuilder 1.312 released
+
+* allow inheritance for beans
