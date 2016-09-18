@@ -70,9 +70,30 @@ To see how the generated class is used, have a look at
 
 ### Recycle
 
-Creating and discarding an intermediate builder object in each create and update operation 
-might create more pressure on the garbage collector.
+Creating and discarding an intermediate builder object for every create or update operation 
+may create additional pressure on the garbage collector.
 
 If you feel that zerobuilder affects performance,
 you could try the `recycle = true` option.
-This will cause builder instances to be stored in a `ThreadLocal` and reused.
+This will cause the builder instances to be stored in a `ThreadLocal` and reused.
+
+### Order of steps
+
+The `static businessAnalystBuilder()` method returns an interface called `Age`.
+This is the first step in a linear "chain" of interfaces that ends in an instance of `BusinessAnalyst`.
+
+By default, the builder steps are in alphabetic order, which is why the `age` property
+has to be specified first.
+
+The alphabetic order can be overridden by adding a `@Step` annotation to one of the getters:
+
+````java
+@Step(0)
+public String getName() { 
+  return name; 
+}
+````
+
+Now `name` is the first step.
+The remaining steps `age`, `executive` and `notes` are still in alphabetic order.
+In order to make `notes` the second step, add `@Step(1)` to the corresponding getter, and so on.
