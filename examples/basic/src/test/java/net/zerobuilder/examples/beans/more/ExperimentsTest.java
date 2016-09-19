@@ -2,6 +2,7 @@ package net.zerobuilder.examples.beans.more;
 
 import net.zerobuilder.examples.beans.more.Experiments.AeroExperiment;
 import net.zerobuilder.examples.beans.more.Experiments.BioExperiment;
+import net.zerobuilder.examples.beans.more.Experiments.IterableExperiment;
 import net.zerobuilder.examples.beans.more.Experiments.RawExperiment;
 import org.junit.Test;
 
@@ -58,6 +59,21 @@ public class ExperimentsTest {
     expectedList1.add("one");
     List expectedList2 = new ArrayList();
     expectedList2.add(2);
+    assertThat(experiment1.getThings(), is(expectedList1));
+    assertThat(experiment2.getThings(), is(expectedList2));
+  }
+
+  @Test
+  public void iterableTest() {
+    IterableExperiment experiment1 = Experiments_IterableExperimentBuilders.iterableExperimentBuilder()
+        .things(asList(asList("1")));
+    IterableExperiment experiment2 = Experiments_IterableExperimentBuilders.iterableExperimentToBuilder(experiment1)
+        .things(asList(asList("2")))
+        .build();
+    List<Iterable<String>> expectedList1 = new ArrayList();
+    expectedList1.add(asList("1"));
+    List<Iterable<String>> expectedList2 = new ArrayList();
+    expectedList2.add(asList("2"));
     assertThat(experiment1.getThings(), is(expectedList1));
     assertThat(experiment2.getThings(), is(expectedList2));
   }

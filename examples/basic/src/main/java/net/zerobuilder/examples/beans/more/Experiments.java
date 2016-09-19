@@ -4,6 +4,7 @@ import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 // see ExperimentsTest
@@ -56,6 +57,21 @@ public class Experiments {
     private List things;
 
     public List getThings() {
+      if (things == null) {
+        things = new ArrayList();
+      }
+      return things;
+    }
+  }
+
+  // setterless raw collection
+  @Builders(recycle = true)
+  @Goal(toBuilder = true)
+  @SuppressWarnings("rawtypes")
+  public static class IterableExperiment {
+    private List<Iterable<String>> things;
+
+    public List<Iterable<String>> getThings() {
       if (things == null) {
         things = new ArrayList();
       }

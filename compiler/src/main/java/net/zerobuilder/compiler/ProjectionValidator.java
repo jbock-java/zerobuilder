@@ -177,7 +177,7 @@ final class ProjectionValidator {
         } else if (referenced.size() == 1) {
           // one type parameter
           TypeMirror parameter = getOnlyElement(referenced);
-          boolean allowShortcut = !ClassName.get(asTypeElement(parameter)).equals(Iterable.class);
+          boolean allowShortcut = !ClassName.get(asTypeElement(parameter)).equals(ClassName.get(Iterable.class));
           List<? extends TypeMirror> typeArguments = asDeclared(parameter).getTypeArguments();
           if (typeArguments.isEmpty()) {
             TypeName collectionType = ClassName.get(parameter);
