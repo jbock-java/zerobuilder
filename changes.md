@@ -22,3 +22,8 @@
 ### 2016-09-18 zerobuilder 1.313 released
 
 * beans: bugfix setterless collection w/generics
+
+### 2016-09-19 zerobuilder 1.314 released
+
+* beans/setterless collection: fix corner case with iterables
+
