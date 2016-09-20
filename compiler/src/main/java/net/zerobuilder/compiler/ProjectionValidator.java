@@ -12,9 +12,9 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.ProjectionValidator.TmpValidParameter.AccessorPairTmpValidParameter;
+import net.zerobuilder.compiler.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.AccessorPair;
-import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.Parameter;
+import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.RegularParameter;
 import net.zerobuilder.compiler.ProjectionValidator.ValidationResult.BeanValidationResult;
 
 import javax.lang.model.element.Element;
@@ -48,22 +48,21 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_FIND_SET
 import static net.zerobuilder.compiler.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_SETTER_TYPE_MISMATCH;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NEGATIVE_STEP_POSITION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
-import static net.zerobuilder.compiler.ProjectionValidator.TmpValidParameter.AccessorPairTmpValidParameter.toValidParameter;
+import static net.zerobuilder.compiler.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 final class ProjectionValidator {
 
-  private static final Ordering<AccessorPairTmpValidParameter> ACCESSOR_PAIR_ORDERING
-      = Ordering.from(new Comparator<AccessorPairTmpValidParameter>() {
+  private static final Ordering<TmpAccessorPair> ACCESSOR_PAIR_ORDERING
+      = Ordering.from(new Comparator<TmpAccessorPair>() {
     @Override
-    public int compare(AccessorPairTmpValidParameter pair0, AccessorPairTmpValidParameter pair1) {
+    public int compare(TmpAccessorPair pair0, TmpAccessorPair pair1) {
       return pair0.accessorPair.name.compareTo(pair1.accessorPair.name);
     }
   });
@@ -102,11 +101,11 @@ final class ProjectionValidator {
             }
           });
 
-      ImmutableList.Builder<TmpValidParameter.RegularTmpValidParameter> builder = ImmutableList.builder();
+      ImmutableList.Builder<TmpValidParameter.TmpRegularParameter> builder = ImmutableList.builder();
       for (VariableElement parameter : goal.executableElement.getParameters()) {
         VariableElement field = fields.get(parameter.getSimpleName().toString());
         if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
-          builder.add(TmpValidParameter.RegularTmpValidParameter.create(parameter, Optional.<String>absent()));
+          builder.add(TmpValidParameter.TmpRegularParameter.create(parameter, Optional.<String>absent()));
         } else {
           String methodName = "get" + upcase(parameter.getSimpleName().toString());
           ExecutableElement method = methods.get(methodName);
@@ -122,12 +121,12 @@ final class ProjectionValidator {
           if (method == null) {
             throw new ValidationException(NO_PROJECTION, parameter);
           }
-          builder.add(TmpValidParameter.RegularTmpValidParameter.create(parameter, Optional.of(methodName)));
+          builder.add(TmpValidParameter.TmpRegularParameter.create(parameter, Optional.of(methodName)));
         }
       }
-      ImmutableList<TmpValidParameter.RegularTmpValidParameter> shuffled = shuffledParameters(builder.build());
+      ImmutableList<TmpValidParameter.TmpRegularParameter> shuffled = shuffledParameters(builder.build());
       return new ValidationResult.RegularValidationResult(goal,
-          FluentIterable.from(shuffled).transform(TmpValidParameter.RegularTmpValidParameter.toValidParameter).toList());
+          FluentIterable.from(shuffled).transform(TmpValidParameter.TmpRegularParameter.toValidParameter).toList());
     }
     @Override
     public ValidationResult beanGoal(Analyser.BeanGoal goal) throws ValidationException {
@@ -153,7 +152,7 @@ final class ProjectionValidator {
           }
         })
         .toList();
-    ImmutableList.Builder<AccessorPairTmpValidParameter> builder = ImmutableList.builder();
+    ImmutableList.Builder<TmpAccessorPair> builder = ImmutableList.builder();
     for (ExecutableElement getter : getters) {
       String name = getter.getSimpleName().toString();
       String setterName = name.substring(name.startsWith("get") ? 3 : 2);
@@ -165,7 +164,7 @@ final class ProjectionValidator {
         if (!getter.getThrownTypes().isEmpty()) {
           throw new ValidationException(GETTER_EXCEPTION, getter);
         }
-        builder.add(AccessorPairTmpValidParameter.create(getter, CollectionType.absent));
+        builder.add(TmpAccessorPair.create(getter, CollectionType.absent));
       } else if (isImplementationOf(getter.getReturnType(), ClassName.get(Collection.class))) {
         // no setter but we have a getter that returns something like List<E>
         // in this case we need to find what E is ("collectionType")
@@ -173,7 +172,7 @@ final class ProjectionValidator {
         if (referenced.isEmpty()) {
           // raw collection
           ClassName collectionType = ClassName.get(Object.class);
-          builder.add(AccessorPairTmpValidParameter.create(getter, CollectionType.of(collectionType, false)));
+          builder.add(TmpAccessorPair.create(getter, CollectionType.of(collectionType, false)));
         } else if (referenced.size() == 1) {
           // one type parameter
           TypeMirror parameter = getOnlyElement(referenced);
@@ -181,10 +180,10 @@ final class ProjectionValidator {
           List<? extends TypeMirror> typeArguments = asDeclared(parameter).getTypeArguments();
           if (typeArguments.isEmpty()) {
             TypeName collectionType = ClassName.get(parameter);
-            builder.add(AccessorPairTmpValidParameter.create(getter, CollectionType.of(collectionType, allowShortcut)));
+            builder.add(TmpAccessorPair.create(getter, CollectionType.of(collectionType, allowShortcut)));
           } else {
             TypeName collectionType = ParameterizedTypeName.get(parameter);
-            builder.add(AccessorPairTmpValidParameter.create(getter, CollectionType.of(collectionType, allowShortcut)));
+            builder.add(TmpAccessorPair.create(getter, CollectionType.of(collectionType, allowShortcut)));
           }
         } else {
           // unlikely: Collection should not have more than one type parameter
@@ -194,7 +193,7 @@ final class ProjectionValidator {
         throw new ValidationException(COULD_NOT_FIND_SETTER, getter);
       }
     }
-    ImmutableList<AccessorPairTmpValidParameter> parameters
+    ImmutableList<TmpAccessorPair> parameters
         = shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(builder.build()));
     return new BeanValidationResult(goal,
         FluentIterable.from(parameters).transform(toValidParameter).toList());
@@ -223,13 +222,13 @@ final class ProjectionValidator {
   static final GoalElementCases<ValidationResult> skip = new GoalElementCases<ValidationResult>() {
     @Override
     public ValidationResult executableGoal(Analyser.ExecutableGoal goal) throws ValidationException {
-      ImmutableList.Builder<TmpValidParameter.RegularTmpValidParameter> builder = ImmutableList.builder();
+      ImmutableList.Builder<TmpValidParameter.TmpRegularParameter> builder = ImmutableList.builder();
       for (VariableElement parameter : goal.executableElement.getParameters()) {
-        builder.add(TmpValidParameter.RegularTmpValidParameter.create(parameter, Optional.<String>absent()));
+        builder.add(TmpValidParameter.TmpRegularParameter.create(parameter, Optional.<String>absent()));
       }
-      ImmutableList<TmpValidParameter.RegularTmpValidParameter> shuffled = shuffledParameters(builder.build());
+      ImmutableList<TmpValidParameter.TmpRegularParameter> shuffled = shuffledParameters(builder.build());
       return new ValidationResult.RegularValidationResult(goal,
-          FluentIterable.from(shuffled).transform(TmpValidParameter.RegularTmpValidParameter.toValidParameter).toList());
+          FluentIterable.from(shuffled).transform(TmpValidParameter.TmpRegularParameter.toValidParameter).toList());
     }
     @Override
     public ValidationResult beanGoal(Analyser.BeanGoal goal) throws ValidationException {
@@ -288,12 +287,8 @@ final class ProjectionValidator {
     ImmutableList.Builder<E> noAnnotation = ImmutableList.builder();
     for (E parameter : parameters) {
       Optional<Step> step = parameter.annotation;
-      if (step.isPresent()) {
+      if (step.isPresent() && step.get().value() >= 0) {
         int value = step.get().value();
-        if (value < 0) {
-          throw new ValidationException(ERROR,
-              NEGATIVE_STEP_POSITION, parameter.element);
-        }
         if (value >= parameters.size()) {
           throw new ValidationException(ERROR,
               STEP_POSITION_TOO_LARGE, parameter.element);
@@ -322,40 +317,43 @@ final class ProjectionValidator {
     final Element element;
     final Optional<Step> annotation;
 
-    final static class RegularTmpValidParameter extends TmpValidParameter {
-      private final Parameter parameter;
-      private RegularTmpValidParameter(Element element, Optional<Step> annotation, Parameter parameter) {
+    final static class TmpRegularParameter extends TmpValidParameter {
+      private final RegularParameter parameter;
+      private TmpRegularParameter(Element element, Optional<Step> annotation, RegularParameter parameter) {
         super(element, annotation);
         this.parameter = parameter;
       }
-      static final Function<RegularTmpValidParameter, Parameter> toValidParameter = new Function<RegularTmpValidParameter, Parameter>() {
+      static final Function<TmpRegularParameter, RegularParameter> toValidParameter = new Function<TmpRegularParameter, RegularParameter>() {
         @Override
-        public Parameter apply(RegularTmpValidParameter parameter) {
+        public RegularParameter apply(TmpRegularParameter parameter) {
           return parameter.parameter;
         }
       };
-      static RegularTmpValidParameter create(VariableElement element, Optional<String> projectionMethodName) {
-        Parameter parameter = new Parameter(element.getSimpleName().toString(), TypeName.get(element.asType()), projectionMethodName);
+      static TmpRegularParameter create(VariableElement element, Optional<String> projectionMethodName) {
         Optional<Step> annotation = fromNullable(element.getAnnotation(Step.class));
-        return new RegularTmpValidParameter(element, annotation, parameter);
+        boolean nonNull = annotation.isPresent() && annotation.get().nonNull();
+        RegularParameter parameter = new RegularParameter(element.getSimpleName().toString(), TypeName.get(element.asType()), projectionMethodName, nonNull);
+        return new TmpRegularParameter(element, annotation, parameter);
       }
     }
 
-    static final class AccessorPairTmpValidParameter extends TmpValidParameter {
+    static final class TmpAccessorPair extends TmpValidParameter {
       private final AccessorPair accessorPair;
-      private AccessorPairTmpValidParameter(Element element, Optional<Step> annotation, AccessorPair accessorPair) {
+      private TmpAccessorPair(Element element, Optional<Step> annotation, AccessorPair accessorPair) {
         super(element, annotation);
         this.accessorPair = accessorPair;
       }
-      static final Function<AccessorPairTmpValidParameter, AccessorPair> toValidParameter = new Function<AccessorPairTmpValidParameter, AccessorPair>() {
+      static final Function<TmpAccessorPair, AccessorPair> toValidParameter = new Function<TmpAccessorPair, AccessorPair>() {
         @Override
-        public AccessorPair apply(AccessorPairTmpValidParameter parameter) {
+        public AccessorPair apply(TmpAccessorPair parameter) {
           return parameter.accessorPair;
         }
       };
-      static AccessorPairTmpValidParameter create(ExecutableElement getter, CollectionType collectionType) {
-        AccessorPair accessorPair = new AccessorPair(TypeName.get(getter.getReturnType()), getter.getSimpleName().toString(), collectionType);
-        return new AccessorPairTmpValidParameter(getter, Optional.fromNullable(getter.getAnnotation(Step.class)), accessorPair);
+      static TmpAccessorPair create(ExecutableElement getter, CollectionType collectionType) {
+        Optional<Step> annotation = fromNullable(getter.getAnnotation(Step.class));
+        boolean nonNull = annotation.isPresent() && annotation.get().nonNull();
+        AccessorPair accessorPair = new AccessorPair(TypeName.get(getter.getReturnType()), getter.getSimpleName().toString(), collectionType, nonNull);
+        return new TmpAccessorPair(getter, annotation, accessorPair);
       }
     }
 
@@ -370,11 +368,12 @@ final class ProjectionValidator {
 
     final String name;
     final TypeName type;
+    final boolean nonNull;
 
-    static final class Parameter extends ValidParameter {
+    static final class RegularParameter extends ValidParameter {
       final Optional<String> projectionMethodName;
-      Parameter(String name, TypeName type, Optional<String> projectionMethodName) {
-        super(name, type);
+      RegularParameter(String name, TypeName type, Optional<String> projectionMethodName, boolean nonNull) {
+        super(name, type, nonNull);
         this.projectionMethodName = projectionMethodName;
       }
     }
@@ -388,8 +387,8 @@ final class ProjectionValidator {
        */
       final CollectionType collectionType;
 
-      AccessorPair(TypeName type, String projectionMethodName, CollectionType collectionType) {
-        super(name(projectionMethodName), type);
+      AccessorPair(TypeName type, String projectionMethodName, CollectionType collectionType, boolean nonNull) {
+        super(name(projectionMethodName), type, nonNull);
         this.projectionMethodName = projectionMethodName;
         this.collectionType = collectionType;
       }
@@ -399,22 +398,23 @@ final class ProjectionValidator {
       }
     }
 
-    ValidParameter(String name, TypeName type) {
+    ValidParameter(String name, TypeName type, boolean nonNull) {
       this.name = name;
       this.type = type;
+      this.nonNull = nonNull;
     }
   }
 
   static abstract class ValidationResult {
     static abstract class ValidationResultCases<R> {
-      abstract R executableGoal(Analyser.ExecutableGoal goal, ImmutableList<Parameter> parameters);
+      abstract R executableGoal(Analyser.ExecutableGoal goal, ImmutableList<RegularParameter> parameters);
       abstract R beanGoal(Analyser.BeanGoal beanGoal, ImmutableList<AccessorPair> accessorPairs);
     }
     abstract <R> R accept(ValidationResultCases<R> cases);
     static final class RegularValidationResult extends ValidationResult {
       private final Analyser.ExecutableGoal goal;
-      private final ImmutableList<Parameter> parameters;
-      RegularValidationResult(Analyser.ExecutableGoal goal, ImmutableList<Parameter> parameters) {
+      private final ImmutableList<RegularParameter> parameters;
+      RegularValidationResult(Analyser.ExecutableGoal goal, ImmutableList<RegularParameter> parameters) {
         this.goal = goal;
         this.parameters = parameters;
       }

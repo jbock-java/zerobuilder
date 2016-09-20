@@ -20,7 +20,7 @@ final class GoalContextFactory {
                              final CodeBlock goalCall) throws ValidationException {
     return validationResult.accept(new ProjectionValidator.ValidationResult.ValidationResultCases<GoalContext>() {
       @Override
-      GoalContext executableGoal(Analyser.ExecutableGoal goal, ImmutableList<ValidParameter.Parameter> validParameters) {
+      GoalContext executableGoal(Analyser.ExecutableGoal goal, ImmutableList<ValidParameter.RegularParameter> validParameters) {
         ClassName contractName = config.generatedType.nestedClass(upcase(goal.name + "Builder"));
         ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
         ImmutableList<ParameterContext.ExecutableParameterContext> parameters = parameters(contractName, goal.goalType, validParameters, thrownTypes);
@@ -54,10 +54,10 @@ final class GoalContextFactory {
   }
 
   private static ImmutableList<ParameterContext.ExecutableParameterContext> parameters(ClassName builderType, TypeName returnType,
-                                                                                       ImmutableList<ValidParameter.Parameter> parameters, ImmutableList<TypeName> thrownTypes) {
+                                                                                       ImmutableList<ValidParameter.RegularParameter> parameters, ImmutableList<TypeName> thrownTypes) {
     ImmutableList.Builder<ParameterContext.ExecutableParameterContext> builder = ImmutableList.builder();
     for (int i = parameters.size() - 1; i >= 0; i--) {
-      ValidParameter.Parameter parameter = parameters.get(i);
+      ValidParameter.RegularParameter parameter = parameters.get(i);
       ClassName stepContract = builderType.nestedClass(
           upcase(parameter.name));
       builder.add(new ParameterContext.ExecutableParameterContext(stepContract, returnType, parameter, thrownTypes));

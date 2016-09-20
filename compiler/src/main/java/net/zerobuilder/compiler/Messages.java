@@ -31,9 +31,6 @@ final class Messages {
     static final String GOAL_WITHOUT_BUILDERS =
         "A class that carries the @Goal annotation must also carry the @Builders annotation.";
 
-    static final String NEGATIVE_STEP_POSITION =
-        "Negative step position is not allowed.";
-
     static final String STEP_POSITION_TOO_LARGE =
         "Step position must be less than the number of arguments.";
 
@@ -82,9 +79,6 @@ final class Messages {
 
     static final String BAD_GENERICS
         = "Can't understand the generics of this beanGoal";
-
-    static final String RAW_COLLECTION
-        = "Raw collection is currently not supported";
 
     static final String COULD_NOT_FIND_SETTER
         = "Could not find setter";

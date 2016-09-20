@@ -8,7 +8,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.AccessorPair;
-import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.Parameter;
+import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.RegularParameter;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
@@ -23,7 +23,7 @@ abstract class ParameterContext {
   final TypeName typeNextStep;
 
   abstract static class ParameterCases<R> {
-    abstract R parameter(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions);
+    abstract R parameter(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions);
     abstract R accessorPair(ClassName typeName, TypeName returnType, AccessorPair parameter);
   }
 
@@ -35,9 +35,9 @@ abstract class ParameterContext {
   }
 
   final static class ExecutableParameterContext extends ParameterContext {
-    final Parameter parameter;
+    final RegularParameter parameter;
     final ImmutableList<TypeName> declaredExceptions;
-    ExecutableParameterContext(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions) {
+    ExecutableParameterContext(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
       super(typeName, returnType);
       this.declaredExceptions = declaredExceptions;
       this.parameter = parameter;
@@ -67,7 +67,7 @@ abstract class ParameterContext {
   private static <R> ParameterCases<R> always(final ParameterFunction<R> parameterFunction) {
     return new ParameterCases<R>() {
       @Override
-      R parameter(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions) {
+      R parameter(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
         return parameterFunction.apply(typeName, returnType, parameter, declaredExceptions);
       }
       @Override
@@ -88,7 +88,7 @@ abstract class ParameterContext {
 
   static Function<ParameterContext, TypeSpec> asStepInterface = asFunction(new ParameterCases<TypeSpec>() {
     @Override
-    TypeSpec parameter(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions) {
+    TypeSpec parameter(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
       return regularStepInterface(typeName, returnType, parameter, declaredExceptions);
     }
     @Override

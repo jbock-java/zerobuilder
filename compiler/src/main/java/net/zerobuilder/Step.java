@@ -11,8 +11,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * <p>
  * An optional annotation on {@link Goal} parameters.
  * </p><p>
- * In the case of a bean goal, this annotation goes on the getters of the target type.
- * By default, bean steps are in alphabetic order.
+ * In the case of a bean goal, this annotation goes on a <em>getter</em> of the bean.
  * </p>
  *
  * @see Goal
@@ -24,10 +23,13 @@ public @interface Step {
 
   /**
    * <p>Overrides the default position in the generated chain of builder steps
-   * for this parameter.</p>
+   * for this parameter. By default, bean steps are in alphabetic order.</p>
    *
-   * @return the position that this step should occupy in the step chain
+   * @return The desired position of this step in the builder chain.
+   * Negative values are ignored.
    */
-  int value();
+  int value() default -1;
+
+  boolean nonNull() default false;
 
 }
