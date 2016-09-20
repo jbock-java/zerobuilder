@@ -78,4 +78,17 @@ public class Experiments {
       return things;
     }
   }
+
+  // setterless raw collection
+  @Builders(recycle = true)
+  @Goal(toBuilder = true)
+  public static class CAPSExperiment {
+    private String foo;
+    public String getFoo() {
+      return foo;
+    }
+    public void setFoo(String foo) {
+      this.foo = foo;
+    }
+  }
 }

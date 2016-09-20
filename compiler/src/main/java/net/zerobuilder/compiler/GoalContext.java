@@ -3,26 +3,22 @@ package net.zerobuilder.compiler;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.GoalContextFactory.Visibility;
+import net.zerobuilder.compiler.ParameterContext.BeansParameterContext;
+import net.zerobuilder.compiler.ParameterContext.ExecutableParameterContext;
 
-import javax.lang.model.element.Modifier;
-import java.util.Set;
-
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 abstract class GoalContext {
 
   static abstract class GoalCases<R> {
-    abstract R regularGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                           ImmutableList<ParameterContext.RegularParameterContext> parameters,
-                           ImmutableList<TypeName> thrownTypes);
-    abstract R fieldGoal(GoalContext goal, ClassName goalType, ImmutableList<ParameterContext.BeansParameterContext> parameters);
+    abstract R executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
+                              ImmutableList<ExecutableParameterContext> parameters,
+                              ImmutableList<TypeName> thrownTypes);
+    abstract R beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters);
   }
 
   abstract <R> R accept(GoalCases<R> cases);
@@ -34,13 +30,13 @@ abstract class GoalContext {
   static <R> GoalCases<R> always(final GoalFunction<R> function) {
     return new GoalCases<R>() {
       @Override
-      R regularGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                    ImmutableList<ParameterContext.RegularParameterContext> parameters,
-                    ImmutableList<TypeName> thrownTypes) {
+      R executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
+                       ImmutableList<ExecutableParameterContext> parameters,
+                       ImmutableList<TypeName> thrownTypes) {
         return function.apply(goal, goalType, parameters);
       }
       @Override
-      R fieldGoal(GoalContext goal, ClassName goalType, ImmutableList<ParameterContext.BeansParameterContext> parameters) {
+      R beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
         return function.apply(goal, goalType, parameters);
       }
     };
@@ -62,13 +58,10 @@ abstract class GoalContext {
 
   final ClassName contractName;
 
-  /**
-   * Always starts with a lower case character.
-   */
   final String goalName;
 
   /**
-   * contents of {@code updaterImpl.build()} and {@code stepsImpl.build()}
+   * implementation of {@code updaterImpl.build()} and {@code stepsImpl.build()}
    */
   final CodeBlock goalCall;
 
@@ -103,7 +96,7 @@ abstract class GoalContext {
     }
   });
 
-  final static class RegularGoalContext extends GoalContext {
+  final static class ExecutableGoalContext extends GoalContext {
 
     final GoalKind kind;
 
@@ -116,20 +109,20 @@ abstract class GoalContext {
     /**
      * original parameter order unless Step annotation was used
      */
-    final ImmutableList<ParameterContext.RegularParameterContext> goalParameters;
+    final ImmutableList<ExecutableParameterContext> goalParameters;
 
     final ImmutableList<TypeName> thrownTypes;
 
-    RegularGoalContext(TypeName goalType,
-                       BuilderContext config,
-                       boolean toBuilder,
-                       boolean builder,
-                       ClassName contractName,
-                       GoalKind kind,
-                       String goalName,
-                       ImmutableList<TypeName> thrownTypes,
-                       ImmutableList<ParameterContext.RegularParameterContext> goalParameters,
-                       CodeBlock goalCall) {
+    ExecutableGoalContext(TypeName goalType,
+                          BuilderContext config,
+                          boolean toBuilder,
+                          boolean builder,
+                          ClassName contractName,
+                          GoalKind kind,
+                          String goalName,
+                          ImmutableList<TypeName> thrownTypes,
+                          ImmutableList<ExecutableParameterContext> goalParameters,
+                          CodeBlock goalCall) {
       super(config, toBuilder, builder, contractName, goalName, goalCall);
       this.thrownTypes = thrownTypes;
       this.goalParameters = goalParameters;
@@ -138,33 +131,33 @@ abstract class GoalContext {
     }
 
     <R> R accept(GoalCases<R> cases) {
-      return cases.regularGoal(this, goalType, kind, goalParameters, thrownTypes);
+      return cases.executableGoal(this, goalType, kind, goalParameters, thrownTypes);
     }
   }
 
-  final static class FieldGoalContext extends GoalContext {
+  final static class BeanGoalContext extends GoalContext {
 
     /**
      * alphabetic order unless Step annotation was used
      */
-    final ImmutableList<ParameterContext.BeansParameterContext> goalParameters;
+    final ImmutableList<BeansParameterContext> goalParameters;
     final ClassName goalType;
 
-    FieldGoalContext(ClassName goalType,
-                     BuilderContext config,
-                     boolean toBuilder,
-                     boolean builder,
-                     ClassName contractName,
-                     String goalName,
-                     ImmutableList<ParameterContext.BeansParameterContext> goalParameters,
-                     CodeBlock goalCall) {
+    BeanGoalContext(ClassName goalType,
+                    BuilderContext config,
+                    boolean toBuilder,
+                    boolean builder,
+                    ClassName contractName,
+                    String goalName,
+                    ImmutableList<BeansParameterContext> goalParameters,
+                    CodeBlock goalCall) {
       super(config, toBuilder, builder, contractName, goalName, goalCall);
       this.goalParameters = goalParameters;
       this.goalType = goalType;
     }
 
     <R> R accept(GoalCases<R> cases) {
-      return cases.fieldGoal(this, goalType, goalParameters);
+      return cases.beanGoal(this, goalType, goalParameters);
     }
   }
 

@@ -6,7 +6,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.WildcardTypeName;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.AccessorPair;
 import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.Parameter;
@@ -24,8 +23,8 @@ abstract class ParameterContext {
   final TypeName typeNextStep;
 
   abstract static class ParameterCases<R> {
-    abstract R regularParameter(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions);
-    abstract R beansParameter(ClassName typeName, TypeName returnType, AccessorPair parameter);
+    abstract R parameter(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions);
+    abstract R accessorPair(ClassName typeName, TypeName returnType, AccessorPair parameter);
   }
 
   abstract <R> R accept(ParameterCases<R> cases);
@@ -35,29 +34,29 @@ abstract class ParameterContext {
     this.typeNextStep = typeNextStep;
   }
 
-  final static class RegularParameterContext extends ParameterContext {
+  final static class ExecutableParameterContext extends ParameterContext {
     final Parameter parameter;
     final ImmutableList<TypeName> declaredExceptions;
-    RegularParameterContext(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions) {
+    ExecutableParameterContext(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions) {
       super(typeName, returnType);
       this.declaredExceptions = declaredExceptions;
       this.parameter = parameter;
     }
     @Override
     <R> R accept(ParameterCases<R> cases) {
-      return cases.regularParameter(typeThisStep, typeNextStep, parameter, declaredExceptions);
+      return cases.parameter(typeThisStep, typeNextStep, parameter, declaredExceptions);
     }
   }
 
   final static class BeansParameterContext extends ParameterContext {
-    final AccessorPair parameter;
-    BeansParameterContext(ClassName typeName, TypeName returnType, AccessorPair parameter) {
+    final AccessorPair accessorPair;
+    BeansParameterContext(ClassName typeName, TypeName returnType, AccessorPair accessorPair) {
       super(typeName, returnType);
-      this.parameter = parameter;
+      this.accessorPair = accessorPair;
     }
     @Override
     <R> R accept(ParameterCases<R> cases) {
-      return cases.beansParameter(typeThisStep, typeNextStep, parameter);
+      return cases.accessorPair(typeThisStep, typeNextStep, accessorPair);
     }
   }
 
@@ -68,11 +67,11 @@ abstract class ParameterContext {
   private static <R> ParameterCases<R> always(final ParameterFunction<R> parameterFunction) {
     return new ParameterCases<R>() {
       @Override
-      R regularParameter(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions) {
+      R parameter(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions) {
         return parameterFunction.apply(typeName, returnType, parameter, declaredExceptions);
       }
       @Override
-      R beansParameter(ClassName typeName, TypeName returnType, AccessorPair parameter) {
+      R accessorPair(ClassName typeName, TypeName returnType, AccessorPair parameter) {
         return parameterFunction.apply(typeName, returnType, parameter, ImmutableList.<TypeName>of());
       }
     };
@@ -89,11 +88,11 @@ abstract class ParameterContext {
 
   static Function<ParameterContext, TypeSpec> asStepInterface = asFunction(new ParameterCases<TypeSpec>() {
     @Override
-    TypeSpec regularParameter(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions) {
+    TypeSpec parameter(ClassName typeName, TypeName returnType, Parameter parameter, ImmutableList<TypeName> declaredExceptions) {
       return regularStepInterface(typeName, returnType, parameter, declaredExceptions);
     }
     @Override
-    TypeSpec beansParameter(ClassName typeName, TypeName returnType, AccessorPair parameter) {
+    TypeSpec accessorPair(ClassName typeName, TypeName returnType, AccessorPair parameter) {
       String name = parameter.name;
       if (parameter.collectionType.type.isPresent()) {
         TypeName collectionType = parameter.collectionType.type.get();
