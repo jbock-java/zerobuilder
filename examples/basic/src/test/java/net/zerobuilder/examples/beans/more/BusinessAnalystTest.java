@@ -18,8 +18,6 @@ public class BusinessAnalystTest {
         .executive(false)
         .name("Peter")
         .notes("entry");
-    peter.setName("Peter");
-    peter.setAge(36);
     BusinessAnalyst updated = businessAnalystToBuilder(peter)
         .executive(true)
         .age(37)
@@ -42,8 +40,6 @@ public class BusinessAnalystTest {
         .executive(true)
         .name("Peter")
         .notes(Arrays.asList("entry0", "entry1"));
-    peter.setName("Peter");
-    peter.setAge(36);
     BusinessAnalyst updated = businessAnalystToBuilder(peter)
         .age(37)
         .executive(false)
