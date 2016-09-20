@@ -27,3 +27,6 @@
 
 * beans/setterless collection: fix corner case with iterables
 
+### 2016-09-20 zerobuilder 1.321 released
+
+* beans: allow all-caps goal names (breaking)
