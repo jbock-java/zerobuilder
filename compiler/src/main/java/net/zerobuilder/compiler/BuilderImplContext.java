@@ -30,7 +30,7 @@ import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
-final class StepsContext {
+final class BuilderImplContext {
 
   private static final GoalCases<ImmutableList<FieldSpec>> fields
       = new GoalCases<ImmutableList<FieldSpec>>() {
@@ -189,7 +189,7 @@ final class StepsContext {
         .addCode(finalBlock).build();
   }
 
-  private StepsContext() {
+  private BuilderImplContext() {
     throw new UnsupportedOperationException("no instances");
   }
 }

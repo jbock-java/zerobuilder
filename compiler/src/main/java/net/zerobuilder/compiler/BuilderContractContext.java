@@ -16,7 +16,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.always;
 import static net.zerobuilder.compiler.ParameterContext.asStepInterface;
 
-final class ContractContext {
+final class BuilderContractContext {
 
   private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces = always(new GoalFunction<ImmutableList<TypeSpec>>() {
     @Override
@@ -33,7 +33,7 @@ final class ContractContext {
         .build();
   }
 
-  private ContractContext() {
+  private BuilderContractContext() {
     throw new UnsupportedOperationException("no instances");
   }
 }
