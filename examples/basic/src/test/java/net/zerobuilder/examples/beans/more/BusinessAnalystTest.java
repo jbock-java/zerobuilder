@@ -55,4 +55,13 @@ public class BusinessAnalystTest {
     assertThat(updated.isExecutive(), is(false));
 
   }
+
+  @Test(expected = NullPointerException.class)
+  public void testNull() throws Exception {
+    businessAnalystBuilder()
+        .age(36)
+        .executive(true)
+        .name("Peter")
+        .notes((String) null);
+  }
 }

@@ -1,8 +1,10 @@
 package net.zerobuilder.compiler;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -76,6 +78,21 @@ abstract class ParameterContext {
       }
     };
   }
+
+  static ParameterCases<CodeBlock> nullCheck = always(new ParameterFunction<CodeBlock>() {
+    @Override
+    CodeBlock apply(ClassName typeName, TypeName returnType, ValidParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+      if (!parameter.nonNull || parameter.type.isPrimitive()) {
+        System.out.println("\n\n\n\n\n\nno " +
+            parameter.nonNull + " \n\n\n\n\n\n");
+        return CodeBlock.of("");
+      }
+      CodeBlock.Builder builder = CodeBlock.builder();
+      builder.beginControlFlow("if ($N == null)", parameter.name);
+      builder.addStatement("throw new $T($S)", NullPointerException.class, parameter.name);
+      return builder.endControlFlow().build();
+    }
+  });
 
   static <R> Function<ParameterContext, R> asFunction(final ParameterCases<R> cases) {
     return new Function<ParameterContext, R>() {

@@ -1,10 +1,9 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Optional;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-
-import java.util.Locale;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;

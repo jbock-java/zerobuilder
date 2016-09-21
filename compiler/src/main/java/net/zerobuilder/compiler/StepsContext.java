@@ -25,6 +25,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.builderImplName;
 import static net.zerobuilder.compiler.GoalContext.stepInterfaceNames;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.ParameterContext.nullCheck;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -81,7 +82,7 @@ final class StepsContext {
         if (parameter.accessorPair.collectionType.type.isPresent()) {
           builder.add(beanCollectionMethod(parameter, goalType, finalBlock));
           if (parameter.accessorPair.collectionType.allowShortcut) {
-            builder.add(beanSingleInstanceMethod(parameter, goalType, finalBlock));
+            builder.add(beanCollectionShortcut(parameter, goalType, finalBlock));
           }
         } else {
           builder.add(beanRegularMethod(parameter, goalType, finalBlock));
@@ -107,7 +108,7 @@ final class StepsContext {
         ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
         builder.add(beanCollectionMethod(parameter, goalType, goal.goalCall));
         if (parameter.accessorPair.collectionType.allowShortcut) {
-          builder.add(beanSingleInstanceMethod(parameter, goalType, goal.goalCall));
+          builder.add(beanCollectionShortcut(parameter, goalType, goal.goalCall));
         }
         return builder.build();
       } else {
@@ -161,13 +162,14 @@ final class StepsContext {
         .build();
   }
 
-  private static MethodSpec beanSingleInstanceMethod(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
+  private static MethodSpec beanCollectionShortcut(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
     String name = parameter.accessorPair.name;
     TypeName collectionType = parameter.accessorPair.collectionType.type.get();
     return methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(parameter.typeNextStep)
         .addParameter(parameterSpec(collectionType, name))
+        .addCode(parameter.accept(nullCheck))
         .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
             parameter.accessorPair.projectionMethodName, name)
         .addCode(finalBlock)
