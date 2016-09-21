@@ -25,7 +25,8 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.builderImplName;
 import static net.zerobuilder.compiler.GoalContext.stepInterfaceNames;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.ParameterContext.nullCheck;
+import static net.zerobuilder.compiler.ParameterContext.maybeNullCheck;
+import static net.zerobuilder.compiler.ParameterContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -117,7 +118,7 @@ final class BuilderImplContext {
     }
   };
 
-  static TypeSpec buildStepsImpl(GoalContext goal) {
+  static TypeSpec defineBuilderImpl(GoalContext goal) {
     return classBuilder(goal.accept(builderImplName))
         .addSuperinterfaces(goal.accept(stepInterfaceNames))
         .addFields(goal.accept(fields))
@@ -138,6 +139,7 @@ final class BuilderImplContext {
         .addExceptions(thrownTypes)
         .addModifiers(PUBLIC)
         .returns(parameter.typeNextStep)
+        .addCode(parameter.accept(maybeNullCheck))
         .addCode(finalBlock).build();
   }
 
@@ -153,6 +155,7 @@ final class BuilderImplContext {
         .addParameter(parameterSpec(iterable, name))
         .beginControlFlow("for ($T $N : $N)",
             collectionType, iterationVarName, name)
+        .addCode(parameter.accept(maybeIterationNullCheck))
         .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
             parameter.accessorPair.projectionMethodName,
             iterationVarName)
@@ -169,7 +172,7 @@ final class BuilderImplContext {
         .addAnnotation(Override.class)
         .returns(parameter.typeNextStep)
         .addParameter(parameterSpec(collectionType, name))
-        .addCode(parameter.accept(nullCheck))
+        .addCode(parameter.accept(maybeNullCheck))
         .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
             parameter.accessorPair.projectionMethodName, name)
         .addCode(finalBlock)
@@ -185,6 +188,7 @@ final class BuilderImplContext {
         .addParameter(parameterSpec(type, name))
         .addModifiers(PUBLIC)
         .returns(parameter.typeNextStep)
+        .addCode(parameter.accept(maybeNullCheck))
         .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
         .addCode(finalBlock).build();
   }

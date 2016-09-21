@@ -25,7 +25,7 @@ final class BuilderContractContext {
     }
   });
 
-  static TypeSpec buildContract(GoalContext goal) {
+  static TypeSpec defineContract(GoalContext goal) {
     return classBuilder(goal.contractName)
         .addTypes(goal.accept(stepInterfaces))
         .addModifiers(PUBLIC, FINAL, STATIC)

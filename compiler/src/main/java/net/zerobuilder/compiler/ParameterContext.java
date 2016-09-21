@@ -17,6 +17,7 @@ import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 
 abstract class ParameterContext {
@@ -79,18 +80,23 @@ abstract class ParameterContext {
     };
   }
 
-  static ParameterCases<CodeBlock> nullCheck = always(new ParameterFunction<CodeBlock>() {
+  static ParameterCases<CodeBlock> maybeNullCheck = always(new ParameterFunction<CodeBlock>() {
     @Override
     CodeBlock apply(ClassName typeName, TypeName returnType, ValidParameter parameter, ImmutableList<TypeName> declaredExceptions) {
       if (!parameter.nonNull || parameter.type.isPrimitive()) {
-        System.out.println("\n\n\n\n\n\nno " +
-            parameter.nonNull + " \n\n\n\n\n\n");
         return CodeBlock.of("");
       }
-      CodeBlock.Builder builder = CodeBlock.builder();
-      builder.beginControlFlow("if ($N == null)", parameter.name);
-      builder.addStatement("throw new $T($S)", NullPointerException.class, parameter.name);
-      return builder.endControlFlow().build();
+      return nullCheck(parameter.name, parameter.name);
+    }
+  });
+
+  static ParameterCases<CodeBlock> maybeIterationNullCheck = always(new ParameterFunction<CodeBlock>() {
+    @Override
+    CodeBlock apply(ClassName typeName, TypeName returnType, ValidParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+      if (!parameter.nonNull || parameter.type.isPrimitive()) {
+        return CodeBlock.of("");
+      }
+      return nullCheck("v", parameter.name);
     }
   });
 

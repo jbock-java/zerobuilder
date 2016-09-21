@@ -30,6 +30,13 @@ final class Utilities {
     return ParameterSpec.builder(type, name).build();
   }
 
+  static CodeBlock nullCheck(String varName, String message) {
+    return CodeBlock.builder()
+        .beginControlFlow("if ($N == null)", varName)
+        .addStatement("throw new $T($S)", NullPointerException.class, message)
+        .endControlFlow().build();
+  }
+
   private Utilities() {
     throw new UnsupportedOperationException("no instances");
   }

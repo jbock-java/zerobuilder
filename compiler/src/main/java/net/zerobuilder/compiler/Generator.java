@@ -32,13 +32,15 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.BuilderContractContext.buildContract;
+import static net.zerobuilder.compiler.BuilderContractContext.defineContract;
 import static net.zerobuilder.compiler.GoalContext.builderImplName;
 import static net.zerobuilder.compiler.GoalContext.goalCasesFunction;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
-import static net.zerobuilder.compiler.BuilderImplContext.buildStepsImpl;
-import static net.zerobuilder.compiler.UpdaterContext.buildUpdaterImpl;
+import static net.zerobuilder.compiler.BuilderImplContext.defineBuilderImpl;
+import static net.zerobuilder.compiler.ParameterContext.maybeIterationNullCheck;
+import static net.zerobuilder.compiler.ParameterContext.maybeNullCheck;
+import static net.zerobuilder.compiler.UpdaterContext.defineUpdater;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
@@ -77,11 +79,11 @@ final class Generator {
     ImmutableList.Builder<TypeSpec> builder = ImmutableList.builder();
     for (GoalContext goal : goals) {
       if (goal.toBuilder) {
-        builder.add(buildUpdaterImpl(goal));
+        builder.add(defineUpdater(goal));
       }
       if (goal.builder) {
-        builder.add(buildStepsImpl(goal));
-        builder.add(buildContract(goal));
+        builder.add(defineBuilderImpl(goal));
+        builder.add(defineContract(goal));
       }
     }
     return builder.build();
@@ -181,11 +183,24 @@ final class Generator {
       CodeBlock.Builder builder = CodeBlock.builder();
       for (ExecutableParameterContext parameter : parameters) {
         if (parameter.parameter.projectionMethodName.isPresent()) {
+          if (parameter.parameter.nonNull) {
+            builder.add(CodeBlock.builder()
+                .beginControlFlow("if ($N.$N() == null)", instance, parameter.parameter.projectionMethodName.get())
+                .addStatement("throw new $T($S)", NullPointerException.class, parameter.parameter.name)
+                .endControlFlow().build());
+          }
           builder.addStatement("$N.$N = $N.$N()", updater, parameter.parameter.name,
               instance, parameter.parameter.projectionMethodName.get());
         } else {
-          builder.addStatement("$N.$N = $N.$N", updater, parameter.parameter.name,
-              instance, parameter.parameter.name);
+          if (parameter.parameter.nonNull) {
+            builder.add(CodeBlock.builder()
+                .beginControlFlow("if ($N.$N == null)", instance, parameter.parameter.name)
+                .addStatement("throw new $T($S)", NullPointerException.class, parameter.parameter.name)
+                .endControlFlow().build());
+          }
+          builder.add(CodeBlock.builder()
+              .addStatement("$N.$N = $N.$N", updater, parameter.parameter.name,
+                  instance, parameter.parameter.name).build());
         }
       }
       method.addCode(builder.build());
@@ -219,12 +234,19 @@ final class Generator {
           builder
               .beginControlFlow("for ($T $N : $N.$N())",
                   collectionType, iterationVarName, instance, parameter.accessorPair.projectionMethodName)
+              .add(parameter.accept(maybeIterationNullCheck))
               .addStatement("$N.$N.$N().add($N)", updater,
                   downcase(goalType.simpleName()),
                   parameter.accessorPair.projectionMethodName,
                   iterationVarName)
               .endControlFlow();
         } else {
+          if (parameter.accessorPair.nonNull) {
+            builder.add(CodeBlock.builder()
+                .beginControlFlow("if ($N.$N() == null)", instance, parameter.accessorPair.projectionMethodName)
+                .addStatement("throw new $T($S)", NullPointerException.class, parameter.accessorPair.name)
+                .endControlFlow().build());
+          }
           builder.addStatement("$N.$N.set$L($N.$N())", updater,
               instance,
               parameterName,

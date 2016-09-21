@@ -23,6 +23,8 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.GoalContext.always;
 import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.ParameterContext.maybeIterationNullCheck;
+import static net.zerobuilder.compiler.ParameterContext.maybeNullCheck;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -74,6 +76,7 @@ final class UpdaterContext {
         builder.add(methodBuilder(name)
             .returns(goal.accept(typeName))
             .addParameter(parameterSpec(type, name))
+            .addCode(parameter.accept(maybeNullCheck))
             .addStatement("this.$N = $N", name, name)
             .addStatement("return this")
             .addModifiers(PUBLIC)
@@ -98,6 +101,7 @@ final class UpdaterContext {
               .addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
                   parameter.accessorPair.projectionMethodName)
               .beginControlFlow("for ($T $N : $N)", collectionType, iterationVarName, name)
+              .addCode(parameter.accept(maybeIterationNullCheck))
               .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
                   parameter.accessorPair.projectionMethodName, iterationVarName)
               .endControlFlow()
@@ -108,8 +112,9 @@ final class UpdaterContext {
             builder.add(methodBuilder(name)
                 .returns(goal.accept(typeName))
                 .addParameter(parameterSpec(collectionType, name))
+                .addCode(parameter.accept(maybeNullCheck))
                 .addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
-                    parameter.accessorPair.projectionMethodName)
+                parameter.accessorPair.projectionMethodName)
                 .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
                     parameter.accessorPair.projectionMethodName, name)
                 .addStatement("return this")
@@ -152,7 +157,7 @@ final class UpdaterContext {
     }
   };
 
-  static TypeSpec buildUpdaterImpl(GoalContext goal) {
+  static TypeSpec defineUpdater(GoalContext goal) {
     return classBuilder(goal.accept(typeName))
         .addFields(goal.accept(fields))
         .addMethods(goal.accept(updateMethods))
