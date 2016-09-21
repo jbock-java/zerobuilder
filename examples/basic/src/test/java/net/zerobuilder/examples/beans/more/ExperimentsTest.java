@@ -14,8 +14,6 @@ import static net.zerobuilder.examples.beans.more.Experiments_AeroExperimentBuil
 import static net.zerobuilder.examples.beans.more.Experiments_AeroExperimentBuilders.aeroExperimentToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_BioExperimentBuilders.bioExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_BioExperimentBuilders.bioExperimentToBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_CAPSExperimentBuilders.CAPSExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_CAPSExperimentBuilders.CAPSExperimentToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_RawExperimentBuilders.rawExperimentBuilder;
@@ -80,15 +78,5 @@ public class ExperimentsTest {
     expectedList2.add(asList("2"));
     assertThat(experiment1.getThings(), is(expectedList1));
     assertThat(experiment2.getThings(), is(expectedList2));
-  }
-
-  @Test
-  public void capsTest() {
-    Experiments.CAPSExperiment experiment1 = CAPSExperimentBuilder().foo("bar");
-    Experiments.CAPSExperiment experiment2 = CAPSExperimentToBuilder(experiment1)
-        .foo("tar")
-        .build();
-    assertThat(experiment1.getFoo(), is("bar"));
-    assertThat(experiment2.getFoo(), is("tar"));
   }
 }

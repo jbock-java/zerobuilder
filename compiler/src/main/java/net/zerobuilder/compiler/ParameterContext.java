@@ -17,6 +17,7 @@ import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 
@@ -126,6 +127,10 @@ abstract class ParameterContext {
             .addMethod(methodBuilder(name)
                 .returns(returnType)
                 .addParameter(parameterSpec(iterable, name))
+                .addModifiers(PUBLIC, ABSTRACT)
+                .build())
+            .addMethod(methodBuilder(name)
+                .returns(returnType)
                 .addModifiers(PUBLIC, ABSTRACT)
                 .build());
         if (parameter.collectionType.allowShortcut) {

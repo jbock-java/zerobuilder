@@ -158,8 +158,11 @@ final class ProjectionValidator {
       String setterName = name.substring(name.startsWith("get") ? 3 : 2);
       ExecutableElement setter = setters.get(setterName);
       if (setter != null) {
-        if (!setter.getParameters().get(0).asType().equals(getter.getReturnType())) {
-          throw new ValidationException(GETTER_SETTER_TYPE_MISMATCH, setter);
+        TypeName setterType = TypeName.get(setter.getParameters().get(0).asType());
+        TypeName getterType = TypeName.get(getter.getReturnType());
+        if (!setterType.equals(getterType)) {
+          throw new ValidationException(GETTER_SETTER_TYPE_MISMATCH
+              + ": " + getterType + " vs " + setterType, setter);
         }
         if (!getter.getThrownTypes().isEmpty()) {
           throw new ValidationException(GETTER_EXCEPTION, getter);
@@ -175,16 +178,9 @@ final class ProjectionValidator {
           builder.add(TmpAccessorPair.create(getter, CollectionType.of(collectionType, false)));
         } else if (referenced.size() == 1) {
           // one type parameter
-          TypeMirror parameter = getOnlyElement(referenced);
-          boolean allowShortcut = !ClassName.get(asTypeElement(parameter)).equals(ClassName.get(Iterable.class));
-          List<? extends TypeMirror> typeArguments = asDeclared(parameter).getTypeArguments();
-          if (typeArguments.isEmpty()) {
-            TypeName collectionType = ClassName.get(parameter);
-            builder.add(TmpAccessorPair.create(getter, CollectionType.of(collectionType, allowShortcut)));
-          } else {
-            TypeName collectionType = ParameterizedTypeName.get(parameter);
-            builder.add(TmpAccessorPair.create(getter, CollectionType.of(collectionType, allowShortcut)));
-          }
+          TypeMirror collectionType = getOnlyElement(referenced);
+          boolean allowShortcut = !ClassName.get(asTypeElement(collectionType)).equals(ParameterizedTypeName.get(Iterable.class));
+          builder.add(TmpAccessorPair.create(getter, CollectionType.of(ParameterizedTypeName.get(collectionType), allowShortcut)));
         } else {
           // unlikely: Collection should not have more than one type parameter
           throw new ValidationException(BAD_GENERICS, getter);

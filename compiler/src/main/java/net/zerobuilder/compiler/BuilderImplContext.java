@@ -81,7 +81,7 @@ final class BuilderImplContext {
       CodeBlock finalBlock = CodeBlock.builder().addStatement("return this").build();
       for (BeansParameterContext parameter : parameters.subList(0, parameters.size() - 1)) {
         if (parameter.accessorPair.collectionType.type.isPresent()) {
-          builder.add(beanCollectionMethod(parameter, goalType, finalBlock));
+          builder.addAll(beanCollectionMethods(parameter, goalType, finalBlock));
           if (parameter.accessorPair.collectionType.allowShortcut) {
             builder.add(beanCollectionShortcut(parameter, goalType, finalBlock));
           }
@@ -107,7 +107,7 @@ final class BuilderImplContext {
       BeansParameterContext parameter = getLast(parameters);
       if (parameter.accessorPair.collectionType.type.isPresent()) {
         ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-        builder.add(beanCollectionMethod(parameter, goalType, goal.goalCall));
+        builder.addAll(beanCollectionMethods(parameter, goalType, goal.goalCall));
         if (parameter.accessorPair.collectionType.allowShortcut) {
           builder.add(beanCollectionShortcut(parameter, goalType, goal.goalCall));
         }
@@ -143,13 +143,13 @@ final class BuilderImplContext {
         .addCode(finalBlock).build();
   }
 
-  private static MethodSpec beanCollectionMethod(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
+  private static ImmutableList<MethodSpec> beanCollectionMethods(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
     String name = parameter.accessorPair.name;
     TypeName collectionType = parameter.accessorPair.collectionType.type.get();
     String iterationVarName = "v";
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
         subtypeOf(collectionType));
-    return methodBuilder(name)
+    MethodSpec fromIterable = methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(parameter.typeNextStep)
         .addParameter(parameterSpec(iterable, name))
@@ -163,6 +163,13 @@ final class BuilderImplContext {
         .addCode(finalBlock)
         .addModifiers(PUBLIC)
         .build();
+    MethodSpec fromEmpty = methodBuilder(name)
+        .addAnnotation(Override.class)
+        .returns(parameter.typeNextStep)
+        .addCode(finalBlock)
+        .addModifiers(PUBLIC)
+        .build();
+    return ImmutableList.of(fromIterable, fromEmpty);
   }
 
   private static MethodSpec beanCollectionShortcut(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {

@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+// various beans
 // see ExperimentsTest
 public class Experiments {
 
+  // standard bean
   @Builders(recycle = true)
   @Goal(toBuilder = true)
   public static class Experiment {
@@ -35,7 +37,7 @@ public class Experiments {
     }
   }
 
-  // setterless generic collection
+  // setterless collection with complicated type
   @Builders(recycle = true)
   @Goal(toBuilder = true)
   public static class BioExperiment {
@@ -64,7 +66,7 @@ public class Experiments {
     }
   }
 
-  // setterless raw collection
+  // corner case: list<iterable>; must avoid "same erasure" error
   @Builders(recycle = true)
   @Goal(toBuilder = true)
   @SuppressWarnings("rawtypes")
@@ -76,19 +78,6 @@ public class Experiments {
         things = new ArrayList();
       }
       return things;
-    }
-  }
-
-  // setterless raw collection
-  @Builders(recycle = true)
-  @Goal(toBuilder = true)
-  public static class CAPSExperiment {
-    private String foo;
-    public String getFoo() {
-      return foo;
-    }
-    public void setFoo(String foo) {
-      this.foo = foo;
     }
   }
 }

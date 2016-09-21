@@ -2,6 +2,7 @@ package net.zerobuilder.compiler;
 
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -94,12 +95,13 @@ final class UpdaterContext {
           TypeName collectionType = parameter.accessorPair.collectionType.type.get();
           ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
               subtypeOf(collectionType));
+          CodeBlock clearCollection = CodeBlock.builder().addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
+              parameter.accessorPair.projectionMethodName).build();
           String iterationVarName = "v";
           builder.add(methodBuilder(name)
               .returns(goal.accept(typeName))
               .addParameter(parameterSpec(iterable, name))
-              .addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
-                  parameter.accessorPair.projectionMethodName)
+              .addCode(clearCollection)
               .beginControlFlow("for ($T $N : $N)", collectionType, iterationVarName, name)
               .addCode(parameter.accept(maybeIterationNullCheck))
               .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
@@ -108,13 +110,18 @@ final class UpdaterContext {
               .addStatement("return this")
               .addModifiers(PUBLIC)
               .build());
+          builder.add(methodBuilder(name)
+              .returns(goal.accept(typeName))
+              .addCode(clearCollection)
+              .addStatement("return this")
+              .addModifiers(PUBLIC)
+              .build());
           if (parameter.accessorPair.collectionType.allowShortcut) {
             builder.add(methodBuilder(name)
                 .returns(goal.accept(typeName))
                 .addParameter(parameterSpec(collectionType, name))
                 .addCode(parameter.accept(maybeNullCheck))
-                .addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
-                parameter.accessorPair.projectionMethodName)
+                .addCode(clearCollection)
                 .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
                     parameter.accessorPair.projectionMethodName, name)
                 .addStatement("return this")

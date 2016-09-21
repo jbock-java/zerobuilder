@@ -7,6 +7,7 @@ import net.zerobuilder.Step;
 import java.util.ArrayList;
 import java.util.List;
 
+// bean with setterless collection (notes)
 // see BusinessAnalystTest
 @Builders(recycle = true)
 @Goal(toBuilder = true)
@@ -33,7 +34,6 @@ public class BusinessAnalyst {
     this.age = age;
   }
 
-  @Step(nonNull = true)
   public List<String> getNotes() {
     if (notes == null) {
       notes = new ArrayList<>();
