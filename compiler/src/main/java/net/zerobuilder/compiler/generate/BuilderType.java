@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Joiner;
 import com.squareup.javapoet.ClassName;
@@ -6,33 +6,31 @@ import net.zerobuilder.Builders;
 
 import javax.lang.model.element.TypeElement;
 
-import static javax.lang.model.element.Modifier.PUBLIC;
-
-final class BuilderContext {
+public final class BuilderType {
 
   final boolean recycle;
 
   /**
    * The type that carries the {@link Builders} annotation
    */
-  final ClassName annotatedType;
+  public final ClassName annotatedType;
 
   /**
    * The type that will be generated: {@code annotatedType + "Builders"}
    */
-  final ClassName generatedType;
+  public final ClassName generatedType;
 
-  private BuilderContext(boolean recycle, ClassName annotatedType, ClassName generatedType) {
+  private BuilderType(boolean recycle, ClassName annotatedType, ClassName generatedType) {
     this.recycle = recycle;
     this.annotatedType = annotatedType;
     this.generatedType = generatedType;
   }
 
-  static BuilderContext createBuildConfig(TypeElement buildElement) {
+  public static BuilderType createBuilderContext(TypeElement buildElement) {
     boolean nogc = buildElement.getAnnotation(Builders.class).recycle();
     ClassName generatedType = generatedClassName(buildElement);
     ClassName annotatedType = ClassName.get(buildElement);
-    return new BuilderContext(nogc, annotatedType, generatedType);
+    return new BuilderType(nogc, annotatedType, generatedType);
   }
 
   private static ClassName generatedClassName(TypeElement buildElement) {

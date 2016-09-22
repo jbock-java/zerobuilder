@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.generate;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -6,13 +6,13 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.ParameterContext.BeansParameterContext;
-import net.zerobuilder.compiler.ParameterContext.ExecutableParameterContext;
+import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
+import net.zerobuilder.compiler.generate.ParameterContext.BeansParameterContext;
+import net.zerobuilder.compiler.generate.ParameterContext.ExecutableParameterContext;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
 
-abstract class GoalContext {
+public abstract class GoalContext {
 
   static abstract class GoalCases<R> {
     abstract R executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
@@ -51,7 +51,7 @@ abstract class GoalContext {
     };
   }
 
-  final BuilderContext config;
+  final BuilderType config;
 
   final boolean toBuilder;
   final boolean builder;
@@ -66,7 +66,7 @@ abstract class GoalContext {
   final CodeBlock goalCall;
 
   @VisibleForTesting
-  GoalContext(BuilderContext config,
+  GoalContext(BuilderType config,
               boolean toBuilder,
               boolean builder, ClassName contractName, String goalName,
               CodeBlock goalCall) {
@@ -96,7 +96,7 @@ abstract class GoalContext {
     }
   });
 
-  final static class ExecutableGoalContext extends GoalContext {
+  public final static class ExecutableGoalContext extends GoalContext {
 
     final GoalKind kind;
 
@@ -113,8 +113,8 @@ abstract class GoalContext {
 
     final ImmutableList<TypeName> thrownTypes;
 
-    ExecutableGoalContext(TypeName goalType,
-                          BuilderContext config,
+    public ExecutableGoalContext(TypeName goalType,
+                          BuilderType config,
                           boolean toBuilder,
                           boolean builder,
                           ClassName contractName,
@@ -135,7 +135,7 @@ abstract class GoalContext {
     }
   }
 
-  final static class BeanGoalContext extends GoalContext {
+  public final static class BeanGoalContext extends GoalContext {
 
     /**
      * alphabetic order unless Step annotation was used
@@ -143,8 +143,8 @@ abstract class GoalContext {
     final ImmutableList<BeansParameterContext> goalParameters;
     final ClassName goalType;
 
-    BeanGoalContext(ClassName goalType,
-                    BuilderContext config,
+    public BeanGoalContext(ClassName goalType,
+                    BuilderType config,
                     boolean toBuilder,
                     boolean builder,
                     ClassName contractName,

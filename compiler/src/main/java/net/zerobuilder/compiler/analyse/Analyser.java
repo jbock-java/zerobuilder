@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.analyse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -7,9 +7,11 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.ProjectionValidator.ValidationResult;
+import net.zerobuilder.compiler.analyse.Analyser.AbstractGoalElement.GoalElementCases;
+import net.zerobuilder.compiler.generate.BuilderType;
+import net.zerobuilder.compiler.generate.GoalContext;
+import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidationResult;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -31,24 +33,24 @@ import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind.WARNING;
-import static net.zerobuilder.compiler.BuilderContext.createBuildConfig;
-import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.STATIC_METHOD;
-import static net.zerobuilder.compiler.GoalContextFactory.context;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EECC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMM;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.TypeValidator.validateBuildersType;
+import static net.zerobuilder.compiler.generate.BuilderType.createBuilderContext;
+import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.STATIC_METHOD;
+import static net.zerobuilder.compiler.analyse.GoalContextFactory.context;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_EECC;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_EEMC;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_EEMM;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_NECC;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_NEMC;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_NEMM;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_NN;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.NO_GOALS;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersType;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
-final class Analyser {
+public final class Analyser {
 
   /**
    * to generate better error messages, in case of goal name conflict
@@ -78,12 +80,12 @@ final class Analyser {
 
   private final Elements elements;
 
-  Analyser(Elements elements) {
+  public Analyser(Elements elements) {
     this.elements = elements;
   }
 
-  AnalysisResult parse(TypeElement buildElement) throws ValidationException {
-    BuilderContext context = createBuildConfig(buildElement);
+  public AnalysisResult analyse(TypeElement buildElement) throws ValidationException {
+    BuilderType context = createBuilderContext(buildElement);
     ImmutableList.Builder<GoalContext> builder = ImmutableList.builder();
     ImmutableList<GoalElement> goals = goals(buildElement);
     checkNameConflict(goals);
@@ -161,11 +163,11 @@ final class Analyser {
     return goals;
   }
 
-  static final class AnalysisResult {
-    final BuilderContext config;
-    final ImmutableList<GoalContext> goals;
+  public static final class AnalysisResult {
+    public final BuilderType config;
+    public final ImmutableList<GoalContext> goals;
 
-    AnalysisResult(BuilderContext config, ImmutableList<GoalContext> goals) {
+    AnalysisResult(BuilderType config, ImmutableList<GoalContext> goals) {
       this.config = config;
       this.goals = goals;
     }

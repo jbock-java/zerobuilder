@@ -8,7 +8,10 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.Analyser.AnalysisResult;
+import net.zerobuilder.compiler.analyse.Analyser;
+import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
+import net.zerobuilder.compiler.analyse.ValidationException;
+import net.zerobuilder.compiler.generate.Generator;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
@@ -29,8 +32,8 @@ import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_NOT_IN_BUILD;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_WITHOUT_BUILDERS;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOAL_NOT_IN_BUILD;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOAL_WITHOUT_BUILDERS;
 
 @AutoService(Processor.class)
 public final class ZeroProcessor extends AbstractProcessor {
@@ -51,12 +54,12 @@ public final class ZeroProcessor extends AbstractProcessor {
     if (goalNotInBuild.isPresent()) {
       return false;
     }
-    Analyser transformer = new Analyser(processingEnv.getElementUtils());
+    Analyser analyser = new Analyser(processingEnv.getElementUtils());
     Generator generator = new Generator(processingEnv.getElementUtils());
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builders.class));
     for (TypeElement annotatedType : types) {
       try {
-        AnalysisResult analysisResult = transformer.parse(annotatedType);
+        AnalysisResult analysisResult = analyser.analyse(annotatedType);
         TypeSpec typeSpec = generator.generate(analysisResult);
         try {
           write(analysisResult.config.generatedType, typeSpec);

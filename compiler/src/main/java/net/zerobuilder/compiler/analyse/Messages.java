@@ -1,14 +1,15 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.analyse;
 
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.AnnotationSpec;
+import net.zerobuilder.compiler.ZeroProcessor;
 
 import javax.annotation.Generated;
 import javax.lang.model.util.Elements;
 
-final class Messages {
+public final class Messages {
 
-  static final class ErrorMessages {
+  public static final class ErrorMessages {
 
     private static final String POJO_HINT
         = " If this is not a POJO, try putting the @Goal annotation on a constructor instead.";
@@ -31,11 +32,11 @@ final class Messages {
     static final String NO_GOALS =
         "No goals were found.";
 
-    static final String GOAL_NOT_IN_BUILD =
+    public static final String GOAL_NOT_IN_BUILD =
         "The @Goal annotation may not appear outside a class that carries the @Builders annotation.";
 
-    static final String GOAL_WITHOUT_BUILDERS =
-        "A class that carries the @Goal annotation must also carry the @Builders annotation.";
+    public static final String GOAL_WITHOUT_BUILDERS =
+        "A class that carries the @Goal annotation must also carry the @Builders annotation." + POJO_HINT;
 
     static final String STEP_POSITION_TOO_LARGE =
         "Step position must be less than the number of arguments.";
@@ -100,11 +101,11 @@ final class Messages {
     }
   }
 
-  static final class JavadocMessages {
+  public static final class JavadocMessages {
 
-    static final String GENERATED_COMMENTS = "https://github.com/h908714124/zerobuilder";
+    public static final String GENERATED_COMMENTS = "https://github.com/h908714124/zerobuilder";
 
-    static ImmutableList<AnnotationSpec> generatedAnnotations(Elements elements) {
+    public static ImmutableList<AnnotationSpec> generatedAnnotations(Elements elements) {
       if (elements.getTypeElement("javax.annotation.Generated") != null) {
         return ImmutableList.of(AnnotationSpec.builder(Generated.class)
             .addMember("value", "$S", ZeroProcessor.class.getName())

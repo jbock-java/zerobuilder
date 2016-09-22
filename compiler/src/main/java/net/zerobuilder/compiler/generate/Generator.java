@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -12,11 +12,11 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.Analyser.AnalysisResult;
-import net.zerobuilder.compiler.GoalContext.GoalCases;
-import net.zerobuilder.compiler.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.ParameterContext.BeansParameterContext;
-import net.zerobuilder.compiler.ParameterContext.ExecutableParameterContext;
+import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
+import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
+import net.zerobuilder.compiler.generate.GoalContext.GoalCases;
+import net.zerobuilder.compiler.generate.ParameterContext.BeansParameterContext;
+import net.zerobuilder.compiler.generate.ParameterContext.ExecutableParameterContext;
 
 import javax.lang.model.util.Elements;
 
@@ -32,26 +32,24 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.BuilderContractContext.defineContract;
-import static net.zerobuilder.compiler.GoalContext.builderImplName;
-import static net.zerobuilder.compiler.GoalContext.goalCasesFunction;
-import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
-import static net.zerobuilder.compiler.BuilderImplContext.defineBuilderImpl;
-import static net.zerobuilder.compiler.ParameterContext.maybeIterationNullCheck;
-import static net.zerobuilder.compiler.ParameterContext.maybeNullCheck;
-import static net.zerobuilder.compiler.UpdaterContext.defineUpdater;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.iterationVarName;
-import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.analyse.Messages.JavadocMessages.generatedAnnotations;
+import static net.zerobuilder.compiler.generate.BuilderContractContext.defineContract;
+import static net.zerobuilder.compiler.generate.BuilderImplContext.defineBuilderImpl;
+import static net.zerobuilder.compiler.generate.GoalContext.builderImplName;
+import static net.zerobuilder.compiler.generate.GoalContext.goalCasesFunction;
+import static net.zerobuilder.compiler.generate.ParameterContext.maybeIterationNullCheck;
+import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 
 /**
  * Generates an xyzBuilders class for each {@link net.zerobuilder.Builders} annotated class Xyz.
  */
-final class Generator {
+public final class Generator {
 
   private final Elements elements;
 
@@ -60,11 +58,11 @@ final class Generator {
    */
   private static final String TL = "INSTANCE";
 
-  Generator(Elements elements) {
+  public Generator(Elements elements) {
     this.elements = elements;
   }
 
-  TypeSpec generate(AnalysisResult analysisResult) {
+  public TypeSpec generate(AnalysisResult analysisResult) {
     return classBuilder(analysisResult.config.generatedType)
         .addFields(instanceFields(analysisResult))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
@@ -91,7 +89,7 @@ final class Generator {
     return builder.build();
   }
 
-  private Optional<FieldSpec> threadLocalField(BuilderContext config) {
+  private Optional<FieldSpec> threadLocalField(BuilderType config) {
     if (!config.recycle) {
       return absent();
     }

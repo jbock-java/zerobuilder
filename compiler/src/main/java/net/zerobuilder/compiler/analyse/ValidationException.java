@@ -1,14 +1,14 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.analyse;
 
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 
-final class ValidationException extends Exception {
+public final class ValidationException extends Exception {
   private static final long serialVersionUID = 0;
-  final Diagnostic.Kind kind;
-  final Element about;
+  public final Diagnostic.Kind kind;
+  public final Element about;
   ValidationException(Diagnostic.Kind kind, String message, Element about) {
     super(message);
     this.kind = kind;

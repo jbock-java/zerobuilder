@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.analyse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -11,11 +11,12 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.Analyser.AbstractGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
-import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.AccessorPair;
-import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.RegularParameter;
-import net.zerobuilder.compiler.ProjectionValidator.ValidationResult.BeanValidationResult;
+import net.zerobuilder.compiler.analyse.Analyser.AbstractGoalElement.GoalElementCases;
+import net.zerobuilder.compiler.analyse.Analyser.BeanGoal;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter.AccessorPair;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter.RegularParameter;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidationResult.BeanValidationResult;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -43,21 +44,21 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BAD_GENERICS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_FIND_SETTER;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_EXCEPTION;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_SETTER_TYPE_MISMATCH;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
-import static net.zerobuilder.compiler.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.BAD_GENERICS;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.COULD_NOT_FIND_SETTER;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GETTER_EXCEPTION;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GETTER_SETTER_TYPE_MISMATCH;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.NO_PROJECTION;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.SETTER_EXCEPTION;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
+import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.TARGET_PUBLIC;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
 
-final class ProjectionValidator {
+public final class ProjectionValidator {
 
   private static final Ordering<TmpAccessorPair> ACCESSOR_PAIR_ORDERING
       = Ordering.from(new Comparator<TmpAccessorPair>() {
@@ -129,31 +130,15 @@ final class ProjectionValidator {
           FluentIterable.from(shuffled).transform(TmpValidParameter.TmpRegularParameter.toValidParameter).toList());
     }
     @Override
-    public ValidationResult beanGoal(Analyser.BeanGoal goal) throws ValidationException {
+    public ValidationResult beanGoal(BeanGoal goal) throws ValidationException {
       return validateBean(goal);
     }
   };
 
-  private static ValidationResult validateBean(Analyser.BeanGoal goal) throws ValidationException {
+  private static ValidationResult validateBean(BeanGoal goal) throws ValidationException {
     ImmutableMap<String, ExecutableElement> setters = setters(goal);
-    ImmutableList<ExecutableElement> getters
-        = FluentIterable.from(getLocalAndInheritedMethods(goal.beanTypeElement, goal.elements))
-        .filter(new Predicate<ExecutableElement>() {
-          @Override
-          public boolean apply(ExecutableElement method) {
-            String name = method.getSimpleName().toString();
-            return method.getParameters().isEmpty()
-                && method.getModifiers().contains(PUBLIC)
-                && !method.getModifiers().contains(STATIC)
-                && !method.getReturnType().getKind().equals(TypeKind.VOID)
-                && !method.getReturnType().getKind().equals(TypeKind.NONE)
-                && (name.startsWith("get") || name.startsWith("is"))
-                && !"getClass".equals(name);
-          }
-        })
-        .toList();
     ImmutableList.Builder<TmpAccessorPair> builder = ImmutableList.builder();
-    for (ExecutableElement getter : getters) {
+    for (ExecutableElement getter : getters(goal)) {
       String name = getter.getSimpleName().toString();
       String setterName = name.substring(name.startsWith("get") ? 3 : 2);
       ExecutableElement setter = setters.get(setterName);
@@ -226,12 +211,30 @@ final class ProjectionValidator {
           FluentIterable.from(shuffled).transform(TmpValidParameter.TmpRegularParameter.toValidParameter).toList());
     }
     @Override
-    public ValidationResult beanGoal(Analyser.BeanGoal goal) throws ValidationException {
+    public ValidationResult beanGoal(BeanGoal goal) throws ValidationException {
       return validateBean(goal);
     }
   };
 
-  private static ImmutableMap<String, ExecutableElement> setters(Analyser.BeanGoal goal) throws ValidationException {
+  private static ImmutableList<ExecutableElement> getters(BeanGoal goal) {
+    return FluentIterable.from(getLocalAndInheritedMethods(goal.beanTypeElement, goal.elements))
+        .filter(new Predicate<ExecutableElement>() {
+          @Override
+          public boolean apply(ExecutableElement method) {
+            String name = method.getSimpleName().toString();
+            return method.getParameters().isEmpty()
+                && method.getModifiers().contains(PUBLIC)
+                && !method.getModifiers().contains(STATIC)
+                && !method.getReturnType().getKind().equals(TypeKind.VOID)
+                && !method.getReturnType().getKind().equals(TypeKind.NONE)
+                && (name.startsWith("get") || name.startsWith("is"))
+                && !"getClass".equals(name);
+          }
+        })
+        .toList();
+  }
+
+  private static ImmutableMap<String, ExecutableElement> setters(BeanGoal goal) throws ValidationException {
     TypeElement beanType = goal.beanTypeElement;
     if (!hasParameterlessConstructor(beanType)) {
       throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, beanType);
@@ -359,28 +362,28 @@ final class ProjectionValidator {
 
   }
 
-  abstract static class ValidParameter {
+  public abstract static class ValidParameter {
 
-    final String name;
-    final TypeName type;
-    final boolean nonNull;
+    public final String name;
+    public final TypeName type;
+    public final boolean nonNull;
 
-    static final class RegularParameter extends ValidParameter {
-      final Optional<String> projectionMethodName;
+    public static final class RegularParameter extends ValidParameter {
+      public final Optional<String> projectionMethodName;
       RegularParameter(String name, TypeName type, Optional<String> projectionMethodName, boolean nonNull) {
         super(name, type, nonNull);
         this.projectionMethodName = projectionMethodName;
       }
     }
 
-    static final class AccessorPair extends ValidParameter {
-      final String projectionMethodName;
+    public static final class AccessorPair extends ValidParameter {
+      public final String projectionMethodName;
 
       /**
        * Only present if there is no setter for the collection.
        * If {@link #type} is {@code List<String>}, this would be {@code String}
        */
-      final CollectionType collectionType;
+      public final CollectionType collectionType;
 
       AccessorPair(TypeName type, String projectionMethodName, CollectionType collectionType, boolean nonNull) {
         super(name(projectionMethodName), type, nonNull);
@@ -400,10 +403,10 @@ final class ProjectionValidator {
     }
   }
 
-  static abstract class ValidationResult {
-    static abstract class ValidationResultCases<R> {
+  public static abstract class ValidationResult {
+    public static abstract class ValidationResultCases<R> {
       abstract R executableGoal(Analyser.ExecutableGoal goal, ImmutableList<RegularParameter> parameters);
-      abstract R beanGoal(Analyser.BeanGoal beanGoal, ImmutableList<AccessorPair> accessorPairs);
+      abstract R beanGoal(BeanGoal beanGoal, ImmutableList<AccessorPair> accessorPairs);
     }
     abstract <R> R accept(ValidationResultCases<R> cases);
     static final class RegularValidationResult extends ValidationResult {
@@ -420,9 +423,9 @@ final class ProjectionValidator {
     }
 
     static final class BeanValidationResult extends ValidationResult {
-      private final Analyser.BeanGoal goal;
+      private final BeanGoal goal;
       private final ImmutableList<AccessorPair> accessorPairs;
-      BeanValidationResult(Analyser.BeanGoal goal, ImmutableList<AccessorPair> accessorPairs) {
+      BeanValidationResult(BeanGoal goal, ImmutableList<AccessorPair> accessorPairs) {
         this.goal = goal;
         this.accessorPairs = accessorPairs;
       }
@@ -433,9 +436,9 @@ final class ProjectionValidator {
     }
   }
 
-  static final class CollectionType {
-    final Optional<? extends TypeName> type;
-    final boolean allowShortcut;
+  public static final class CollectionType {
+    public final Optional<? extends TypeName> type;
+    public final boolean allowShortcut;
 
     private CollectionType(Optional<? extends TypeName> type, boolean allowShortcut) {
       this.type = type;

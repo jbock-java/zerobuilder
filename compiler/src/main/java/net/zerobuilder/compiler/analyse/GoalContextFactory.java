@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.analyse;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -6,16 +6,19 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.ProjectionValidator.ValidParameter;
+import net.zerobuilder.compiler.generate.BuilderType;
+import net.zerobuilder.compiler.generate.GoalContext;
+import net.zerobuilder.compiler.generate.ParameterContext;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
 
-final class GoalContextFactory {
+public final class GoalContextFactory {
 
-  static GoalContext context(final ProjectionValidator.ValidationResult validationResult, final BuilderContext config,
+  static GoalContext context(final ProjectionValidator.ValidationResult validationResult, final BuilderType config,
                              final boolean toBuilder, final boolean builder,
                              final CodeBlock goalCall) throws ValidationException {
     return validationResult.accept(new ProjectionValidator.ValidationResult.ValidationResultCases<GoalContext>() {
@@ -80,7 +83,7 @@ final class GoalContextFactory {
   }
 
   // beanGoal goals don't have a kind
-  enum GoalKind {
+  public enum GoalKind {
     CONSTRUCTOR, STATIC_METHOD, INSTANCE_METHOD
   }
 

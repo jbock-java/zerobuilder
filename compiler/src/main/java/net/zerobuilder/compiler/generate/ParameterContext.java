@@ -1,28 +1,26 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.ProjectionValidator.ValidParameter;
-import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.AccessorPair;
-import net.zerobuilder.compiler.ProjectionValidator.ValidParameter.RegularParameter;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter.AccessorPair;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter.RegularParameter;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.iterationVarName;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 
-abstract class ParameterContext {
+public abstract class ParameterContext {
 
   final ClassName typeThisStep;
   final TypeName typeNextStep;
@@ -39,10 +37,10 @@ abstract class ParameterContext {
     this.typeNextStep = typeNextStep;
   }
 
-  final static class ExecutableParameterContext extends ParameterContext {
+  public final static class ExecutableParameterContext extends ParameterContext {
     final RegularParameter parameter;
     final ImmutableList<TypeName> declaredExceptions;
-    ExecutableParameterContext(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+    public ExecutableParameterContext(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
       super(typeName, returnType);
       this.declaredExceptions = declaredExceptions;
       this.parameter = parameter;
@@ -53,9 +51,9 @@ abstract class ParameterContext {
     }
   }
 
-  final static class BeansParameterContext extends ParameterContext {
+  public final static class BeansParameterContext extends ParameterContext {
     final AccessorPair accessorPair;
-    BeansParameterContext(ClassName typeName, TypeName returnType, AccessorPair accessorPair) {
+    public BeansParameterContext(ClassName typeName, TypeName returnType, AccessorPair accessorPair) {
       super(typeName, returnType);
       this.accessorPair = accessorPair;
     }
