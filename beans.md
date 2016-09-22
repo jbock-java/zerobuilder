@@ -97,3 +97,14 @@ public String getName() {
 Now `name` is the first step.
 The remaining steps `age`, `executive` and `notes` are still in alphabetic order.
 In order to make `notes` the second step, add `@Step(1)` to the corresponding getter, and so on.
+
+### Null checking
+
+Null checking is enabled by adding a `@Step` annotation to a getter:
+
+````java
+@Step(nonNull = true)
+public String getName() {
+  return name;
+}
+````
