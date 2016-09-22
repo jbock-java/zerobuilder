@@ -28,6 +28,8 @@ import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METH
 import static net.zerobuilder.compiler.ParameterContext.maybeNullCheck;
 import static net.zerobuilder.compiler.ParameterContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.iterationVarName;
+import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -146,19 +148,18 @@ final class BuilderImplContext {
   private static ImmutableList<MethodSpec> beanCollectionMethods(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
     String name = parameter.accessorPair.name;
     TypeName collectionType = parameter.accessorPair.collectionType.type.get();
-    String iterationVarName = "v";
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
         subtypeOf(collectionType));
     MethodSpec fromIterable = methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(parameter.typeNextStep)
         .addParameter(parameterSpec(iterable, name))
+        .addCode(nullCheck(name, name))
         .beginControlFlow("for ($T $N : $N)",
             collectionType, iterationVarName, name)
         .addCode(parameter.accept(maybeIterationNullCheck))
         .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
-            parameter.accessorPair.projectionMethodName,
-            iterationVarName)
+            parameter.accessorPair.projectionMethodName, iterationVarName)
         .endControlFlow()
         .addCode(finalBlock)
         .addModifiers(PUBLIC)

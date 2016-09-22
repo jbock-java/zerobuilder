@@ -3,6 +3,8 @@ package net.zerobuilder.examples.basic;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
+// projections: field access
+// see FieldAccessTest
 @Builders(recycle = true)
 final class FieldAccess {
 

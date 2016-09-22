@@ -40,4 +40,17 @@ public class NullChecks {
     }
   }
 
+  // not a collection
+  @Builders
+  @Goal
+  public static class CheckedString {
+    private String string;
+    @Step(nonNull = true)
+    public String getString() {
+      return string;
+    }
+    public void setString(String string) {
+      this.string = string;
+    }
+  }
 }

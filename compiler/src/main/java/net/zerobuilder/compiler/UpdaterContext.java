@@ -27,6 +27,8 @@ import static net.zerobuilder.compiler.GoalContextFactory.GoalKind.INSTANCE_METH
 import static net.zerobuilder.compiler.ParameterContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.ParameterContext.maybeNullCheck;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.iterationVarName;
+import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -97,10 +99,10 @@ final class UpdaterContext {
               subtypeOf(collectionType));
           CodeBlock clearCollection = CodeBlock.builder().addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
               parameter.accessorPair.projectionMethodName).build();
-          String iterationVarName = "v";
           builder.add(methodBuilder(name)
               .returns(goal.accept(typeName))
               .addParameter(parameterSpec(iterable, name))
+              .addCode(nullCheck(name, name))
               .addCode(clearCollection)
               .beginControlFlow("for ($T $N : $N)", collectionType, iterationVarName, name)
               .addCode(parameter.accept(maybeIterationNullCheck))

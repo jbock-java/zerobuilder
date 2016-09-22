@@ -53,6 +53,5 @@ public class BusinessAnalystTest {
     assertThat(updated.getName(), is("Peter"));
     assertThat(updated.getNotes(), is(Arrays.asList("entry")));
     assertThat(updated.isExecutive(), is(false));
-
   }
 }

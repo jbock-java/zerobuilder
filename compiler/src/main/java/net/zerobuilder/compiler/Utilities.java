@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.base.Optional;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -10,6 +9,8 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static java.lang.Character.isUpperCase;
 
 final class Utilities {
+
+  static final String iterationVarName = "v";
 
   static String upcase(String s) {
     return LOWER_CAMEL.to(UPPER_CAMEL, s);

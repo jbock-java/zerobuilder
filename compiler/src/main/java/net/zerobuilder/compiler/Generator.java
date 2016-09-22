@@ -42,6 +42,8 @@ import static net.zerobuilder.compiler.ParameterContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.ParameterContext.maybeNullCheck;
 import static net.zerobuilder.compiler.UpdaterContext.defineUpdater;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.iterationVarName;
+import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -228,10 +230,13 @@ final class Generator {
       builder.addStatement("$N.$N = new $T()", updater, instance, goalType);
       for (BeansParameterContext parameter : parameters) {
         String parameterName = upcase(parameter.accessorPair.name);
+        CodeBlock nullCheck = CodeBlock.builder()
+            .beginControlFlow("if ($N.$N() == null)", instance, parameter.accessorPair.projectionMethodName)
+            .addStatement("throw new $T($S)", NullPointerException.class, parameter.accessorPair.name)
+            .endControlFlow().build();
         if (parameter.accessorPair.collectionType.type.isPresent()) {
           TypeName collectionType = parameter.accessorPair.collectionType.type.get();
-          String iterationVarName = "v";
-          builder
+          builder.add(nullCheck)
               .beginControlFlow("for ($T $N : $N.$N())",
                   collectionType, iterationVarName, instance, parameter.accessorPair.projectionMethodName)
               .add(parameter.accept(maybeIterationNullCheck))
@@ -242,10 +247,7 @@ final class Generator {
               .endControlFlow();
         } else {
           if (parameter.accessorPair.nonNull) {
-            builder.add(CodeBlock.builder()
-                .beginControlFlow("if ($N.$N() == null)", instance, parameter.accessorPair.projectionMethodName)
-                .addStatement("throw new $T($S)", NullPointerException.class, parameter.accessorPair.name)
-                .endControlFlow().build());
+            builder.add(nullCheck);
           }
           builder.addStatement("$N.$N.set$L($N.$N())", updater,
               instance,

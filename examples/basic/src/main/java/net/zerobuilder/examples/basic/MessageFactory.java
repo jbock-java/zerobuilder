@@ -3,6 +3,7 @@ package net.zerobuilder.examples.basic;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
+// non-static goal
 // see MessageFactoryTest
 @Builders(recycle = true)
 final class MessageFactory {

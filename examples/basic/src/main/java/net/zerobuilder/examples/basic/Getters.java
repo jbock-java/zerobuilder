@@ -3,6 +3,8 @@ package net.zerobuilder.examples.basic;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
+// projections: getters
+// see GettersTest
 @Builders
 final class Getters {
 

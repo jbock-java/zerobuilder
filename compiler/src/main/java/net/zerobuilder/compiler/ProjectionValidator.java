@@ -161,8 +161,7 @@ final class ProjectionValidator {
         TypeName setterType = TypeName.get(setter.getParameters().get(0).asType());
         TypeName getterType = TypeName.get(getter.getReturnType());
         if (!setterType.equals(getterType)) {
-          throw new ValidationException(GETTER_SETTER_TYPE_MISMATCH
-              + ": " + getterType + " vs " + setterType, setter);
+          throw new ValidationException(GETTER_SETTER_TYPE_MISMATCH, setter);
         }
         if (!getter.getThrownTypes().isEmpty()) {
           throw new ValidationException(GETTER_EXCEPTION, getter);
@@ -235,7 +234,7 @@ final class ProjectionValidator {
   private static ImmutableMap<String, ExecutableElement> setters(Analyser.BeanGoal goal) throws ValidationException {
     TypeElement beanType = goal.beanTypeElement;
     if (!hasParameterlessConstructor(beanType)) {
-      throw new ValidationException(NO_DEFAULT_CONSTRUCTOR + TypeName.get(beanType.asType()), beanType);
+      throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, beanType);
     }
     if (!beanType.getModifiers().contains(PUBLIC)) {
       throw new ValidationException(TARGET_PUBLIC, beanType);

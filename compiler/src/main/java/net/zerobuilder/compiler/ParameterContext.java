@@ -18,6 +18,7 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.Utilities.iterationVarName;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 
@@ -97,7 +98,7 @@ abstract class ParameterContext {
       if (!parameter.nonNull || parameter.type.isPrimitive()) {
         return CodeBlock.of("");
       }
-      return nullCheck("v", parameter.name);
+      return nullCheck(iterationVarName, parameter.name + " (element)");
     }
   });
 
@@ -160,5 +161,4 @@ abstract class ParameterContext {
         .addModifiers(PUBLIC)
         .build();
   }
-
 }

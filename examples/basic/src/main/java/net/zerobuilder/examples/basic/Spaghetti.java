@@ -4,6 +4,7 @@ import net.zerobuilder.Builders;
 import net.zerobuilder.Step;
 import net.zerobuilder.Goal;
 
+// changing step order
 @Builders(recycle = true)
 final class Spaghetti {
 

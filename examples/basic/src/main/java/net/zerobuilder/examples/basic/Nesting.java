@@ -3,6 +3,7 @@ package net.zerobuilder.examples.basic;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
+// nested classes
 final class Nesting {
 
   @Builders

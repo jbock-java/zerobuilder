@@ -10,11 +10,17 @@ final class Messages {
 
   static final class ErrorMessages {
 
+    private static final String POJO_HINT
+        = " If this is not a POJO, try putting the @Goal annotation on a constructor instead.";
+
+    private static final String GOAL_NAME_HINT
+        = " Goal name conflicts can be resolved with the @Goal(name = ...) attribute.";
+
     static final String PRIVATE_METHOD =
         "The goal may not be private.";
 
     static final String PRIVATE_TYPE =
-        "The @Builders annotated type may not be private.";
+        "The @Builders annotated class may not be private.";
 
     static final String NOT_ENOUGH_PARAMETERS =
         "The goal must have at least one parameter.";
@@ -43,51 +49,51 @@ final class Messages {
 
     /* empty, empty, method, constructor */
     static final String GOALNAME_EEMC =
-        "There is already a constructor goal for this return type. Please add a goal name.";
+        "There is already a constructor goal for this return type." + GOAL_NAME_HINT;
 
     /* empty, empty, method, method */
     static final String GOALNAME_EEMM =
-        "There is already another goal for this return type. Please add a goal name.";
+        "There is already another goal for this return type." + GOAL_NAME_HINT;
 
     /* named, empty, constructor, constructor */
     static final String GOALNAME_NECC =
-        "This goal name is taken by another constructor.";
+        "This goal name is taken by another constructor." + GOAL_NAME_HINT;
 
     /* named, empty, method, constructor */
     static final String GOALNAME_NEMC =
-        "This goal name is taken by a constructor.";
+        "This goal name is taken by a constructor." + GOAL_NAME_HINT;
 
     /* named, empty, method, method */
     static final String GOALNAME_NEMM =
-        "This goal name is taken by another goal.";
+        "This goal name is taken by another goal." + GOAL_NAME_HINT;
 
     /* named, named */
     static final String GOALNAME_NN =
-        "There is another goal with this goal name.";
+        "There is another goal with this goal name." + GOAL_NAME_HINT;
 
     static final String NO_DEFAULT_CONSTRUCTOR
-        = "Class not public or no public default constructor found: ";
+        = "Class not public or no public default constructor found." + POJO_HINT;
 
     static final String TARGET_PUBLIC
-        = "Target type must be public";
+        = "Target type must be public." + POJO_HINT;
 
     static final String GETTER_EXCEPTION
-        = "Getter may not declare exception";
+        = "POJO getters may not declare exceptions." + POJO_HINT;
 
     static final String GETTER_SETTER_TYPE_MISMATCH
-        = "Getter/setter type mismatch";
+        = "Getter/setter type mismatch." + POJO_HINT;
 
     static final String BAD_GENERICS
-        = "Can't understand the generics of this beanGoal";
+        = "Can't understand the generics of this accessor pair." + POJO_HINT;
 
     static final String COULD_NOT_FIND_SETTER
-        = "Could not find setter";
-
-    static final String NO_PROJECTION
-        = "Could not find projection";
+        = "Could not find setter." + POJO_HINT;
 
     static final String SETTER_EXCEPTION
-        = "Setter may not declare exception";
+        = "Setters may not declare exceptions." + POJO_HINT;
+
+    static final String NO_PROJECTION
+        = "Could not find a projection (getter or field).";
 
     private ErrorMessages() {
       throw new UnsupportedOperationException("no instances");

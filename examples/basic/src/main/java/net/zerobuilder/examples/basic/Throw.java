@@ -5,6 +5,7 @@ import net.zerobuilder.Goal;
 
 import java.io.IOException;
 
+// goal with declared exceptions
 @Builders
 final class Throw {
 
