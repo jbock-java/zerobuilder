@@ -5,7 +5,7 @@ import javax.tools.Diagnostic;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 
-public final class ValidationException extends Exception {
+public final class ValidationException extends RuntimeException {
   private static final long serialVersionUID = 0;
   public final Diagnostic.Kind kind;
   public final Element about;

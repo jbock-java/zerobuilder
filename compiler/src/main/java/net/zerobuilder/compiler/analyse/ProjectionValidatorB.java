@@ -1,0 +1,203 @@
+package net.zerobuilder.compiler.analyse;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Ordering;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.analyse.Analyser.BeanGoal;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.CollectionType;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter.AccessorPair;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidationResult.BeanValidationResult;
+
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+
+import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
+import static com.google.auto.common.MoreTypes.asDeclared;
+import static com.google.auto.common.MoreTypes.asTypeElement;
+import static com.google.common.base.Ascii.isUpperCase;
+import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.common.collect.Maps.uniqueIndex;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
+import static javax.lang.model.util.ElementFilter.constructorsIn;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BAD_GENERICS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_FIND_SETTER;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_EXCEPTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_SETTER_TYPE_MISMATCH;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
+
+final class ProjectionValidatorB {
+
+  private static final Ordering<TmpAccessorPair> ACCESSOR_PAIR_ORDERING
+      = Ordering.from(new Comparator<TmpAccessorPair>() {
+    @Override
+    public int compare(TmpAccessorPair pair0, TmpAccessorPair pair1) {
+      return pair0.accessorPair.name.compareTo(pair1.accessorPair.name);
+    }
+  });
+
+  private static final ClassName OBJECT = ClassName.get(Object.class);
+  private static final ClassName COLLECTION = ClassName.get(Collection.class);
+
+  static final Function<BeanGoal, ProjectionValidator.ValidationResult> validateBean
+      = new Function<BeanGoal, ProjectionValidator.ValidationResult>() {
+    @Override
+    public ProjectionValidator.ValidationResult apply(BeanGoal goal) {
+      ImmutableMap<String, ExecutableElement> setters = setters(goal);
+      ImmutableList.Builder<TmpAccessorPair> builder = ImmutableList.builder();
+      for (ExecutableElement getter : getters(goal)) {
+        ExecutableElement setter = setters.get(setterName(getter));
+        builder.add(setter == null
+            ? setterlessAccessorPair(getter)
+            : regularAccessorPair(getter, setter));
+      }
+      return createResult(goal, builder.build());
+    }
+  };
+
+  private static TmpAccessorPair setterlessAccessorPair(ExecutableElement getter) {
+    if (!isImplementationOf(getter.getReturnType(), COLLECTION)) {
+      throw new ValidationException(COULD_NOT_FIND_SETTER, getter);
+    }
+    // no setter but we have a getter that returns something like List<E>
+    // in this case we need to find what E is ("collectionType")
+    List<? extends TypeMirror> typeArguments = asDeclared(getter.getReturnType()).getTypeArguments();
+    if (typeArguments.isEmpty()) {
+      // raw collection
+      return TmpAccessorPair.create(getter, CollectionType.of(Object.class, false));
+    } else if (typeArguments.size() == 1) {
+      // one type parameter
+      TypeMirror collectionType = getOnlyElement(typeArguments);
+      boolean allowShortcut = !ClassName.get(asTypeElement(collectionType)).equals(ClassName.get(Iterable.class));
+      return TmpAccessorPair.create(getter, CollectionType.of(collectionType, allowShortcut));
+    } else {
+      // unlikely: subclass of Collection should not have more than one type parameter
+      throw new ValidationException(BAD_GENERICS, getter);
+    }
+  }
+
+  private static TmpAccessorPair regularAccessorPair(ExecutableElement getter, ExecutableElement setter) {
+    TypeName setterType = TypeName.get(setter.getParameters().get(0).asType());
+    TypeName getterType = TypeName.get(getter.getReturnType());
+    if (!setterType.equals(getterType)) {
+      throw new ValidationException(GETTER_SETTER_TYPE_MISMATCH, setter);
+    }
+    if (!getter.getThrownTypes().isEmpty()) {
+      throw new ValidationException(GETTER_EXCEPTION, getter);
+    }
+    return TmpAccessorPair.create(getter, CollectionType.absent);
+  }
+
+  private static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {
+    if (!typeMirror.getKind().equals(TypeKind.DECLARED)) {
+      return false;
+    }
+    TypeElement element = asTypeElement(typeMirror);
+    TypeName className = ClassName.get(element);
+    if (className.equals(test)) {
+      return true;
+    }
+    if (className.equals(OBJECT)) {
+      return false;
+    }
+    for (TypeMirror anInterface : element.getInterfaces()) {
+      if (isImplementationOf(anInterface, test)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static ImmutableList<ExecutableElement> getters(BeanGoal goal) {
+    return FluentIterable.from(getLocalAndInheritedMethods(goal.beanTypeElement, goal.elements))
+        .filter(new Predicate<ExecutableElement>() {
+          @Override
+          public boolean apply(ExecutableElement method) {
+            String name = method.getSimpleName().toString();
+            return method.getParameters().isEmpty()
+                && method.getModifiers().contains(PUBLIC)
+                && !method.getModifiers().contains(STATIC)
+                && !method.getReturnType().getKind().equals(TypeKind.VOID)
+                && !method.getReturnType().getKind().equals(TypeKind.NONE)
+                && (name.startsWith("get") || name.startsWith("is"))
+                && !"getClass".equals(name);
+          }
+        })
+        .toList();
+  }
+
+  private static ImmutableMap<String, ExecutableElement> setters(BeanGoal goal) throws ValidationException {
+    TypeElement beanType = goal.beanTypeElement;
+    if (!hasParameterlessConstructor(beanType)) {
+      throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, beanType);
+    }
+    if (!beanType.getModifiers().contains(PUBLIC)) {
+      throw new ValidationException(TARGET_PUBLIC, beanType);
+    }
+    ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
+    for (ExecutableElement method : getLocalAndInheritedMethods(beanType, goal.elements)) {
+      if (method.getKind() == ElementKind.METHOD
+          && method.getModifiers().contains(PUBLIC)
+          && method.getSimpleName().length() >= 4
+          && isUpperCase(method.getSimpleName().charAt(3))
+          && method.getSimpleName().toString().startsWith("set")
+          && method.getParameters().size() == 1
+          && method.getReturnType().getKind() == TypeKind.VOID) {
+        if (method.getThrownTypes().isEmpty()) {
+          builder.add(method);
+        } else {
+          throw new ValidationException(SETTER_EXCEPTION, method);
+        }
+      }
+    }
+    return uniqueIndex(builder.build(), new Function<ExecutableElement, String>() {
+      @Override
+      public String apply(ExecutableElement setter) {
+        return setter.getSimpleName().toString().substring(3);
+      }
+    });
+  }
+
+  private static String setterName(ExecutableElement getter) {
+    String name = getter.getSimpleName().toString();
+    return name.substring(name.startsWith("get") ? 3 : 2);
+  }
+
+  private static boolean hasParameterlessConstructor(TypeElement type) {
+    for (ExecutableElement constructor : constructorsIn(type.getEnclosedElements())) {
+      if (constructor.getParameters().isEmpty()
+          && constructor.getModifiers().contains(PUBLIC)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static ProjectionValidator.ValidationResult createResult(BeanGoal goal, ImmutableList<TmpAccessorPair> tmpAccessorPairs) {
+    ImmutableList<AccessorPair> accessorPairs
+        = FluentIterable.from(shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(tmpAccessorPairs)))
+        .transform(toValidParameter)
+        .toList();
+    return new BeanValidationResult(goal, accessorPairs);
+  }
+
+  private ProjectionValidatorB() {
+    throw new UnsupportedOperationException("no instances");
+  }
+}

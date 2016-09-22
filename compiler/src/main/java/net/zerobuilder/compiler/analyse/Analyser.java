@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
@@ -223,7 +224,7 @@ public final class Analyser {
     });
   }
 
-  private static CodeBlock goalParameters(ExecutableElement element) throws ValidationException {
+  private static CodeBlock goalParameters(ExecutableElement element) {
     CodeBlock.Builder builder = CodeBlock.builder();
     List<? extends VariableElement> parameters = element.getParameters();
     for (VariableElement arg : parameters.subList(0, parameters.size() - 1)) {
@@ -235,10 +236,25 @@ public final class Analyser {
 
   static abstract class AbstractGoalElement {
     interface GoalElementCases<R> {
-      R executableGoal(ExecutableGoal executableGoal) throws ValidationException;
-      R beanGoal(BeanGoal beanGoal) throws ValidationException;
+      R executableGoal(ExecutableGoal executableGoal);
+      R beanGoal(BeanGoal beanGoal);
     }
-    abstract <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException;
+    abstract <R> R accept(GoalElementCases<R> goalElementCases);
+  }
+
+  static <R> GoalElementCases<R> goalElementCases(
+      final Function<ExecutableGoal, R> executableGoalFunction,
+      final Function<BeanGoal, R> beanGoalFunction) {
+    return new GoalElementCases<R>() {
+      @Override
+      public R executableGoal(ExecutableGoal executableGoal){
+        return executableGoalFunction.apply(executableGoal);
+      }
+      @Override
+      public R beanGoal(BeanGoal beanGoal) {
+        return beanGoalFunction.apply(beanGoal);
+      }
+    };
   }
 
   static abstract class GoalElement extends AbstractGoalElement {
@@ -273,7 +289,7 @@ public final class Analyser {
           goalType(element), name, elements);
 
     }
-    <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
+    <R> R accept(GoalElementCases<R> goalElementCases) {
       return goalElementCases.executableGoal(this);
     }
   }
@@ -286,23 +302,23 @@ public final class Analyser {
       this.goalType = goalType;
       this.beanTypeElement = beanTypeElement;
     }
-    private static GoalElement create(TypeElement beanType, Elements elements) throws ValidationException {
+    private static GoalElement create(TypeElement beanType, Elements elements) {
       ClassName goalType = ClassName.get(beanType);
       String name = goalName(beanType.getAnnotation(Goal.class), goalType);
       return new BeanGoal(beanType, goalType, name, beanType, elements);
     }
-    <R> R accept(GoalElementCases<R> goalElementCases) throws ValidationException {
+    <R> R accept(GoalElementCases<R> goalElementCases) {
       return goalElementCases.beanGoal(this);
     }
   }
 
   private static final GoalElementCases<Element> getElement = new GoalElementCases<Element>() {
     @Override
-    public Element executableGoal(ExecutableGoal executableGoal) throws ValidationException {
+    public Element executableGoal(ExecutableGoal executableGoal) {
       return executableGoal.executableElement;
     }
     @Override
-    public Element beanGoal(BeanGoal beanGoal) throws ValidationException {
+    public Element beanGoal(BeanGoal beanGoal) {
       return beanGoal.beanTypeElement;
     }
   };
