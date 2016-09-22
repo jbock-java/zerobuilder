@@ -30,3 +30,9 @@
 ### 2016-09-20 zerobuilder 1.321 released
 
 * beans: allow all-caps goal names (breaking)
+
+### 2016-09-22 zerobuilder 1.331 released
+
+* beans: fix generics bug
+* `@Step` value now optional
+* added null checking via `@Step(nonNull = true)`

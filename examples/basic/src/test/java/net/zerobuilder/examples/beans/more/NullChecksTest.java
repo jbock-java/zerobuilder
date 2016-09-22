@@ -1,7 +1,9 @@
 package net.zerobuilder.examples.beans.more;
 
 import net.zerobuilder.examples.beans.more.NullChecks.UncheckedCollection;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,8 +19,13 @@ import static org.junit.Assert.assertThat;
 
 public class NullChecksTest {
 
-  @Test(expected = NullPointerException.class)
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
+
+  @Test
   public void nullElementRejected() {
+    thrown.expect(NullPointerException.class);
+    thrown.expectMessage("strings (element)");
     List<String> wrappedNull = nCopies(1, null);
     checkedCollectionBuilder().strings(wrappedNull);
   }
@@ -31,13 +38,17 @@ public class NullChecksTest {
     assertThat(bean.getStrings().get(0), is(nullValue()));
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void collectionMayNotBeNull() {
+    thrown.expect(NullPointerException.class);
+    thrown.expectMessage("strings");
     uncheckedCollectionBuilder().strings(null);
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void simpleNullRejected() {
+    thrown.expect(NullPointerException.class);
+    thrown.expectMessage("string");
     checkedStringBuilder().string(null);
   }
 }
