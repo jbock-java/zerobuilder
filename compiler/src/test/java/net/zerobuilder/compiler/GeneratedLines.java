@@ -16,8 +16,6 @@
 
 package net.zerobuilder.compiler;
 
-import net.zerobuilder.compiler.analyse.Messages;
-
 public final class GeneratedLines {
   public static final String GENERATED_ANNOTATION =
       "@Generated("

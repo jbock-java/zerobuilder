@@ -46,16 +46,16 @@ import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.BAD_GENERICS;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.COULD_NOT_FIND_SETTER;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GETTER_EXCEPTION;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GETTER_SETTER_TYPE_MISMATCH;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.NO_PROJECTION;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.SETTER_EXCEPTION;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.TARGET_PUBLIC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BAD_GENERICS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_FIND_SETTER;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_EXCEPTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_SETTER_TYPE_MISMATCH;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
 
 public final class ProjectionValidator {

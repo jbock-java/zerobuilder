@@ -37,16 +37,16 @@ import static net.zerobuilder.compiler.generate.BuilderType.createBuilderContext
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.STATIC_METHOD;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.context;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_EECC;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_EEMC;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_EEMM;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_NECC;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_NEMC;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_NEMM;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOALNAME_NN;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.NO_GOALS;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EECC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMM;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersType;
 import static net.zerobuilder.compiler.Utilities.downcase;
 

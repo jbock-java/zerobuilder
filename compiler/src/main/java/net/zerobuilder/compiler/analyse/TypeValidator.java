@@ -12,8 +12,8 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.element.NestingKind.TOP_LEVEL;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.NESTING_KIND;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.PRIVATE_TYPE;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NESTING_KIND;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_TYPE;
 
 final class TypeValidator {
 

@@ -32,8 +32,8 @@ import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOAL_NOT_IN_BUILD;
-import static net.zerobuilder.compiler.analyse.Messages.ErrorMessages.GOAL_WITHOUT_BUILDERS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_NOT_IN_BUILD;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_WITHOUT_BUILDERS;
 
 @AutoService(Processor.class)
 public final class ZeroProcessor extends AbstractProcessor {
