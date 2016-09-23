@@ -30,6 +30,20 @@ public abstract class ParameterContext {
     abstract R accessorPair(BeansParameterContext beansParameterContext);
   }
 
+  static <R> ParameterCases<R> parameterCases(final Function<ParameterContext, R> executableFunction,
+                                              final Function<BeansParameterContext, R> beansFunction) {
+    return new ParameterCases<R>() {
+      @Override
+      R parameter(ExecutableParameterContext parameterContext) {
+        return executableFunction.apply(parameterContext);
+      }
+      @Override
+      R accessorPair(BeansParameterContext beansParameterContext) {
+        return beansFunction.apply(beansParameterContext);
+      }
+    };
+  }
+
   abstract <R> R accept(ParameterCases<R> cases);
 
   ParameterContext(ClassName typeName, TypeName typeNextStep) {
@@ -51,6 +65,30 @@ public abstract class ParameterContext {
     }
   }
 
+  static final ParameterCases<ImmutableList<TypeName>> declaredExceptions
+      = new ParameterCases<ImmutableList<TypeName>>() {
+    @Override
+    ImmutableList<TypeName> parameter(ExecutableParameterContext parameterContext) {
+      return parameterContext.declaredExceptions;
+    }
+    @Override
+    ImmutableList<TypeName> accessorPair(BeansParameterContext beansParameterContext) {
+      return ImmutableList.of();
+    }
+  };
+
+  static final ParameterCases<ValidParameter> validParameter
+      = new ParameterCases<ValidParameter>() {
+    @Override
+    ValidParameter parameter(ExecutableParameterContext parameterContext) {
+      return parameterContext.parameter;
+    }
+    @Override
+    ValidParameter accessorPair(BeansParameterContext beansParameterContext) {
+      return beansParameterContext.accessorPair;
+    }
+  };
+
   public final static class BeansParameterContext extends ParameterContext {
     final AccessorPair accessorPair;
     public BeansParameterContext(ClassName typeThisStep, TypeName typeNextStep, AccessorPair accessorPair) {
@@ -63,26 +101,24 @@ public abstract class ParameterContext {
     }
   }
 
-  abstract static class ParameterFunction<R> {
-    abstract R apply(ClassName typeName, TypeName returnType, ValidParameter parameter, ImmutableList<TypeName> declaredExceptions);
-  }
-
-  private static <R> ParameterCases<R> always(final ParameterFunction<R> parameterFunction) {
+  private static <R> ParameterCases<R> always(final Function<ParameterContext, R> parameterFunction) {
     return new ParameterCases<R>() {
       @Override
       R parameter(ExecutableParameterContext context) {
-        return parameterFunction.apply(context.typeThisStep, context.typeNextStep, context.parameter, context.declaredExceptions);
+        return parameterFunction.apply(context);
       }
       @Override
       R accessorPair(BeansParameterContext context) {
-        return parameterFunction.apply(context.typeThisStep, context.typeNextStep, context.accessorPair, ImmutableList.<TypeName>of());
+        return parameterFunction.apply(context);
       }
     };
   }
 
-  static ParameterCases<CodeBlock> maybeNullCheck = always(new ParameterFunction<CodeBlock>() {
+  static final ParameterCases<CodeBlock> maybeNullCheck
+      = always(new Function<ParameterContext, CodeBlock>() {
     @Override
-    CodeBlock apply(ClassName typeName, TypeName returnType, ValidParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+    public CodeBlock apply(ParameterContext context) {
+      ValidParameter parameter = context.accept(validParameter);
       if (!parameter.nonNull || parameter.type.isPrimitive()) {
         return CodeBlock.of("");
       }
@@ -90,9 +126,11 @@ public abstract class ParameterContext {
     }
   });
 
-  static ParameterCases<CodeBlock> maybeIterationNullCheck = always(new ParameterFunction<CodeBlock>() {
+  static final ParameterCases<CodeBlock> maybeIterationNullCheck
+      = always(new Function<ParameterContext, CodeBlock>() {
     @Override
-    CodeBlock apply(ClassName typeName, TypeName returnType, ValidParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+    public CodeBlock apply(ParameterContext context) {
+      ValidParameter parameter = context.accept(validParameter);
       if (!parameter.nonNull || parameter.type.isPrimitive()) {
         return CodeBlock.of("");
       }
@@ -109,13 +147,29 @@ public abstract class ParameterContext {
     };
   }
 
-  static Function<ParameterContext, TypeSpec> asStepInterface = asFunction(new ParameterCases<TypeSpec>() {
+  private static final Function<ParameterContext, TypeSpec> regularStepInterface
+      = new Function<ParameterContext, TypeSpec>() {
     @Override
-    TypeSpec parameter(ExecutableParameterContext context) {
-      return regularStepInterface(context.typeThisStep, context.typeNextStep, context.parameter, context.declaredExceptions);
+    public TypeSpec apply(ParameterContext context) {
+      ValidParameter parameter = context.accept(validParameter);
+      String name = parameter.name;
+      TypeName type = parameter.type;
+      return interfaceBuilder(context.typeThisStep)
+          .addMethod(methodBuilder(name)
+              .returns(context.typeNextStep)
+              .addParameter(parameterSpec(type, name))
+              .addExceptions(context.accept(declaredExceptions))
+              .addModifiers(PUBLIC, ABSTRACT)
+              .build())
+          .addModifiers(PUBLIC)
+          .build();
     }
+  };
+
+  private static final Function<BeansParameterContext, TypeSpec> beansStepInterface
+      = new Function<BeansParameterContext, TypeSpec>() {
     @Override
-    TypeSpec accessorPair(BeansParameterContext context) {
+    public TypeSpec apply(BeansParameterContext context) {
       AccessorPair parameter = context.accessorPair;
       String name = parameter.name;
       if (parameter.collectionType.type.isPresent()) {
@@ -142,22 +196,12 @@ public abstract class ParameterContext {
         }
         return builder.build();
       } else {
-        return regularStepInterface(context.typeThisStep, context.typeNextStep, parameter, ImmutableList.<TypeName>of());
+        return regularStepInterface.apply(context);
       }
     }
-  });
+  };
 
-  private static TypeSpec regularStepInterface(ClassName typeName, TypeName returnType, ValidParameter parameter, ImmutableList<TypeName> declaredExceptions) {
-    String name = parameter.name;
-    TypeName type = parameter.type;
-    return interfaceBuilder(typeName)
-        .addMethod(methodBuilder(name)
-            .returns(returnType)
-            .addParameter(parameterSpec(type, name))
-            .addExceptions(declaredExceptions)
-            .addModifiers(PUBLIC, ABSTRACT)
-            .build())
-        .addModifiers(PUBLIC)
-        .build();
-  }
+  static final Function<ParameterContext, TypeSpec> asStepInterface
+      = asFunction(parameterCases(regularStepInterface, beansStepInterface));
+
 }
