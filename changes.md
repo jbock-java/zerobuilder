@@ -36,3 +36,8 @@
 * beans: fix generics bug
 * `@Step` value now optional
 * added null checking via `@Step(nonNull = true)`
+
+### 2016-09-23 zerobuilder 1.401 released
+
+* add goal-level nonNull option
+* beans: add @Ignore annotation
