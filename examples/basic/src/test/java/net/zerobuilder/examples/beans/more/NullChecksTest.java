@@ -1,5 +1,6 @@
 package net.zerobuilder.examples.beans.more;
 
+import net.zerobuilder.examples.beans.more.NullChecks.Default;
 import net.zerobuilder.examples.beans.more.NullChecks.UncheckedCollection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import java.util.List;
 import static java.util.Collections.nCopies;
 import static net.zerobuilder.examples.beans.more.NullChecks_CheckedCollectionBuilders.checkedCollectionBuilder;
 import static net.zerobuilder.examples.beans.more.NullChecks_CheckedStringBuilders.checkedStringBuilder;
+import static net.zerobuilder.examples.beans.more.NullChecks_DefaultBuilders.DefaultBuilder;
 import static net.zerobuilder.examples.beans.more.NullChecks_UncheckedCollectionBuilders.uncheckedCollectionBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -50,5 +52,19 @@ public class NullChecksTest {
     thrown.expect(NullPointerException.class);
     thrown.expectMessage("string");
     checkedStringBuilder().string(null);
+  }
+
+  @Test
+  public void goalLevelNullOk() {
+    Default bar = DefaultBuilder().bar("bar").foo(null);
+    assertThat(bar.getFoo(), is(nullValue()));
+    assertThat(bar.getBar(), is("bar"));
+  }
+
+  @Test
+  public void goalLevelNullRejected() {
+    thrown.expect(NullPointerException.class);
+    thrown.expectMessage("bar");
+    DefaultBuilder().bar(null);
   }
 }

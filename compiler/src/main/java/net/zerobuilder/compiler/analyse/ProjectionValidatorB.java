@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.Analyser.BeanGoal;
@@ -70,8 +71,8 @@ final class ProjectionValidatorB {
       for (ExecutableElement getter : getters(goal)) {
         ExecutableElement setter = setters.get(setterName(getter));
         builder.add(setter == null
-            ? setterlessAccessorPair(getter)
-            : regularAccessorPair(getter, setter));
+            ? setterlessAccessorPair(getter, goal.goalAnnotation)
+            : regularAccessorPair(getter, setter, goal.goalAnnotation));
       }
       ImmutableList<TmpAccessorPair> tmpAccessorPairs = builder.build();
       if (tmpAccessorPairs.isEmpty()) {
@@ -81,7 +82,7 @@ final class ProjectionValidatorB {
     }
   };
 
-  private static TmpAccessorPair setterlessAccessorPair(ExecutableElement getter) {
+  private static TmpAccessorPair setterlessAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
     if (!isImplementationOf(getter.getReturnType(), COLLECTION)) {
       throw new ValidationException(COULD_NOT_FIND_SETTER, getter);
     }
@@ -90,19 +91,19 @@ final class ProjectionValidatorB {
     List<? extends TypeMirror> typeArguments = asDeclared(getter.getReturnType()).getTypeArguments();
     if (typeArguments.isEmpty()) {
       // raw collection
-      return TmpAccessorPair.create(getter, CollectionType.of(Object.class, false));
+      return TmpAccessorPair.create(getter, CollectionType.of(Object.class, false), goalAnnotation);
     } else if (typeArguments.size() == 1) {
       // one type parameter
       TypeMirror collectionType = getOnlyElement(typeArguments);
       boolean allowShortcut = !ClassName.get(asTypeElement(collectionType)).equals(ITERABLE);
-      return TmpAccessorPair.create(getter, CollectionType.of(collectionType, allowShortcut));
+      return TmpAccessorPair.create(getter, CollectionType.of(collectionType, allowShortcut), goalAnnotation);
     } else {
       // unlikely: subclass of Collection should not have more than one type parameter
       throw new ValidationException(BAD_GENERICS, getter);
     }
   }
 
-  private static TmpAccessorPair regularAccessorPair(ExecutableElement getter, ExecutableElement setter) {
+  private static TmpAccessorPair regularAccessorPair(ExecutableElement getter, ExecutableElement setter, Goal goalAnnotation) {
     TypeName setterType = TypeName.get(setter.getParameters().get(0).asType());
     TypeName getterType = TypeName.get(getter.getReturnType());
     if (!setterType.equals(getterType)) {
@@ -111,7 +112,7 @@ final class ProjectionValidatorB {
     if (!getter.getThrownTypes().isEmpty()) {
       throw new ValidationException(GETTER_EXCEPTION, getter);
     }
-    return TmpAccessorPair.create(getter, CollectionType.absent);
+    return TmpAccessorPair.create(getter, CollectionType.absent, goalAnnotation);
   }
 
   private static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {

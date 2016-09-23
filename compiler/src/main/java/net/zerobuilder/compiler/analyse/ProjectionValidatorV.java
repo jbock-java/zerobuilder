@@ -36,7 +36,7 @@ final class ProjectionValidatorV {
       for (VariableElement parameter : goal.executableElement.getParameters()) {
         VariableElement field = fields.get(parameter.getSimpleName().toString());
         if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
-          builder.add(TmpRegularParameter.create(parameter, Optional.<String>absent()));
+          builder.add(TmpRegularParameter.create(parameter, Optional.<String>absent(), goal.goalAnnotation));
         } else {
           String methodName = "get" + upcase(parameter.getSimpleName().toString());
           ExecutableElement method = methods.get(methodName);
@@ -52,7 +52,7 @@ final class ProjectionValidatorV {
           if (method == null) {
             throw new ValidationException(NO_PROJECTION, parameter);
           }
-          builder.add(TmpRegularParameter.create(parameter, Optional.of(methodName)));
+          builder.add(TmpRegularParameter.create(parameter, Optional.of(methodName), goal.goalAnnotation));
         }
       }
       return createResult(goal, builder.build());
@@ -97,7 +97,7 @@ final class ProjectionValidatorV {
     public ProjectionValidator.ValidationResult apply(ExecutableGoal goal) {
       ImmutableList.Builder<TmpRegularParameter> builder = ImmutableList.builder();
       for (VariableElement parameter : goal.executableElement.getParameters()) {
-        builder.add(TmpRegularParameter.create(parameter, Optional.<String>absent()));
+        builder.add(TmpRegularParameter.create(parameter, Optional.<String>absent(), goal.goalAnnotation));
       }
       return createResult(goal, builder.build());
 

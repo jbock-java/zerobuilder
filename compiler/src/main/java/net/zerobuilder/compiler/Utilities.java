@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -9,6 +10,14 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static java.lang.Character.isUpperCase;
 
 public final class Utilities {
+
+  static final ImmutableSet<String> reservedWords = ImmutableSet.of(
+      "abstract", "continue", "for", "new", "switch", "assert", "default", "if", "package",
+      "synchronized", "boolean", "do", "goto", "private", "this", "break", "double", "implements",
+      "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
+      "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char", "final",
+      "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
+      "float", "native", "super", "while");
 
   public static final String iterationVarName = "v";
 
@@ -20,7 +29,11 @@ public final class Utilities {
     if (s.length() >= 2 && isUpperCase(s.charAt(1))) {
       return s;
     }
-    return UPPER_CAMEL.to(LOWER_CAMEL, s);
+    String lowered = UPPER_CAMEL.to(LOWER_CAMEL, s);
+    if (reservedWords.contains(lowered)) {
+      return s;
+    }
+    return lowered;
   }
 
   public static CodeBlock statement(String format, Object... args) {
