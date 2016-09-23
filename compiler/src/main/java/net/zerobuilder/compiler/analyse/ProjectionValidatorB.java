@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.Ignore;
+import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.Analyser.BeanGoal;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.CollectionType;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
@@ -28,7 +30,6 @@ import static com.google.auto.common.MoreTypes.asDeclared;
 import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.base.Ascii.isUpperCase;
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static com.google.common.collect.Maps.uniqueIndex;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
@@ -36,8 +37,12 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.BAD_GENERICS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_FIND_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_SETTER_TYPE_MISMATCH;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_AND_STEP;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_ACCESSOR_PAIRS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
@@ -54,6 +59,7 @@ final class ProjectionValidatorB {
 
   private static final ClassName OBJECT = ClassName.get(Object.class);
   private static final ClassName COLLECTION = ClassName.get(Collection.class);
+  private static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
   static final Function<BeanGoal, ProjectionValidator.ValidationResult> validateBean
       = new Function<BeanGoal, ProjectionValidator.ValidationResult>() {
@@ -67,7 +73,11 @@ final class ProjectionValidatorB {
             ? setterlessAccessorPair(getter)
             : regularAccessorPair(getter, setter));
       }
-      return createResult(goal, builder.build());
+      ImmutableList<TmpAccessorPair> tmpAccessorPairs = builder.build();
+      if (tmpAccessorPairs.isEmpty()) {
+        throw new ValidationException(NO_ACCESSOR_PAIRS, goal.beanTypeElement);
+      }
+      return createResult(goal, tmpAccessorPairs);
     }
   };
 
@@ -84,7 +94,7 @@ final class ProjectionValidatorB {
     } else if (typeArguments.size() == 1) {
       // one type parameter
       TypeMirror collectionType = getOnlyElement(typeArguments);
-      boolean allowShortcut = !ClassName.get(asTypeElement(collectionType)).equals(ClassName.get(Iterable.class));
+      boolean allowShortcut = !ClassName.get(asTypeElement(collectionType)).equals(ITERABLE);
       return TmpAccessorPair.create(getter, CollectionType.of(collectionType, allowShortcut));
     } else {
       // unlikely: subclass of Collection should not have more than one type parameter
@@ -139,6 +149,16 @@ final class ProjectionValidatorB {
                 && !"getClass".equals(name);
           }
         })
+        .filter(new Predicate<ExecutableElement>() {
+          @Override
+          public boolean apply(ExecutableElement getter) {
+            Ignore ignoreAnnotation = getter.getAnnotation(Ignore.class);
+            if (ignoreAnnotation != null && getter.getAnnotation(Step.class) != null) {
+              throw new ValidationException(IGNORE_AND_STEP, getter);
+            }
+            return ignoreAnnotation == null;
+          }
+        })
         .toList();
   }
 
@@ -150,28 +170,47 @@ final class ProjectionValidatorB {
     if (!beanType.getModifiers().contains(PUBLIC)) {
       throw new ValidationException(TARGET_PUBLIC, beanType);
     }
-    ImmutableList.Builder<ExecutableElement> builder = ImmutableList.builder();
-    for (ExecutableElement method : getLocalAndInheritedMethods(beanType, goal.elements)) {
-      if (method.getKind() == ElementKind.METHOD
-          && method.getModifiers().contains(PUBLIC)
-          && method.getSimpleName().length() >= 4
-          && isUpperCase(method.getSimpleName().charAt(3))
-          && method.getSimpleName().toString().startsWith("set")
-          && method.getParameters().size() == 1
-          && method.getReturnType().getKind() == TypeKind.VOID) {
-        if (method.getThrownTypes().isEmpty()) {
-          builder.add(method);
-        } else {
-          throw new ValidationException(SETTER_EXCEPTION, method);
-        }
-      }
-    }
-    return uniqueIndex(builder.build(), new Function<ExecutableElement, String>() {
-      @Override
-      public String apply(ExecutableElement setter) {
-        return setter.getSimpleName().toString().substring(3);
-      }
-    });
+    return FluentIterable.from(getLocalAndInheritedMethods(beanType, goal.elements))
+        .filter(new Predicate<ExecutableElement>() {
+          @Override
+          public boolean apply(ExecutableElement method) {
+            return method.getKind() == ElementKind.METHOD
+                && method.getModifiers().contains(PUBLIC)
+                && method.getSimpleName().length() >= 4
+                && isUpperCase(method.getSimpleName().charAt(3))
+                && method.getSimpleName().toString().startsWith("set")
+                && method.getParameters().size() == 1
+                && method.getReturnType().getKind() == TypeKind.VOID;
+          }
+        })
+        .filter(new Predicate<ExecutableElement>() {
+          @Override
+          public boolean apply(ExecutableElement setter) {
+            if (setter.getThrownTypes().isEmpty()) {
+              return true;
+            } else {
+              throw new ValidationException(SETTER_EXCEPTION, setter);
+            }
+          }
+        })
+        .filter(new Predicate<ExecutableElement>() {
+          @Override
+          public boolean apply(ExecutableElement setter) {
+            if (setter.getAnnotation(Step.class) != null) {
+              throw new ValidationException(STEP_ON_SETTER, setter);
+            }
+            if (setter.getAnnotation(Ignore.class) != null) {
+              throw new ValidationException(IGNORE_ON_SETTER, setter);
+            }
+            return true;
+          }
+        })
+        .uniqueIndex(new Function<ExecutableElement, String>() {
+          @Override
+          public String apply(ExecutableElement setter) {
+            return setter.getSimpleName().toString().substring(3);
+          }
+        });
   }
 
   private static String setterName(ExecutableElement getter) {

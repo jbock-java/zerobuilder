@@ -2,6 +2,7 @@ package net.zerobuilder.examples.beans.more;
 
 import net.zerobuilder.examples.beans.more.Experiments.AeroExperiment;
 import net.zerobuilder.examples.beans.more.Experiments.BioExperiment;
+import net.zerobuilder.examples.beans.more.Experiments.Ignorify;
 import net.zerobuilder.examples.beans.more.Experiments.IterableExperiment;
 import net.zerobuilder.examples.beans.more.Experiments.RawExperiment;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import static net.zerobuilder.examples.beans.more.Experiments_AeroExperimentBuil
 import static net.zerobuilder.examples.beans.more.Experiments_AeroExperimentBuilders.aeroExperimentToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_BioExperimentBuilders.bioExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_BioExperimentBuilders.bioExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.Experiments_IgnorifyBuilders.ignorifyBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_RawExperimentBuilders.rawExperimentBuilder;
@@ -78,5 +80,11 @@ public class ExperimentsTest {
     expectedList2.add(asList("2"));
     assertThat(experiment1.getThings(), is(expectedList1));
     assertThat(experiment2.getThings(), is(expectedList2));
+  }
+
+  @Test
+  public void ignoreTest() {
+    Ignorify ignore = ignorifyBuilder().things();
+    assertThat(ignore.getThings().size(), is(0));
   }
 }

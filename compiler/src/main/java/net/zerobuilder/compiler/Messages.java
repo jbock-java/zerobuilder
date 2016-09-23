@@ -2,7 +2,6 @@ package net.zerobuilder.compiler;
 
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.AnnotationSpec;
-import net.zerobuilder.compiler.ZeroProcessor;
 
 import javax.annotation.Generated;
 import javax.lang.model.util.Elements;
@@ -95,6 +94,18 @@ public final class Messages {
 
     public static final String NO_PROJECTION
         = "Could not find a projection (getter or field).";
+
+    public static final String IGNORE_AND_STEP =
+        "@Ignore and @Step don't make sense together." + POJO_HINT;
+
+    public static final String STEP_ON_SETTER
+        = "The @Step annotation goes on getters, not setters.";
+
+    public static final String IGNORE_ON_SETTER
+        = "The @Ignore annotation goes on getters, not setters.";
+
+    public static final String NO_ACCESSOR_PAIRS
+        = "No accessor pairs found." + POJO_HINT;
 
     private ErrorMessages() {
       throw new UnsupportedOperationException("no instances");

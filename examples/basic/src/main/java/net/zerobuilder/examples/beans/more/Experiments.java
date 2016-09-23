@@ -2,9 +2,9 @@ package net.zerobuilder.examples.beans.more;
 
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
+import net.zerobuilder.Ignore;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 // various beans
@@ -69,10 +69,26 @@ public class Experiments {
   // corner case: list<iterable>; must avoid "same erasure" error
   @Builders(recycle = true)
   @Goal(toBuilder = true)
-  @SuppressWarnings("rawtypes")
   public static class IterableExperiment {
     private List<Iterable<String>> things;
 
+    public List<Iterable<String>> getThings() {
+      if (things == null) {
+        things = new ArrayList();
+      }
+      return things;
+    }
+  }
+
+  // ignore annotation
+  @Builders
+  @Goal
+  public static class Ignorify {
+    private List<Iterable<String>> things;
+    @Ignore
+    public String getSocks() {
+      return "socks";
+    }
     public List<Iterable<String>> getThings() {
       if (things == null) {
         things = new ArrayList();
