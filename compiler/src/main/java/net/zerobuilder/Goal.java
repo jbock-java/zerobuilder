@@ -4,7 +4,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
-import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
@@ -63,5 +62,16 @@ public @interface Goal {
    * @return builder flag, defaults to {@code true}
    */
   boolean builder() default true;
+
+  /**
+   * <p>
+   * Default null checking behaviour for the non-primitive properties of this goal.
+   * </p><p>
+   * Can be overridden in {@link Step}.
+   * </p>
+   *
+   * @return default value for {@code @Step(nonNull)}
+   */
+  boolean nonNull() default false;
 
 }

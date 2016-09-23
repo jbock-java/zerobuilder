@@ -1,10 +1,12 @@
 package net.zerobuilder.compiler.analyse;
 
+import com.google.auto.common.MoreTypes;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.Goal;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.Analyser.AbstractGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.analyse.Analyser.BeanGoal;
@@ -13,6 +15,7 @@ import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter.Regul
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
@@ -82,13 +85,24 @@ public final class ProjectionValidator {
           return parameter.parameter;
         }
       };
-      static TmpRegularParameter create(VariableElement element, Optional<String> projectionMethodName) {
-        Optional<Step> annotation = fromNullable(element.getAnnotation(Step.class));
-        boolean nonNull = annotation.isPresent() && annotation.get().nonNull();
+      static TmpRegularParameter create(VariableElement element, Optional<String> projectionMethodName,
+                                        Goal goalAnnotation) {
+        Step stepAnnotation = element.getAnnotation(Step.class);
+        boolean nonNull = TmpValidParameter.nonNull(element.asType(), stepAnnotation, goalAnnotation);
         RegularParameter parameter = new RegularParameter(element.getSimpleName().toString(),
             TypeName.get(element.asType()), projectionMethodName, nonNull);
-        return new TmpRegularParameter(element, annotation, parameter);
+        return new TmpRegularParameter(element, fromNullable(stepAnnotation), parameter);
       }
+    }
+
+    private static boolean nonNull(TypeMirror type, Step step, Goal goal) {
+      if (TypeName.get(type).isPrimitive()) {
+        return false;
+      }
+      if (step != null) {
+        return step.nonNull();
+      }
+      return goal.nonNull();
     }
 
     static final class TmpAccessorPair extends TmpValidParameter {
@@ -103,12 +117,12 @@ public final class ProjectionValidator {
           return parameter.accessorPair;
         }
       };
-      static TmpAccessorPair create(ExecutableElement getter, CollectionType collectionType) {
-        Optional<Step> annotation = fromNullable(getter.getAnnotation(Step.class));
-        boolean nonNull = annotation.isPresent() && annotation.get().nonNull();
+      static TmpAccessorPair create(ExecutableElement getter, CollectionType collectionType, Goal goalAnnotation) {
+        Step stepAnnotation = getter.getAnnotation(Step.class);
+        boolean nonNull = TmpValidParameter.nonNull(getter.getReturnType(), stepAnnotation, goalAnnotation);
         AccessorPair accessorPair = new AccessorPair(TypeName.get(getter.getReturnType()),
             getter.getSimpleName().toString(), collectionType, nonNull);
-        return new TmpAccessorPair(getter, annotation, accessorPair);
+        return new TmpAccessorPair(getter, fromNullable(stepAnnotation), accessorPair);
       }
     }
 
