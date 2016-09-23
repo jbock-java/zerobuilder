@@ -39,7 +39,7 @@ import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
-import static net.zerobuilder.compiler.generate.BuilderContractContext.defineContract;
+import static net.zerobuilder.compiler.generate.BuilderImplContext.defineContract;
 import static net.zerobuilder.compiler.generate.BuilderImplContext.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.GoalContext.builderImplName;
 import static net.zerobuilder.compiler.generate.GoalContext.goalCasesFunction;

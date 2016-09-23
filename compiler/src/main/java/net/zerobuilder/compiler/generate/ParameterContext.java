@@ -26,8 +26,8 @@ public abstract class ParameterContext {
   final TypeName typeNextStep;
 
   abstract static class ParameterCases<R> {
-    abstract R parameter(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions);
-    abstract R accessorPair(ClassName typeName, TypeName returnType, AccessorPair parameter);
+    abstract R parameter(ExecutableParameterContext parameterContext);
+    abstract R accessorPair(BeansParameterContext beansParameterContext);
   }
 
   abstract <R> R accept(ParameterCases<R> cases);
@@ -40,26 +40,26 @@ public abstract class ParameterContext {
   public final static class ExecutableParameterContext extends ParameterContext {
     final RegularParameter parameter;
     final ImmutableList<TypeName> declaredExceptions;
-    public ExecutableParameterContext(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
-      super(typeName, returnType);
+    public ExecutableParameterContext(ClassName typeThisStep, TypeName typeNextStep, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+      super(typeThisStep, typeNextStep);
       this.declaredExceptions = declaredExceptions;
       this.parameter = parameter;
     }
     @Override
     <R> R accept(ParameterCases<R> cases) {
-      return cases.parameter(typeThisStep, typeNextStep, parameter, declaredExceptions);
+      return cases.parameter(this);
     }
   }
 
   public final static class BeansParameterContext extends ParameterContext {
     final AccessorPair accessorPair;
-    public BeansParameterContext(ClassName typeName, TypeName returnType, AccessorPair accessorPair) {
-      super(typeName, returnType);
+    public BeansParameterContext(ClassName typeThisStep, TypeName typeNextStep, AccessorPair accessorPair) {
+      super(typeThisStep, typeNextStep);
       this.accessorPair = accessorPair;
     }
     @Override
     <R> R accept(ParameterCases<R> cases) {
-      return cases.accessorPair(typeThisStep, typeNextStep, accessorPair);
+      return cases.accessorPair(this);
     }
   }
 
@@ -70,12 +70,12 @@ public abstract class ParameterContext {
   private static <R> ParameterCases<R> always(final ParameterFunction<R> parameterFunction) {
     return new ParameterCases<R>() {
       @Override
-      R parameter(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
-        return parameterFunction.apply(typeName, returnType, parameter, declaredExceptions);
+      R parameter(ExecutableParameterContext context) {
+        return parameterFunction.apply(context.typeThisStep, context.typeNextStep, context.parameter, context.declaredExceptions);
       }
       @Override
-      R accessorPair(ClassName typeName, TypeName returnType, AccessorPair parameter) {
-        return parameterFunction.apply(typeName, returnType, parameter, ImmutableList.<TypeName>of());
+      R accessorPair(BeansParameterContext context) {
+        return parameterFunction.apply(context.typeThisStep, context.typeNextStep, context.accessorPair, ImmutableList.<TypeName>of());
       }
     };
   }
@@ -111,37 +111,38 @@ public abstract class ParameterContext {
 
   static Function<ParameterContext, TypeSpec> asStepInterface = asFunction(new ParameterCases<TypeSpec>() {
     @Override
-    TypeSpec parameter(ClassName typeName, TypeName returnType, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
-      return regularStepInterface(typeName, returnType, parameter, declaredExceptions);
+    TypeSpec parameter(ExecutableParameterContext context) {
+      return regularStepInterface(context.typeThisStep, context.typeNextStep, context.parameter, context.declaredExceptions);
     }
     @Override
-    TypeSpec accessorPair(ClassName typeName, TypeName returnType, AccessorPair parameter) {
+    TypeSpec accessorPair(BeansParameterContext context) {
+      AccessorPair parameter = context.accessorPair;
       String name = parameter.name;
       if (parameter.collectionType.type.isPresent()) {
         TypeName collectionType = parameter.collectionType.type.get();
         ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
             subtypeOf(collectionType));
-        TypeSpec.Builder builder = interfaceBuilder(typeName)
+        TypeSpec.Builder builder = interfaceBuilder(context.typeThisStep)
             .addModifiers(PUBLIC)
             .addMethod(methodBuilder(name)
-                .returns(returnType)
                 .addParameter(parameterSpec(iterable, name))
+                .returns(context.typeNextStep)
                 .addModifiers(PUBLIC, ABSTRACT)
                 .build())
             .addMethod(methodBuilder(name)
-                .returns(returnType)
+                .returns(context.typeNextStep)
                 .addModifiers(PUBLIC, ABSTRACT)
                 .build());
         if (parameter.collectionType.allowShortcut) {
           builder.addMethod(methodBuilder(name)
-              .returns(returnType)
               .addParameter(parameterSpec(collectionType, name))
+              .returns(context.typeNextStep)
               .addModifiers(PUBLIC, ABSTRACT)
               .build());
         }
         return builder.build();
       } else {
-        return regularStepInterface(typeName, returnType, parameter, ImmutableList.<TypeName>of());
+        return regularStepInterface(context.typeThisStep, context.typeNextStep, parameter, ImmutableList.<TypeName>of());
       }
     }
   });

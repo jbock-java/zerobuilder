@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -22,9 +23,11 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.generate.GoalContext.always;
 import static net.zerobuilder.compiler.generate.GoalContext.builderImplName;
 import static net.zerobuilder.compiler.generate.GoalContext.stepInterfaceNames;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.generate.ParameterContext.asStepInterface;
 import static net.zerobuilder.compiler.generate.ParameterContext.maybeNullCheck;
 import static net.zerobuilder.compiler.generate.ParameterContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.Utilities.downcase;
@@ -59,6 +62,13 @@ final class BuilderImplContext {
       return ImmutableList.of(field);
     }
   };
+
+  private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces = always(new GoalContext.GoalFunction<ImmutableList<TypeSpec>>() {
+    @Override
+    public ImmutableList<TypeSpec> apply(GoalContext goal, TypeName goalType, ImmutableList<? extends ParameterContext> parameters) {
+      return FluentIterable.from(parameters).transform(asStepInterface).toList();
+    }
+  });
 
   private static final GoalCases<ImmutableList<MethodSpec>> stepsButLast
       = new GoalCases<ImmutableList<MethodSpec>>() {
@@ -128,6 +138,14 @@ final class BuilderImplContext {
         .addMethods(goal.accept(stepsButLast))
         .addMethods(goal.accept(lastStep))
         .addModifiers(FINAL, STATIC)
+        .build();
+  }
+
+  static TypeSpec defineContract(GoalContext goal) {
+    return classBuilder(goal.contractName)
+        .addTypes(goal.accept(stepInterfaces))
+        .addModifiers(PUBLIC, FINAL, STATIC)
+        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
   }
 
