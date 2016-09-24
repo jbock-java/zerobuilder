@@ -155,4 +155,4 @@ public List<Employee> getEmployees() {
 
 In this case (lone getter that returns a subclass of `Collection`),
 it is often not necessary to ignore the getter.
-Zerobuilder will assume that collection is mutable and adapt the builder code accordingly.
+Zerobuilder will assume that the collection is mutable and adapt the builder code accordingly.
