@@ -8,9 +8,11 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
+import net.zerobuilder.compiler.generate.GoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.GoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.GoalContext.GoalFunction;
-import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
+import net.zerobuilder.compiler.generate.GoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
@@ -37,22 +39,20 @@ final class UpdaterContext {
 
   static final GoalCases<ClassName> typeName = always(new GoalFunction<ClassName>() {
     @Override
-    public ClassName apply(GoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
-      return goal.config.generatedType.nestedClass(upcase(goal.goalName + "Updater"));
+    public ClassName apply(AbstractContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
+      return goal.config.generatedType.nestedClass(upcase(goal.accept(GoalContext.getGoalName) + "Updater"));
     }
   });
 
   private static final GoalCases<ImmutableList<FieldSpec>> fields = new GoalCases<ImmutableList<FieldSpec>>() {
     @Override
-    ImmutableList<FieldSpec> executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                                            ImmutableList<RegularStep> parameters,
-                                            ImmutableList<TypeName> thrownTypes) {
+    ImmutableList<FieldSpec> regularGoal(RegularGoalContext goal) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-      if (kind == INSTANCE_METHOD) {
+      if (goal.goal.kind == INSTANCE_METHOD) {
         ClassName receiverType = goal.config.annotatedType;
         builder.add(FieldSpec.builder(receiverType, '_' + downcase(receiverType.simpleName()), PRIVATE).build());
       }
-      for (RegularStep parameter : parameters) {
+      for (RegularStep parameter : goal.steps) {
         String name = parameter.parameter.name;
         TypeName type = parameter.parameter.type;
         builder.add(FieldSpec.builder(type, name, PRIVATE).build());
@@ -60,8 +60,8 @@ final class UpdaterContext {
       return builder.build();
     }
     @Override
-    ImmutableList<FieldSpec> beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters) {
-      FieldSpec field = FieldSpec.builder(goalType, downcase(goalType.simpleName()))
+    ImmutableList<FieldSpec> beanGoal(BeanGoalContext goal) {
+      FieldSpec field = FieldSpec.builder(goal.goal.goalType, downcase(goal.goal.goalType.simpleName()))
           .build();
       return ImmutableList.of(field);
     }
@@ -70,11 +70,9 @@ final class UpdaterContext {
 
   private static final GoalCases<ImmutableList<MethodSpec>> updateMethods = new GoalCases<ImmutableList<MethodSpec>>() {
     @Override
-    ImmutableList<MethodSpec> executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                                             ImmutableList<RegularStep> parameters,
-                                             ImmutableList<TypeName> thrownTypes) {
+    ImmutableList<MethodSpec> regularGoal(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (RegularStep parameter : parameters) {
+      for (RegularStep parameter : goal.steps) {
         String name = parameter.parameter.name;
         TypeName type = parameter.parameter.type;
         builder.add(methodBuilder(name)
@@ -89,16 +87,17 @@ final class UpdaterContext {
       return builder.build();
     }
     @Override
-    ImmutableList<MethodSpec> beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters) {
+    ImmutableList<MethodSpec> beanGoal(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (BeansStep parameter : parameters) {
+      for (BeansStep parameter : goal.steps) {
         String name = parameter.validBeanParameter.name;
         TypeName type = parameter.validBeanParameter.type;
         if (parameter.validBeanParameter.collectionType.isPresent()) {
           TypeName collectionType = parameter.validBeanParameter.collectionType.get();
           ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
               subtypeOf(collectionType));
-          CodeBlock clearCollection = CodeBlock.builder().addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
+          CodeBlock clearCollection = CodeBlock.builder().addStatement("this.$N.$N().clear()",
+              downcase(goal.goal.goalType.simpleName()),
               parameter.validBeanParameter.projectionMethodName).build();
           builder.add(methodBuilder(name)
               .returns(goal.accept(typeName))
@@ -107,7 +106,8 @@ final class UpdaterContext {
               .addCode(clearCollection)
               .beginControlFlow("for ($T $N : $N)", collectionType, iterationVarName, name)
               .addCode(parameter.accept(maybeIterationNullCheck))
-              .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
+              .addStatement("this.$N.$N().add($N)",
+                  downcase(goal.goal.goalType.simpleName()),
                   parameter.validBeanParameter.projectionMethodName, iterationVarName)
               .endControlFlow()
               .addStatement("return this")
@@ -125,7 +125,8 @@ final class UpdaterContext {
                 .addParameter(parameterSpec(collectionType, name))
                 .addCode(parameter.accept(maybeNullCheck))
                 .addCode(clearCollection)
-                .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
+                .addStatement("this.$N.$N().add($N)",
+                    downcase(goal.goal.goalType.simpleName()),
                     parameter.validBeanParameter.projectionMethodName, name)
                 .addStatement("return this")
                 .addModifiers(PUBLIC)
@@ -135,7 +136,8 @@ final class UpdaterContext {
           builder.add(methodBuilder(name)
               .returns(goal.accept(typeName))
               .addParameter(parameterSpec(type, name))
-              .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
+              .addStatement("this.$N.set$L($N)",
+                  downcase(goal.goal.goalType.simpleName()), upcase(name), name)
               .addStatement("return this")
               .addModifiers(PUBLIC)
               .build());
@@ -147,27 +149,25 @@ final class UpdaterContext {
 
   private static final GoalCases<MethodSpec> buildMethod = new GoalCases<MethodSpec>() {
     @Override
-    MethodSpec executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                              ImmutableList<RegularStep> parameters,
-                              ImmutableList<TypeName> thrownTypes) {
+    MethodSpec regularGoal(RegularGoalContext goal) {
       return methodBuilder("build")
           .addModifiers(PUBLIC)
-          .returns(goalType)
+          .returns(goal.goal.goalType)
           .addCode(goal.goalCall)
-          .addExceptions(thrownTypes)
+          .addExceptions(goal.thrownTypes)
           .build();
     }
     @Override
-    MethodSpec beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters) {
+    MethodSpec beanGoal(BeanGoalContext goal) {
       return methodBuilder("build")
           .addModifiers(PUBLIC)
-          .returns(goalType)
+          .returns(goal.goal.goalType)
           .addCode(goal.goalCall)
           .build();
     }
   };
 
-  static TypeSpec defineUpdater(GoalContext goal) {
+  static TypeSpec defineUpdater(AbstractContext goal) {
     return classBuilder(goal.accept(typeName))
         .addFields(goal.accept(fields))
         .addMethods(goal.accept(updateMethods))

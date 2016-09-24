@@ -4,13 +4,15 @@ import com.google.common.base.Function;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.analyse.DtoShared.BeanGoal;
+import net.zerobuilder.compiler.analyse.DtoShared.RegularGoal;
+import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -23,8 +25,8 @@ final class DtoPackage {
   static final class GoalTypes {
 
     interface GoalElementCases<R> {
-      R executableGoal(ExecutableGoal executableGoal);
-      R beanGoal(BeanGoal beanGoal);
+      R executableGoal(RegularGoalElement goal);
+      R beanGoal(BeanGoalElement goal);
     }
 
     static abstract class AbstractGoalElement {
@@ -32,48 +34,55 @@ final class DtoPackage {
     }
 
     static <R> GoalElementCases<R> goalElementCases(
-        final Function<ExecutableGoal, R> executableGoalFunction,
-        final Function<BeanGoal, R> beanGoalFunction) {
+        final Function<RegularGoalElement, R> executableGoalFunction,
+        final Function<BeanGoalElement, R> beanGoalFunction) {
       return new GoalElementCases<R>() {
         @Override
-        public R executableGoal(ExecutableGoal executableGoal) {
+        public R executableGoal(RegularGoalElement executableGoal) {
           return executableGoalFunction.apply(executableGoal);
         }
         @Override
-        public R beanGoal(BeanGoal beanGoal) {
+        public R beanGoal(BeanGoalElement beanGoal) {
           return beanGoalFunction.apply(beanGoal);
         }
       };
     }
 
-    static abstract class GoalElement extends AbstractGoalElement {
+    public static abstract class GoalElement extends AbstractGoalElement {
       final Goal goalAnnotation;
-      final String name;
       final Elements elements;
-      GoalElement(Goal goalAnnotation, String name, Elements elements) {
-        this.goalAnnotation = checkNotNull(goalAnnotation, "goalAnnotation");
-        this.name = checkNotNull(name, "name");
+      GoalElement(Goal goalAnnotation, Elements elements) {
+        this.goalAnnotation = goalAnnotation;
         this.elements = elements;
       }
     }
 
-    static final class ExecutableGoal extends GoalElement {
-      final GoalContextFactory.GoalKind kind;
-      final TypeName goalType;
+    static final GoalElementCases<String> getName = new GoalElementCases<String>() {
+      @Override
+      public String executableGoal(RegularGoalElement goal) {
+        return goal.goal.name;
+      }
+      @Override
+      public String beanGoal(BeanGoalElement goal) {
+        return goal.goal.name;
+      }
+    };
+
+    static final class RegularGoalElement extends GoalElement {
+      final RegularGoal goal;
       final ExecutableElement executableElement;
-      ExecutableGoal(ExecutableElement element, GoalContextFactory.GoalKind kind, TypeName goalType, String name,
-                     Elements elements) {
-        super(element.getAnnotation(Goal.class), name, elements);
-        this.goalType = goalType;
-        this.kind = kind;
+      RegularGoalElement(ExecutableElement element, GoalKind kind, TypeName goalType, String name,
+                         Elements elements) {
+        super(element.getAnnotation(Goal.class), elements);
+        this.goal = new RegularGoal(goalType, name, kind);
         this.executableElement = element;
       }
       static GoalElement create(ExecutableElement element, Elements elements) {
         TypeName goalType = goalType(element);
         String name = goalName(element.getAnnotation(Goal.class), goalType);
-        return new ExecutableGoal(element,
+        return new RegularGoalElement(element,
             element.getKind() == CONSTRUCTOR
-                ? GoalContextFactory.GoalKind.CONSTRUCTOR
+                ? GoalKind.CONSTRUCTOR
                 : element.getModifiers().contains(STATIC) ? STATIC_METHOD : INSTANCE_METHOD,
             goalType(element), name, elements);
 
@@ -83,39 +92,38 @@ final class DtoPackage {
       }
     }
 
-    static final class BeanGoal extends GoalElement {
-      final ClassName goalType;
+    static final class BeanGoalElement extends GoalElement {
+      final BeanGoal goal;
       final TypeElement beanTypeElement;
-      private BeanGoal(Element field, ClassName goalType, String name, TypeElement beanTypeElement, Elements elements) {
-        super(field.getAnnotation(Goal.class), name, elements);
-        this.goalType = goalType;
+      private BeanGoalElement(Element field, ClassName goalType, String name, TypeElement beanTypeElement, Elements elements) {
+        super(field.getAnnotation(Goal.class), elements);
+        this.goal = new BeanGoal(goalType, name);
         this.beanTypeElement = beanTypeElement;
       }
       static GoalElement create(TypeElement beanType, Elements elements) {
         ClassName goalType = ClassName.get(beanType);
         String name = goalName(beanType.getAnnotation(Goal.class), goalType);
-        return new BeanGoal(beanType, goalType, name, beanType, elements);
+        return new BeanGoalElement(beanType, goalType, name, beanType, elements);
       }
       <R> R accept(GoalElementCases<R> goalElementCases) {
         return goalElementCases.beanGoal(this);
       }
     }
 
-    private GoalTypes() {
-      throw new UnsupportedOperationException("no instances");
-    }
-
     static final GoalTypes.GoalElementCases<Element> getElement = new GoalTypes.GoalElementCases<Element>() {
       @Override
-      public Element executableGoal(GoalTypes.ExecutableGoal executableGoal) {
+      public Element executableGoal(RegularGoalElement executableGoal) {
         return executableGoal.executableElement;
       }
       @Override
-      public Element beanGoal(GoalTypes.BeanGoal beanGoal) {
+      public Element beanGoal(BeanGoalElement beanGoal) {
         return beanGoal.beanTypeElement;
       }
     };
 
+    private GoalTypes() {
+      throw new UnsupportedOperationException("no instances");
+    }
   }
 
   private static String goalName(Goal goalAnnotation, TypeName goalType) {

@@ -4,8 +4,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoal;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.ExecutableGoal;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
+import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
 
 import javax.lang.model.type.TypeMirror;
 
@@ -28,16 +29,60 @@ public final class DtoShared {
 
   public static abstract class ValidGoal {
     public static abstract class ValidationResultCases<R> {
-      abstract R executableGoal(ExecutableGoal goal, ImmutableList<ValidRegularParameter> parameters);
-      abstract R beanGoal(BeanGoal beanGoal, ImmutableList<ValidBeanParameter> validBeanParameters);
+      abstract R executableGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> parameters);
+      abstract R beanGoal(BeanGoalElement beanGoal, ImmutableList<ValidBeanParameter> validBeanParameters);
     }
     abstract <R> R accept(ValidationResultCases<R> cases);
   }
 
+  public static abstract class AbstractGoal {
+    public final String name;
+    AbstractGoal(String name) {
+      this.name = name;
+    }
+    public abstract <R> R accept(AbstractGoalCases<R> cases);
+  }
+
+  public interface AbstractGoalCases<R> {
+    R regularGoal(RegularGoal goal);
+    R beanGoal(BeanGoal goal);
+  }
+
+  public static final class RegularGoal extends AbstractGoal {
+
+    /**
+     * <p>method goal: return type</p>
+     * <p>constructor goal: type of enclosing class</p>
+     */
+    public final TypeName goalType;
+    public final GoalKind kind;
+    RegularGoal(TypeName goalType, String name, GoalKind kind) {
+      super(name);
+      this.goalType = goalType;
+      this.kind = kind;
+    }
+    @Override
+    public <R> R accept(AbstractGoalCases<R> cases) {
+      return cases.regularGoal(this);
+    }
+  }
+
+  public static final class BeanGoal extends AbstractGoal {
+    public final ClassName goalType;
+    BeanGoal(ClassName goalType, String name) {
+      super(name);
+      this.goalType = goalType;
+    }
+    @Override
+    public <R> R accept(AbstractGoalCases<R> cases) {
+      return cases.beanGoal(this);
+    }
+  }
+
   static final class ValidRegularGoal extends ValidGoal {
-    private final ExecutableGoal goal;
+    private final RegularGoalElement goal;
     private final ImmutableList<ValidRegularParameter> parameters;
-    ValidRegularGoal(ExecutableGoal goal, ImmutableList<ValidRegularParameter> parameters) {
+    ValidRegularGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> parameters) {
       this.goal = goal;
       this.parameters = parameters;
     }
@@ -48,9 +93,9 @@ public final class DtoShared {
   }
 
   static final class ValidBeanGoal extends ValidGoal {
-    private final BeanGoal goal;
+    private final BeanGoalElement goal;
     private final ImmutableList<ValidBeanParameter> validBeanParameters;
-    ValidBeanGoal(BeanGoal goal, ImmutableList<ValidBeanParameter> validBeanParameters) {
+    ValidBeanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validBeanParameters) {
       this.goal = goal;
       this.validBeanParameters = validBeanParameters;
     }

@@ -6,9 +6,9 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoal;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.ExecutableGoal;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElement;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
+import net.zerobuilder.compiler.analyse.DtoShared.AbstractGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal.ValidationResultCases;
@@ -16,6 +16,7 @@ import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 import net.zerobuilder.compiler.generate.BuilderType;
 import net.zerobuilder.compiler.generate.GoalContext;
+import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
 import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
@@ -27,46 +28,43 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 
 public final class GoalContextFactory {
 
-  static GoalContext context(final ValidGoal validGoal, final BuilderType config,
-                             final boolean toBuilder, final boolean builder,
-                             final CodeBlock goalCall) throws ValidationException {
-    return validGoal.accept(new ValidationResultCases<GoalContext>() {
+  static AbstractContext context(final ValidGoal validGoal, final BuilderType config,
+                                             final boolean toBuilder, final boolean builder,
+                                             final CodeBlock goalCall) throws ValidationException {
+    return validGoal.accept(new ValidationResultCases<AbstractContext>() {
       @Override
-      GoalContext executableGoal(ExecutableGoal goal, ImmutableList<ValidRegularParameter> validParameters) {
-        ClassName contractName = contractName(goal, config);
+      AbstractContext executableGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> validParameters) {
+        ClassName contractName = contractName(goal.goal, config);
         ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
         ImmutableList<RegularStep> parameters = steps(contractName,
-            goal.goalType,
+            goal.goal.goalType,
             validParameters,
             thrownTypes,
             regularParameterFactory);
-        return new GoalContext.ExecutableGoalContext(
-            goal.goalType,
+        return new GoalContext.RegularGoalContext(
+            goal.goal,
             config,
             toBuilder,
             builder,
             contractName,
-            goal.kind,
-            goal.name,
             thrownTypes,
             parameters,
             goalCall);
       }
       @Override
-      GoalContext beanGoal(BeanGoal goal, ImmutableList<ValidBeanParameter> validBeanParameters) {
-        ClassName contractName = contractName(goal, config);
+      AbstractContext beanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validBeanParameters) {
+        ClassName contractName = contractName(goal.goal, config);
         ImmutableList<BeansStep> parameters = steps(contractName,
-            goal.goalType,
+            goal.goal.goalType,
             validBeanParameters,
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
         return new GoalContext.BeanGoalContext(
-            goal.goalType,
+            goal.goal,
             config,
             toBuilder,
             builder,
             contractName,
-            goal.name,
             parameters,
             goalCall);
       }
@@ -108,7 +106,7 @@ public final class GoalContextFactory {
     }
   };
 
-  private static ClassName contractName(GoalElement goal, BuilderType config) {
+  private static ClassName contractName(AbstractGoal goal, BuilderType config) {
     return config.generatedType.nestedClass(upcase(goal.name + "Builder"));
   }
 

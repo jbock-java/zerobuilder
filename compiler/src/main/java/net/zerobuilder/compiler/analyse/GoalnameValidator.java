@@ -22,6 +22,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
 import static net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.getElement;
+import static net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.getName;
 
 final class GoalnameValidator {
 
@@ -56,7 +57,7 @@ final class GoalnameValidator {
     goals = GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK.immutableSortedCopy(goals);
     HashMap<String, GoalElement> goalNames = new HashMap<>();
     for (GoalElement goal : goals) {
-      GoalElement otherGoal = goalNames.put(goal.name, goal);
+      GoalElement otherGoal = goalNames.put(goal.accept(getName), goal);
       if (otherGoal != null) {
         Goal goalAnnotation = goal.goalAnnotation;
         Goal otherAnnotation = otherGoal.goalAnnotation;

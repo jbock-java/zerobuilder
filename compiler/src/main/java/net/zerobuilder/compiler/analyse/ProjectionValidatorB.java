@@ -11,7 +11,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoal;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter.CollectionType;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
@@ -63,10 +63,10 @@ final class ProjectionValidatorB {
   private static final ClassName COLLECTION = ClassName.get(Collection.class);
   private static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
-  static final Function<BeanGoal, ValidGoal> validateBean
-      = new Function<BeanGoal, ValidGoal>() {
+  static final Function<BeanGoalElement, ValidGoal> validateBean
+      = new Function<BeanGoalElement, ValidGoal>() {
     @Override
-    public ValidGoal apply(BeanGoal goal) {
+    public ValidGoal apply(BeanGoalElement goal) {
       ImmutableMap<String, ExecutableElement> setters = setters(goal);
       ImmutableList.Builder<TmpAccessorPair> builder = ImmutableList.builder();
       for (ExecutableElement getter : getters(goal)) {
@@ -136,7 +136,7 @@ final class ProjectionValidatorB {
     return false;
   }
 
-  private static ImmutableList<ExecutableElement> getters(BeanGoal goal) {
+  private static ImmutableList<ExecutableElement> getters(BeanGoalElement goal) {
     return FluentIterable.from(getLocalAndInheritedMethods(goal.beanTypeElement, goal.elements))
         .filter(new Predicate<ExecutableElement>() {
           @Override
@@ -164,7 +164,7 @@ final class ProjectionValidatorB {
         .toList();
   }
 
-  private static ImmutableMap<String, ExecutableElement> setters(BeanGoal goal) throws ValidationException {
+  private static ImmutableMap<String, ExecutableElement> setters(BeanGoalElement goal) throws ValidationException {
     TypeElement beanType = goal.beanTypeElement;
     if (!hasParameterlessConstructor(beanType)) {
       throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, beanType);
@@ -230,7 +230,7 @@ final class ProjectionValidatorB {
     return false;
   }
 
-  private static ValidGoal createResult(BeanGoal goal, ImmutableList<TmpAccessorPair> tmpAccessorPairs) {
+  private static ValidGoal createResult(BeanGoalElement goal, ImmutableList<TmpAccessorPair> tmpAccessorPairs) {
     ImmutableList<ValidBeanParameter> validBeanParameters
         = FluentIterable.from(shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(tmpAccessorPairs)))
         .transform(toValidParameter)

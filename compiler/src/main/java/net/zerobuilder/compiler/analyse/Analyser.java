@@ -5,13 +5,14 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoal;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.ExecutableGoal;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElementCases;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.generate.BuilderType;
 import net.zerobuilder.compiler.generate.GoalContext;
+import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -46,7 +47,7 @@ public final class Analyser {
 
   public AnalysisResult analyse(TypeElement buildElement) throws ValidationException {
     BuilderType context = createBuilderContext(buildElement);
-    ImmutableList.Builder<GoalContext> builder = ImmutableList.builder();
+    ImmutableList.Builder<AbstractContext> builder = ImmutableList.builder();
     ImmutableList<GoalElement> goals = goals(buildElement);
     checkNameConflict(goals);
     for (GoalElement goal : goals) {
@@ -65,7 +66,7 @@ public final class Analyser {
   private ImmutableList<GoalElement> goals(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<GoalElement> builder = ImmutableList.builder();
     if (buildElement.getAnnotation(Goal.class) != null) {
-      builder.add(BeanGoal.create(buildElement, elements));
+      builder.add(BeanGoalElement.create(buildElement, elements));
     }
     for (Element element : buildElement.getEnclosedElements()) {
       if (element.getAnnotation(Goal.class) != null) {
@@ -78,7 +79,7 @@ public final class Analyser {
           if (executableElement.getParameters().isEmpty()) {
             throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
           }
-          builder.add(ExecutableGoal.create(executableElement, elements));
+          builder.add(RegularGoalElement.create(executableElement, elements));
         }
       }
     }
@@ -91,9 +92,9 @@ public final class Analyser {
 
   public static final class AnalysisResult {
     public final BuilderType config;
-    public final ImmutableList<GoalContext> goals;
+    public final ImmutableList<AbstractContext> goals;
 
-    AnalysisResult(BuilderType config, ImmutableList<GoalContext> goals) {
+    AnalysisResult(BuilderType config, ImmutableList<AbstractContext> goals) {
       this.config = config;
       this.goals = goals;
     }
@@ -103,14 +104,14 @@ public final class Analyser {
                                           final ClassName annotatedType) throws ValidationException {
     return goal.accept(new GoalElementCases<CodeBlock>() {
       @Override
-      public CodeBlock executableGoal(ExecutableGoal goal) throws ValidationException {
+      public CodeBlock executableGoal(RegularGoalElement goal) throws ValidationException {
         CodeBlock parameters = goalParameters(goal.executableElement);
         String method = goal.executableElement.getSimpleName().toString();
-        String returnLiteral = TypeName.VOID.equals(goal.goalType) ? "" : "return ";
-        switch (goal.kind) {
+        String returnLiteral = TypeName.VOID.equals(goal.goal.goalType) ? "" : "return ";
+        switch (goal.goal.kind) {
           case CONSTRUCTOR:
             return CodeBlock.builder()
-                .addStatement("return new $T($L)", goal.goalType, parameters)
+                .addStatement("return new $T($L)", goal.goal.goalType, parameters)
                 .build();
           case INSTANCE_METHOD:
             String instance = downcase(annotatedType.simpleName());
@@ -122,13 +123,13 @@ public final class Analyser {
                 .addStatement("$L$T.$N($L)", returnLiteral, annotatedType, method, parameters)
                 .build();
           default:
-            throw new IllegalStateException("unknown kind: " + goal.kind);
+            throw new IllegalStateException("unknown kind: " + goal.goal.kind);
         }
       }
       @Override
-      public CodeBlock beanGoal(BeanGoal goal) throws ValidationException {
+      public CodeBlock beanGoal(BeanGoalElement goal) throws ValidationException {
         return CodeBlock.builder()
-            .addStatement("return $L", downcase(goal.goalType.simpleName()))
+            .addStatement("return $L", downcase(goal.goal.goalType.simpleName()))
             .build();
       }
     });
