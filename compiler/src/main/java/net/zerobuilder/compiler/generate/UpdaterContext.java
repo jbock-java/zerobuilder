@@ -11,8 +11,9 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.GoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.GoalContext.GoalFunction;
 import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.generate.ParameterContext.BeansParameterContext;
-import net.zerobuilder.compiler.generate.ParameterContext.ExecutableParameterContext;
+import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
+import net.zerobuilder.compiler.generate.StepContext.BeansStep;
+import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -24,8 +25,8 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.GoalContext.always;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.ParameterContext.maybeIterationNullCheck;
-import static net.zerobuilder.compiler.generate.ParameterContext.maybeNullCheck;
+import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
+import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.iterationVarName;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
@@ -36,7 +37,7 @@ final class UpdaterContext {
 
   static final GoalCases<ClassName> typeName = always(new GoalFunction<ClassName>() {
     @Override
-    public ClassName apply(GoalContext goal, TypeName goalType, ImmutableList<? extends ParameterContext> parameters) {
+    public ClassName apply(GoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
       return goal.config.generatedType.nestedClass(upcase(goal.goalName + "Updater"));
     }
   });
@@ -44,14 +45,14 @@ final class UpdaterContext {
   private static final GoalCases<ImmutableList<FieldSpec>> fields = new GoalCases<ImmutableList<FieldSpec>>() {
     @Override
     ImmutableList<FieldSpec> executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                                            ImmutableList<ExecutableParameterContext> parameters,
+                                            ImmutableList<RegularStep> parameters,
                                             ImmutableList<TypeName> thrownTypes) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       if (kind == INSTANCE_METHOD) {
         ClassName receiverType = goal.config.annotatedType;
         builder.add(FieldSpec.builder(receiverType, '_' + downcase(receiverType.simpleName()), PRIVATE).build());
       }
-      for (ExecutableParameterContext parameter : parameters) {
+      for (RegularStep parameter : parameters) {
         String name = parameter.parameter.name;
         TypeName type = parameter.parameter.type;
         builder.add(FieldSpec.builder(type, name, PRIVATE).build());
@@ -59,7 +60,7 @@ final class UpdaterContext {
       return builder.build();
     }
     @Override
-    ImmutableList<FieldSpec> beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
+    ImmutableList<FieldSpec> beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters) {
       FieldSpec field = FieldSpec.builder(goalType, downcase(goalType.simpleName()))
           .build();
       return ImmutableList.of(field);
@@ -70,10 +71,10 @@ final class UpdaterContext {
   private static final GoalCases<ImmutableList<MethodSpec>> updateMethods = new GoalCases<ImmutableList<MethodSpec>>() {
     @Override
     ImmutableList<MethodSpec> executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                                             ImmutableList<ExecutableParameterContext> parameters,
+                                             ImmutableList<RegularStep> parameters,
                                              ImmutableList<TypeName> thrownTypes) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (ExecutableParameterContext parameter : parameters) {
+      for (RegularStep parameter : parameters) {
         String name = parameter.parameter.name;
         TypeName type = parameter.parameter.type;
         builder.add(methodBuilder(name)
@@ -88,9 +89,9 @@ final class UpdaterContext {
       return builder.build();
     }
     @Override
-    ImmutableList<MethodSpec> beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
+    ImmutableList<MethodSpec> beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (BeansParameterContext parameter : parameters) {
+      for (BeansStep parameter : parameters) {
         String name = parameter.validBeanParameter.name;
         TypeName type = parameter.validBeanParameter.type;
         if (parameter.validBeanParameter.collectionType.isPresent()) {
@@ -147,7 +148,7 @@ final class UpdaterContext {
   private static final GoalCases<MethodSpec> buildMethod = new GoalCases<MethodSpec>() {
     @Override
     MethodSpec executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                              ImmutableList<ExecutableParameterContext> parameters,
+                              ImmutableList<RegularStep> parameters,
                               ImmutableList<TypeName> thrownTypes) {
       return methodBuilder("build")
           .addModifiers(PUBLIC)
@@ -157,7 +158,7 @@ final class UpdaterContext {
           .build();
     }
     @Override
-    MethodSpec beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
+    MethodSpec beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters) {
       return methodBuilder("build")
           .addModifiers(PUBLIC)
           .returns(goalType)

@@ -15,8 +15,8 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
 import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
 import net.zerobuilder.compiler.generate.GoalContext.GoalCases;
-import net.zerobuilder.compiler.generate.ParameterContext.BeansParameterContext;
-import net.zerobuilder.compiler.generate.ParameterContext.ExecutableParameterContext;
+import net.zerobuilder.compiler.generate.StepContext.BeansStep;
+import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
 import javax.lang.model.util.Elements;
 
@@ -43,7 +43,7 @@ import static net.zerobuilder.compiler.generate.BuilderImplContext.defineContrac
 import static net.zerobuilder.compiler.generate.BuilderImplContext.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.GoalContext.builderImplName;
 import static net.zerobuilder.compiler.generate.GoalContext.goalCasesFunction;
-import static net.zerobuilder.compiler.generate.ParameterContext.maybeIterationNullCheck;
+import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 
 /**
@@ -165,7 +165,7 @@ public final class Generator {
   private static final GoalCases<MethodSpec> goalToToBuilder = new GoalCases<MethodSpec>() {
     @Override
     MethodSpec executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                              ImmutableList<ExecutableParameterContext> parameters,
+                              ImmutableList<RegularStep> parameters,
                               ImmutableList<TypeName> thrownTypes) {
       String instance = downcase(((ClassName) goalType.box()).simpleName());
       String methodName = goal.goalName + "ToBuilder";
@@ -181,7 +181,7 @@ public final class Generator {
             updaterType);
       }
       CodeBlock.Builder builder = CodeBlock.builder();
-      for (ExecutableParameterContext parameter : parameters) {
+      for (RegularStep parameter : parameters) {
         if (parameter.parameter.projectionMethodName.isPresent()) {
           if (parameter.parameter.nonNull) {
             builder.add(CodeBlock.builder()
@@ -210,7 +210,7 @@ public final class Generator {
           .addModifiers(PUBLIC, STATIC).build();
     }
     @Override
-    MethodSpec beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
+    MethodSpec beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters) {
       String instance = downcase(goalType.simpleName());
       String methodName = downcase(goal.goalName + "ToBuilder");
       CodeBlock.Builder builder = CodeBlock.builder();
@@ -226,7 +226,7 @@ public final class Generator {
             updaterType);
       }
       builder.addStatement("$N.$N = new $T()", updater, instance, goalType);
-      for (BeansParameterContext parameter : parameters) {
+      for (BeansStep parameter : parameters) {
         String parameterName = upcase(parameter.validBeanParameter.name);
         CodeBlock nullCheck = CodeBlock.builder()
             .beginControlFlow("if ($N.$N() == null)", instance, parameter.validBeanParameter.projectionMethodName)
@@ -265,11 +265,11 @@ public final class Generator {
   private static final GoalCases<MethodSpec> goalToBuilder = new GoalCases<MethodSpec>() {
     @Override
     MethodSpec executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                              ImmutableList<ExecutableParameterContext> parameters,
+                              ImmutableList<RegularStep> parameters,
                               ImmutableList<TypeName> thrownTypes) {
       ClassName stepsType = goal.accept(builderImplName);
       MethodSpec.Builder method = methodBuilder(goal.goalName + "Builder")
-          .returns(parameters.get(0).typeThisStep)
+          .returns(parameters.get(0).thisType)
           .addModifiers(PUBLIC, STATIC);
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.config.recycle
@@ -287,10 +287,10 @@ public final class Generator {
           .build();
     }
     @Override
-    MethodSpec beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
+    MethodSpec beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters) {
       ClassName stepsType = goal.accept(builderImplName);
       MethodSpec.Builder method = methodBuilder(goal.goalName + "Builder")
-          .returns(parameters.get(0).typeThisStep)
+          .returns(parameters.get(0).thisType)
           .addModifiers(PUBLIC, STATIC);
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.config.recycle

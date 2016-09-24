@@ -8,13 +8,17 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoal;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.ExecutableGoal;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElement;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal.ValidationResultCases;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 import net.zerobuilder.compiler.generate.BuilderType;
 import net.zerobuilder.compiler.generate.GoalContext;
-import net.zerobuilder.compiler.generate.ParameterContext;
+import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
+import net.zerobuilder.compiler.generate.StepContext.BeansStep;
+import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -29,9 +33,13 @@ public final class GoalContextFactory {
     return validGoal.accept(new ValidationResultCases<GoalContext>() {
       @Override
       GoalContext executableGoal(ExecutableGoal goal, ImmutableList<ValidRegularParameter> validParameters) {
-        ClassName contractName = config.generatedType.nestedClass(upcase(goal.name + "Builder"));
+        ClassName contractName = contractName(goal, config);
         ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
-        ImmutableList<ParameterContext.ExecutableParameterContext> parameters = parameters(contractName, goal.goalType, validParameters, thrownTypes);
+        ImmutableList<RegularStep> parameters = steps(contractName,
+            goal.goalType,
+            validParameters,
+            thrownTypes,
+            regularParameterFactory);
         return new GoalContext.ExecutableGoalContext(
             goal.goalType,
             config,
@@ -45,49 +53,65 @@ public final class GoalContextFactory {
             goalCall);
       }
       @Override
-      GoalContext beanGoal(BeanGoal beanGoal, ImmutableList<ValidBeanParameter> validBeanParameters) {
-        ClassName contractName = config.generatedType.nestedClass(upcase(beanGoal.name + "Builder"));
-        ImmutableList<ParameterContext.BeansParameterContext> parameters = beanParameters(contractName, beanGoal.goalType, validBeanParameters);
+      GoalContext beanGoal(BeanGoal goal, ImmutableList<ValidBeanParameter> validBeanParameters) {
+        ClassName contractName = contractName(goal, config);
+        ImmutableList<BeansStep> parameters = steps(contractName,
+            goal.goalType,
+            validBeanParameters,
+            ImmutableList.<TypeName>of(),
+            beansParameterFactory);
         return new GoalContext.BeanGoalContext(
-            beanGoal.goalType,
+            goal.goalType,
             config,
             toBuilder,
             builder,
             contractName,
-            beanGoal.name,
+            goal.name,
             parameters,
             goalCall);
       }
     });
   }
 
-  private static ImmutableList<ParameterContext.ExecutableParameterContext> parameters(ClassName builderType, TypeName returnType,
-                                                                                       ImmutableList<ValidRegularParameter> parameters, ImmutableList<TypeName> thrownTypes) {
-    ImmutableList.Builder<ParameterContext.ExecutableParameterContext> builder = ImmutableList.builder();
-    for (int i = parameters.size() - 1; i >= 0; i--) {
-      ValidRegularParameter parameter = parameters.get(i);
-      ClassName stepContract = builderType.nestedClass(
-          upcase(parameter.name));
-      builder.add(new ParameterContext.ExecutableParameterContext(stepContract, returnType, parameter, thrownTypes));
-      returnType = stepContract;
+  private static <P extends ValidParameter, R extends AbstractStep>
+  ImmutableList<R> steps(ClassName builderType,
+                         TypeName nextType,
+                         ImmutableList<P> parameters,
+                         ImmutableList<TypeName> thrownTypes,
+                         ParameterFactory<P, R> parameterFactory) {
+    ImmutableList.Builder<R> builder = ImmutableList.builder();
+    for (P parameter : parameters.reverse()) {
+      ClassName thisType = builderType.nestedClass(upcase(parameter.name));
+      builder.add(parameterFactory.create(thisType, nextType, parameter, thrownTypes));
+      nextType = thisType;
     }
     return builder.build().reverse();
   }
 
-  private static ImmutableList<ParameterContext.BeansParameterContext> beanParameters(ClassName builderType, TypeName returnType,
-                                                                                      ImmutableList<ValidBeanParameter> parameters) {
-    ImmutableList.Builder<ParameterContext.BeansParameterContext> builder = ImmutableList.builder();
-    for (int i = parameters.size() - 1; i >= 0; i--) {
-      ValidBeanParameter parameter = parameters.get(i);
-      ClassName stepContract = builderType.nestedClass(
-          upcase(parameter.name));
-      builder.add(new ParameterContext.BeansParameterContext(stepContract, returnType, parameter));
-      returnType = stepContract;
-    }
-    return builder.build().reverse();
+  private static abstract class ParameterFactory<P extends ValidParameter, R extends AbstractStep> {
+    abstract R create(ClassName typeThisStep, TypeName typeNextStep, P parameter, ImmutableList<TypeName> declaredExceptions);
   }
 
-  // beanGoal goals don't have a kind
+  private static final ParameterFactory<ValidBeanParameter, BeansStep> beansParameterFactory
+      = new ParameterFactory<ValidBeanParameter, BeansStep>() {
+    @Override
+    BeansStep create(ClassName typeThisStep, TypeName typeNextStep, ValidBeanParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+      return new BeansStep(typeThisStep, typeNextStep, parameter);
+    }
+  };
+
+  private static final ParameterFactory<ValidRegularParameter, RegularStep> regularParameterFactory
+      = new ParameterFactory<ValidRegularParameter, RegularStep>() {
+    @Override
+    RegularStep create(ClassName typeThisStep, TypeName typeNextStep, ValidRegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+      return new RegularStep(typeThisStep, typeNextStep, parameter, declaredExceptions);
+    }
+  };
+
+  private static ClassName contractName(GoalElement goal, BuilderType config) {
+    return config.generatedType.nestedClass(upcase(goal.name + "Builder"));
+  }
+
   public enum GoalKind {
     CONSTRUCTOR, STATIC_METHOD, INSTANCE_METHOD
   }

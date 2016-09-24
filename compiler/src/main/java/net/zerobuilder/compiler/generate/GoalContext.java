@@ -7,8 +7,9 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.generate.ParameterContext.BeansParameterContext;
-import net.zerobuilder.compiler.generate.ParameterContext.ExecutableParameterContext;
+import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
+import net.zerobuilder.compiler.generate.StepContext.BeansStep;
+import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -16,27 +17,27 @@ public abstract class GoalContext {
 
   static abstract class GoalCases<R> {
     abstract R executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                              ImmutableList<ExecutableParameterContext> parameters,
+                              ImmutableList<RegularStep> parameters,
                               ImmutableList<TypeName> thrownTypes);
-    abstract R beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters);
+    abstract R beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters);
   }
 
   abstract <R> R accept(GoalCases<R> cases);
 
   static abstract class GoalFunction<R> {
-    abstract R apply(GoalContext goal, TypeName goalType, ImmutableList<? extends ParameterContext> parameters);
+    abstract R apply(GoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters);
   }
 
   static <R> GoalCases<R> always(final GoalFunction<R> function) {
     return new GoalCases<R>() {
       @Override
       R executableGoal(GoalContext goal, TypeName goalType, GoalKind kind,
-                       ImmutableList<ExecutableParameterContext> parameters,
+                       ImmutableList<RegularStep> parameters,
                        ImmutableList<TypeName> thrownTypes) {
         return function.apply(goal, goalType, parameters);
       }
       @Override
-      R beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
+      R beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansStep> parameters) {
         return function.apply(goal, goalType, parameters);
       }
     };
@@ -80,10 +81,10 @@ public abstract class GoalContext {
 
   static final GoalCases<ImmutableList<ClassName>> stepInterfaceNames = always(new GoalFunction<ImmutableList<ClassName>>() {
     @Override
-    public ImmutableList<ClassName> apply(GoalContext goal, TypeName goalType, ImmutableList<? extends ParameterContext> parameters) {
+    public ImmutableList<ClassName> apply(GoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
-      for (ParameterContext parameter : parameters) {
-        specs.add(parameter.typeThisStep);
+      for (AbstractStep abstractStep : parameters) {
+        specs.add(abstractStep.thisType);
       }
       return specs.build();
     }
@@ -91,7 +92,7 @@ public abstract class GoalContext {
 
   static final GoalCases<ClassName> builderImplName = always(new GoalFunction<ClassName>() {
     @Override
-    public ClassName apply(GoalContext goal, TypeName goalType, ImmutableList<? extends ParameterContext> parameters) {
+    public ClassName apply(GoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
       return goal.config.generatedType.nestedClass(upcase(goal.goalName + "BuilderImpl"));
     }
   });
@@ -109,7 +110,7 @@ public abstract class GoalContext {
     /**
      * original parameter order unless Step annotation was used
      */
-    final ImmutableList<ExecutableParameterContext> goalParameters;
+    final ImmutableList<RegularStep> goalParameters;
 
     final ImmutableList<TypeName> thrownTypes;
 
@@ -121,7 +122,7 @@ public abstract class GoalContext {
                           GoalKind kind,
                           String goalName,
                           ImmutableList<TypeName> thrownTypes,
-                          ImmutableList<ExecutableParameterContext> goalParameters,
+                          ImmutableList<RegularStep> goalParameters,
                           CodeBlock goalCall) {
       super(config, toBuilder, builder, contractName, goalName, goalCall);
       this.thrownTypes = thrownTypes;
@@ -140,7 +141,7 @@ public abstract class GoalContext {
     /**
      * alphabetic order unless Step annotation was used
      */
-    final ImmutableList<BeansParameterContext> goalParameters;
+    final ImmutableList<BeansStep> goalParameters;
     final ClassName goalType;
 
     public BeanGoalContext(ClassName goalType,
@@ -149,7 +150,7 @@ public abstract class GoalContext {
                     boolean builder,
                     ClassName contractName,
                     String goalName,
-                    ImmutableList<BeansParameterContext> goalParameters,
+                    ImmutableList<BeansStep> goalParameters,
                     CodeBlock goalCall) {
       super(config, toBuilder, builder, contractName, goalName, goalCall);
       this.goalParameters = goalParameters;
