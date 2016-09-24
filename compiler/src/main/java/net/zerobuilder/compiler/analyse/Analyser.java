@@ -2,17 +2,15 @@ package net.zerobuilder.compiler.analyse;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
-import com.google.common.primitives.Ints;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.Analyser.AbstractGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.generate.BuilderType;
-import net.zerobuilder.compiler.generate.GoalContext;
 import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidationResult;
+import net.zerobuilder.compiler.generate.BuilderType;
+import net.zerobuilder.compiler.generate.GoalContext;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -20,64 +18,29 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
 import static com.google.auto.common.MoreElements.asExecutable;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Iterables.getLast;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind.WARNING;
-import static net.zerobuilder.compiler.generate.BuilderType.createBuilderContext;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.STATIC_METHOD;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.context;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EECC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_EEMM;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersType;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.STATIC_METHOD;
+import static net.zerobuilder.compiler.analyse.GoalContextFactory.context;
+import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConflict;
+import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersType;
+import static net.zerobuilder.compiler.generate.BuilderType.createBuilderContext;
 
 public final class Analyser {
-
-  /**
-   * to generate better error messages, in case of goal name conflict
-   */
-  private static final Ordering<GoalElement> GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK
-      = Ordering.from(new Comparator<GoalElement>() {
-
-    private int goalWeight(GoalElement goal) throws ValidationException {
-      ElementKind kind = goal.accept(getElement).getKind();
-      Goal annotation = goal.goalAnnotation;
-      String name = annotation.name();
-      return isNullOrEmpty(name)
-          ? (kind == CONSTRUCTOR ? 0 : (kind == METHOD ? 1 : 2))
-          : (kind == CONSTRUCTOR ? 3 : (kind == METHOD ? 4 : 5));
-    }
-
-    @Override
-    public int compare(GoalElement g0, GoalElement g1) {
-      try {
-        return Ints.compare(goalWeight(g0), goalWeight(g1));
-      } catch (ValidationException e) {
-        propagate(e);
-        return 0;
-      }
-    }
-  });
 
   private final Elements elements;
 
@@ -101,40 +64,6 @@ public final class Analyser {
       builder.add(context(validationResult, context, toBuilder, isBuilder, goalCall));
     }
     return new AnalysisResult(context, builder.build());
-  }
-
-  private void checkNameConflict(ImmutableList<GoalElement> goals) throws ValidationException {
-    goals = GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK.immutableSortedCopy(goals);
-    HashMap<String, GoalElement> goalNames = new HashMap<>();
-    for (GoalElement goal : goals) {
-      GoalElement otherGoal = goalNames.put(goal.name, goal);
-      if (otherGoal != null) {
-        Goal goalAnnotation = goal.goalAnnotation;
-        Goal otherAnnotation = otherGoal.goalAnnotation;
-        String thisName = goalAnnotation.name();
-        String otherName = otherAnnotation.name();
-        ElementKind thisKind = goal.accept(getElement).getKind();
-        ElementKind otherKind = otherGoal.accept(getElement).getKind();
-        if (isNullOrEmpty(thisName)) {
-          if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EECC, goal.accept(getElement));
-          }
-          if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EEMC, goal.accept(getElement));
-          }
-          throw new ValidationException(GOALNAME_EEMM, goal.accept(getElement));
-        } else if (isNullOrEmpty(otherName)) {
-          if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NECC, goal.accept(getElement));
-          }
-          if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NEMC, goal.accept(getElement));
-          }
-          throw new ValidationException(GOALNAME_NEMM, goal.accept(getElement));
-        }
-        throw new ValidationException(GOALNAME_NN, goal.accept(getElement));
-      }
-    }
   }
 
   private ImmutableList<GoalElement> goals(TypeElement buildElement) throws ValidationException {
@@ -247,7 +176,7 @@ public final class Analyser {
       final Function<BeanGoal, R> beanGoalFunction) {
     return new GoalElementCases<R>() {
       @Override
-      public R executableGoal(ExecutableGoal executableGoal){
+      public R executableGoal(ExecutableGoal executableGoal) {
         return executableGoalFunction.apply(executableGoal);
       }
       @Override
@@ -311,15 +240,4 @@ public final class Analyser {
       return goalElementCases.beanGoal(this);
     }
   }
-
-  private static final GoalElementCases<Element> getElement = new GoalElementCases<Element>() {
-    @Override
-    public Element executableGoal(ExecutableGoal executableGoal) {
-      return executableGoal.executableElement;
-    }
-    @Override
-    public Element beanGoal(BeanGoal beanGoal) {
-      return beanGoal.beanTypeElement;
-    }
-  };
 }
