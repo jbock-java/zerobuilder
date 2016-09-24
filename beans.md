@@ -108,3 +108,49 @@ public String getName() {
   return name;
 }
 ````
+
+It is also possible to have all non-primitive properties checked,
+by using the goal level `nonNull` option:
+
+````java
+@Builders
+@Goal(nonNull = true)
+public class Employee { ... }
+````
+
+In this case, individual getters can be excluded with `@Step(nonNull = false)`.
+
+### Lone getter
+
+In handwritten beans, you may have a getter without a corresponding setter.
+
+````java
+public String getFoo() {
+  return "foo";
+}
+````
+
+Zerobuilder will refuse to process this class.
+To get around this, add the `@Ignore` annotation:
+
+````java
+public String getFoo() { 
+  return "foo";
+}
+````
+
+### Lone getter that returns a collection
+
+Some frameworks (such as Apache CXF) can generate beans with lone getters that look like this:
+
+````java
+public List<Employee> getEmployees() {
+  if (this.employees == null) {
+    this.employees = new ArrayList<Employee>();
+  }
+  return this.employees;
+}
+````
+
+In this case (lone getter that returns a subclass of `Collection`), it is not necessary to ignore the getter.
+Zerobuilder should be able to adapt the builder code accordingly.
