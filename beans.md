@@ -122,7 +122,7 @@ In this case, individual getters can be excluded with `@Step(nonNull = false)`.
 
 ### Lone getter
 
-In handwritten beans, you may have a getter without a corresponding setter.
+In handwritten beans, you may occasionally have a getter without a corresponding setter.
 
 ````java
 public String getFoo() {
@@ -134,6 +134,7 @@ Zerobuilder will refuse to process this class.
 To get around this, add the `@Ignore` annotation:
 
 ````java
+@Ignore
 public String getFoo() { 
   return "foo";
 }
