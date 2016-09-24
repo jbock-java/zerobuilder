@@ -9,9 +9,9 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoal;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.ExecutableGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal.ValidationResultCases;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 import net.zerobuilder.compiler.generate.BuilderType;
 import net.zerobuilder.compiler.generate.GoalContext;
 import net.zerobuilder.compiler.generate.ParameterContext;
@@ -90,10 +90,6 @@ public final class GoalContextFactory {
   // beanGoal goals don't have a kind
   public enum GoalKind {
     CONSTRUCTOR, STATIC_METHOD, INSTANCE_METHOD
-  }
-
-  enum Visibility {
-    PUBLIC, PACKAGE
   }
 
   private static ImmutableList<TypeName> thrownTypes(ExecutableElement executableElement) {
