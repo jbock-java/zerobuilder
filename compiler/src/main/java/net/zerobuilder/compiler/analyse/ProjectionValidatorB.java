@@ -11,11 +11,12 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.analyse.Analyser.BeanGoal;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.CollectionType;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoal;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter.CollectionType;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanGoal;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter.AccessorPair;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidationResult.BeanValidationResult;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -54,7 +55,7 @@ final class ProjectionValidatorB {
       = Ordering.from(new Comparator<TmpAccessorPair>() {
     @Override
     public int compare(TmpAccessorPair pair0, TmpAccessorPair pair1) {
-      return pair0.accessorPair.name.compareTo(pair1.accessorPair.name);
+      return pair0.validBeanParameter.name.compareTo(pair1.validBeanParameter.name);
     }
   });
 
@@ -62,10 +63,10 @@ final class ProjectionValidatorB {
   private static final ClassName COLLECTION = ClassName.get(Collection.class);
   private static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
-  static final Function<BeanGoal, ProjectionValidator.ValidationResult> validateBean
-      = new Function<BeanGoal, ProjectionValidator.ValidationResult>() {
+  static final Function<BeanGoal, ValidGoal> validateBean
+      = new Function<BeanGoal, ValidGoal>() {
     @Override
-    public ProjectionValidator.ValidationResult apply(BeanGoal goal) {
+    public ValidGoal apply(BeanGoal goal) {
       ImmutableMap<String, ExecutableElement> setters = setters(goal);
       ImmutableList.Builder<TmpAccessorPair> builder = ImmutableList.builder();
       for (ExecutableElement getter : getters(goal)) {
@@ -112,7 +113,7 @@ final class ProjectionValidatorB {
     if (!getter.getThrownTypes().isEmpty()) {
       throw new ValidationException(GETTER_EXCEPTION, getter);
     }
-    return TmpAccessorPair.create(getter, CollectionType.absent, goalAnnotation);
+    return TmpAccessorPair.createRegular(getter, goalAnnotation);
   }
 
   private static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {
@@ -229,12 +230,12 @@ final class ProjectionValidatorB {
     return false;
   }
 
-  private static ProjectionValidator.ValidationResult createResult(BeanGoal goal, ImmutableList<TmpAccessorPair> tmpAccessorPairs) {
-    ImmutableList<AccessorPair> accessorPairs
+  private static ValidGoal createResult(BeanGoal goal, ImmutableList<TmpAccessorPair> tmpAccessorPairs) {
+    ImmutableList<ValidBeanParameter> validBeanParameters
         = FluentIterable.from(shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(tmpAccessorPairs)))
         .transform(toValidParameter)
         .toList();
-    return new BeanValidationResult(goal, accessorPairs);
+    return new ValidBeanGoal(goal, validBeanParameters);
   }
 
   private ProjectionValidatorB() {

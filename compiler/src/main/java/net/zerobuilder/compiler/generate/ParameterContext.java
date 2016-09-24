@@ -7,9 +7,9 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter.AccessorPair;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidParameter.RegularParameter;
+import net.zerobuilder.compiler.analyse.DtoShared;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
@@ -52,9 +52,9 @@ public abstract class ParameterContext {
   }
 
   public final static class ExecutableParameterContext extends ParameterContext {
-    final RegularParameter parameter;
+    final DtoShared.ValidRegularParameter parameter;
     final ImmutableList<TypeName> declaredExceptions;
-    public ExecutableParameterContext(ClassName typeThisStep, TypeName typeNextStep, RegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+    public ExecutableParameterContext(ClassName typeThisStep, TypeName typeNextStep, DtoShared.ValidRegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
       super(typeThisStep, typeNextStep);
       this.declaredExceptions = declaredExceptions;
       this.parameter = parameter;
@@ -85,15 +85,15 @@ public abstract class ParameterContext {
     }
     @Override
     ValidParameter accessorPair(BeansParameterContext beansParameterContext) {
-      return beansParameterContext.accessorPair;
+      return beansParameterContext.validBeanParameter;
     }
   };
 
   public final static class BeansParameterContext extends ParameterContext {
-    final AccessorPair accessorPair;
-    public BeansParameterContext(ClassName typeThisStep, TypeName typeNextStep, AccessorPair accessorPair) {
+    final ValidBeanParameter validBeanParameter;
+    public BeansParameterContext(ClassName typeThisStep, TypeName typeNextStep, ValidBeanParameter validBeanParameter) {
       super(typeThisStep, typeNextStep);
-      this.accessorPair = accessorPair;
+      this.validBeanParameter = validBeanParameter;
     }
     @Override
     <R> R accept(ParameterCases<R> cases) {
@@ -170,10 +170,10 @@ public abstract class ParameterContext {
       = new Function<BeansParameterContext, TypeSpec>() {
     @Override
     public TypeSpec apply(BeansParameterContext context) {
-      AccessorPair parameter = context.accessorPair;
+      ValidBeanParameter parameter = context.validBeanParameter;
       String name = parameter.name;
-      if (parameter.collectionType.type.isPresent()) {
-        TypeName collectionType = parameter.collectionType.type.get();
+      if (parameter.collectionType.isPresent()) {
+        TypeName collectionType = parameter.collectionType.get();
         ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
             subtypeOf(collectionType));
         TypeSpec.Builder builder = interfaceBuilder(context.typeThisStep)

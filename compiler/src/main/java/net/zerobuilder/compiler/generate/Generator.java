@@ -227,31 +227,31 @@ public final class Generator {
       }
       builder.addStatement("$N.$N = new $T()", updater, instance, goalType);
       for (BeansParameterContext parameter : parameters) {
-        String parameterName = upcase(parameter.accessorPair.name);
+        String parameterName = upcase(parameter.validBeanParameter.name);
         CodeBlock nullCheck = CodeBlock.builder()
-            .beginControlFlow("if ($N.$N() == null)", instance, parameter.accessorPair.projectionMethodName)
-            .addStatement("throw new $T($S)", NullPointerException.class, parameter.accessorPair.name)
+            .beginControlFlow("if ($N.$N() == null)", instance, parameter.validBeanParameter.projectionMethodName)
+            .addStatement("throw new $T($S)", NullPointerException.class, parameter.validBeanParameter.name)
             .endControlFlow().build();
-        if (parameter.accessorPair.collectionType.type.isPresent()) {
-          TypeName collectionType = parameter.accessorPair.collectionType.type.get();
+        if (parameter.validBeanParameter.collectionType.isPresent()) {
+          TypeName collectionType = parameter.validBeanParameter.collectionType.get();
           builder.add(nullCheck)
               .beginControlFlow("for ($T $N : $N.$N())",
-                  collectionType, iterationVarName, instance, parameter.accessorPair.projectionMethodName)
+                  collectionType, iterationVarName, instance, parameter.validBeanParameter.projectionMethodName)
               .add(parameter.accept(maybeIterationNullCheck))
               .addStatement("$N.$N.$N().add($N)", updater,
                   downcase(goalType.simpleName()),
-                  parameter.accessorPair.projectionMethodName,
+                  parameter.validBeanParameter.projectionMethodName,
                   iterationVarName)
               .endControlFlow();
         } else {
-          if (parameter.accessorPair.nonNull) {
+          if (parameter.validBeanParameter.nonNull) {
             builder.add(nullCheck);
           }
           builder.addStatement("$N.$N.set$L($N.$N())", updater,
               instance,
               parameterName,
               instance,
-              parameter.accessorPair.projectionMethodName);
+              parameter.validBeanParameter.projectionMethodName);
         }
       }
       method.addCode(builder.build());

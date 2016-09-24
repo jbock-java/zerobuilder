@@ -8,11 +8,9 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.GoalContext;
 import net.zerobuilder.compiler.generate.GoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.GoalContext.GoalFunction;
 import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.generate.ParameterContext;
 import net.zerobuilder.compiler.generate.ParameterContext.BeansParameterContext;
 import net.zerobuilder.compiler.generate.ParameterContext.ExecutableParameterContext;
 
@@ -93,14 +91,14 @@ final class UpdaterContext {
     ImmutableList<MethodSpec> beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (BeansParameterContext parameter : parameters) {
-        String name = parameter.accessorPair.name;
-        TypeName type = parameter.accessorPair.type;
-        if (parameter.accessorPair.collectionType.type.isPresent()) {
-          TypeName collectionType = parameter.accessorPair.collectionType.type.get();
+        String name = parameter.validBeanParameter.name;
+        TypeName type = parameter.validBeanParameter.type;
+        if (parameter.validBeanParameter.collectionType.isPresent()) {
+          TypeName collectionType = parameter.validBeanParameter.collectionType.get();
           ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
               subtypeOf(collectionType));
           CodeBlock clearCollection = CodeBlock.builder().addStatement("this.$N.$N().clear()", downcase(goalType.simpleName()),
-              parameter.accessorPair.projectionMethodName).build();
+              parameter.validBeanParameter.projectionMethodName).build();
           builder.add(methodBuilder(name)
               .returns(goal.accept(typeName))
               .addParameter(parameterSpec(iterable, name))
@@ -109,7 +107,7 @@ final class UpdaterContext {
               .beginControlFlow("for ($T $N : $N)", collectionType, iterationVarName, name)
               .addCode(parameter.accept(maybeIterationNullCheck))
               .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
-                  parameter.accessorPair.projectionMethodName, iterationVarName)
+                  parameter.validBeanParameter.projectionMethodName, iterationVarName)
               .endControlFlow()
               .addStatement("return this")
               .addModifiers(PUBLIC)
@@ -120,14 +118,14 @@ final class UpdaterContext {
               .addStatement("return this")
               .addModifiers(PUBLIC)
               .build());
-          if (parameter.accessorPair.collectionType.allowShortcut) {
+          if (parameter.validBeanParameter.collectionType.allowShortcut) {
             builder.add(methodBuilder(name)
                 .returns(goal.accept(typeName))
                 .addParameter(parameterSpec(collectionType, name))
                 .addCode(parameter.accept(maybeNullCheck))
                 .addCode(clearCollection)
                 .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
-                    parameter.accessorPair.projectionMethodName, name)
+                    parameter.validBeanParameter.projectionMethodName, name)
                 .addStatement("return this")
                 .addModifiers(PUBLIC)
                 .build());

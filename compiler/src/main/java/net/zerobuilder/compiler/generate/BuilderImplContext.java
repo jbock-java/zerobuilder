@@ -92,9 +92,9 @@ final class BuilderImplContext {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       CodeBlock finalBlock = CodeBlock.builder().addStatement("return this").build();
       for (BeansParameterContext parameter : parameters.subList(0, parameters.size() - 1)) {
-        if (parameter.accessorPair.collectionType.type.isPresent()) {
+        if (parameter.validBeanParameter.collectionType.isPresent()) {
           builder.addAll(beanCollectionMethods(parameter, goalType, finalBlock));
-          if (parameter.accessorPair.collectionType.allowShortcut) {
+          if (parameter.validBeanParameter.collectionType.allowShortcut) {
             builder.add(beanCollectionShortcut(parameter, goalType, finalBlock));
           }
         } else {
@@ -117,10 +117,10 @@ final class BuilderImplContext {
     @Override
     ImmutableList<MethodSpec> beanGoal(GoalContext goal, ClassName goalType, ImmutableList<BeansParameterContext> parameters) {
       BeansParameterContext parameter = getLast(parameters);
-      if (parameter.accessorPair.collectionType.type.isPresent()) {
+      if (parameter.validBeanParameter.collectionType.isPresent()) {
         ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
         builder.addAll(beanCollectionMethods(parameter, goalType, goal.goalCall));
-        if (parameter.accessorPair.collectionType.allowShortcut) {
+        if (parameter.validBeanParameter.collectionType.allowShortcut) {
           builder.add(beanCollectionShortcut(parameter, goalType, goal.goalCall));
         }
         return builder.build();
@@ -164,8 +164,8 @@ final class BuilderImplContext {
   }
 
   private static ImmutableList<MethodSpec> beanCollectionMethods(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
-    String name = parameter.accessorPair.name;
-    TypeName collectionType = parameter.accessorPair.collectionType.type.get();
+    String name = parameter.validBeanParameter.name;
+    TypeName collectionType = parameter.validBeanParameter.collectionType.get();
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
         subtypeOf(collectionType));
     MethodSpec fromIterable = methodBuilder(name)
@@ -177,7 +177,7 @@ final class BuilderImplContext {
             collectionType, iterationVarName, name)
         .addCode(parameter.accept(maybeIterationNullCheck))
         .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
-            parameter.accessorPair.projectionMethodName, iterationVarName)
+            parameter.validBeanParameter.projectionMethodName, iterationVarName)
         .endControlFlow()
         .addCode(finalBlock)
         .addModifiers(PUBLIC)
@@ -192,24 +192,24 @@ final class BuilderImplContext {
   }
 
   private static MethodSpec beanCollectionShortcut(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
-    String name = parameter.accessorPair.name;
-    TypeName collectionType = parameter.accessorPair.collectionType.type.get();
+    String name = parameter.validBeanParameter.name;
+    TypeName collectionType = parameter.validBeanParameter.collectionType.get();
     return methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(parameter.typeNextStep)
         .addParameter(parameterSpec(collectionType, name))
         .addCode(parameter.accept(maybeNullCheck))
         .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
-            parameter.accessorPair.projectionMethodName, name)
+            parameter.validBeanParameter.projectionMethodName, name)
         .addCode(finalBlock)
         .addModifiers(PUBLIC)
         .build();
   }
 
   private static MethodSpec beanRegularMethod(BeansParameterContext parameter, ClassName goalType, CodeBlock finalBlock) {
-    String name = parameter.accessorPair.name;
-    TypeName type = parameter.accessorPair.type;
-    return methodBuilder(parameter.accessorPair.name)
+    String name = parameter.validBeanParameter.name;
+    TypeName type = parameter.validBeanParameter.type;
+    return methodBuilder(parameter.validBeanParameter.name)
         .addAnnotation(Override.class)
         .addParameter(parameterSpec(type, name))
         .addModifiers(PUBLIC)

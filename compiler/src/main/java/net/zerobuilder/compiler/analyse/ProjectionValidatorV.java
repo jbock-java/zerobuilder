@@ -7,7 +7,9 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.Analyser.ExecutableGoal;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.ExecutableGoal;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularGoal;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpRegularParameter;
 
 import javax.lang.model.element.ExecutableElement;
@@ -25,10 +27,10 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParam
 
 final class ProjectionValidatorV {
 
-  static final Function<ExecutableGoal, ProjectionValidator.ValidationResult> validateValue
-      = new Function<ExecutableGoal, ProjectionValidator.ValidationResult>() {
+  static final Function<ExecutableGoal, ValidGoal> validateValue
+      = new Function<ExecutableGoal, ValidGoal>() {
     @Override
-    public ProjectionValidator.ValidationResult apply(ExecutableGoal goal) {
+    public ValidGoal apply(ExecutableGoal goal) {
       TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
       ImmutableMap<String, ExecutableElement> methods = methods(goal, type);
       ImmutableMap<String, VariableElement> fields = fields(type);
@@ -91,10 +93,10 @@ final class ProjectionValidatorV {
             });
   }
 
-  static final Function<ExecutableGoal, ProjectionValidator.ValidationResult> validateValueSkipProjections
-      = new Function<ExecutableGoal, ProjectionValidator.ValidationResult>() {
+  static final Function<ExecutableGoal, ValidGoal> validateValueSkipProjections
+      = new Function<ExecutableGoal, ValidGoal>() {
     @Override
-    public ProjectionValidator.ValidationResult apply(ExecutableGoal goal) {
+    public ValidGoal apply(ExecutableGoal goal) {
       ImmutableList.Builder<TmpRegularParameter> builder = ImmutableList.builder();
       for (VariableElement parameter : goal.executableElement.getParameters()) {
         builder.add(TmpRegularParameter.create(parameter, Optional.<String>absent(), goal.goalAnnotation));
@@ -103,9 +105,10 @@ final class ProjectionValidatorV {
 
     }
   };
-  private static ProjectionValidator.ValidationResult createResult(ExecutableGoal goal, ImmutableList<TmpRegularParameter> parameters) {
+
+  private static ValidGoal createResult(ExecutableGoal goal, ImmutableList<TmpRegularParameter> parameters) {
     ImmutableList<TmpRegularParameter> shuffled = shuffledParameters(parameters);
-    return new ProjectionValidator.ValidationResult.RegularValidationResult(goal,
+    return new ValidRegularGoal(goal,
         FluentIterable.from(shuffled).transform(TmpRegularParameter.toValidParameter).toList());
   }
 

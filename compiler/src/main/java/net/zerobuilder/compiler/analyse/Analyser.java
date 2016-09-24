@@ -1,14 +1,15 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.analyse.Analyser.AbstractGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.ValidationResult;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoal;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.ExecutableGoal;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElement;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElementCases;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.generate.BuilderType;
 import net.zerobuilder.compiler.generate.GoalContext;
 
@@ -21,20 +22,15 @@ import javax.lang.model.util.Elements;
 import java.util.List;
 
 import static com.google.auto.common.MoreElements.asExecutable;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Iterables.getLast;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
 import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.STATIC_METHOD;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.context;
 import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConflict;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersType;
@@ -57,11 +53,11 @@ public final class Analyser {
       validateBuildersType(buildElement);
       boolean toBuilder = goal.goalAnnotation.toBuilder();
       boolean isBuilder = goal.goalAnnotation.builder();
-      ValidationResult validationResult = toBuilder
+      ValidGoal validGoal = toBuilder
           ? goal.accept(ProjectionValidator.validate)
           : goal.accept(ProjectionValidator.skip);
       CodeBlock goalCall = goalInvocation(goal, context.annotatedType);
-      builder.add(context(validationResult, context, toBuilder, isBuilder, goalCall));
+      builder.add(context(validGoal, context, toBuilder, isBuilder, goalCall));
     }
     return new AnalysisResult(context, builder.build());
   }
@@ -100,21 +96,6 @@ public final class Analyser {
     AnalysisResult(BuilderType config, ImmutableList<GoalContext> goals) {
       this.config = config;
       this.goals = goals;
-    }
-  }
-
-  private static String goalName(Goal goalAnnotation, TypeName goalType) {
-    return isNullOrEmpty(goalAnnotation.name())
-        ? downcase(((ClassName) goalType.box()).simpleName())
-        : goalAnnotation.name();
-  }
-
-  private static TypeName goalType(ExecutableElement goal) {
-    switch (goal.getKind()) {
-      case CONSTRUCTOR:
-        return ClassName.get(goal.getEnclosingElement().asType());
-      default:
-        return TypeName.get(goal.getReturnType());
     }
   }
 
@@ -161,83 +142,5 @@ public final class Analyser {
     }
     builder.add(CodeBlock.of("$L", getLast(parameters).getSimpleName()));
     return builder.build();
-  }
-
-  static abstract class AbstractGoalElement {
-    interface GoalElementCases<R> {
-      R executableGoal(ExecutableGoal executableGoal);
-      R beanGoal(BeanGoal beanGoal);
-    }
-    abstract <R> R accept(GoalElementCases<R> goalElementCases);
-  }
-
-  static <R> GoalElementCases<R> goalElementCases(
-      final Function<ExecutableGoal, R> executableGoalFunction,
-      final Function<BeanGoal, R> beanGoalFunction) {
-    return new GoalElementCases<R>() {
-      @Override
-      public R executableGoal(ExecutableGoal executableGoal) {
-        return executableGoalFunction.apply(executableGoal);
-      }
-      @Override
-      public R beanGoal(BeanGoal beanGoal) {
-        return beanGoalFunction.apply(beanGoal);
-      }
-    };
-  }
-
-  static abstract class GoalElement extends AbstractGoalElement {
-    final Goal goalAnnotation;
-    final String name;
-    final Elements elements;
-    GoalElement(Goal goalAnnotation, String name, Elements elements) {
-      this.goalAnnotation = checkNotNull(goalAnnotation, "goalAnnotation");
-      this.name = checkNotNull(name, "name");
-      this.elements = elements;
-    }
-  }
-
-  static final class ExecutableGoal extends GoalElement {
-    final GoalKind kind;
-    final TypeName goalType;
-    final ExecutableElement executableElement;
-    ExecutableGoal(ExecutableElement element, GoalKind kind, TypeName goalType, String name,
-                   Elements elements) {
-      super(element.getAnnotation(Goal.class), name, elements);
-      this.goalType = goalType;
-      this.kind = kind;
-      this.executableElement = element;
-    }
-    static GoalElement create(ExecutableElement element, Elements elements) {
-      TypeName goalType = goalType(element);
-      String name = goalName(element.getAnnotation(Goal.class), goalType);
-      return new ExecutableGoal(element,
-          element.getKind() == CONSTRUCTOR
-              ? GoalKind.CONSTRUCTOR
-              : element.getModifiers().contains(STATIC) ? STATIC_METHOD : INSTANCE_METHOD,
-          goalType(element), name, elements);
-
-    }
-    <R> R accept(GoalElementCases<R> goalElementCases) {
-      return goalElementCases.executableGoal(this);
-    }
-  }
-
-  static final class BeanGoal extends GoalElement {
-    final ClassName goalType;
-    final TypeElement beanTypeElement;
-    private BeanGoal(Element field, ClassName goalType, String name, TypeElement beanTypeElement, Elements elements) {
-      super(field.getAnnotation(Goal.class), name, elements);
-      this.goalType = goalType;
-      this.beanTypeElement = beanTypeElement;
-    }
-    private static GoalElement create(TypeElement beanType, Elements elements) {
-      ClassName goalType = ClassName.get(beanType);
-      String name = goalName(beanType.getAnnotation(Goal.class), goalType);
-      return new BeanGoal(beanType, goalType, name, beanType, elements);
-    }
-    <R> R accept(GoalElementCases<R> goalElementCases) {
-      return goalElementCases.beanGoal(this);
-    }
   }
 }

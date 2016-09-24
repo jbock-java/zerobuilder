@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElement;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,16 +21,17 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
+import static net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.getElement;
 
 final class GoalnameValidator {
 
   /**
    * to generate better error messages, in case of goal name conflict
    */
-  private static final Ordering<Analyser.GoalElement> GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK
-      = Ordering.from(new Comparator<Analyser.GoalElement>() {
+  private static final Ordering<GoalElement> GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK
+      = Ordering.from(new Comparator<GoalElement>() {
 
-    private int goalWeight(Analyser.GoalElement goal) throws ValidationException {
+    private int goalWeight(GoalElement goal) throws ValidationException {
       ElementKind kind = goal.accept(getElement).getKind();
       Goal annotation = goal.goalAnnotation;
       String name = annotation.name();
@@ -40,7 +41,7 @@ final class GoalnameValidator {
     }
 
     @Override
-    public int compare(Analyser.GoalElement g0, Analyser.GoalElement g1) {
+    public int compare(GoalElement g0, GoalElement g1) {
       try {
         return Ints.compare(goalWeight(g0), goalWeight(g1));
       } catch (ValidationException e) {
@@ -51,11 +52,11 @@ final class GoalnameValidator {
   });
 
 
-  static void checkNameConflict(ImmutableList<Analyser.GoalElement> goals) throws ValidationException {
+  static void checkNameConflict(ImmutableList<GoalElement> goals) throws ValidationException {
     goals = GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK.immutableSortedCopy(goals);
-    HashMap<String, Analyser.GoalElement> goalNames = new HashMap<>();
-    for (Analyser.GoalElement goal : goals) {
-      Analyser.GoalElement otherGoal = goalNames.put(goal.name, goal);
+    HashMap<String, GoalElement> goalNames = new HashMap<>();
+    for (GoalElement goal : goals) {
+      GoalElement otherGoal = goalNames.put(goal.name, goal);
       if (otherGoal != null) {
         Goal goalAnnotation = goal.goalAnnotation;
         Goal otherAnnotation = otherGoal.goalAnnotation;
@@ -84,17 +85,6 @@ final class GoalnameValidator {
       }
     }
   }
-
-  private static final Analyser.AbstractGoalElement.GoalElementCases<Element> getElement = new Analyser.AbstractGoalElement.GoalElementCases<Element>() {
-    @Override
-    public Element executableGoal(Analyser.ExecutableGoal executableGoal) {
-      return executableGoal.executableElement;
-    }
-    @Override
-    public Element beanGoal(Analyser.BeanGoal beanGoal) {
-      return beanGoal.beanTypeElement;
-    }
-  };
 
   private GoalnameValidator() {
     throw new UnsupportedOperationException("no instances");
