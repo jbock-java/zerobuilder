@@ -128,7 +128,7 @@ public String getFoo() {
 
 ### Lone getter that returns a collection
 
-Some frameworks (such as Apache CXF) can generate beans with lone getters that look like this:
+Some tools (such as [wsdl2java](https://cxf.apache.org/docs/wsdl-to-java.html)) can generate beans with lone getters that look like this:
 
 ````java
 public List<Employee> getEmployees() {
