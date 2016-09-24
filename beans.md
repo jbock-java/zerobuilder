@@ -153,5 +153,6 @@ public List<Employee> getEmployees() {
 }
 ````
 
-In this case (lone getter that returns a subclass of `Collection`), it is not necessary to ignore the getter.
-Zerobuilder should be able to adapt the builder code accordingly.
+In this case (lone getter that returns a subclass of `Collection`),
+it is often not necessary to ignore the getter.
+Zerobuilder will assume that collection is mutable and adapt the builder code accordingly.
