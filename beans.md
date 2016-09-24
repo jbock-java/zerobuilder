@@ -25,9 +25,8 @@ Just add two annotations `@Builders` and `@Goal` to a POJO class:
 
 ````java
 @Builders(recycle = true)
-@Goal(builder = true, toBuilder = true)
+@Goal(toBuilder = true)
 public class BusinessAnalyst {
-
   private String name;
   private int age;
 
