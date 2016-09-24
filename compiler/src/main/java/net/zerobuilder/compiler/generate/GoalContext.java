@@ -6,10 +6,8 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoShared;
 import net.zerobuilder.compiler.analyse.DtoShared.BeanGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.RegularGoal;
-import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
 import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
@@ -27,7 +25,7 @@ public final class GoalContext {
     final ClassName contractName;
 
     /**
-     * implementation of {@code updaterImpl.build()} and {@code stepsImpl.build()}
+     * final statement(s) of {@code updater.build()} and {@code builder.build()}
      */
     final CodeBlock goalCall;
 
@@ -109,7 +107,7 @@ public final class GoalContext {
   public final static class RegularGoalContext extends AbstractContext {
 
     /**
-     * original parameter order unless Step annotation was used
+     * original parameter order unless {@link net.zerobuilder.Step} was used
      */
     final ImmutableList<RegularStep> steps;
     final ImmutableList<TypeName> thrownTypes;
@@ -137,7 +135,7 @@ public final class GoalContext {
   public final static class BeanGoalContext extends AbstractContext {
 
     /**
-     * alphabetic order unless Step annotation was used
+     * alphabetic order unless {@link net.zerobuilder.Step} was used
      */
     final ImmutableList<BeansStep> steps;
     final BeanGoal goal;
