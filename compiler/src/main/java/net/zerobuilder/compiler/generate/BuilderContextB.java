@@ -15,7 +15,6 @@ import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.iterationVarName;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
@@ -41,12 +40,12 @@ final class BuilderContextB {
       CodeBlock finalBlock = CodeBlock.builder().addStatement("return this").build();
       for (BeansStep parameter : goal.steps.subList(0, goal.steps.size() - 1)) {
         if (parameter.validBeanParameter.collectionType.isPresent()) {
-          builder.addAll(beanCollectionMethods(parameter, goal.goal.goalType, finalBlock));
+          builder.addAll(beanCollectionMethods(parameter, goal, finalBlock));
           if (parameter.validBeanParameter.collectionType.allowShortcut) {
-            builder.add(beanCollectionShortcut(parameter, goal.goal.goalType, finalBlock));
+            builder.add(beanCollectionShortcut(parameter, goal, finalBlock));
           }
         } else {
-          builder.add(beanRegularMethod(parameter, goal.goal.goalType, finalBlock));
+          builder.add(beanRegularMethod(parameter, goal, finalBlock));
         }
       }
       return builder.build();
@@ -60,18 +59,18 @@ final class BuilderContextB {
       BeansStep parameter = getLast(goal.steps);
       if (parameter.validBeanParameter.collectionType.isPresent()) {
         ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-        builder.addAll(beanCollectionMethods(parameter, goal.goal.goalType, invoke.apply(goal)));
+        builder.addAll(beanCollectionMethods(parameter, goal, invoke.apply(goal)));
         if (parameter.validBeanParameter.collectionType.allowShortcut) {
-          builder.add(beanCollectionShortcut(parameter, goal.goal.goalType, invoke.apply(goal)));
+          builder.add(beanCollectionShortcut(parameter, goal, invoke.apply(goal)));
         }
         return builder.build();
       } else {
-        return ImmutableList.of(beanRegularMethod(parameter, goal.goal.goalType, invoke.apply(goal)));
+        return ImmutableList.of(beanRegularMethod(parameter, goal, invoke.apply(goal)));
       }
     }
   };
 
-  private static ImmutableList<MethodSpec> beanCollectionMethods(BeansStep parameter, ClassName goalType, CodeBlock finalBlock) {
+  private static ImmutableList<MethodSpec> beanCollectionMethods(BeansStep parameter, BeanGoalContext goal, CodeBlock finalBlock) {
     String name = parameter.validBeanParameter.name;
     TypeName collectionType = parameter.validBeanParameter.collectionType.get();
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
@@ -84,7 +83,7 @@ final class BuilderContextB {
         .beginControlFlow("for ($T $N : $N)",
             collectionType, iterationVarName, name)
         .addCode(parameter.accept(maybeIterationNullCheck))
-        .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
+        .addStatement("this.$N.$N().add($N)", goal.field,
             parameter.validBeanParameter.projectionMethodName, iterationVarName)
         .endControlFlow()
         .addCode(finalBlock)
@@ -99,7 +98,7 @@ final class BuilderContextB {
     return ImmutableList.of(fromIterable, fromEmpty);
   }
 
-  private static MethodSpec beanCollectionShortcut(BeansStep parameter, ClassName goalType, CodeBlock finalBlock) {
+  private static MethodSpec beanCollectionShortcut(BeansStep parameter, BeanGoalContext goal, CodeBlock finalBlock) {
     String name = parameter.validBeanParameter.name;
     TypeName collectionType = parameter.validBeanParameter.collectionType.get();
     return methodBuilder(name)
@@ -107,14 +106,14 @@ final class BuilderContextB {
         .returns(parameter.nextType)
         .addParameter(parameterSpec(collectionType, name))
         .addCode(parameter.accept(maybeNullCheck))
-        .addStatement("this.$N.$N().add($N)", downcase(goalType.simpleName()),
+        .addStatement("this.$N.$N().add($N)", goal.field,
             parameter.validBeanParameter.projectionMethodName, name)
         .addCode(finalBlock)
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static MethodSpec beanRegularMethod(BeansStep parameter, ClassName goalType, CodeBlock finalBlock) {
+  private static MethodSpec beanRegularMethod(BeansStep parameter, BeanGoalContext goal, CodeBlock finalBlock) {
     String name = parameter.validBeanParameter.name;
     TypeName type = parameter.validBeanParameter.type;
     return methodBuilder(parameter.validBeanParameter.name)
@@ -123,7 +122,7 @@ final class BuilderContextB {
         .addModifiers(PUBLIC)
         .returns(parameter.nextType)
         .addCode(parameter.accept(maybeNullCheck))
-        .addStatement("this.$N.set$L($N)", downcase(goalType.simpleName()), upcase(name), name)
+        .addStatement("this.$N.set$L($N)", goal.field, upcase(name), name)
         .addCode(finalBlock).build();
   }
 
