@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import static net.zerobuilder.examples.basic.MoreValues_InterfaceBuilders.interfaceBuilder;
 import static net.zerobuilder.examples.basic.MoreValues_NothingBuilders.appendBuilder;
+import static net.zerobuilder.examples.basic.MoreValues_SumBuilders.sumBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
@@ -23,5 +24,11 @@ public class MoreValuesTest {
     appendBuilder().sb(sb).word(", ");
     appendBuilder().sb(sb).word("World!");
     assertThat(sb.toString(), is("Hello, World!"));
+  }
+
+  @Test
+  public void testSum() {
+    int sum = sumBuilder().a(5).b(8);
+    assertThat(sum, is(13));
   }
 }

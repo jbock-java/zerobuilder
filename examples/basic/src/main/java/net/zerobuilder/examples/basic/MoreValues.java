@@ -23,4 +23,13 @@ public class MoreValues {
       sb.append(word);
     }
   }
+
+  // goal returns primitive
+  @Builders(recycle = true)
+  static class Sum {
+    @Goal(name = "sum")
+    static int sum(int a, int b) {
+      return a + b;
+    }
+  }
 }
