@@ -29,8 +29,8 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 public final class GoalContextFactory {
 
   static AbstractContext context(final ValidGoal validGoal, final BuildersType config,
-                                             final boolean toBuilder, final boolean builder,
-                                             final CodeBlock goalCall) throws ValidationException {
+                                 final boolean toBuilder, final boolean builder,
+                                 final CodeBlock goalCall) throws ValidationException {
     return validGoal.accept(new ValidationResultCases<AbstractContext>() {
       @Override
       AbstractContext executableGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> validParameters) {

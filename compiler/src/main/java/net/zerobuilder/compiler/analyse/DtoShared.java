@@ -58,10 +58,16 @@ public final class DtoShared {
      */
     public final TypeName goalType;
     public final GoalKind kind;
-    RegularGoal(TypeName goalType, String name, GoalKind kind) {
+
+    /**
+     * parameter names in original order
+     */
+    public final ImmutableList<String> parameters;
+    RegularGoal(TypeName goalType, String name, GoalKind kind, ImmutableList<String> parameters) {
       super(name);
       this.goalType = goalType;
       this.kind = kind;
+      this.parameters = parameters;
     }
     @Override
     public <R> R accept(AbstractGoalCases<R> cases) {
