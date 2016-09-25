@@ -19,9 +19,9 @@ import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
-import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
-import net.zerobuilder.compiler.generate.StepContext.BeansStep;
-import net.zerobuilder.compiler.generate.StepContext.RegularStep;
+import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
+import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
+import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -51,7 +51,7 @@ public final class GoalContextFactory {
       @Override
       AbstractGoalContext beanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validParameters) {
         ClassName contractName = contractName(goal.goal, builders);
-        ImmutableList<BeansStep> steps = steps(contractName,
+        ImmutableList<BeanStep> steps = steps(contractName,
             goal.goal.goalType,
             validParameters,
             ImmutableList.<TypeName>of(),
@@ -83,13 +83,13 @@ public final class GoalContextFactory {
     abstract R create(ClassName typeThisStep, TypeName typeNextStep, P parameter, ImmutableList<TypeName> declaredExceptions);
   }
 
-  private static final ParameterFactory<ValidBeanParameter, BeansStep> beansParameterFactory
-      = new ParameterFactory<ValidBeanParameter, BeansStep>() {
+  private static final ParameterFactory<ValidBeanParameter, BeanStep> beansParameterFactory
+      = new ParameterFactory<ValidBeanParameter, BeanStep>() {
     @Override
-    BeansStep create(ClassName thisType, TypeName nextType, ValidBeanParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
+    BeanStep create(ClassName thisType, TypeName nextType, ValidBeanParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
       ParameterSpec parameter = parameterSpec(validParameter.type, validParameter.name);
       String setter = validParameter.collectionType.isPresent() ? "" : "set" + upcase(validParameter.name);
-      return new BeansStep(thisType, nextType, validParameter, parameter, setter);
+      return new BeanStep(thisType, nextType, validParameter, parameter, setter);
     }
   };
 

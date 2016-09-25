@@ -8,12 +8,12 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.StepContext.BeansStep;
+import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.iterationVarName;
+import static net.zerobuilder.compiler.Utilities.iterationVar;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
@@ -36,7 +36,7 @@ final class UpdaterContextB {
     @Override
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (BeansStep step : goal.steps) {
+      for (BeanStep step : goal.steps) {
         if (step.validParameter.collectionType.isPresent()) {
           builder.addAll(collectionUpdaters(goal, step));
         } else {
@@ -47,7 +47,7 @@ final class UpdaterContextB {
     }
   };
 
-  private static MethodSpec regularUpdater(BeanGoalContext goal, BeansStep step) {
+  private static MethodSpec regularUpdater(BeanGoalContext goal, BeanStep step) {
     String name = step.validParameter.name;
     return methodBuilder(name)
         .returns(goal.accept(typeName))
@@ -59,7 +59,7 @@ final class UpdaterContextB {
         .build();
   }
 
-  private static ImmutableList<MethodSpec> collectionUpdaters(BeanGoalContext goal, BeansStep step) {
+  private static ImmutableList<MethodSpec> collectionUpdaters(BeanGoalContext goal, BeanStep step) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(iterateCollection(goal, step));
     builder.add(emptyCollection(goal, step));
@@ -69,7 +69,7 @@ final class UpdaterContextB {
     return builder.build();
   }
 
-  private static MethodSpec iterateCollection(BeanGoalContext goal, BeansStep step) {
+  private static MethodSpec iterateCollection(BeanGoalContext goal, BeanStep step) {
     TypeName collectionType = step.validParameter.collectionType.get();
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE, subtypeOf(collectionType));
     String name = step.validParameter.name;
@@ -78,18 +78,17 @@ final class UpdaterContextB {
         .addParameter(parameterSpec(iterable, name))
         .addCode(nullCheck(name, name))
         .addCode(clearCollection(goal, step))
-        .beginControlFlow("for ($T $N : $N)", collectionType, iterationVarName, name)
+        .beginControlFlow("for ($T $N : $N)", collectionType, iterationVar, name)
         .addCode(step.accept(maybeIterationNullCheck))
         .addStatement("this.$N.$N().add($N)",
-            goal.field,
-            step.validParameter.getter, iterationVarName)
+            goal.field, step.validParameter.getter, iterationVar)
         .endControlFlow()
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static MethodSpec emptyCollection(BeanGoalContext goal, BeansStep step) {
+  private static MethodSpec emptyCollection(BeanGoalContext goal, BeanStep step) {
     String name = step.validParameter.name;
     return methodBuilder(name)
         .returns(goal.accept(typeName))
@@ -99,7 +98,7 @@ final class UpdaterContextB {
         .build();
   }
 
-  private static MethodSpec singletonCollection(BeanGoalContext goal, BeansStep step) {
+  private static MethodSpec singletonCollection(BeanGoalContext goal, BeanStep step) {
     TypeName collectionType = step.validParameter.collectionType.get();
     String name = step.validParameter.name;
     return methodBuilder(name)
@@ -114,7 +113,7 @@ final class UpdaterContextB {
         .build();
   }
 
-  private static CodeBlock clearCollection(BeanGoalContext goal, BeansStep step) {
+  private static CodeBlock clearCollection(BeanGoalContext goal, BeanStep step) {
     return CodeBlock.builder().addStatement("this.$N.$N().clear()",
         goal.field, step.validParameter.getter).build();
   }

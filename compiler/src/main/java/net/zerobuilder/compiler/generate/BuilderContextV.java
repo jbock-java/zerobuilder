@@ -8,7 +8,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
-import net.zerobuilder.compiler.generate.StepContext.RegularStep;
+import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;

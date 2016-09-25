@@ -5,7 +5,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
-import net.zerobuilder.compiler.generate.StepContext.RegularStep;
+import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PUBLIC;

@@ -6,7 +6,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
-import net.zerobuilder.compiler.generate.StepContext.RegularStep;
+import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -26,9 +26,9 @@ final class UpdaterContextV {
       if (goal.goal.kind == INSTANCE_METHOD) {
         builder.add(goal.builders.field);
       }
-      for (RegularStep parameter : goal.steps) {
-        String name = parameter.validParameter.name;
-        TypeName type = parameter.validParameter.type;
+      for (RegularStep step : goal.steps) {
+        String name = step.validParameter.name;
+        TypeName type = step.validParameter.type;
         builder.add(FieldSpec.builder(type, name, PRIVATE).build());
       }
       return builder.build();
@@ -40,14 +40,13 @@ final class UpdaterContextV {
     @Override
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (RegularStep parameter : goal.steps) {
-        String name = parameter.validParameter.name;
-        TypeName type = parameter.validParameter.type;
+      for (RegularStep step : goal.steps) {
+        String name = step.validParameter.name;
         builder.add(methodBuilder(name)
             .returns(goal.accept(typeName))
-            .addParameter(parameterSpec(type, name))
-            .addCode(parameter.accept(maybeNullCheck))
-            .addStatement("this.$N = $N", name, name)
+            .addParameter(step.parameter)
+            .addCode(step.accept(maybeNullCheck))
+            .addStatement("this.$N = $N", step.field, step.parameter)
             .addStatement("return this")
             .addModifiers(PUBLIC)
             .build());

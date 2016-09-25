@@ -9,9 +9,9 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoShared.BeanGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.RegularGoal;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
-import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
-import net.zerobuilder.compiler.generate.StepContext.BeansStep;
-import net.zerobuilder.compiler.generate.StepContext.RegularStep;
+import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
+import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
+import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
 
@@ -156,7 +156,7 @@ public final class DtoGoal {
     /**
      * alphabetic order unless {@link net.zerobuilder.Step} was used
      */
-    final ImmutableList<BeansStep> steps;
+    final ImmutableList<BeanStep> steps;
     final BeanGoal goal;
     final FieldSpec field;
 
@@ -165,7 +165,7 @@ public final class DtoGoal {
                            boolean toBuilder,
                            boolean builder,
                            ClassName contractName,
-                           ImmutableList<BeansStep> steps, FieldSpec field) {
+                           ImmutableList<BeanStep> steps, FieldSpec field) {
       super(builders, toBuilder, builder, contractName);
       this.steps = steps;
       this.goal = goal;

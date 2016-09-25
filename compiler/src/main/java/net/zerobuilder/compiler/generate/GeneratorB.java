@@ -6,13 +6,13 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.StepContext.BeansStep;
+import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.iterationVarName;
+import static net.zerobuilder.compiler.Utilities.iterationVar;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoGoal.builderImplName;
@@ -42,7 +42,7 @@ final class GeneratorB {
             updaterType);
       }
       builder.addStatement("$N.$N = new $T()", updater, instance, goal.goal.goalType);
-      for (BeansStep parameter : goal.steps) {
+      for (BeanStep parameter : goal.steps) {
         String parameterName = upcase(parameter.validParameter.name);
         CodeBlock nullCheck = CodeBlock.builder()
             .beginControlFlow("if ($N.$N() == null)", instance,
@@ -54,13 +54,13 @@ final class GeneratorB {
           TypeName collectionType = parameter.validParameter.collectionType.get();
           builder.add(nullCheck)
               .beginControlFlow("for ($T $N : $N.$N())",
-                  collectionType, iterationVarName, instance,
+                  collectionType, iterationVar, instance,
                   parameter.validParameter.getter)
               .add(parameter.accept(maybeIterationNullCheck))
               .addStatement("$N.$N.$N().add($N)", updater,
                   downcase(goal.goal.goalType.simpleName()),
                   parameter.validParameter.getter,
-                  iterationVarName)
+                  iterationVar)
               .endControlFlow();
         } else {
           if (parameter.validParameter.nonNull) {

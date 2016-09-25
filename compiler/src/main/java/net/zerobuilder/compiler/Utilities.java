@@ -19,7 +19,7 @@ public final class Utilities {
       "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
       "float", "native", "super", "while");
 
-  public static final String iterationVarName = "v";
+  public static final String iterationVar = "v";
 
   public static String upcase(String s) {
     return LOWER_CAMEL.to(UPPER_CAMEL, s);
