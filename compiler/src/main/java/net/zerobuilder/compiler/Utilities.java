@@ -19,6 +19,8 @@ public final class Utilities {
       "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
       "float", "native", "super", "while");
 
+  public static final CodeBlock emptyCodeBlock = CodeBlock.of("");
+
   public static String upcase(String s) {
     return LOWER_CAMEL.to(UPPER_CAMEL, s);
   }

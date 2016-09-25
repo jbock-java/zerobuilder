@@ -25,6 +25,20 @@ public class NullChecks {
     }
   }
 
+  // elements are not checked
+  @Builders
+  @Goal
+  public static class NullableElements {
+    private List<String> strings;
+    @Step
+    public List<String> getStrings() {
+      if (strings == null) {
+        strings = new ArrayList<>();
+      }
+      return strings;
+    }
+  }
+
   // setter is present -> collection itself is checked but not its elements
   // to check elements, pass ImmutableList or other null-rejecting type to the setter
   @Builders

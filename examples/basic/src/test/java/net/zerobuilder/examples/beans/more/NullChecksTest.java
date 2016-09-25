@@ -1,6 +1,7 @@
 package net.zerobuilder.examples.beans.more;
 
 import net.zerobuilder.examples.beans.more.NullChecks.Default;
+import net.zerobuilder.examples.beans.more.NullChecks.NullableElements;
 import net.zerobuilder.examples.beans.more.NullChecks.UncheckedCollection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import static java.util.Collections.nCopies;
 import static net.zerobuilder.examples.beans.more.NullChecks_CheckedCollectionBuilders.checkedCollectionBuilder;
 import static net.zerobuilder.examples.beans.more.NullChecks_CheckedStringBuilders.checkedStringBuilder;
 import static net.zerobuilder.examples.beans.more.NullChecks_DefaultBuilders.DefaultBuilder;
+import static net.zerobuilder.examples.beans.more.NullChecks_NullableElementsBuilders.nullableElementsBuilder;
 import static net.zerobuilder.examples.beans.more.NullChecks_UncheckedCollectionBuilders.uncheckedCollectionBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -30,6 +32,14 @@ public class NullChecksTest {
     thrown.expectMessage("strings (element)");
     List<String> wrappedNull = nCopies(1, null);
     checkedCollectionBuilder().strings(wrappedNull);
+  }
+
+  @Test
+  public void nullableElement() {
+    List<String> wrappedNull = nCopies(1, null);
+    NullableElements bean = nullableElementsBuilder().strings(wrappedNull);
+    assertThat(bean.getStrings().size(), is(1));
+    assertThat(bean.getStrings().get(0), is(nullValue()));
   }
 
   @Test
@@ -67,4 +77,5 @@ public class NullChecksTest {
     thrown.expectMessage("bar");
     DefaultBuilder().bar(null);
   }
+
 }

@@ -8,6 +8,7 @@ import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.StepCases;
 
+import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.DtoStep.asFunction;
@@ -24,13 +25,16 @@ public final class StepContext {
     public CodeBlock apply(AbstractStep context) {
       ValidParameter parameter = context.accept(validParameter);
       if (!parameter.nonNull || parameter.type.isPrimitive()) {
-        return CodeBlock.of("");
+        return emptyCodeBlock;
       }
       return nullCheck(parameter.name, parameter.name);
     }
   });
 
   static CodeBlock iterationVarNullCheck(BeanStep step) {
+    if (!step.validParameter.nonNull) {
+      return emptyCodeBlock;
+    }
     return nullCheck(step.validParameter.collectionType.get(),
         step.validParameter.name + " (element)");
   }

@@ -5,6 +5,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
@@ -12,6 +13,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoGoal.builderImplName;
@@ -26,45 +28,18 @@ final class GeneratorB {
       = new Function<BeanGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(BeanGoalContext goal) {
-      String methodName = downcase(goal.goal.name + "ToBuilder");
-      CodeBlock.Builder builder = CodeBlock.builder();
       ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
-      MethodSpec.Builder method = methodBuilder(methodName)
+      MethodSpec.Builder method = methodBuilder(downcase(goal.goal.name + "ToBuilder"))
           .addParameter(parameter);
       ParameterSpec updater = updaterInstance(goal);
       method.addCode(initializeUpdater(goal, updater));
-      builder.addStatement("$N.$N = new $T()", updater, goal.field, goal.goal.goalType);
       for (BeanStep step : goal.steps) {
-        CodeBlock nullCheck = CodeBlock.builder()
-            .beginControlFlow("if ($N.$N() == null)", parameter,
-                step.validParameter.getter)
-            .addStatement("throw new $T($S)",
-                NullPointerException.class, step.validParameter.name)
-            .endControlFlow().build();
         if (step.validParameter.collectionType.isPresent()) {
-          ParameterSpec iterationVar = step.validParameter.collectionType.get();
-          builder.add(nullCheck)
-              .beginControlFlow("for ($T $N : $N.$N())",
-                  iterationVar.type, iterationVar, parameter,
-                  step.validParameter.getter)
-              .add(iterationVarNullCheck(step))
-              .addStatement("$N.$N.$N().add($N)", updater,
-                  downcase(goal.goal.goalType.simpleName()),
-                  step.validParameter.getter,
-                  iterationVar)
-              .endControlFlow();
+          method.addCode(copyCollection(goal, step));
         } else {
-          if (step.validParameter.nonNull) {
-            builder.add(nullCheck);
-          }
-          builder.addStatement("$N.$N.$L($N.$N())", updater,
-              goal.field,
-              step.setter,
-              parameter,
-              step.validParameter.getter);
+          method.addCode(copyRegular(goal, step));
         }
       }
-      method.addCode(builder.build());
       method.addStatement("return $N", updater);
       return method
           .returns(goal.accept(UpdaterContext.typeName))
@@ -72,13 +47,62 @@ final class GeneratorB {
     }
   };
 
+  private static CodeBlock copyCollection(BeanGoalContext goal, BeanStep step) {
+    ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
+    ParameterSpec iterationVar = step.validParameter.collectionType.get();
+    return CodeBlock.builder().add(nullCheck(parameter, step.validParameter, true))
+        .beginControlFlow("for ($T $N : $N.$N())",
+            iterationVar.type, iterationVar, parameter,
+            step.validParameter.getter)
+        .add(iterationVarNullCheck(step))
+        .addStatement("$N.$N.$N().add($N)", updaterInstance(goal),
+            downcase(goal.goal.goalType.simpleName()),
+            step.validParameter.getter,
+            iterationVar)
+        .endControlFlow()
+        .build();
+  }
+
+  private static CodeBlock copyRegular(BeanGoalContext goal, BeanStep step) {
+    ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
+    ParameterSpec updater = updaterInstance(goal);
+    return CodeBlock.builder()
+        .add(nullCheck(parameter, step.validParameter))
+        .addStatement("$N.$N.$L($N.$N())", updater,
+            goal.field,
+            step.setter,
+            parameter,
+            step.validParameter.getter)
+        .build();
+  }
+
+
+  private static CodeBlock nullCheck(ParameterSpec parameter, ValidBeanParameter validParameter) {
+    return nullCheck(parameter, validParameter, validParameter.nonNull);
+  }
+
+  private static CodeBlock nullCheck(ParameterSpec parameter, ValidBeanParameter validParameter, boolean nonNull) {
+    if (!nonNull) {
+      return emptyCodeBlock;
+    }
+    return CodeBlock.builder()
+        .beginControlFlow("if ($N.$N() == null)", parameter,
+            validParameter.getter)
+        .addStatement("throw new $T($S)",
+            NullPointerException.class, validParameter.name)
+        .endControlFlow().build();
+  }
+
   private static CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec updater) {
+    CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.builders.recycle) {
-      return statement("$T $N = $L.get().$N", updater.type, updater,
+      builder.addStatement("$T $N = $L.get().$N", updater.type, updater,
           TL, updaterField(goal));
     } else {
-      return statement("$T $N = new $T()", updater.type, updater, updater.type);
+      builder.addStatement("$T $N = new $T()", updater.type, updater, updater.type);
     }
+    builder.addStatement("$N.$N = new $T()", updater, goal.field, goal.goal.goalType);
+    return builder.build();
   }
 
   private static ParameterSpec updaterInstance(BeanGoalContext goal) {
