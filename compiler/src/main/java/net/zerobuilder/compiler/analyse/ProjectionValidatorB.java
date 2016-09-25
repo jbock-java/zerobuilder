@@ -12,9 +12,9 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter.CollectionType;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter.CollectionType;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
 
@@ -49,7 +49,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 
-final class ProjectionValidatorB {
+public final class ProjectionValidatorB {
 
   private static final Ordering<TmpAccessorPair> ACCESSOR_PAIR_ORDERING
       = Ordering.from(new Comparator<TmpAccessorPair>() {
@@ -61,7 +61,7 @@ final class ProjectionValidatorB {
 
   private static final ClassName OBJECT = ClassName.get(Object.class);
   private static final ClassName COLLECTION = ClassName.get(Collection.class);
-  private static final ClassName ITERABLE = ClassName.get(Iterable.class);
+  public static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
   static final Function<BeanGoalElement, ValidGoal> validateBean
       = new Function<BeanGoalElement, ValidGoal>() {
