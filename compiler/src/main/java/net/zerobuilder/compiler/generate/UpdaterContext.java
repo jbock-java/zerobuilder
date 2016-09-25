@@ -25,15 +25,15 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.GoalContext.always;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
-import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.iterationVarName;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.generate.GoalContext.always;
+import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
+import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
 
 final class UpdaterContext {
 
@@ -49,8 +49,7 @@ final class UpdaterContext {
     ImmutableList<FieldSpec> regularGoal(RegularGoalContext goal) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       if (goal.goal.kind == INSTANCE_METHOD) {
-        ClassName receiverType = goal.builders.type;
-        builder.add(FieldSpec.builder(receiverType, goal.builders.field, PRIVATE).build());
+        builder.add(goal.builders.field);
       }
       for (RegularStep parameter : goal.steps) {
         String name = parameter.parameter.name;

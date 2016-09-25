@@ -47,9 +47,7 @@ final class BuilderImplContext {
     ImmutableList<FieldSpec> regularGoal(RegularGoalContext goal) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       if (goal.goal.kind == INSTANCE_METHOD) {
-        builder.add(FieldSpec.builder(
-            goal.builders.type,
-            goal.builders.field, PRIVATE).build());
+        builder.add(goal.builders.field);
       }
       for (RegularStep parameter : goal.steps.subList(0, goal.steps.size() - 1)) {
         String name = parameter.parameter.name;
