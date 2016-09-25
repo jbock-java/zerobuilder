@@ -6,7 +6,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -15,11 +14,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.DtoShared.AnalysisResult;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalCases;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
-import net.zerobuilder.compiler.generate.StepContext.BeansStep;
-import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
 import javax.lang.model.util.Elements;
 
@@ -37,17 +32,12 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.iterationVarName;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.Utilities.statement;
-import static net.zerobuilder.compiler.Utilities.upcase;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineContract;
 import static net.zerobuilder.compiler.generate.DtoGoal.builderImplName;
 import static net.zerobuilder.compiler.generate.DtoGoal.getGoalName;
+import static net.zerobuilder.compiler.generate.DtoGoal.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoal.goalCasesFunction;
-import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 
 /**
@@ -60,7 +50,7 @@ public final class Generator {
   /**
    * Name of a {@code static ThreadLocal } that holds an instance of the generated type, if {@code recycle}.
    */
-  private static final String TL = "INSTANCE";
+  static final String TL = "INSTANCE";
 
   public Generator(Elements elements) {
     this.elements = elements;
@@ -166,153 +156,17 @@ public final class Generator {
     return builder.build();
   }
 
-  private static final GoalCases<MethodSpec> goalToToBuilder = new GoalCases<MethodSpec>() {
-    @Override
-    public MethodSpec regularGoal(RegularGoalContext goal) {
-      String instance = downcase(((ClassName) goal.goal.goalType.box()).simpleName());
-      String methodName = goal.goal.name + "ToBuilder";
-      MethodSpec.Builder method = methodBuilder(methodName)
-          .addParameter(goal.goal.goalType, instance);
-      String updater = "updater";
-      ClassName updaterType = goal.accept(UpdaterContext.typeName);
-      if (goal.builders.recycle) {
-        method.addStatement("$T $L = $L.get().$N", updaterType, updater,
-            TL, updaterField(goal));
-      } else {
-        method.addStatement("$T $L = new $T()", updaterType, updater,
-            updaterType);
-      }
-      CodeBlock.Builder builder = CodeBlock.builder();
-      for (RegularStep parameter : goal.steps) {
-        if (parameter.parameter.projectionMethodName.isPresent()) {
-          if (parameter.parameter.nonNull) {
-            builder.add(CodeBlock.builder()
-                .beginControlFlow("if ($N.$N() == null)", instance, parameter.parameter.projectionMethodName.get())
-                .addStatement("throw new $T($S)", NullPointerException.class, parameter.parameter.name)
-                .endControlFlow().build());
-          }
-          builder.addStatement("$N.$N = $N.$N()", updater, parameter.parameter.name,
-              instance, parameter.parameter.projectionMethodName.get());
-        } else {
-          if (parameter.parameter.nonNull) {
-            builder.add(CodeBlock.builder()
-                .beginControlFlow("if ($N.$N == null)", instance, parameter.parameter.name)
-                .addStatement("throw new $T($S)", NullPointerException.class, parameter.parameter.name)
-                .endControlFlow().build());
-          }
-          builder.add(CodeBlock.builder()
-              .addStatement("$N.$N = $N.$N", updater, parameter.parameter.name,
-                  instance, parameter.parameter.name).build());
-        }
-      }
-      method.addCode(builder.build());
-      method.addStatement("return $L", updater);
-      return method
-          .returns(goal.accept(UpdaterContext.typeName))
-          .addModifiers(PUBLIC, STATIC).build();
-    }
-    @Override
-    public MethodSpec beanGoal(BeanGoalContext goal) {
-      String instance = downcase(goal.goal.goalType.simpleName());
-      String methodName = downcase(goal.goal.name + "ToBuilder");
-      CodeBlock.Builder builder = CodeBlock.builder();
-      MethodSpec.Builder method = methodBuilder(methodName)
-          .addParameter(goal.goal.goalType, instance);
-      String updater = "updater";
-      ClassName updaterType = goal.accept(UpdaterContext.typeName);
-      if (goal.builders.recycle) {
-        method.addStatement("$T $L = $L.get().$N", updaterType, updater,
-            TL, updaterField(goal));
-      } else {
-        method.addStatement("$T $L = new $T()", updaterType, updater,
-            updaterType);
-      }
-      builder.addStatement("$N.$N = new $T()", updater, instance, goal.goal.goalType);
-      for (BeansStep parameter : goal.steps) {
-        String parameterName = upcase(parameter.validBeanParameter.name);
-        CodeBlock nullCheck = CodeBlock.builder()
-            .beginControlFlow("if ($N.$N() == null)", instance,
-                parameter.validBeanParameter.projectionMethodName)
-            .addStatement("throw new $T($S)",
-                NullPointerException.class, parameter.validBeanParameter.name)
-            .endControlFlow().build();
-        if (parameter.validBeanParameter.collectionType.isPresent()) {
-          TypeName collectionType = parameter.validBeanParameter.collectionType.get();
-          builder.add(nullCheck)
-              .beginControlFlow("for ($T $N : $N.$N())",
-                  collectionType, iterationVarName, instance,
-                  parameter.validBeanParameter.projectionMethodName)
-              .add(parameter.accept(maybeIterationNullCheck))
-              .addStatement("$N.$N.$N().add($N)", updater,
-                  downcase(goal.goal.goalType.simpleName()),
-                  parameter.validBeanParameter.projectionMethodName,
-                  iterationVarName)
-              .endControlFlow();
-        } else {
-          if (parameter.validBeanParameter.nonNull) {
-            builder.add(nullCheck);
-          }
-          builder.addStatement("$N.$N.set$L($N.$N())", updater,
-              instance,
-              parameterName,
-              instance,
-              parameter.validBeanParameter.projectionMethodName);
-        }
-      }
-      method.addCode(builder.build());
-      method.addStatement("return $L", updater);
-      return method
-          .returns(goal.accept(UpdaterContext.typeName))
-          .addModifiers(PUBLIC, STATIC).build();
-    }
-  };
+  private static final GoalCases<MethodSpec> goalToToBuilder
+      = goalCases(GeneratorV.goalToToBuilder, GeneratorB.goalToToBuilder);
 
-  private static final GoalCases<MethodSpec> goalToBuilder = new GoalCases<MethodSpec>() {
-    @Override
-    public MethodSpec regularGoal(RegularGoalContext goal) {
-      ClassName stepsType = goal.accept(builderImplName);
-      MethodSpec.Builder method = methodBuilder(goal.accept(getGoalName) + "Builder")
-          .returns(goal.steps.get(0).thisType)
-          .addModifiers(PUBLIC, STATIC);
-      String steps = downcase(stepsType.simpleName());
-      method.addCode(goal.builders.recycle
-          ? statement("$T $N = $N.get().$N", stepsType, steps, TL, stepsField(goal))
-          : statement("$T $N = new $T()", stepsType, steps, stepsType));
-      if (goal.goal.kind == INSTANCE_METHOD) {
-        ClassName instanceType = goal.builders.type;
-        String instance = downcase(instanceType.simpleName());
-        return method
-            .addParameter(parameterSpec(instanceType, instance))
-            .addStatement("$N.$N = $N", steps, goal.builders.field, instance)
-            .addStatement("return $N", steps)
-            .build();
-      } else {
-        return method.addStatement("return $N", steps).build();
-      }
-    }
-    @Override
-    public MethodSpec beanGoal(BeanGoalContext goal) {
-      ClassName stepsType = goal.accept(builderImplName);
-      MethodSpec.Builder method = methodBuilder(goal.goal.name + "Builder")
-          .returns(goal.steps.get(0).thisType)
-          .addModifiers(PUBLIC, STATIC);
-      String steps = downcase(stepsType.simpleName());
-      method.addCode(goal.builders.recycle
-          ? statement("$T $N = $N.get().$N", stepsType, steps, TL, stepsField(goal))
-          : statement("$T $N = new $T()", stepsType, steps, stepsType));
-      return method.addStatement("$N.$N = new $T()", steps,
-          downcase(goal.goal.goalType.simpleName()), goal.goal.goalType)
-          .addStatement("return $N", steps)
-          .build();
-    }
-  };
+  private static final GoalCases<MethodSpec> goalToBuilder
+      = goalCases(GeneratorV.goalToBuilder, GeneratorB.goalToBuilder);
 
-  private static String updaterField(AbstractGoalContext goal) {
+  static String updaterField(AbstractGoalContext goal) {
     return downcase(goal.accept(getGoalName) + "Updater");
   }
 
-  private static String stepsField(AbstractGoalContext goal) {
+  static String stepsField(AbstractGoalContext goal) {
     return downcase(goal.accept(getGoalName) + "BuilderImpl");
   }
-
 }
