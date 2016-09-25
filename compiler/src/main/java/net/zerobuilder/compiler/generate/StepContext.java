@@ -39,6 +39,20 @@ public final class StepContext {
     abstract R beanStep(BeansStep step);
   }
 
+  static <R> StepCases<R> stepCases(final Function<? super RegularStep, R> regularFunction,
+                                    final Function<? super BeansStep, R> beanFunction) {
+    return new StepCases<R>() {
+      @Override
+      R regularStep(RegularStep step) {
+        return regularFunction.apply(step);
+      }
+      @Override
+      R beanStep(BeansStep step) {
+        return beanFunction.apply(step);
+      }
+    };
+  }
+
   public final static class RegularStep extends AbstractStep {
     final ValidRegularParameter validParameter;
     final ImmutableList<TypeName> declaredExceptions;
@@ -203,16 +217,8 @@ public final class StepContext {
     }
   };
 
-  static final Function<AbstractStep, TypeSpec> asStepInterface = asFunction(new StepCases<TypeSpec>() {
-    @Override
-    TypeSpec regularStep(RegularStep step) {
-      return regularStepInterface.apply(step);
-    }
-    @Override
-    TypeSpec beanStep(BeansStep step) {
-      return beansStepInterface.apply(step);
-    }
-  });
+  static final Function<AbstractStep, TypeSpec> asStepInterface
+      = asFunction(stepCases(regularStepInterface, beansStepInterface));
 
   private StepContext() {
     throw new UnsupportedOperationException("no instances");

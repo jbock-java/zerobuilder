@@ -7,7 +7,7 @@ import static net.zerobuilder.examples.basic.MoreValues_InterfaceBuilders.interf
 import static net.zerobuilder.examples.basic.MoreValues_NothingBuilders.appendBuilder;
 import static net.zerobuilder.examples.basic.MoreValues_SumBuilders.sumBuilder;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class MoreValuesTest {
 

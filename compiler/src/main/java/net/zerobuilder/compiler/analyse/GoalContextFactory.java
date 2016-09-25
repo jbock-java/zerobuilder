@@ -16,8 +16,9 @@ import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal.ValidationResultCase
 import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoal;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
@@ -44,7 +45,7 @@ public final class GoalContextFactory {
             validParameters,
             thrownTypes,
             regularParameterFactory);
-        return new DtoGoal.RegularGoalContext(
+        return new RegularGoalContext(
             goal.goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
       }
       @Override
@@ -57,7 +58,7 @@ public final class GoalContextFactory {
             beansParameterFactory);
         FieldSpec field = FieldSpec.builder(goal.goal.goalType,
             downcase(goal.goal.goalType.simpleName())).build();
-        return new DtoGoal.BeanGoalContext(
+        return new BeanGoalContext(
             goal.goal, builders, toBuilder, builder, contractName, steps, field);
       }
     });

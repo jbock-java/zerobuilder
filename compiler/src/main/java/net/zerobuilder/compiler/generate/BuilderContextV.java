@@ -13,9 +13,7 @@ import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
 
@@ -29,9 +27,8 @@ final class BuilderContextV {
       if (goal.goal.kind == INSTANCE_METHOD) {
         builder.add(goal.builders.field);
       }
-      for (RegularStep parameter : goal.steps.subList(0, goal.steps.size() - 1)) {
-        String name = parameter.validParameter.name;
-        builder.add(FieldSpec.builder(parameter.validParameter.type, name, PRIVATE).build());
+      for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
+        builder.add(step.field);
       }
       return builder.build();
     }
@@ -42,13 +39,12 @@ final class BuilderContextV {
     @Override
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (RegularStep parameter : goal.steps.subList(0, goal.steps.size() - 1)) {
-        String name = parameter.validParameter.name;
+      for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
         CodeBlock finalBlock = CodeBlock.builder()
-            .addStatement("this.$N = $N", name, name)
+            .addStatement("this.$N = $N", step.field, step.parameter)
             .addStatement("return this")
             .build();
-        builder.add(regularMethod(parameter, finalBlock, ImmutableList.<TypeName>of()));
+        builder.add(regularStep(step, finalBlock, ImmutableList.<TypeName>of()));
       }
       return builder.build();
     }
@@ -59,21 +55,19 @@ final class BuilderContextV {
     @Override
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       RegularStep parameter = getLast(goal.steps);
-      return ImmutableList.of(regularMethod(parameter, invoke.apply(goal), goal.thrownTypes));
+      return ImmutableList.of(regularStep(parameter, invoke.apply(goal), goal.thrownTypes));
     }
   };
 
-  private static MethodSpec regularMethod(RegularStep parameter,
-                                          CodeBlock finalBlock, ImmutableList<TypeName> thrownTypes) {
-    String name = parameter.validParameter.name;
-    TypeName type = parameter.validParameter.type;
-    return methodBuilder(parameter.validParameter.name)
+  private static MethodSpec regularStep(RegularStep step,
+                                        CodeBlock finalBlock, ImmutableList<TypeName> thrownTypes) {
+    return methodBuilder(step.validParameter.name)
         .addAnnotation(Override.class)
-        .addParameter(parameterSpec(type, name))
+        .addParameter(step.parameter)
         .addExceptions(thrownTypes)
         .addModifiers(PUBLIC)
-        .returns(parameter.nextType)
-        .addCode(parameter.accept(maybeNullCheck))
+        .returns(step.nextType)
+        .addCode(step.accept(maybeNullCheck))
         .addCode(finalBlock).build();
   }
 
