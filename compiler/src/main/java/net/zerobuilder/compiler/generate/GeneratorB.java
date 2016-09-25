@@ -12,8 +12,8 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
-import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoGoal.builderImplName;
 import static net.zerobuilder.compiler.generate.Generator.TL;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
@@ -26,25 +26,17 @@ final class GeneratorB {
       = new Function<BeanGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(BeanGoalContext goal) {
-      String instance = downcase(goal.goal.goalType.simpleName());
       String methodName = downcase(goal.goal.name + "ToBuilder");
       CodeBlock.Builder builder = CodeBlock.builder();
+      ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
       MethodSpec.Builder method = methodBuilder(methodName)
-          .addParameter(goal.goal.goalType, instance);
-      String updater = "updater";
-      ClassName updaterType = goal.accept(UpdaterContext.typeName);
-      if (goal.builders.recycle) {
-        method.addStatement("$T $L = $L.get().$N", updaterType, updater,
-            TL, updaterField(goal));
-      } else {
-        method.addStatement("$T $L = new $T()", updaterType, updater,
-            updaterType);
-      }
-      builder.addStatement("$N.$N = new $T()", updater, instance, goal.goal.goalType);
+          .addParameter(parameter);
+      ParameterSpec updater = updaterInstance(goal);
+      method.addCode(initializeUpdater(goal, updater));
+      builder.addStatement("$N.$N = new $T()", updater, goal.field, goal.goal.goalType);
       for (BeanStep step : goal.steps) {
-        String parameterName = upcase(step.validParameter.name);
         CodeBlock nullCheck = CodeBlock.builder()
-            .beginControlFlow("if ($N.$N() == null)", instance,
+            .beginControlFlow("if ($N.$N() == null)", parameter,
                 step.validParameter.getter)
             .addStatement("throw new $T($S)",
                 NullPointerException.class, step.validParameter.name)
@@ -53,7 +45,7 @@ final class GeneratorB {
           ParameterSpec iterationVar = step.validParameter.collectionType.get();
           builder.add(nullCheck)
               .beginControlFlow("for ($T $N : $N.$N())",
-                  iterationVar.type, iterationVar, instance,
+                  iterationVar.type, iterationVar, parameter,
                   step.validParameter.getter)
               .add(iterationVarNullCheck(step))
               .addStatement("$N.$N.$N().add($N)", updater,
@@ -65,20 +57,34 @@ final class GeneratorB {
           if (step.validParameter.nonNull) {
             builder.add(nullCheck);
           }
-          builder.addStatement("$N.$N.set$L($N.$N())", updater,
-              instance,
-              parameterName,
-              instance,
+          builder.addStatement("$N.$N.$L($N.$N())", updater,
+              goal.field,
+              step.setter,
+              parameter,
               step.validParameter.getter);
         }
       }
       method.addCode(builder.build());
-      method.addStatement("return $L", updater);
+      method.addStatement("return $N", updater);
       return method
           .returns(goal.accept(UpdaterContext.typeName))
           .addModifiers(PUBLIC, STATIC).build();
     }
   };
+
+  private static CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec updater) {
+    if (goal.builders.recycle) {
+      return statement("$T $N = $L.get().$N", updater.type, updater,
+          TL, updaterField(goal));
+    } else {
+      return statement("$T $N = new $T()", updater.type, updater, updater.type);
+    }
+  }
+
+  private static ParameterSpec updaterInstance(BeanGoalContext goal) {
+    ClassName updaterType = goal.accept(UpdaterContext.typeName);
+    return parameterSpec(updaterType, "updater");
+  }
 
   static final Function<BeanGoalContext, MethodSpec> goalToBuilder
       = new Function<BeanGoalContext, MethodSpec>() {
