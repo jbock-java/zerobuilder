@@ -11,15 +11,13 @@ import static java.lang.Character.isUpperCase;
 
 public final class Utilities {
 
-  static final ImmutableSet<String> reservedWords = ImmutableSet.of(
+  private static final ImmutableSet<String> reservedWords = ImmutableSet.of(
       "abstract", "continue", "for", "new", "switch", "assert", "default", "if", "package",
       "synchronized", "boolean", "do", "goto", "private", "this", "break", "double", "implements",
       "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
       "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char", "final",
       "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
       "float", "native", "super", "while");
-
-  public static final String iterationVar = "v";
 
   public static String upcase(String s) {
     return LOWER_CAMEL.to(UPPER_CAMEL, s);
@@ -53,6 +51,10 @@ public final class Utilities {
 
   public static CodeBlock nullCheck(ParameterSpec parameterSpec) {
     return nullCheck(parameterSpec.name, parameterSpec.name);
+  }
+
+  public static CodeBlock nullCheck(ParameterSpec parameterSpec, String message) {
+    return nullCheck(parameterSpec.name, message);
   }
 
   private Utilities() {

@@ -15,7 +15,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
+import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 
 final class BuilderContextV {
 
@@ -67,7 +67,7 @@ final class BuilderContextV {
         .addExceptions(thrownTypes)
         .addModifiers(PUBLIC)
         .returns(step.nextType)
-        .addCode(step.accept(maybeNullCheck))
+        .addCode(step.accept(nullCheck))
         .addCode(finalBlock).build();
   }
 

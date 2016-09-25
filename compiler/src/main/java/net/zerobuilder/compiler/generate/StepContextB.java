@@ -1,11 +1,13 @@
 package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
-import com.squareup.javapoet.ClassName;
+import com.google.common.collect.ImmutableList;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter.CollectionType;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -14,6 +16,7 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
 
 final class StepContextB {
@@ -22,36 +25,57 @@ final class StepContextB {
       = new Function<BeanStep, TypeSpec>() {
     @Override
     public TypeSpec apply(BeanStep step) {
-      ValidBeanParameter parameter = step.validParameter;
-      String name = parameter.name;
-      if (parameter.collectionType.isPresent()) {
-        TypeName collectionType = parameter.collectionType.get();
-        ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
-            subtypeOf(collectionType));
-        TypeSpec.Builder builder = interfaceBuilder(step.thisType)
+      CollectionType collectionType = step.validParameter.collectionType;
+      if (collectionType.isPresent()) {
+        return interfaceBuilder(step.thisType)
             .addModifiers(PUBLIC)
-            .addMethod(methodBuilder(name)
-                .addParameter(parameterSpec(iterable, name))
-                .returns(step.nextType)
-                .addModifiers(PUBLIC, ABSTRACT)
-                .build())
-            .addMethod(methodBuilder(name)
-                .returns(step.nextType)
-                .addModifiers(PUBLIC, ABSTRACT)
-                .build());
-        if (parameter.collectionType.allowShortcut) {
-          builder.addMethod(methodBuilder(name)
-              .addParameter(parameterSpec(collectionType, name))
-              .returns(step.nextType)
-              .addModifiers(PUBLIC, ABSTRACT)
-              .build());
-        }
-        return builder.build();
+            .addMethods(collectionMethods(step))
+            .build();
       } else {
         return regularStepInterface.apply(step);
       }
     }
   };
+
+  private static ImmutableList<MethodSpec> collectionMethods(BeanStep step) {
+    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+    builder.add(iterateCollection(step), emptyCollection(step));
+    if (step.validParameter.collectionType.allowShortcut) {
+      builder.add(singletonCollection(step));
+    }
+    return builder.build();
+  }
+
+
+  private static MethodSpec singletonCollection(BeanStep step) {
+    ValidBeanParameter parameter = step.validParameter;
+    String name = parameter.name;
+    return methodBuilder(name)
+        .addParameter(ParameterSpec.builder(parameter.collectionType.get().type, name).build())
+        .returns(step.nextType)
+        .addModifiers(PUBLIC, ABSTRACT)
+        .build();
+  }
+
+  private static MethodSpec emptyCollection(BeanStep step) {
+    ValidBeanParameter parameter = step.validParameter;
+    String name = parameter.name;
+    return methodBuilder(name)
+        .returns(step.nextType)
+        .addModifiers(PUBLIC, ABSTRACT)
+        .build();
+  }
+
+  private static MethodSpec iterateCollection(BeanStep step) {
+    ValidBeanParameter parameter = step.validParameter;
+    String name = parameter.name;
+    return methodBuilder(name)
+        .addParameter(parameterSpec(ParameterizedTypeName.get(ITERABLE,
+            subtypeOf(parameter.collectionType.get().type)), name))
+        .returns(step.nextType)
+        .addModifiers(PUBLIC, ABSTRACT)
+        .build();
+  }
 
   private StepContextB() {
     throw new UnsupportedOperationException("no instances");

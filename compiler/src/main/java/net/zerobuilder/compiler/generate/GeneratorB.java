@@ -4,7 +4,7 @@ import com.google.common.base.Function;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.ParameterSpec;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
@@ -12,14 +12,13 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.iterationVar;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoGoal.builderImplName;
 import static net.zerobuilder.compiler.generate.Generator.TL;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
-import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
+import static net.zerobuilder.compiler.generate.StepContext.iterationVarNullCheck;
 
 final class GeneratorB {
 
@@ -42,35 +41,35 @@ final class GeneratorB {
             updaterType);
       }
       builder.addStatement("$N.$N = new $T()", updater, instance, goal.goal.goalType);
-      for (BeanStep parameter : goal.steps) {
-        String parameterName = upcase(parameter.validParameter.name);
+      for (BeanStep step : goal.steps) {
+        String parameterName = upcase(step.validParameter.name);
         CodeBlock nullCheck = CodeBlock.builder()
             .beginControlFlow("if ($N.$N() == null)", instance,
-                parameter.validParameter.getter)
+                step.validParameter.getter)
             .addStatement("throw new $T($S)",
-                NullPointerException.class, parameter.validParameter.name)
+                NullPointerException.class, step.validParameter.name)
             .endControlFlow().build();
-        if (parameter.validParameter.collectionType.isPresent()) {
-          TypeName collectionType = parameter.validParameter.collectionType.get();
+        if (step.validParameter.collectionType.isPresent()) {
+          ParameterSpec iterationVar = step.validParameter.collectionType.get();
           builder.add(nullCheck)
               .beginControlFlow("for ($T $N : $N.$N())",
-                  collectionType, iterationVar, instance,
-                  parameter.validParameter.getter)
-              .add(parameter.accept(maybeIterationNullCheck))
+                  iterationVar.type, iterationVar, instance,
+                  step.validParameter.getter)
+              .add(iterationVarNullCheck(step))
               .addStatement("$N.$N.$N().add($N)", updater,
                   downcase(goal.goal.goalType.simpleName()),
-                  parameter.validParameter.getter,
+                  step.validParameter.getter,
                   iterationVar)
               .endControlFlow();
         } else {
-          if (parameter.validParameter.nonNull) {
+          if (step.validParameter.nonNull) {
             builder.add(nullCheck);
           }
           builder.addStatement("$N.$N.set$L($N.$N())", updater,
               instance,
               parameterName,
               instance,
-              parameter.validParameter.getter);
+              step.validParameter.getter);
         }
       }
       method.addCode(builder.build());

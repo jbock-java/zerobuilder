@@ -3,7 +3,7 @@ package net.zerobuilder.compiler.analyse;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
@@ -13,6 +13,7 @@ import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
 
 import javax.lang.model.type.TypeMirror;
 
+import static com.google.common.base.Preconditions.checkState;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
 public final class DtoShared {
@@ -145,8 +146,7 @@ public final class DtoShared {
     public final String getter;
 
     /**
-     * Contains details about generics if this is a collection-returning lone getter,
-     * otherwise {@link CollectionType#ABSENT}
+     * Present iff this step fills a setterless collection
      */
     public final CollectionType collectionType;
 
@@ -162,30 +162,29 @@ public final class DtoShared {
 
     public static final class CollectionType {
 
-      /**
-       * Present iff this parameter is a setterless collection.
-       * For example, if the parameter is of type {@code List<String>}, this would be {@code String}.
-       */
-      private final Optional<? extends TypeName> type;
+      private final Optional<ParameterSpec> iterationVar;
       public final boolean allowShortcut;
 
       public boolean isPresent() {
-        return type.isPresent();
+        return iterationVar.isPresent();
       }
-      public TypeName get() {
-        return type.get();
+      public ParameterSpec get() {
+        return iterationVar.get();
       }
 
-      private CollectionType(Optional<? extends TypeName> type, boolean allowShortcut) {
-        this.type = type;
+      private CollectionType(Optional<ParameterSpec> iterationVar, boolean allowShortcut) {
+        checkState(iterationVar.isPresent() || !allowShortcut);
+        this.iterationVar = iterationVar;
         this.allowShortcut = allowShortcut;
       }
-      static final CollectionType ABSENT = new CollectionType(Optional.<TypeName>absent(), false);
+      static final CollectionType ABSENT = new CollectionType(Optional.<ParameterSpec>absent(), false);
       static CollectionType of(TypeMirror type, boolean allowShortcut) {
-        return new CollectionType(Optional.of(TypeName.get(type)), allowShortcut);
+        ParameterSpec iterationVar = ParameterSpec.builder(TypeName.get(type), "v").build();
+        return new CollectionType(Optional.of(iterationVar), allowShortcut);
       }
       static CollectionType of(Class clazz, boolean allowShortcut) {
-        return new CollectionType(Optional.of(ClassName.get(clazz)), allowShortcut);
+        ParameterSpec iterationVar = ParameterSpec.builder(ClassName.get(clazz), "v").build();
+        return new CollectionType(Optional.of(iterationVar), allowShortcut);
       }
     }
   }

@@ -5,20 +5,19 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.iterationVar;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
-import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
-import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
+import static net.zerobuilder.compiler.generate.StepContext.iterationVarNullCheck;
+import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 import static net.zerobuilder.compiler.generate.UpdaterContext.typeName;
 
 final class UpdaterContextB {
@@ -70,16 +69,17 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec iterateCollection(BeanGoalContext goal, BeanStep step) {
-    TypeName collectionType = step.validParameter.collectionType.get();
-    ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE, subtypeOf(collectionType));
+    ParameterSpec iterationVar = step.validParameter.collectionType.get();
+    ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
+        subtypeOf(iterationVar.type));
     String name = step.validParameter.name;
     return methodBuilder(name)
         .returns(goal.accept(typeName))
         .addParameter(parameterSpec(iterable, name))
         .addCode(nullCheck(name, name))
         .addCode(clearCollection(goal, step))
-        .beginControlFlow("for ($T $N : $N)", collectionType, iterationVar, name)
-        .addCode(step.accept(maybeIterationNullCheck))
+        .beginControlFlow("for ($T $N : $N)", iterationVar.type, iterationVar, name)
+        .addCode(iterationVarNullCheck(step))
         .addStatement("this.$N.$N().add($N)",
             goal.field, step.validParameter.getter, iterationVar)
         .endControlFlow()
@@ -99,12 +99,13 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec singletonCollection(BeanGoalContext goal, BeanStep step) {
-    TypeName collectionType = step.validParameter.collectionType.get();
+    ParameterSpec iterationVar = step.validParameter.collectionType.get();
     String name = step.validParameter.name;
+    ParameterSpec parameter = ParameterSpec.builder(iterationVar.type, step.validParameter.name).build();
     return methodBuilder(name)
         .returns(goal.accept(typeName))
-        .addParameter(parameterSpec(collectionType, name))
-        .addCode(step.accept(maybeNullCheck))
+        .addParameter(parameter)
+        .addCode(step.accept(nullCheck))
         .addCode(clearCollection(goal, step))
         .addStatement("this.$N.$N().add($N)",
             goal.field, step.validParameter.getter, name)

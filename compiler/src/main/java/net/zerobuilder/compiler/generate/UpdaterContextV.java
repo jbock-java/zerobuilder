@@ -11,9 +11,8 @@ import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
+import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 import static net.zerobuilder.compiler.generate.UpdaterContext.typeName;
 
 final class UpdaterContextV {
@@ -45,7 +44,7 @@ final class UpdaterContextV {
         builder.add(methodBuilder(name)
             .returns(goal.accept(typeName))
             .addParameter(step.parameter)
-            .addCode(step.accept(maybeNullCheck))
+            .addCode(step.accept(nullCheck))
             .addStatement("this.$N = $N", step.field, step.parameter)
             .addStatement("return this")
             .addModifiers(PUBLIC)
