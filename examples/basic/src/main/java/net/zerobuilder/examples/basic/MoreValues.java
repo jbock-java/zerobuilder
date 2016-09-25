@@ -15,4 +15,12 @@ public class MoreValues {
     }
   }
 
+  // goal returns void
+  @Builders(recycle = true)
+  static class Nothing {
+    @Goal(name = "append")
+    static void append(StringBuilder sb, String word) {
+      sb.append(word);
+    }
+  }
 }
