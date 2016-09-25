@@ -12,7 +12,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
+import net.zerobuilder.compiler.analyse.DtoShared.AnalysisResult;
 import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
 import net.zerobuilder.compiler.generate.GoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.GoalContext.GoalCases;
@@ -92,7 +92,7 @@ public final class Generator {
     return builder.build();
   }
 
-  private Optional<FieldSpec> threadLocalField(BuilderType config) {
+  private Optional<FieldSpec> threadLocalField(BuildersType config) {
     if (!config.recycle) {
       return absent();
     }
@@ -174,7 +174,7 @@ public final class Generator {
           .addParameter(goal.goal.goalType, instance);
       String updater = "updater";
       ClassName updaterType = goal.accept(UpdaterContext.typeName);
-      if (goal.config.recycle) {
+      if (goal.builders.recycle) {
         method.addStatement("$T $L = $L.get().$N", updaterType, updater,
             TL, updaterField(goal));
       } else {
@@ -219,7 +219,7 @@ public final class Generator {
           .addParameter(goal.goal.goalType, instance);
       String updater = "updater";
       ClassName updaterType = goal.accept(UpdaterContext.typeName);
-      if (goal.config.recycle) {
+      if (goal.builders.recycle) {
         method.addStatement("$T $L = $L.get().$N", updaterType, updater,
             TL, updaterField(goal));
       } else {
@@ -274,19 +274,20 @@ public final class Generator {
           .returns(goal.steps.get(0).thisType)
           .addModifiers(PUBLIC, STATIC);
       String steps = downcase(stepsType.simpleName());
-      method.addCode(goal.config.recycle
+      method.addCode(goal.builders.recycle
           ? statement("$T $N = $N.get().$N", stepsType, steps, TL, stepsField(goal))
           : statement("$T $N = new $T()", stepsType, steps, stepsType));
-      if (goal.goal.kind != INSTANCE_METHOD) {
+      if (goal.goal.kind == INSTANCE_METHOD) {
+        ClassName instanceType = goal.builders.type;
+        String instance = downcase(instanceType.simpleName());
+        return method
+            .addParameter(parameterSpec(instanceType, instance))
+            .addStatement("$N.$N = $N", steps, goal.builders.field, instance)
+            .addStatement("return $N", steps)
+            .build();
+      } else {
         return method.addStatement("return $N", steps).build();
       }
-      ClassName instanceType = goal.config.annotatedType;
-      String instance = downcase(instanceType.simpleName());
-      return method
-          .addParameter(parameterSpec(instanceType, instance))
-          .addStatement("$N.$N = $N", steps, '_' + instance, instance)
-          .addStatement("return $N", steps)
-          .build();
     }
     @Override
     MethodSpec beanGoal(BeanGoalContext goal) {
@@ -295,7 +296,7 @@ public final class Generator {
           .returns(goal.steps.get(0).thisType)
           .addModifiers(PUBLIC, STATIC);
       String steps = downcase(stepsType.simpleName());
-      method.addCode(goal.config.recycle
+      method.addCode(goal.builders.recycle
           ? statement("$T $N = $N.get().$N", stepsType, steps, TL, stepsField(goal))
           : statement("$T $N = new $T()", stepsType, steps, stepsType));
       return method.addStatement("$N.$N = new $T()", steps,

@@ -17,7 +17,7 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 public final class GoalContext {
 
   public static abstract class AbstractContext {
-    final BuilderType config;
+    final BuildersType builders;
 
     final boolean toBuilder;
     final boolean builder;
@@ -30,11 +30,11 @@ public final class GoalContext {
     final CodeBlock goalCall;
 
     @VisibleForTesting
-    AbstractContext(BuilderType config,
+    AbstractContext(BuildersType builders,
                     boolean toBuilder,
                     boolean builder, ClassName contractName,
                     CodeBlock goalCall) {
-      this.config = config;
+      this.builders = builders;
       this.toBuilder = toBuilder;
       this.builder = builder;
       this.contractName = contractName;
@@ -89,7 +89,7 @@ public final class GoalContext {
   static final GoalCases<ClassName> builderImplName = always(new GoalFunction<ClassName>() {
     @Override
     public ClassName apply(AbstractContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
-      return goal.config.generatedType.nestedClass(upcase(goal.accept(getGoalName) + "BuilderImpl"));
+      return goal.builders.generatedType.nestedClass(upcase(goal.accept(getGoalName) + "BuilderImpl"));
     }
   });
 
@@ -114,7 +114,7 @@ public final class GoalContext {
     final RegularGoal goal;
 
     public RegularGoalContext(RegularGoal goal,
-                              BuilderType config,
+                              BuildersType config,
                               boolean toBuilder,
                               boolean builder,
                               ClassName contractName,
@@ -141,7 +141,7 @@ public final class GoalContext {
     final BeanGoal goal;
 
     public BeanGoalContext(BeanGoal goal,
-                           BuilderType config,
+                           BuildersType config,
                            boolean toBuilder,
                            boolean builder,
                            ClassName contractName,

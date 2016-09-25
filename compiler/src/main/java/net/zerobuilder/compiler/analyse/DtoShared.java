@@ -7,6 +7,8 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
+import net.zerobuilder.compiler.generate.BuildersType;
+import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
 
 import javax.lang.model.type.TypeMirror;
 
@@ -167,6 +169,16 @@ public final class DtoShared {
       static CollectionType of(Class clazz, boolean allowShortcut) {
         return new CollectionType(Optional.of(ClassName.get(clazz)), allowShortcut);
       }
+    }
+  }
+
+  public static final class AnalysisResult {
+    public final BuildersType config;
+    public final ImmutableList<AbstractContext> goals;
+
+    AnalysisResult(BuildersType config, ImmutableList<AbstractContext> goals) {
+      this.config = config;
+      this.goals = goals;
     }
   }
 

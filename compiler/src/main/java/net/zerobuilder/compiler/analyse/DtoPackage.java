@@ -25,7 +25,7 @@ final class DtoPackage {
   static final class GoalTypes {
 
     interface GoalElementCases<R> {
-      R executableGoal(RegularGoalElement goal);
+      R regularGoal(RegularGoalElement goal);
       R beanGoal(BeanGoalElement goal);
     }
 
@@ -40,12 +40,12 @@ final class DtoPackage {
     }
 
     static <R> GoalElementCases<R> goalElementCases(
-        final Function<RegularGoalElement, R> executableGoalFunction,
+        final Function<RegularGoalElement, R> regularGoalFunction,
         final Function<BeanGoalElement, R> beanGoalFunction) {
       return new GoalElementCases<R>() {
         @Override
-        public R executableGoal(RegularGoalElement executableGoal) {
-          return executableGoalFunction.apply(executableGoal);
+        public R regularGoal(RegularGoalElement executableGoal) {
+          return regularGoalFunction.apply(executableGoal);
         }
         @Override
         public R beanGoal(BeanGoalElement beanGoal) {
@@ -56,7 +56,7 @@ final class DtoPackage {
 
     static final GoalElementCases<String> getName = new GoalElementCases<String>() {
       @Override
-      public String executableGoal(RegularGoalElement goal) {
+      public String regularGoal(RegularGoalElement goal) {
         return goal.goal.name;
       }
       @Override
@@ -85,7 +85,7 @@ final class DtoPackage {
 
       }
       <R> R accept(GoalElementCases<R> goalElementCases) {
-        return goalElementCases.executableGoal(this);
+        return goalElementCases.regularGoal(this);
       }
     }
 
@@ -109,7 +109,7 @@ final class DtoPackage {
 
     static final GoalTypes.GoalElementCases<Element> getElement = new GoalTypes.GoalElementCases<Element>() {
       @Override
-      public Element executableGoal(RegularGoalElement executableGoal) {
+      public Element regularGoal(RegularGoalElement executableGoal) {
         return executableGoal.executableElement;
       }
       @Override

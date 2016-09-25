@@ -40,7 +40,7 @@ final class UpdaterContext {
   static final GoalCases<ClassName> typeName = always(new GoalFunction<ClassName>() {
     @Override
     public ClassName apply(AbstractContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
-      return goal.config.generatedType.nestedClass(upcase(goal.accept(GoalContext.getGoalName) + "Updater"));
+      return goal.builders.generatedType.nestedClass(upcase(goal.accept(GoalContext.getGoalName) + "Updater"));
     }
   });
 
@@ -49,8 +49,8 @@ final class UpdaterContext {
     ImmutableList<FieldSpec> regularGoal(RegularGoalContext goal) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       if (goal.goal.kind == INSTANCE_METHOD) {
-        ClassName receiverType = goal.config.annotatedType;
-        builder.add(FieldSpec.builder(receiverType, '_' + downcase(receiverType.simpleName()), PRIVATE).build());
+        ClassName receiverType = goal.builders.type;
+        builder.add(FieldSpec.builder(receiverType, goal.builders.field, PRIVATE).build());
       }
       for (RegularStep parameter : goal.steps) {
         String name = parameter.parameter.name;

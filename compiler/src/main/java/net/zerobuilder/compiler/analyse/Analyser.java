@@ -1,16 +1,15 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.google.common.collect.ImmutableList;
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElementCases;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
+import net.zerobuilder.compiler.analyse.DtoShared.AnalysisResult;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
-import net.zerobuilder.compiler.generate.BuilderType;
+import net.zerobuilder.compiler.generate.BuildersType;
 import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
 
 import javax.lang.model.element.Element;
@@ -23,6 +22,7 @@ import java.util.List;
 
 import static com.google.auto.common.MoreElements.asExecutable;
 import static com.google.common.collect.Iterables.getLast;
+import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -34,7 +34,7 @@ import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.context;
 import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConflict;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersType;
-import static net.zerobuilder.compiler.generate.BuilderType.createBuilderContext;
+import static net.zerobuilder.compiler.generate.BuildersType.createBuilderContext;
 
 public final class Analyser {
 
@@ -45,7 +45,7 @@ public final class Analyser {
   }
 
   public AnalysisResult analyse(TypeElement buildElement) throws ValidationException {
-    BuilderType context = createBuilderContext(buildElement);
+    BuildersType context = createBuilderContext(buildElement);
     ImmutableList.Builder<AbstractContext> builder = ImmutableList.builder();
     ImmutableList<AbstractGoalElement> goals = goals(buildElement);
     checkNameConflict(goals);
@@ -56,12 +56,17 @@ public final class Analyser {
       ValidGoal validGoal = toBuilder
           ? goal.accept(ProjectionValidator.validate)
           : goal.accept(ProjectionValidator.skip);
-      CodeBlock goalCall = goalInvocation(goal, context.annotatedType);
+      CodeBlock goalCall = goalInvocation(goal, context);
       builder.add(context(validGoal, context, toBuilder, isBuilder, goalCall));
     }
     return new AnalysisResult(context, builder.build());
   }
 
+  /**
+   * @param buildElement a class that carries the {@link net.zerobuilder.Builders} annotation
+   * @return the goals that this class defines: one per {@link Goal} annotation
+   * @throws ValidationException if validation fails
+   */
   private ImmutableList<AbstractGoalElement> goals(TypeElement buildElement) throws ValidationException {
     ImmutableList.Builder<AbstractGoalElement> builder = ImmutableList.builder();
     if (buildElement.getAnnotation(Goal.class) != null) {
@@ -89,38 +94,28 @@ public final class Analyser {
     return goals;
   }
 
-  public static final class AnalysisResult {
-    public final BuilderType config;
-    public final ImmutableList<AbstractContext> goals;
-
-    AnalysisResult(BuilderType config, ImmutableList<AbstractContext> goals) {
-      this.config = config;
-      this.goals = goals;
-    }
-  }
-
   private static CodeBlock goalInvocation(AbstractGoalElement goal,
-                                          final ClassName annotatedType) throws ValidationException {
+                                          final BuildersType builders) throws ValidationException {
     return goal.accept(new GoalElementCases<CodeBlock>() {
       @Override
-      public CodeBlock executableGoal(RegularGoalElement goal) throws ValidationException {
+      public CodeBlock regularGoal(RegularGoalElement goal) throws ValidationException {
         CodeBlock parameters = goalParameters(goal.executableElement);
         String method = goal.executableElement.getSimpleName().toString();
-        String returnLiteral = TypeName.VOID.equals(goal.goal.goalType) ? "" : "return ";
+        CodeBlock.Builder builder = CodeBlock.builder();
+        builder.add(VOID.equals(goal.goal.goalType) ?
+            CodeBlock.of("") :
+            CodeBlock.of("return "));
         switch (goal.goal.kind) {
           case CONSTRUCTOR:
-            return CodeBlock.builder()
-                .addStatement("return new $T($L)", goal.goal.goalType, parameters)
-                .build();
+            return builder
+                .addStatement("new $T($L)",
+                    goal.goal.goalType, parameters).build();
           case INSTANCE_METHOD:
-            String instance = downcase(annotatedType.simpleName());
-            return CodeBlock.builder()
-                .addStatement("$L$N.$N($L)", returnLiteral, "_" + instance, method, parameters)
-                .build();
+            return builder.addStatement("$N.$N($L)",
+                builders.field, method, parameters).build();
           case STATIC_METHOD:
-            return CodeBlock.builder()
-                .addStatement("$L$T.$N($L)", returnLiteral, annotatedType, method, parameters)
-                .build();
+            return builder.addStatement("$T.$N($L)",
+                builders.type, method, parameters).build();
           default:
             throw new IllegalStateException("unknown kind: " + goal.goal.kind);
         }

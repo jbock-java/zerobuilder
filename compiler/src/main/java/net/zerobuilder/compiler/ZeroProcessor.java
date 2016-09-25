@@ -9,7 +9,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.Analyser;
-import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
+import net.zerobuilder.compiler.analyse.DtoShared.AnalysisResult;
 import net.zerobuilder.compiler.analyse.ValidationException;
 import net.zerobuilder.compiler.generate.Generator;
 
