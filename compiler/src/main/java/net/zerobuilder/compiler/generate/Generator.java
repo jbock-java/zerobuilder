@@ -13,10 +13,11 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.DtoShared.AnalysisResult;
-import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
-import net.zerobuilder.compiler.generate.GoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.GoalContext.GoalCases;
-import net.zerobuilder.compiler.generate.GoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalCases;
+import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
@@ -41,11 +42,11 @@ import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.BuilderImplContext.defineBuilderImpl;
-import static net.zerobuilder.compiler.generate.BuilderImplContext.defineContract;
-import static net.zerobuilder.compiler.generate.GoalContext.builderImplName;
-import static net.zerobuilder.compiler.generate.GoalContext.getGoalName;
-import static net.zerobuilder.compiler.generate.GoalContext.goalCasesFunction;
+import static net.zerobuilder.compiler.generate.BuilderContext.defineBuilderImpl;
+import static net.zerobuilder.compiler.generate.BuilderContext.defineContract;
+import static net.zerobuilder.compiler.generate.DtoGoal.builderImplName;
+import static net.zerobuilder.compiler.generate.DtoGoal.getGoalName;
+import static net.zerobuilder.compiler.generate.DtoGoal.goalCasesFunction;
 import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 
@@ -66,10 +67,10 @@ public final class Generator {
   }
 
   public TypeSpec generate(AnalysisResult analysisResult) {
-    return classBuilder(analysisResult.config.generatedType)
+    return classBuilder(analysisResult.builders.generatedType)
         .addFields(instanceFields(analysisResult))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
-        .addFields(presentInstances(of(threadLocalField(analysisResult.config))))
+        .addFields(presentInstances(of(threadLocalField(analysisResult.builders))))
         .addMethods(builderMethods(analysisResult))
         .addMethods(toBuilderMethods(analysisResult))
         .addAnnotations(generatedAnnotations(elements))
@@ -78,9 +79,9 @@ public final class Generator {
         .build();
   }
 
-  private ImmutableList<TypeSpec> nestedGoalTypes(ImmutableList<AbstractContext> goals) {
+  private ImmutableList<TypeSpec> nestedGoalTypes(ImmutableList<AbstractGoalContext> goals) {
     ImmutableList.Builder<TypeSpec> builder = ImmutableList.builder();
-    for (AbstractContext goal : goals) {
+    for (AbstractGoalContext goal : goals) {
       if (goal.toBuilder) {
         builder.add(defineUpdater(goal));
       }
@@ -92,11 +93,11 @@ public final class Generator {
     return builder.build();
   }
 
-  private Optional<FieldSpec> threadLocalField(BuildersType config) {
-    if (!config.recycle) {
+  private Optional<FieldSpec> threadLocalField(BuildersContext builders) {
+    if (!builders.recycle) {
       return absent();
     }
-    ClassName generatedTypeName = config.generatedType;
+    ClassName generatedTypeName = builders.generatedType;
     TypeName threadLocal = ParameterizedTypeName.get(ClassName.get(ThreadLocal.class),
         generatedTypeName);
     MethodSpec initialValue = methodBuilder("initialValue")
@@ -116,9 +117,9 @@ public final class Generator {
 
   private ImmutableList<MethodSpec> toBuilderMethods(AnalysisResult analysisResult) {
     return FluentIterable.from(analysisResult.goals)
-        .filter(new Predicate<AbstractContext>() {
+        .filter(new Predicate<AbstractGoalContext>() {
           @Override
-          public boolean apply(AbstractContext goal) {
+          public boolean apply(AbstractGoalContext goal) {
             return goal.toBuilder;
           }
         })
@@ -128,14 +129,14 @@ public final class Generator {
 
   private ImmutableList<MethodSpec> builderMethods(AnalysisResult analysisResult) {
     return FluentIterable.from(analysisResult.goals)
-        .filter(new Predicate<AbstractContext>() {
+        .filter(new Predicate<AbstractGoalContext>() {
           @Override
-          public boolean apply(AbstractContext goal) {
+          public boolean apply(AbstractGoalContext goal) {
             return goal.builder;
           }
         })
-        .transform(new Function<AbstractContext, MethodSpec>() {
-          public MethodSpec apply(AbstractContext goal) {
+        .transform(new Function<AbstractGoalContext, MethodSpec>() {
+          public MethodSpec apply(AbstractGoalContext goal) {
             return goal
                 .accept(goalToBuilder);
           }
@@ -144,11 +145,11 @@ public final class Generator {
   }
 
   private ImmutableList<FieldSpec> instanceFields(AnalysisResult analysisResult) {
-    if (!analysisResult.config.recycle) {
+    if (!analysisResult.builders.recycle) {
       return ImmutableList.of();
     }
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    for (AbstractContext goal : analysisResult.goals) {
+    for (AbstractGoalContext goal : analysisResult.goals) {
       if (goal.toBuilder) {
         ClassName updaterType = goal.accept(UpdaterContext.typeName);
         builder.add(FieldSpec.builder(updaterType,
@@ -306,11 +307,11 @@ public final class Generator {
     }
   };
 
-  private static String updaterField(AbstractContext goal) {
+  private static String updaterField(AbstractGoalContext goal) {
     return downcase(goal.accept(getGoalName) + "Updater");
   }
 
-  private static String stepsField(AbstractContext goal) {
+  private static String stepsField(AbstractGoalContext goal) {
     return downcase(goal.accept(getGoalName) + "BuilderImpl");
   }
 

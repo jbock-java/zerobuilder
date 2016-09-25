@@ -2,25 +2,22 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoShared.BeanGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.RegularGoal;
+import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
-import static com.squareup.javapoet.TypeName.VOID;
-import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
-public final class GoalContext {
+public final class DtoGoal {
 
-  public static abstract class AbstractContext {
-    final BuildersType builders;
+  public static abstract class AbstractGoalContext {
+    final BuildersContext builders;
 
     final boolean toBuilder;
     final boolean builder;
@@ -28,9 +25,9 @@ public final class GoalContext {
     final ClassName contractName;
 
     @VisibleForTesting
-    AbstractContext(BuildersType builders,
-                    boolean toBuilder,
-                    boolean builder, ClassName contractName) {
+    AbstractGoalContext(BuildersContext builders,
+                        boolean toBuilder,
+                        boolean builder, ClassName contractName) {
       this.builders = builders;
       this.toBuilder = toBuilder;
       this.builder = builder;
@@ -46,7 +43,7 @@ public final class GoalContext {
   }
 
   static abstract class GoalFunction<R> {
-    abstract R apply(AbstractContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters);
+    abstract R apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters);
   }
 
   static <R> GoalCases<R> always(final GoalFunction<R> function) {
@@ -62,10 +59,10 @@ public final class GoalContext {
     };
   }
 
-  static <R> Function<AbstractContext, R> goalCasesFunction(final GoalCases<R> cases) {
-    return new Function<AbstractContext, R>() {
+  static <R> Function<AbstractGoalContext, R> goalCasesFunction(final GoalCases<R> cases) {
+    return new Function<AbstractGoalContext, R>() {
       @Override
-      public R apply(AbstractContext goal) {
+      public R apply(AbstractGoalContext goal) {
         return goal.accept(cases);
       }
     };
@@ -73,7 +70,7 @@ public final class GoalContext {
 
   static final GoalCases<ImmutableList<ClassName>> stepInterfaceNames = always(new GoalFunction<ImmutableList<ClassName>>() {
     @Override
-    public ImmutableList<ClassName> apply(AbstractContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
+    public ImmutableList<ClassName> apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
       for (AbstractStep abstractStep : parameters) {
         specs.add(abstractStep.thisType);
@@ -84,7 +81,7 @@ public final class GoalContext {
 
   static final GoalCases<ClassName> builderImplName = always(new GoalFunction<ClassName>() {
     @Override
-    public ClassName apply(AbstractContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
+    public ClassName apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
       return goal.builders.generatedType.nestedClass(upcase(goal.accept(getGoalName) + "BuilderImpl"));
     }
   });
@@ -100,7 +97,7 @@ public final class GoalContext {
     }
   };
 
-  public final static class RegularGoalContext extends AbstractContext {
+  public final static class RegularGoalContext extends AbstractGoalContext {
 
     /**
      * original parameter order unless {@link net.zerobuilder.Step} was used
@@ -110,13 +107,13 @@ public final class GoalContext {
     final RegularGoal goal;
 
     public RegularGoalContext(RegularGoal goal,
-                              BuildersType config,
+                              BuildersContext builders,
                               boolean toBuilder,
                               boolean builder,
                               ClassName contractName,
                               ImmutableList<RegularStep> steps,
                               ImmutableList<TypeName> thrownTypes) {
-      super(config, toBuilder, builder, contractName);
+      super(builders, toBuilder, builder, contractName);
       this.thrownTypes = thrownTypes;
       this.steps = steps;
       this.goal = goal;
@@ -127,7 +124,7 @@ public final class GoalContext {
     }
   }
 
-  public final static class BeanGoalContext extends AbstractContext {
+  public final static class BeanGoalContext extends AbstractGoalContext {
 
     /**
      * alphabetic order unless {@link net.zerobuilder.Step} was used
@@ -136,12 +133,12 @@ public final class GoalContext {
     final BeanGoal goal;
 
     public BeanGoalContext(BeanGoal goal,
-                           BuildersType config,
+                           BuildersContext builders,
                            boolean toBuilder,
                            boolean builder,
                            ClassName contractName,
                            ImmutableList<BeansStep> steps) {
-      super(config, toBuilder, builder, contractName);
+      super(builders, toBuilder, builder, contractName);
       this.steps = steps;
       this.goal = goal;
     }
@@ -151,39 +148,7 @@ public final class GoalContext {
     }
   }
 
-  static final GoalCases<CodeBlock> invoke
-      = new GoalCases<CodeBlock>() {
-    @Override
-    CodeBlock regularGoal(RegularGoalContext goal) {
-      CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
-      CodeBlock.Builder builder = CodeBlock.builder();
-      builder.add(VOID.equals(goal.goal.goalType) ?
-          CodeBlock.of("") :
-          CodeBlock.of("return "));
-      switch (goal.goal.kind) {
-        case CONSTRUCTOR:
-          return builder
-              .addStatement("new $T($L)",
-                  goal.goal.goalType, parameters).build();
-        case INSTANCE_METHOD:
-          return builder.addStatement("$N.$N($L)",
-              goal.builders.field, goal.goal.methodName, parameters).build();
-        case STATIC_METHOD:
-          return builder.addStatement("$T.$N($L)",
-              goal.builders.type, goal.goal.methodName, parameters).build();
-        default:
-          throw new IllegalStateException("unknown kind: " + goal.goal.kind);
-      }
-    }
-    @Override
-    CodeBlock beanGoal(BeanGoalContext goal) {
-      return CodeBlock.builder()
-          .addStatement("return $L", downcase(goal.goal.goalType.simpleName()))
-          .build();
-    }
-  };
-
-  private GoalContext() {
+  private DtoGoal() {
     throw new UnsupportedOperationException("no instances");
   }
 }

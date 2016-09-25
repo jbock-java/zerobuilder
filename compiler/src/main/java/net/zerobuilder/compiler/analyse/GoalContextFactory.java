@@ -13,9 +13,9 @@ import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal.ValidationResultCases;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
-import net.zerobuilder.compiler.generate.BuildersType;
-import net.zerobuilder.compiler.generate.GoalContext;
-import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
+import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGoal;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
@@ -27,31 +27,31 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 
 public final class GoalContextFactory {
 
-  static AbstractContext context(final ValidGoal validGoal, final BuildersType config,
-                                 final boolean toBuilder, final boolean builder) throws ValidationException {
-    return validGoal.accept(new ValidationResultCases<AbstractContext>() {
+  static AbstractGoalContext context(final ValidGoal validGoal, final BuildersContext builders,
+                                     final boolean toBuilder, final boolean builder) throws ValidationException {
+    return validGoal.accept(new ValidationResultCases<AbstractGoalContext>() {
       @Override
-      AbstractContext executableGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> validParameters) {
-        ClassName contractName = contractName(goal.goal, config);
+      AbstractGoalContext executableGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> validParameters) {
+        ClassName contractName = contractName(goal.goal, builders);
         ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
         ImmutableList<RegularStep> steps = steps(contractName,
             goal.goal.goalType,
             validParameters,
             thrownTypes,
             regularParameterFactory);
-        return new GoalContext.RegularGoalContext(
-            goal.goal, config, toBuilder, builder, contractName, steps, thrownTypes);
+        return new DtoGoal.RegularGoalContext(
+            goal.goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
       }
       @Override
-      AbstractContext beanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validParameters) {
-        ClassName contractName = contractName(goal.goal, config);
+      AbstractGoalContext beanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validParameters) {
+        ClassName contractName = contractName(goal.goal, builders);
         ImmutableList<BeansStep> steps = steps(contractName,
             goal.goal.goalType,
             validParameters,
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
-        return new GoalContext.BeanGoalContext(
-            goal.goal, config, toBuilder, builder, contractName, steps);
+        return new DtoGoal.BeanGoalContext(
+            goal.goal, builders, toBuilder, builder, contractName, steps);
       }
     });
   }
@@ -91,7 +91,7 @@ public final class GoalContextFactory {
     }
   };
 
-  private static ClassName contractName(AbstractGoal goal, BuildersType config) {
+  private static ClassName contractName(AbstractGoal goal, BuildersContext config) {
     return config.generatedType.nestedClass(upcase(goal.name + "Builder"));
   }
 

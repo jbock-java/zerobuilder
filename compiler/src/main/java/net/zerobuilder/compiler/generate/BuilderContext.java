@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
@@ -9,10 +10,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
-import net.zerobuilder.compiler.generate.GoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.GoalContext.GoalCases;
-import net.zerobuilder.compiler.generate.GoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalCases;
+import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
@@ -20,6 +21,7 @@ import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.VOID;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -32,15 +34,14 @@ import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.GoalContext.always;
-import static net.zerobuilder.compiler.generate.GoalContext.builderImplName;
-import static net.zerobuilder.compiler.generate.GoalContext.invoke;
-import static net.zerobuilder.compiler.generate.GoalContext.stepInterfaceNames;
+import static net.zerobuilder.compiler.generate.DtoGoal.always;
+import static net.zerobuilder.compiler.generate.DtoGoal.builderImplName;
+import static net.zerobuilder.compiler.generate.DtoGoal.stepInterfaceNames;
 import static net.zerobuilder.compiler.generate.StepContext.asStepInterface;
 import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
 
-final class BuilderImplContext {
+final class BuilderContext {
 
   private static final GoalCases<ImmutableList<FieldSpec>> fields
       = new GoalCases<ImmutableList<FieldSpec>>() {
@@ -64,9 +65,9 @@ final class BuilderImplContext {
     }
   };
 
-  private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces = always(new GoalContext.GoalFunction<ImmutableList<TypeSpec>>() {
+  private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces = always(new DtoGoal.GoalFunction<ImmutableList<TypeSpec>>() {
     @Override
-    public ImmutableList<TypeSpec> apply(AbstractContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
+    public ImmutableList<TypeSpec> apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
       return FluentIterable.from(parameters).transform(asStepInterface).toList();
     }
   });
@@ -127,7 +128,7 @@ final class BuilderImplContext {
     }
   };
 
-  static TypeSpec defineBuilderImpl(AbstractContext goal) {
+  static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
     return classBuilder(goal.accept(builderImplName))
         .addSuperinterfaces(goal.accept(stepInterfaceNames))
         .addFields(goal.accept(fields))
@@ -138,7 +139,7 @@ final class BuilderImplContext {
         .build();
   }
 
-  static TypeSpec defineContract(AbstractContext goal) {
+  static TypeSpec defineContract(AbstractGoalContext goal) {
     return classBuilder(goal.contractName)
         .addTypes(goal.accept(stepInterfaces))
         .addModifiers(PUBLIC, FINAL, STATIC)
@@ -216,7 +217,39 @@ final class BuilderImplContext {
         .addCode(finalBlock).build();
   }
 
-  private BuilderImplContext() {
+  static final GoalCases<CodeBlock> invoke
+      = new GoalCases<CodeBlock>() {
+    @Override
+    CodeBlock regularGoal(RegularGoalContext goal) {
+      CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
+      CodeBlock.Builder builder = CodeBlock.builder();
+      builder.add(VOID.equals(goal.goal.goalType) ?
+          CodeBlock.of("") :
+          CodeBlock.of("return "));
+      switch (goal.goal.kind) {
+        case CONSTRUCTOR:
+          return builder
+              .addStatement("new $T($L)",
+                  goal.goal.goalType, parameters).build();
+        case INSTANCE_METHOD:
+          return builder.addStatement("$N.$N($L)",
+              goal.builders.field, goal.goal.methodName, parameters).build();
+        case STATIC_METHOD:
+          return builder.addStatement("$T.$N($L)",
+              goal.builders.type, goal.goal.methodName, parameters).build();
+        default:
+          throw new IllegalStateException("unknown kind: " + goal.goal.kind);
+      }
+    }
+    @Override
+    CodeBlock beanGoal(BeanGoalContext goal) {
+      return CodeBlock.builder()
+          .addStatement("return $L", downcase(goal.goal.goalType.simpleName()))
+          .build();
+    }
+  };
+
+  private BuilderContext() {
     throw new UnsupportedOperationException("no instances");
   }
 }

@@ -8,11 +8,11 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
-import net.zerobuilder.compiler.generate.GoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.GoalContext.GoalCases;
-import net.zerobuilder.compiler.generate.GoalContext.GoalFunction;
-import net.zerobuilder.compiler.generate.GoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalCases;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalFunction;
+import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
@@ -31,8 +31,8 @@ import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.GoalContext.always;
-import static net.zerobuilder.compiler.generate.GoalContext.invoke;
+import static net.zerobuilder.compiler.generate.BuilderContext.invoke;
+import static net.zerobuilder.compiler.generate.DtoGoal.always;
 import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
 
@@ -40,8 +40,8 @@ final class UpdaterContext {
 
   static final GoalCases<ClassName> typeName = always(new GoalFunction<ClassName>() {
     @Override
-    public ClassName apply(AbstractContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
-      return goal.builders.generatedType.nestedClass(upcase(goal.accept(GoalContext.getGoalName) + "Updater"));
+    public ClassName apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
+      return goal.builders.generatedType.nestedClass(upcase(goal.accept(DtoGoal.getGoalName) + "Updater"));
     }
   });
 
@@ -167,7 +167,7 @@ final class UpdaterContext {
     }
   };
 
-  static TypeSpec defineUpdater(AbstractContext goal) {
+  static TypeSpec defineUpdater(AbstractGoalContext goal) {
     return classBuilder(goal.accept(typeName))
         .addFields(goal.accept(fields))
         .addMethods(goal.accept(updateMethods))

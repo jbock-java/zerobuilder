@@ -62,7 +62,7 @@ public final class ZeroProcessor extends AbstractProcessor {
         AnalysisResult analysisResult = analyser.analyse(annotatedType);
         TypeSpec typeSpec = generator.generate(analysisResult);
         try {
-          write(analysisResult.config.generatedType, typeSpec);
+          write(analysisResult.builders.generatedType, typeSpec);
         } catch (IOException e) {
           String message = "Error processing "
               + ClassName.get(annotatedType) + ": " + getStackTraceAsString(e);

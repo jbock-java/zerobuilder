@@ -7,8 +7,9 @@ import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoShared.AnalysisResult;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
-import net.zerobuilder.compiler.generate.BuildersType;
-import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
+import net.zerobuilder.compiler.generate.DtoBuilders;
+import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -29,7 +30,7 @@ import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConfli
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.skip;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersType;
-import static net.zerobuilder.compiler.generate.BuildersType.createBuilderContext;
+import static net.zerobuilder.compiler.generate.DtoBuilders.createBuildersContext;
 
 public final class Analyser {
 
@@ -40,8 +41,8 @@ public final class Analyser {
   }
 
   public AnalysisResult analyse(TypeElement buildElement) throws ValidationException {
-    BuildersType context = createBuilderContext(buildElement);
-    ImmutableList.Builder<AbstractContext> builder = ImmutableList.builder();
+    BuildersContext context = createBuildersContext(buildElement);
+    ImmutableList.Builder<AbstractGoalContext> builder = ImmutableList.builder();
     ImmutableList<AbstractGoalElement> goals = goals(buildElement);
     checkNameConflict(goals);
     for (AbstractGoalElement goal : goals) {
