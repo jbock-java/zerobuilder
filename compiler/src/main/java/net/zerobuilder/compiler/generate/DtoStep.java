@@ -6,6 +6,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.analyse.DtoShared;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 
@@ -80,6 +81,30 @@ public final class DtoStep {
     }
   }
 
+  static final StepCases<DtoShared.ValidParameter> validParameter
+      = new StepCases<DtoShared.ValidParameter>() {
+    @Override
+    public DtoShared.ValidParameter regularStep(RegularStep step) {
+      return step.validParameter;
+    }
+    @Override
+    public DtoShared.ValidParameter beanStep(BeanStep step) {
+      return step.validParameter;
+    }
+  };
+
+  static final StepCases<ImmutableList<TypeName>> declaredExceptions
+      = new StepCases<ImmutableList<TypeName>>() {
+    @Override
+    public ImmutableList<TypeName> regularStep(RegularStep step) {
+      return step.declaredExceptions;
+    }
+    @Override
+    public ImmutableList<TypeName> beanStep(BeanStep step) {
+      return ImmutableList.of();
+    }
+  };
+
   static <R> StepCases<R> always(final Function<AbstractStep, R> parameterFunction) {
     return new StepCases<R>() {
       @Override
@@ -89,6 +114,15 @@ public final class DtoStep {
       @Override
       public R beanStep(BeanStep step) {
         return parameterFunction.apply(step);
+      }
+    };
+  }
+
+  static <R> Function<AbstractStep, R> asFunction(final StepCases<R> cases) {
+    return new Function<AbstractStep, R>() {
+      @Override
+      public R apply(AbstractStep abstractStep) {
+        return abstractStep.accept(cases);
       }
     };
   }
