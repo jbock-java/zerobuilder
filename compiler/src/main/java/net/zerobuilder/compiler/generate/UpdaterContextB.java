@@ -40,62 +40,91 @@ final class UpdaterContextB {
     @Override
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (BeansStep parameter : goal.steps) {
-        String name = parameter.validBeanParameter.name;
-        TypeName type = parameter.validBeanParameter.type;
-        if (parameter.validBeanParameter.collectionType.isPresent()) {
-          TypeName collectionType = parameter.validBeanParameter.collectionType.get();
-          ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE, subtypeOf(collectionType));
-          CodeBlock clearCollection = CodeBlock.builder().addStatement("this.$N.$N().clear()",
-              downcase(goal.goal.goalType.simpleName()),
-              parameter.validBeanParameter.projectionMethodName).build();
-          builder.add(methodBuilder(name)
-              .returns(goal.accept(typeName))
-              .addParameter(parameterSpec(iterable, name))
-              .addCode(nullCheck(name, name))
-              .addCode(clearCollection)
-              .beginControlFlow("for ($T $N : $N)", collectionType, iterationVarName, name)
-              .addCode(parameter.accept(maybeIterationNullCheck))
-              .addStatement("this.$N.$N().add($N)",
-                  downcase(goal.goal.goalType.simpleName()),
-                  parameter.validBeanParameter.projectionMethodName, iterationVarName)
-              .endControlFlow()
-              .addStatement("return this")
-              .addModifiers(PUBLIC)
-              .build());
-          builder.add(methodBuilder(name)
-              .returns(goal.accept(typeName))
-              .addCode(clearCollection)
-              .addStatement("return this")
-              .addModifiers(PUBLIC)
-              .build());
-          if (parameter.validBeanParameter.collectionType.allowShortcut) {
-            builder.add(methodBuilder(name)
-                .returns(goal.accept(typeName))
-                .addParameter(parameterSpec(collectionType, name))
-                .addCode(parameter.accept(maybeNullCheck))
-                .addCode(clearCollection)
-                .addStatement("this.$N.$N().add($N)",
-                    downcase(goal.goal.goalType.simpleName()),
-                    parameter.validBeanParameter.projectionMethodName, name)
-                .addStatement("return this")
-                .addModifiers(PUBLIC)
-                .build());
-          }
+      for (BeansStep step : goal.steps) {
+        if (step.validBeanParameter.collectionType.isPresent()) {
+          builder.addAll(collectionUpdaters(goal, step));
         } else {
-          builder.add(methodBuilder(name)
-              .returns(goal.accept(typeName))
-              .addParameter(parameterSpec(type, name))
-              .addStatement("this.$N.set$L($N)",
-                  downcase(goal.goal.goalType.simpleName()), upcase(name), name)
-              .addStatement("return this")
-              .addModifiers(PUBLIC)
-              .build());
+          builder.add(regularUpdater(goal, step));
         }
       }
       return builder.build();
     }
   };
+
+  private static MethodSpec regularUpdater(BeanGoalContext goal, BeansStep step) {
+    String name = step.validBeanParameter.name;
+    TypeName type = step.validBeanParameter.type;
+    return methodBuilder(name)
+        .returns(goal.accept(typeName))
+        .addParameter(parameterSpec(type, name))
+        .addStatement("this.$N.set$L($N)",
+            downcase(goal.goal.goalType.simpleName()), upcase(name), name)
+        .addStatement("return this")
+        .addModifiers(PUBLIC)
+        .build();
+  }
+
+  private static ImmutableList<MethodSpec> collectionUpdaters(BeanGoalContext goal, BeansStep step) {
+    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+    builder.add(iterateCollection(goal, step));
+    builder.add(emptyCollection(goal, step));
+    if (step.validBeanParameter.collectionType.allowShortcut) {
+      builder.add(singletonCollection(goal, step));
+    }
+    return builder.build();
+  }
+
+  private static MethodSpec iterateCollection(BeanGoalContext goal, BeansStep step) {
+    TypeName collectionType = step.validBeanParameter.collectionType.get();
+    ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE, subtypeOf(collectionType));
+    String name = step.validBeanParameter.name;
+    return methodBuilder(name)
+        .returns(goal.accept(typeName))
+        .addParameter(parameterSpec(iterable, name))
+        .addCode(nullCheck(name, name))
+        .addCode(clearCollection(goal, step))
+        .beginControlFlow("for ($T $N : $N)", collectionType, iterationVarName, name)
+        .addCode(step.accept(maybeIterationNullCheck))
+        .addStatement("this.$N.$N().add($N)",
+            downcase(goal.goal.goalType.simpleName()),
+            step.validBeanParameter.projectionMethodName, iterationVarName)
+        .endControlFlow()
+        .addStatement("return this")
+        .addModifiers(PUBLIC)
+        .build();
+  }
+
+  private static MethodSpec emptyCollection(BeanGoalContext goal, BeansStep step) {
+    String name = step.validBeanParameter.name;
+    return methodBuilder(name)
+        .returns(goal.accept(typeName))
+        .addCode(clearCollection(goal, step))
+        .addStatement("return this")
+        .addModifiers(PUBLIC)
+        .build();
+  }
+
+  private static MethodSpec singletonCollection(BeanGoalContext goal, BeansStep step) {
+    TypeName collectionType = step.validBeanParameter.collectionType.get();
+    String name = step.validBeanParameter.name;
+    return methodBuilder(name)
+        .returns(goal.accept(typeName))
+        .addParameter(parameterSpec(collectionType, name))
+        .addCode(step.accept(maybeNullCheck))
+        .addCode(clearCollection(goal, step))
+        .addStatement("this.$N.$N().add($N)",
+            downcase(goal.goal.goalType.simpleName()),
+            step.validBeanParameter.projectionMethodName, name)
+        .addStatement("return this")
+        .addModifiers(PUBLIC)
+        .build();
+  }
+
+  private static CodeBlock clearCollection(BeanGoalContext goal, BeansStep step) {
+    return CodeBlock.builder().addStatement("this.$N.$N().clear()",
+        downcase(goal.goal.goalType.simpleName()),
+        step.validBeanParameter.projectionMethodName).build();
+  }
 
   private UpdaterContextB() {
     throw new UnsupportedOperationException("no instances");
