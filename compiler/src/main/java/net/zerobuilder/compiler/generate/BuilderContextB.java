@@ -9,12 +9,16 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.analyse.DtoShared;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
+import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.iterationVarName;
 import static net.zerobuilder.compiler.Utilities.nullCheck;

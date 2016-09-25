@@ -6,21 +6,16 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 
-import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
-import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
-import static javax.lang.model.element.Modifier.ABSTRACT;
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.iterationVarName;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.StepContextB.beanStepInterface;
+import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
 
 public final class StepContext {
 
@@ -163,62 +158,8 @@ public final class StepContext {
     };
   }
 
-  private static final Function<AbstractStep, TypeSpec> regularStepInterface
-      = new Function<AbstractStep, TypeSpec>() {
-    @Override
-    public TypeSpec apply(AbstractStep context) {
-      ValidParameter parameter = context.accept(validParameter);
-      String name = parameter.name;
-      TypeName type = parameter.type;
-      return interfaceBuilder(context.thisType)
-          .addMethod(methodBuilder(name)
-              .returns(context.nextType)
-              .addParameter(parameterSpec(type, name))
-              .addExceptions(context.accept(declaredExceptions))
-              .addModifiers(PUBLIC, ABSTRACT)
-              .build())
-          .addModifiers(PUBLIC)
-          .build();
-    }
-  };
-
-  private static final Function<BeansStep, TypeSpec> beansStepInterface
-      = new Function<BeansStep, TypeSpec>() {
-    @Override
-    public TypeSpec apply(BeansStep context) {
-      ValidBeanParameter parameter = context.validParameter;
-      String name = parameter.name;
-      if (parameter.collectionType.isPresent()) {
-        TypeName collectionType = parameter.collectionType.get();
-        ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
-            subtypeOf(collectionType));
-        TypeSpec.Builder builder = interfaceBuilder(context.thisType)
-            .addModifiers(PUBLIC)
-            .addMethod(methodBuilder(name)
-                .addParameter(parameterSpec(iterable, name))
-                .returns(context.nextType)
-                .addModifiers(PUBLIC, ABSTRACT)
-                .build())
-            .addMethod(methodBuilder(name)
-                .returns(context.nextType)
-                .addModifiers(PUBLIC, ABSTRACT)
-                .build());
-        if (parameter.collectionType.allowShortcut) {
-          builder.addMethod(methodBuilder(name)
-              .addParameter(parameterSpec(collectionType, name))
-              .returns(context.nextType)
-              .addModifiers(PUBLIC, ABSTRACT)
-              .build());
-        }
-        return builder.build();
-      } else {
-        return regularStepInterface.apply(context);
-      }
-    }
-  };
-
   static final Function<AbstractStep, TypeSpec> asStepInterface
-      = asFunction(stepCases(regularStepInterface, beansStepInterface));
+      = asFunction(stepCases(regularStepInterface, beanStepInterface));
 
   private StepContext() {
     throw new UnsupportedOperationException("no instances");
