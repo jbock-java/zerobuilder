@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -11,9 +12,8 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalCases;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalFunction;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalContextCommon;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
-import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
@@ -33,15 +33,17 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.BuilderContext.invoke;
 import static net.zerobuilder.compiler.generate.DtoGoal.always;
+import static net.zerobuilder.compiler.generate.DtoGoal.getGoalName;
 import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
 
 final class UpdaterContext {
 
-  static final GoalCases<ClassName> typeName = always(new GoalFunction<ClassName>() {
+  static final GoalCases<ClassName> typeName = always(new Function<GoalContextCommon, ClassName>() {
     @Override
-    public ClassName apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
-      return goal.builders.generatedType.nestedClass(upcase(goal.accept(DtoGoal.getGoalName) + "Updater"));
+    public ClassName apply(GoalContextCommon goal) {
+      return goal.goal.builders.generatedType.nestedClass(
+          upcase(goal.goal.accept(getGoalName) + "Updater"));
     }
   });
 
@@ -147,25 +149,18 @@ final class UpdaterContext {
     }
   };
 
-  private static final GoalCases<MethodSpec> buildMethod = new GoalCases<MethodSpec>() {
-    @Override
-    MethodSpec regularGoal(RegularGoalContext goal) {
-      return methodBuilder("build")
-          .addModifiers(PUBLIC)
-          .returns(goal.goal.goalType)
-          .addCode(goal.accept(invoke))
-          .addExceptions(goal.thrownTypes)
-          .build();
-    }
-    @Override
-    MethodSpec beanGoal(BeanGoalContext goal) {
-      return methodBuilder("build")
-          .addModifiers(PUBLIC)
-          .returns(goal.goal.goalType)
-          .addCode(goal.accept(invoke))
-          .build();
-    }
-  };
+  private static final GoalCases<MethodSpec> buildMethod =
+      always(new Function<GoalContextCommon, MethodSpec>() {
+        @Override
+        public MethodSpec apply(GoalContextCommon goal) {
+          return methodBuilder("build")
+              .addModifiers(PUBLIC)
+              .returns(goal.goalType)
+              .addCode(goal.goal.accept(invoke))
+              .addExceptions(goal.thrownTypes)
+              .build();
+        }
+      });
 
   static TypeSpec defineUpdater(AbstractGoalContext goal) {
     return classBuilder(goal.accept(typeName))

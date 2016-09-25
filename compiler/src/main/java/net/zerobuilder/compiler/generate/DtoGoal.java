@@ -42,19 +42,30 @@ public final class DtoGoal {
     abstract R beanGoal(BeanGoalContext goal);
   }
 
-  static abstract class GoalFunction<R> {
-    abstract R apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters);
+  static final class GoalContextCommon {
+    final AbstractGoalContext goal;
+    final TypeName goalType;
+    final ImmutableList<? extends AbstractStep> parameters;
+    final ImmutableList<TypeName> thrownTypes;
+    private GoalContextCommon(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters,
+                              ImmutableList<TypeName> thrownTypes) {
+      this.goal = goal;
+      this.goalType = goalType;
+      this.parameters = parameters;
+      this.thrownTypes = thrownTypes;
+    }
   }
 
-  static <R> GoalCases<R> always(final GoalFunction<R> function) {
+  static <R> GoalCases<R> always(final Function<GoalContextCommon, R> function) {
     return new GoalCases<R>() {
       @Override
       R regularGoal(RegularGoalContext goal) {
-        return function.apply(goal, goal.goal.goalType, goal.steps);
+        return function.apply(new GoalContextCommon(goal, goal.goal.goalType, goal.steps, goal.thrownTypes));
       }
       @Override
       R beanGoal(BeanGoalContext goal) {
-        return function.apply(goal, goal.goal.goalType, goal.steps);
+        ImmutableList<TypeName> thrownTypes = ImmutableList.of();
+        return function.apply(new GoalContextCommon(goal, goal.goal.goalType, goal.steps, thrownTypes));
       }
     };
   }
@@ -68,21 +79,22 @@ public final class DtoGoal {
     };
   }
 
-  static final GoalCases<ImmutableList<ClassName>> stepInterfaceNames = always(new GoalFunction<ImmutableList<ClassName>>() {
+  static final GoalCases<ImmutableList<ClassName>> stepInterfaceNames = always(new Function<GoalContextCommon, ImmutableList<ClassName>>() {
     @Override
-    public ImmutableList<ClassName> apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
+    public ImmutableList<ClassName> apply(GoalContextCommon goal) {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
-      for (AbstractStep abstractStep : parameters) {
+      for (AbstractStep abstractStep : goal.parameters) {
         specs.add(abstractStep.thisType);
       }
       return specs.build();
     }
   });
 
-  static final GoalCases<ClassName> builderImplName = always(new GoalFunction<ClassName>() {
+  static final GoalCases<ClassName> builderImplName = always(new Function<GoalContextCommon, ClassName>() {
     @Override
-    public ClassName apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
-      return goal.builders.generatedType.nestedClass(upcase(goal.accept(getGoalName) + "BuilderImpl"));
+    public ClassName apply(GoalContextCommon goal) {
+      return goal.goal.builders.generatedType.nestedClass(
+          upcase(goal.goal.accept(getGoalName) + "BuilderImpl"));
     }
   });
 

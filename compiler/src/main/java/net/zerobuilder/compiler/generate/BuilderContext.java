@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -13,8 +14,8 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalCases;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalContextCommon;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
-import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
@@ -65,10 +66,11 @@ final class BuilderContext {
     }
   };
 
-  private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces = always(new DtoGoal.GoalFunction<ImmutableList<TypeSpec>>() {
+  private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces
+      = always(new Function<GoalContextCommon, ImmutableList<TypeSpec>>() {
     @Override
-    public ImmutableList<TypeSpec> apply(AbstractGoalContext goal, TypeName goalType, ImmutableList<? extends AbstractStep> parameters) {
-      return FluentIterable.from(parameters).transform(asStepInterface).toList();
+    public ImmutableList<TypeSpec> apply(GoalContextCommon goal) {
+      return FluentIterable.from(goal.parameters).transform(asStepInterface).toList();
     }
   });
 
