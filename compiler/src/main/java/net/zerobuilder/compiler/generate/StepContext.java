@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -77,9 +78,18 @@ public final class StepContext {
 
   public final static class BeansStep extends AbstractStep {
     final ValidBeanParameter validBeanParameter;
-    public BeansStep(ClassName thisType, TypeName nextType, ValidBeanParameter validBeanParameter) {
+    final ParameterSpec parameter;
+
+    /**
+     * empty iff {@link #validBeanParameter} {@code .collectionType.isPresent()}
+     */
+    final String setter;
+    public BeansStep(ClassName thisType, TypeName nextType, ValidBeanParameter validBeanParameter,
+                     ParameterSpec parameter, String setter) {
       super(thisType, nextType);
       this.validBeanParameter = validBeanParameter;
+      this.parameter = parameter;
+      this.setter = setter;
     }
     @Override
     <R> R accept(StepCases<R> cases) {

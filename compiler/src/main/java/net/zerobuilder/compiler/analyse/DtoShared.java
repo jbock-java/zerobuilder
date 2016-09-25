@@ -18,6 +18,9 @@ public final class DtoShared {
 
   public abstract static class ValidParameter {
 
+    /**
+     * first char is generally lowercase unless overridden
+     */
     public final String name;
     public final TypeName type;
     public final boolean nonNull;
@@ -138,7 +141,7 @@ public final class DtoShared {
     /**
      * Name of the getter method (could start with "is")
      */
-    public final String projectionMethodName;
+    public final String getter;
 
     /**
      * Contains details about generics if this is a collection-returning lone getter,
@@ -146,9 +149,9 @@ public final class DtoShared {
      */
     public final CollectionType collectionType;
 
-    ValidBeanParameter(TypeName type, String projectionMethodName, CollectionType collectionType, boolean nonNull) {
-      super(name(projectionMethodName), type, nonNull);
-      this.projectionMethodName = projectionMethodName;
+    ValidBeanParameter(TypeName type, String getter, CollectionType collectionType, boolean nonNull) {
+      super(name(getter), type, nonNull);
+      this.getter = getter;
       this.collectionType = collectionType;
     }
 

@@ -46,7 +46,7 @@ final class GeneratorB {
         String parameterName = upcase(parameter.validBeanParameter.name);
         CodeBlock nullCheck = CodeBlock.builder()
             .beginControlFlow("if ($N.$N() == null)", instance,
-                parameter.validBeanParameter.projectionMethodName)
+                parameter.validBeanParameter.getter)
             .addStatement("throw new $T($S)",
                 NullPointerException.class, parameter.validBeanParameter.name)
             .endControlFlow().build();
@@ -55,11 +55,11 @@ final class GeneratorB {
           builder.add(nullCheck)
               .beginControlFlow("for ($T $N : $N.$N())",
                   collectionType, iterationVarName, instance,
-                  parameter.validBeanParameter.projectionMethodName)
+                  parameter.validBeanParameter.getter)
               .add(parameter.accept(maybeIterationNullCheck))
               .addStatement("$N.$N.$N().add($N)", updater,
                   downcase(goal.goal.goalType.simpleName()),
-                  parameter.validBeanParameter.projectionMethodName,
+                  parameter.validBeanParameter.getter,
                   iterationVarName)
               .endControlFlow();
         } else {
@@ -70,7 +70,7 @@ final class GeneratorB {
               instance,
               parameterName,
               instance,
-              parameter.validBeanParameter.projectionMethodName);
+              parameter.validBeanParameter.getter);
         }
       }
       method.addCode(builder.build());

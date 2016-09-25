@@ -51,6 +51,10 @@ public final class Utilities {
         .endControlFlow().build();
   }
 
+  public static CodeBlock nullCheck(ParameterSpec parameterSpec) {
+    return nullCheck(parameterSpec.name, parameterSpec.name);
+  }
+
   private Utilities() {
     throw new UnsupportedOperationException("no instances");
   }

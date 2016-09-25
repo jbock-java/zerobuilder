@@ -5,6 +5,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
@@ -25,6 +26,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 public final class GoalContextFactory {
@@ -83,7 +85,9 @@ public final class GoalContextFactory {
       = new ParameterFactory<ValidBeanParameter, BeansStep>() {
     @Override
     BeansStep create(ClassName typeThisStep, TypeName typeNextStep, ValidBeanParameter parameter, ImmutableList<TypeName> declaredExceptions) {
-      return new BeansStep(typeThisStep, typeNextStep, parameter);
+      ParameterSpec arg = parameterSpec(parameter.type, parameter.name);
+      String setter = parameter.collectionType.isPresent() ? "" : "set" + upcase(parameter.name);
+      return new BeansStep(typeThisStep, typeNextStep, parameter, arg, setter);
     }
   };
 

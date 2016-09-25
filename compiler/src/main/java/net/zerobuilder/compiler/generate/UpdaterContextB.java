@@ -16,7 +16,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.iterationVarName;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
@@ -50,12 +49,11 @@ final class UpdaterContextB {
 
   private static MethodSpec regularUpdater(BeanGoalContext goal, BeansStep step) {
     String name = step.validBeanParameter.name;
-    TypeName type = step.validBeanParameter.type;
     return methodBuilder(name)
         .returns(goal.accept(typeName))
-        .addParameter(parameterSpec(type, name))
-        .addStatement("this.$N.set$L($N)",
-            goal.field, upcase(name), name)
+        .addParameter(step.parameter)
+        .addStatement("this.$N.$L($N)",
+            goal.field, step.setter, step.parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
@@ -84,7 +82,7 @@ final class UpdaterContextB {
         .addCode(step.accept(maybeIterationNullCheck))
         .addStatement("this.$N.$N().add($N)",
             goal.field,
-            step.validBeanParameter.projectionMethodName, iterationVarName)
+            step.validBeanParameter.getter, iterationVarName)
         .endControlFlow()
         .addStatement("return this")
         .addModifiers(PUBLIC)
@@ -110,7 +108,7 @@ final class UpdaterContextB {
         .addCode(step.accept(maybeNullCheck))
         .addCode(clearCollection(goal, step))
         .addStatement("this.$N.$N().add($N)",
-            goal.field, step.validBeanParameter.projectionMethodName, name)
+            goal.field, step.validBeanParameter.getter, name)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
@@ -118,7 +116,7 @@ final class UpdaterContextB {
 
   private static CodeBlock clearCollection(BeanGoalContext goal, BeansStep step) {
     return CodeBlock.builder().addStatement("this.$N.$N().clear()",
-        goal.field, step.validBeanParameter.projectionMethodName).build();
+        goal.field, step.validBeanParameter.getter).build();
   }
 
   private UpdaterContextB() {

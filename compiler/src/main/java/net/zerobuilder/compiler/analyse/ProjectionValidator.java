@@ -35,7 +35,7 @@ public final class ProjectionValidator {
 
   static <E extends TmpValidParameter> ImmutableList<E> shuffledParameters(ImmutableList<E> parameters)
       throws ValidationException {
-    List<E> builder = new ArrayList(nCopies(parameters.size(), null));
+    List<E> builder = new ArrayList<>(nCopies(parameters.size(), (E) null));
     ImmutableList.Builder<E> noAnnotation = ImmutableList.builder();
     for (E parameter : parameters) {
       Optional<Step> step = parameter.annotation;

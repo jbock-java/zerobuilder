@@ -83,9 +83,7 @@ final class BuilderContextV {
     public CodeBlock apply(RegularGoalContext goal) {
       CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
       CodeBlock.Builder builder = CodeBlock.builder();
-      builder.add(VOID.equals(goal.goal.goalType) ?
-          CodeBlock.of("") :
-          CodeBlock.of("return "));
+      builder.add(CodeBlock.of(VOID.equals(goal.goal.goalType) ? "" : "return "));
       switch (goal.goal.kind) {
         case CONSTRUCTOR:
           return builder
