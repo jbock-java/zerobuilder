@@ -27,8 +27,8 @@ final class UpdaterContextV {
         builder.add(goal.builders.field);
       }
       for (RegularStep parameter : goal.steps) {
-        String name = parameter.parameter.name;
-        TypeName type = parameter.parameter.type;
+        String name = parameter.validParameter.name;
+        TypeName type = parameter.validParameter.type;
         builder.add(FieldSpec.builder(type, name, PRIVATE).build());
       }
       return builder.build();
@@ -41,8 +41,8 @@ final class UpdaterContextV {
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (RegularStep parameter : goal.steps) {
-        String name = parameter.parameter.name;
-        TypeName type = parameter.parameter.type;
+        String name = parameter.validParameter.name;
+        TypeName type = parameter.validParameter.type;
         builder.add(methodBuilder(name)
             .returns(goal.accept(typeName))
             .addParameter(parameterSpec(type, name))

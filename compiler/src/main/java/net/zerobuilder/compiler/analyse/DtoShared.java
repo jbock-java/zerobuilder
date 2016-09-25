@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.analyse;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
@@ -127,12 +128,12 @@ public final class DtoShared {
   public static final class ValidRegularParameter extends ValidParameter {
 
     /**
-     * absent iff {@code toBuilder = false} or direct field access
+     * method name; absent iff {@code toBuilder = false} or direct field access
      */
-    public final Optional<String> projectionMethodName;
-    ValidRegularParameter(String name, TypeName type, Optional<String> projectionMethodName, boolean nonNull) {
+    public final Optional<String> projection;
+    ValidRegularParameter(String name, TypeName type, Optional<String> projection, boolean nonNull) {
       super(name, type, nonNull);
-      this.projectionMethodName = projectionMethodName;
+      this.projection = projection;
     }
   }
 

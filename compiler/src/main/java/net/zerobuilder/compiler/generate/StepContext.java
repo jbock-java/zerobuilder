@@ -4,13 +4,14 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.DtoShared;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
+import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
@@ -34,32 +35,37 @@ public final class StepContext {
   }
 
   abstract static class StepCases<R> {
-    abstract R regularParameter(RegularStep parameterContext);
-    abstract R beansParameter(BeansStep beansParameterContext);
+    abstract R regularStep(RegularStep step);
+    abstract R beanStep(BeansStep step);
   }
 
   public final static class RegularStep extends AbstractStep {
-    final DtoShared.ValidRegularParameter parameter;
+    final ValidRegularParameter validParameter;
     final ImmutableList<TypeName> declaredExceptions;
-    public RegularStep(ClassName thisType, TypeName nextType, DtoShared.ValidRegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
+    final FieldSpec field;
+    final ParameterSpec parameter;
+    public RegularStep(ClassName thisType, TypeName nextType, ValidRegularParameter validParameter,
+                       ImmutableList<TypeName> declaredExceptions, FieldSpec field, ParameterSpec parameter) {
       super(thisType, nextType);
       this.declaredExceptions = declaredExceptions;
+      this.validParameter = validParameter;
+      this.field = field;
       this.parameter = parameter;
     }
     @Override
     <R> R accept(StepCases<R> cases) {
-      return cases.regularParameter(this);
+      return cases.regularStep(this);
     }
   }
 
   static final StepCases<ImmutableList<TypeName>> declaredExceptions
       = new StepCases<ImmutableList<TypeName>>() {
     @Override
-    ImmutableList<TypeName> regularParameter(RegularStep parameterContext) {
-      return parameterContext.declaredExceptions;
+    ImmutableList<TypeName> regularStep(RegularStep step) {
+      return step.declaredExceptions;
     }
     @Override
-    ImmutableList<TypeName> beansParameter(BeansStep beansParameterContext) {
+    ImmutableList<TypeName> beanStep(BeansStep step) {
       return ImmutableList.of();
     }
   };
@@ -67,45 +73,45 @@ public final class StepContext {
   static final StepCases<ValidParameter> validParameter
       = new StepCases<ValidParameter>() {
     @Override
-    ValidParameter regularParameter(RegularStep parameterContext) {
-      return parameterContext.parameter;
+    ValidParameter regularStep(RegularStep step) {
+      return step.validParameter;
     }
     @Override
-    ValidParameter beansParameter(BeansStep beansParameterContext) {
-      return beansParameterContext.validBeanParameter;
+    ValidParameter beanStep(BeansStep step) {
+      return step.validParameter;
     }
   };
 
   public final static class BeansStep extends AbstractStep {
-    final ValidBeanParameter validBeanParameter;
+    final ValidBeanParameter validParameter;
     final ParameterSpec parameter;
 
     /**
-     * empty iff {@link #validBeanParameter} {@code .collectionType.isPresent()}
+     * empty iff {@link #validParameter} {@code .collectionType.isPresent()}
      */
     final String setter;
-    public BeansStep(ClassName thisType, TypeName nextType, ValidBeanParameter validBeanParameter,
+    public BeansStep(ClassName thisType, TypeName nextType, ValidBeanParameter validParameter,
                      ParameterSpec parameter, String setter) {
       super(thisType, nextType);
-      this.validBeanParameter = validBeanParameter;
+      this.validParameter = validParameter;
       this.parameter = parameter;
       this.setter = setter;
     }
     @Override
     <R> R accept(StepCases<R> cases) {
-      return cases.beansParameter(this);
+      return cases.beanStep(this);
     }
   }
 
   private static <R> StepCases<R> always(final Function<AbstractStep, R> parameterFunction) {
     return new StepCases<R>() {
       @Override
-      R regularParameter(RegularStep context) {
-        return parameterFunction.apply(context);
+      R regularStep(RegularStep step) {
+        return parameterFunction.apply(step);
       }
       @Override
-      R beansParameter(BeansStep context) {
-        return parameterFunction.apply(context);
+      R beanStep(BeansStep step) {
+        return parameterFunction.apply(step);
       }
     };
   }
@@ -166,7 +172,7 @@ public final class StepContext {
       = new Function<BeansStep, TypeSpec>() {
     @Override
     public TypeSpec apply(BeansStep context) {
-      ValidBeanParameter parameter = context.validBeanParameter;
+      ValidBeanParameter parameter = context.validParameter;
       String name = parameter.name;
       if (parameter.collectionType.isPresent()) {
         TypeName collectionType = parameter.collectionType.get();
@@ -199,12 +205,12 @@ public final class StepContext {
 
   static final Function<AbstractStep, TypeSpec> asStepInterface = asFunction(new StepCases<TypeSpec>() {
     @Override
-    TypeSpec regularParameter(RegularStep parameterContext) {
-      return regularStepInterface.apply(parameterContext);
+    TypeSpec regularStep(RegularStep step) {
+      return regularStepInterface.apply(step);
     }
     @Override
-    TypeSpec beansParameter(BeansStep beansParameterContext) {
-      return beansStepInterface.apply(beansParameterContext);
+    TypeSpec beanStep(BeansStep step) {
+      return beansStepInterface.apply(step);
     }
   });
 

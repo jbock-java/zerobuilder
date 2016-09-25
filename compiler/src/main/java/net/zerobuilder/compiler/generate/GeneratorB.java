@@ -43,34 +43,34 @@ final class GeneratorB {
       }
       builder.addStatement("$N.$N = new $T()", updater, instance, goal.goal.goalType);
       for (BeansStep parameter : goal.steps) {
-        String parameterName = upcase(parameter.validBeanParameter.name);
+        String parameterName = upcase(parameter.validParameter.name);
         CodeBlock nullCheck = CodeBlock.builder()
             .beginControlFlow("if ($N.$N() == null)", instance,
-                parameter.validBeanParameter.getter)
+                parameter.validParameter.getter)
             .addStatement("throw new $T($S)",
-                NullPointerException.class, parameter.validBeanParameter.name)
+                NullPointerException.class, parameter.validParameter.name)
             .endControlFlow().build();
-        if (parameter.validBeanParameter.collectionType.isPresent()) {
-          TypeName collectionType = parameter.validBeanParameter.collectionType.get();
+        if (parameter.validParameter.collectionType.isPresent()) {
+          TypeName collectionType = parameter.validParameter.collectionType.get();
           builder.add(nullCheck)
               .beginControlFlow("for ($T $N : $N.$N())",
                   collectionType, iterationVarName, instance,
-                  parameter.validBeanParameter.getter)
+                  parameter.validParameter.getter)
               .add(parameter.accept(maybeIterationNullCheck))
               .addStatement("$N.$N.$N().add($N)", updater,
                   downcase(goal.goal.goalType.simpleName()),
-                  parameter.validBeanParameter.getter,
+                  parameter.validParameter.getter,
                   iterationVarName)
               .endControlFlow();
         } else {
-          if (parameter.validBeanParameter.nonNull) {
+          if (parameter.validParameter.nonNull) {
             builder.add(nullCheck);
           }
           builder.addStatement("$N.$N.set$L($N.$N())", updater,
               instance,
               parameterName,
               instance,
-              parameter.validBeanParameter.getter);
+              parameter.validParameter.getter);
         }
       }
       method.addCode(builder.build());

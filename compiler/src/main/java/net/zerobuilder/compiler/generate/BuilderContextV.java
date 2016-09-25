@@ -30,8 +30,8 @@ final class BuilderContextV {
         builder.add(goal.builders.field);
       }
       for (RegularStep parameter : goal.steps.subList(0, goal.steps.size() - 1)) {
-        String name = parameter.parameter.name;
-        builder.add(FieldSpec.builder(parameter.parameter.type, name, PRIVATE).build());
+        String name = parameter.validParameter.name;
+        builder.add(FieldSpec.builder(parameter.validParameter.type, name, PRIVATE).build());
       }
       return builder.build();
     }
@@ -43,7 +43,7 @@ final class BuilderContextV {
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (RegularStep parameter : goal.steps.subList(0, goal.steps.size() - 1)) {
-        String name = parameter.parameter.name;
+        String name = parameter.validParameter.name;
         CodeBlock finalBlock = CodeBlock.builder()
             .addStatement("this.$N = $N", name, name)
             .addStatement("return this")
@@ -65,9 +65,9 @@ final class BuilderContextV {
 
   private static MethodSpec regularMethod(RegularStep parameter,
                                           CodeBlock finalBlock, ImmutableList<TypeName> thrownTypes) {
-    String name = parameter.parameter.name;
-    TypeName type = parameter.parameter.type;
-    return methodBuilder(parameter.parameter.name)
+    String name = parameter.validParameter.name;
+    TypeName type = parameter.validParameter.type;
+    return methodBuilder(parameter.validParameter.name)
         .addAnnotation(Override.class)
         .addParameter(parameterSpec(type, name))
         .addExceptions(thrownTypes)

@@ -25,6 +25,7 @@ import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -84,18 +85,20 @@ public final class GoalContextFactory {
   private static final ParameterFactory<ValidBeanParameter, BeansStep> beansParameterFactory
       = new ParameterFactory<ValidBeanParameter, BeansStep>() {
     @Override
-    BeansStep create(ClassName typeThisStep, TypeName typeNextStep, ValidBeanParameter parameter, ImmutableList<TypeName> declaredExceptions) {
-      ParameterSpec arg = parameterSpec(parameter.type, parameter.name);
-      String setter = parameter.collectionType.isPresent() ? "" : "set" + upcase(parameter.name);
-      return new BeansStep(typeThisStep, typeNextStep, parameter, arg, setter);
+    BeansStep create(ClassName thisType, TypeName nextType, ValidBeanParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
+      ParameterSpec parameter = parameterSpec(validParameter.type, validParameter.name);
+      String setter = validParameter.collectionType.isPresent() ? "" : "set" + upcase(validParameter.name);
+      return new BeansStep(thisType, nextType, validParameter, parameter, setter);
     }
   };
 
   private static final ParameterFactory<ValidRegularParameter, RegularStep> regularParameterFactory
       = new ParameterFactory<ValidRegularParameter, RegularStep>() {
     @Override
-    RegularStep create(ClassName typeThisStep, TypeName typeNextStep, ValidRegularParameter parameter, ImmutableList<TypeName> declaredExceptions) {
-      return new RegularStep(typeThisStep, typeNextStep, parameter, declaredExceptions);
+    RegularStep create(ClassName thisType, TypeName nextType, ValidRegularParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
+      FieldSpec field = FieldSpec.builder(validParameter.type, validParameter.name, PRIVATE).build();
+      ParameterSpec parameter = parameterSpec(validParameter.type, validParameter.name);
+      return new RegularStep(thisType, nextType, validParameter, declaredExceptions, field, parameter);
     }
   };
 

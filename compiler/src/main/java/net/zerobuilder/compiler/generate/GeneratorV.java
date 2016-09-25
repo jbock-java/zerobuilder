@@ -41,25 +41,25 @@ final class GeneratorV {
           }
           CodeBlock.Builder builder = CodeBlock.builder();
           for (RegularStep parameter : goal.steps) {
-            if (parameter.parameter.projectionMethodName.isPresent()) {
-              if (parameter.parameter.nonNull) {
+            if (parameter.validParameter.projection.isPresent()) {
+              if (parameter.validParameter.nonNull) {
                 builder.add(CodeBlock.builder()
-                    .beginControlFlow("if ($N.$N() == null)", instance, parameter.parameter.projectionMethodName.get())
-                    .addStatement("throw new $T($S)", NullPointerException.class, parameter.parameter.name)
+                    .beginControlFlow("if ($N.$N() == null)", instance, parameter.validParameter.projection.get())
+                    .addStatement("throw new $T($S)", NullPointerException.class, parameter.validParameter.name)
                     .endControlFlow().build());
               }
-              builder.addStatement("$N.$N = $N.$N()", updater, parameter.parameter.name,
-                  instance, parameter.parameter.projectionMethodName.get());
+              builder.addStatement("$N.$N = $N.$N()", updater, parameter.validParameter.name,
+                  instance, parameter.validParameter.projection.get());
             } else {
-              if (parameter.parameter.nonNull) {
+              if (parameter.validParameter.nonNull) {
                 builder.add(CodeBlock.builder()
-                    .beginControlFlow("if ($N.$N == null)", instance, parameter.parameter.name)
-                    .addStatement("throw new $T($S)", NullPointerException.class, parameter.parameter.name)
+                    .beginControlFlow("if ($N.$N == null)", instance, parameter.validParameter.name)
+                    .addStatement("throw new $T($S)", NullPointerException.class, parameter.validParameter.name)
                     .endControlFlow().build());
               }
               builder.add(CodeBlock.builder()
-                  .addStatement("$N.$N = $N.$N", updater, parameter.parameter.name,
-                      instance, parameter.parameter.name).build());
+                  .addStatement("$N.$N = $N.$N", updater, parameter.validParameter.name,
+                      instance, parameter.validParameter.name).build());
             }
           }
           method.addCode(builder.build());
