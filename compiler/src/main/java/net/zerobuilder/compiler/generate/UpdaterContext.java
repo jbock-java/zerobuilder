@@ -49,7 +49,7 @@ final class UpdaterContext {
 
   private static final GoalCases<ImmutableList<FieldSpec>> fields = new GoalCases<ImmutableList<FieldSpec>>() {
     @Override
-    ImmutableList<FieldSpec> regularGoal(RegularGoalContext goal) {
+    public ImmutableList<FieldSpec> regularGoal(RegularGoalContext goal) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       if (goal.goal.kind == INSTANCE_METHOD) {
         builder.add(goal.builders.field);
@@ -62,7 +62,7 @@ final class UpdaterContext {
       return builder.build();
     }
     @Override
-    ImmutableList<FieldSpec> beanGoal(BeanGoalContext goal) {
+    public ImmutableList<FieldSpec> beanGoal(BeanGoalContext goal) {
       FieldSpec field = FieldSpec.builder(goal.goal.goalType, downcase(goal.goal.goalType.simpleName()))
           .build();
       return ImmutableList.of(field);
@@ -72,7 +72,7 @@ final class UpdaterContext {
 
   private static final GoalCases<ImmutableList<MethodSpec>> updateMethods = new GoalCases<ImmutableList<MethodSpec>>() {
     @Override
-    ImmutableList<MethodSpec> regularGoal(RegularGoalContext goal) {
+    public ImmutableList<MethodSpec> regularGoal(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (RegularStep parameter : goal.steps) {
         String name = parameter.parameter.name;
@@ -89,7 +89,7 @@ final class UpdaterContext {
       return builder.build();
     }
     @Override
-    ImmutableList<MethodSpec> beanGoal(BeanGoalContext goal) {
+    public ImmutableList<MethodSpec> beanGoal(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (BeansStep parameter : goal.steps) {
         String name = parameter.validBeanParameter.name;

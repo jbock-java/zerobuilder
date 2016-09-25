@@ -47,7 +47,7 @@ final class BuilderContext {
   private static final GoalCases<ImmutableList<FieldSpec>> fields
       = new GoalCases<ImmutableList<FieldSpec>>() {
     @Override
-    ImmutableList<FieldSpec> regularGoal(RegularGoalContext goal) {
+    public ImmutableList<FieldSpec> regularGoal(RegularGoalContext goal) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       if (goal.goal.kind == INSTANCE_METHOD) {
         builder.add(goal.builders.field);
@@ -59,7 +59,7 @@ final class BuilderContext {
       return builder.build();
     }
     @Override
-    ImmutableList<FieldSpec> beanGoal(BeanGoalContext goal) {
+    public ImmutableList<FieldSpec> beanGoal(BeanGoalContext goal) {
       FieldSpec field = FieldSpec.builder(goal.goal.goalType, downcase(goal.goal.goalType.simpleName()))
           .build();
       return ImmutableList.of(field);
@@ -77,7 +77,7 @@ final class BuilderContext {
   private static final GoalCases<ImmutableList<MethodSpec>> stepsButLast
       = new GoalCases<ImmutableList<MethodSpec>>() {
     @Override
-    ImmutableList<MethodSpec> regularGoal(RegularGoalContext goal) {
+    public ImmutableList<MethodSpec> regularGoal(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (RegularStep parameter : goal.steps.subList(0, goal.steps.size() - 1)) {
         String name = parameter.parameter.name;
@@ -90,7 +90,7 @@ final class BuilderContext {
       return builder.build();
     }
     @Override
-    ImmutableList<MethodSpec> beanGoal(BeanGoalContext goal) {
+    public ImmutableList<MethodSpec> beanGoal(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       CodeBlock finalBlock = CodeBlock.builder().addStatement("return this").build();
       for (BeansStep parameter : goal.steps.subList(0, goal.steps.size() - 1)) {
@@ -109,13 +109,13 @@ final class BuilderContext {
 
   private static final GoalCases<ImmutableList<MethodSpec>> lastStep = new GoalCases<ImmutableList<MethodSpec>>() {
     @Override
-    ImmutableList<MethodSpec> regularGoal(RegularGoalContext goal) {
+    public ImmutableList<MethodSpec> regularGoal(RegularGoalContext goal) {
       RegularStep parameter = getLast(goal.steps);
       return ImmutableList.of(regularMethod(parameter, goal.accept(invoke), goal.thrownTypes));
     }
 
     @Override
-    ImmutableList<MethodSpec> beanGoal(BeanGoalContext goal) {
+    public ImmutableList<MethodSpec> beanGoal(BeanGoalContext goal) {
       BeansStep parameter = getLast(goal.steps);
       if (parameter.validBeanParameter.collectionType.isPresent()) {
         ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
@@ -222,7 +222,7 @@ final class BuilderContext {
   static final GoalCases<CodeBlock> invoke
       = new GoalCases<CodeBlock>() {
     @Override
-    CodeBlock regularGoal(RegularGoalContext goal) {
+    public CodeBlock regularGoal(RegularGoalContext goal) {
       CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
       CodeBlock.Builder builder = CodeBlock.builder();
       builder.add(VOID.equals(goal.goal.goalType) ?
@@ -244,7 +244,7 @@ final class BuilderContext {
       }
     }
     @Override
-    CodeBlock beanGoal(BeanGoalContext goal) {
+    public CodeBlock beanGoal(BeanGoalContext goal) {
       return CodeBlock.builder()
           .addStatement("return $L", downcase(goal.goal.goalType.simpleName()))
           .build();

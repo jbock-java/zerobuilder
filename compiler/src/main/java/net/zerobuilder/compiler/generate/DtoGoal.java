@@ -37,9 +37,23 @@ public final class DtoGoal {
     abstract <R> R accept(GoalCases<R> cases);
   }
 
-  static abstract class GoalCases<R> {
-    abstract R regularGoal(RegularGoalContext goal);
-    abstract R beanGoal(BeanGoalContext goal);
+  interface GoalCases<R> {
+    R regularGoal(RegularGoalContext goal);
+    R beanGoal(BeanGoalContext goal);
+  }
+
+  static <R> GoalCases<R> goalCases(final Function<RegularGoalContext, R> regularFunction,
+                                    final Function<BeanGoalContext, R> beanFunction) {
+    return new GoalCases<R>() {
+      @Override
+      public R regularGoal(RegularGoalContext goal) {
+        return regularFunction.apply(goal);
+      }
+      @Override
+      public R beanGoal(BeanGoalContext goal) {
+        return beanFunction.apply(goal);
+      }
+    };
   }
 
   static final class GoalContextCommon {
@@ -59,11 +73,11 @@ public final class DtoGoal {
   static <R> GoalCases<R> always(final Function<GoalContextCommon, R> function) {
     return new GoalCases<R>() {
       @Override
-      R regularGoal(RegularGoalContext goal) {
+      public R regularGoal(RegularGoalContext goal) {
         return function.apply(new GoalContextCommon(goal, goal.goal.goalType, goal.steps, goal.thrownTypes));
       }
       @Override
-      R beanGoal(BeanGoalContext goal) {
+      public R beanGoal(BeanGoalContext goal) {
         ImmutableList<TypeName> thrownTypes = ImmutableList.of();
         return function.apply(new GoalContextCommon(goal, goal.goal.goalType, goal.steps, thrownTypes));
       }
@@ -100,11 +114,11 @@ public final class DtoGoal {
 
   static final GoalCases<String> getGoalName = new GoalCases<String>() {
     @Override
-    String regularGoal(RegularGoalContext goal) {
+    public String regularGoal(RegularGoalContext goal) {
       return goal.goal.name;
     }
     @Override
-    String beanGoal(BeanGoalContext goal) {
+    public String beanGoal(BeanGoalContext goal) {
       return goal.goal.name;
     }
   };

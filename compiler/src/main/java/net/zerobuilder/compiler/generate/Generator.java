@@ -168,7 +168,7 @@ public final class Generator {
 
   private static final GoalCases<MethodSpec> goalToToBuilder = new GoalCases<MethodSpec>() {
     @Override
-    MethodSpec regularGoal(RegularGoalContext goal) {
+    public MethodSpec regularGoal(RegularGoalContext goal) {
       String instance = downcase(((ClassName) goal.goal.goalType.box()).simpleName());
       String methodName = goal.goal.name + "ToBuilder";
       MethodSpec.Builder method = methodBuilder(methodName)
@@ -212,7 +212,7 @@ public final class Generator {
           .addModifiers(PUBLIC, STATIC).build();
     }
     @Override
-    MethodSpec beanGoal(BeanGoalContext goal) {
+    public MethodSpec beanGoal(BeanGoalContext goal) {
       String instance = downcase(goal.goal.goalType.simpleName());
       String methodName = downcase(goal.goal.name + "ToBuilder");
       CodeBlock.Builder builder = CodeBlock.builder();
@@ -269,7 +269,7 @@ public final class Generator {
 
   private static final GoalCases<MethodSpec> goalToBuilder = new GoalCases<MethodSpec>() {
     @Override
-    MethodSpec regularGoal(RegularGoalContext goal) {
+    public MethodSpec regularGoal(RegularGoalContext goal) {
       ClassName stepsType = goal.accept(builderImplName);
       MethodSpec.Builder method = methodBuilder(goal.accept(getGoalName) + "Builder")
           .returns(goal.steps.get(0).thisType)
@@ -291,7 +291,7 @@ public final class Generator {
       }
     }
     @Override
-    MethodSpec beanGoal(BeanGoalContext goal) {
+    public MethodSpec beanGoal(BeanGoalContext goal) {
       ClassName stepsType = goal.accept(builderImplName);
       MethodSpec.Builder method = methodBuilder(goal.goal.name + "Builder")
           .returns(goal.steps.get(0).thisType)
