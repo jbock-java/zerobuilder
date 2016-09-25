@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoShared.BeanGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.RegularGoal;
@@ -157,16 +158,18 @@ public final class DtoGoal {
      */
     final ImmutableList<BeansStep> steps;
     final BeanGoal goal;
+    final FieldSpec field;
 
     public BeanGoalContext(BeanGoal goal,
                            BuildersContext builders,
                            boolean toBuilder,
                            boolean builder,
                            ClassName contractName,
-                           ImmutableList<BeansStep> steps) {
+                           ImmutableList<BeansStep> steps, FieldSpec field) {
       super(builders, toBuilder, builder, contractName);
       this.steps = steps;
       this.goal = goal;
+      this.field = field;
     }
 
     <R> R accept(GoalCases<R> cases) {

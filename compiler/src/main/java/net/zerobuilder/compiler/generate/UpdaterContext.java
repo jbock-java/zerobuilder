@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
@@ -18,7 +19,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.upcase;
-import static net.zerobuilder.compiler.generate.BuilderContext.invoke;
 import static net.zerobuilder.compiler.generate.DtoGoal.always;
 import static net.zerobuilder.compiler.generate.DtoGoal.getGoalName;
 import static net.zerobuilder.compiler.generate.DtoGoal.goalCases;
@@ -61,6 +61,9 @@ final class UpdaterContext {
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
   }
+
+  private static final GoalCases<CodeBlock> invoke
+      = goalCases(BuilderContextV.invoke, BuilderContextB.invoke);
 
   private UpdaterContext() {
     throw new UnsupportedOperationException("no instances");

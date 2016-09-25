@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
@@ -23,6 +24,7 @@ import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
+import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 public final class GoalContextFactory {
@@ -50,8 +52,10 @@ public final class GoalContextFactory {
             validParameters,
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
+        FieldSpec field = FieldSpec.builder(goal.goal.goalType,
+            downcase(goal.goal.goalType.simpleName())).build();
         return new DtoGoal.BeanGoalContext(
-            goal.goal, builders, toBuilder, builder, contractName, steps);
+            goal.goal, builders, toBuilder, builder, contractName, steps, field);
       }
     });
   }
