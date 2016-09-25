@@ -30,6 +30,12 @@ final class DtoPackage {
     }
 
     static abstract class AbstractGoalElement {
+      final Goal goalAnnotation;
+      final Elements elements;
+      AbstractGoalElement(Goal goalAnnotation, Elements elements) {
+        this.goalAnnotation = goalAnnotation;
+        this.elements = elements;
+      }
       abstract <R> R accept(GoalElementCases<R> goalElementCases);
     }
 
@@ -48,15 +54,6 @@ final class DtoPackage {
       };
     }
 
-    public static abstract class GoalElement extends AbstractGoalElement {
-      final Goal goalAnnotation;
-      final Elements elements;
-      GoalElement(Goal goalAnnotation, Elements elements) {
-        this.goalAnnotation = goalAnnotation;
-        this.elements = elements;
-      }
-    }
-
     static final GoalElementCases<String> getName = new GoalElementCases<String>() {
       @Override
       public String executableGoal(RegularGoalElement goal) {
@@ -68,7 +65,7 @@ final class DtoPackage {
       }
     };
 
-    static final class RegularGoalElement extends GoalElement {
+    static final class RegularGoalElement extends AbstractGoalElement {
       final RegularGoal goal;
       final ExecutableElement executableElement;
       RegularGoalElement(ExecutableElement element, GoalKind kind, TypeName goalType, String name,
@@ -77,7 +74,7 @@ final class DtoPackage {
         this.goal = new RegularGoal(goalType, name, kind);
         this.executableElement = element;
       }
-      static GoalElement create(ExecutableElement element, Elements elements) {
+      static RegularGoalElement create(ExecutableElement element, Elements elements) {
         TypeName goalType = goalType(element);
         String name = goalName(element.getAnnotation(Goal.class), goalType);
         return new RegularGoalElement(element,
@@ -92,7 +89,7 @@ final class DtoPackage {
       }
     }
 
-    static final class BeanGoalElement extends GoalElement {
+    static final class BeanGoalElement extends AbstractGoalElement {
       final BeanGoal goal;
       final TypeElement beanTypeElement;
       private BeanGoalElement(Element field, ClassName goalType, String name, TypeElement beanTypeElement, Elements elements) {
@@ -100,7 +97,7 @@ final class DtoPackage {
         this.goal = new BeanGoal(goalType, name);
         this.beanTypeElement = beanTypeElement;
       }
-      static GoalElement create(TypeElement beanType, Elements elements) {
+      static BeanGoalElement create(TypeElement beanType, Elements elements) {
         ClassName goalType = ClassName.get(beanType);
         String name = goalName(beanType.getAnnotation(Goal.class), goalType);
         return new BeanGoalElement(beanType, goalType, name, beanType, elements);

@@ -4,8 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElement;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.AbstractGoalElement;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -29,10 +30,10 @@ final class GoalnameValidator {
   /**
    * to generate better error messages, in case of goal name conflict
    */
-  private static final Ordering<GoalElement> GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK
-      = Ordering.from(new Comparator<GoalElement>() {
+  private static final Ordering<AbstractGoalElement> GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK
+      = Ordering.from(new Comparator<AbstractGoalElement>() {
 
-    private int goalWeight(GoalElement goal) throws ValidationException {
+    private int goalWeight(AbstractGoalElement goal) throws ValidationException {
       ElementKind kind = goal.accept(getElement).getKind();
       Goal annotation = goal.goalAnnotation;
       String name = annotation.name();
@@ -42,7 +43,7 @@ final class GoalnameValidator {
     }
 
     @Override
-    public int compare(GoalElement g0, GoalElement g1) {
+    public int compare(AbstractGoalElement g0, AbstractGoalElement g1) {
       try {
         return Ints.compare(goalWeight(g0), goalWeight(g1));
       } catch (ValidationException e) {
@@ -53,36 +54,37 @@ final class GoalnameValidator {
   });
 
 
-  static void checkNameConflict(ImmutableList<GoalElement> goals) throws ValidationException {
+  static void checkNameConflict(ImmutableList<AbstractGoalElement> goals) throws ValidationException {
     goals = GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK.immutableSortedCopy(goals);
-    HashMap<String, GoalElement> goalNames = new HashMap<>();
-    for (GoalElement goal : goals) {
-      GoalElement otherGoal = goalNames.put(goal.accept(getName), goal);
+    HashMap<String, AbstractGoalElement> byName = new HashMap<>();
+    for (AbstractGoalElement goal : goals) {
+      AbstractGoalElement otherGoal = byName.put(goal.accept(getName), goal);
       if (otherGoal != null) {
         Goal goalAnnotation = goal.goalAnnotation;
         Goal otherAnnotation = otherGoal.goalAnnotation;
         String thisName = goalAnnotation.name();
         String otherName = otherAnnotation.name();
-        ElementKind thisKind = goal.accept(getElement).getKind();
+        Element element = goal.accept(getElement);
+        ElementKind thisKind = element.getKind();
         ElementKind otherKind = otherGoal.accept(getElement).getKind();
         if (isNullOrEmpty(thisName)) {
           if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EECC, goal.accept(getElement));
+            throw new ValidationException(GOALNAME_EECC, element);
           }
           if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_EEMC, goal.accept(getElement));
+            throw new ValidationException(GOALNAME_EEMC, element);
           }
-          throw new ValidationException(GOALNAME_EEMM, goal.accept(getElement));
+          throw new ValidationException(GOALNAME_EEMM, element);
         } else if (isNullOrEmpty(otherName)) {
           if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NECC, goal.accept(getElement));
+            throw new ValidationException(GOALNAME_NECC, element);
           }
           if (thisKind == METHOD && otherKind == CONSTRUCTOR) {
-            throw new ValidationException(GOALNAME_NEMC, goal.accept(getElement));
+            throw new ValidationException(GOALNAME_NEMC, element);
           }
-          throw new ValidationException(GOALNAME_NEMM, goal.accept(getElement));
+          throw new ValidationException(GOALNAME_NEMM, element);
         }
-        throw new ValidationException(GOALNAME_NN, goal.accept(getElement));
+        throw new ValidationException(GOALNAME_NN, element);
       }
     }
   }

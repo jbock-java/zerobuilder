@@ -5,13 +5,12 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElementCases;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.generate.BuilderType;
-import net.zerobuilder.compiler.generate.GoalContext;
 import net.zerobuilder.compiler.generate.GoalContext.AbstractContext;
 
 import javax.lang.model.element.Element;
@@ -48,9 +47,9 @@ public final class Analyser {
   public AnalysisResult analyse(TypeElement buildElement) throws ValidationException {
     BuilderType context = createBuilderContext(buildElement);
     ImmutableList.Builder<AbstractContext> builder = ImmutableList.builder();
-    ImmutableList<GoalElement> goals = goals(buildElement);
+    ImmutableList<AbstractGoalElement> goals = goals(buildElement);
     checkNameConflict(goals);
-    for (GoalElement goal : goals) {
+    for (AbstractGoalElement goal : goals) {
       validateBuildersType(buildElement);
       boolean toBuilder = goal.goalAnnotation.toBuilder();
       boolean isBuilder = goal.goalAnnotation.builder();
@@ -63,8 +62,8 @@ public final class Analyser {
     return new AnalysisResult(context, builder.build());
   }
 
-  private ImmutableList<GoalElement> goals(TypeElement buildElement) throws ValidationException {
-    ImmutableList.Builder<GoalElement> builder = ImmutableList.builder();
+  private ImmutableList<AbstractGoalElement> goals(TypeElement buildElement) throws ValidationException {
+    ImmutableList.Builder<AbstractGoalElement> builder = ImmutableList.builder();
     if (buildElement.getAnnotation(Goal.class) != null) {
       builder.add(BeanGoalElement.create(buildElement, elements));
     }
@@ -83,7 +82,7 @@ public final class Analyser {
         }
       }
     }
-    ImmutableList<GoalElement> goals = builder.build();
+    ImmutableList<AbstractGoalElement> goals = builder.build();
     if (goals.isEmpty()) {
       throw new ValidationException(WARNING, NO_GOALS, buildElement);
     }
@@ -100,7 +99,7 @@ public final class Analyser {
     }
   }
 
-  private static CodeBlock goalInvocation(GoalElement goal,
+  private static CodeBlock goalInvocation(AbstractGoalElement goal,
                                           final ClassName annotatedType) throws ValidationException {
     return goal.accept(new GoalElementCases<CodeBlock>() {
       @Override
