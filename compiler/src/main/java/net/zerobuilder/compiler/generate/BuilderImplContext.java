@@ -34,6 +34,7 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.GoalContext.always;
 import static net.zerobuilder.compiler.generate.GoalContext.builderImplName;
+import static net.zerobuilder.compiler.generate.GoalContext.invoke;
 import static net.zerobuilder.compiler.generate.GoalContext.stepInterfaceNames;
 import static net.zerobuilder.compiler.generate.StepContext.asStepInterface;
 import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
@@ -107,7 +108,7 @@ final class BuilderImplContext {
     @Override
     ImmutableList<MethodSpec> regularGoal(RegularGoalContext goal) {
       RegularStep parameter = getLast(goal.steps);
-      return ImmutableList.of(regularMethod(parameter, goal.goalCall, goal.thrownTypes));
+      return ImmutableList.of(regularMethod(parameter, goal.accept(invoke), goal.thrownTypes));
     }
 
     @Override
@@ -115,13 +116,13 @@ final class BuilderImplContext {
       BeansStep parameter = getLast(goal.steps);
       if (parameter.validBeanParameter.collectionType.isPresent()) {
         ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-        builder.addAll(beanCollectionMethods(parameter, goal.goal.goalType, goal.goalCall));
+        builder.addAll(beanCollectionMethods(parameter, goal.goal.goalType, goal.accept(invoke)));
         if (parameter.validBeanParameter.collectionType.allowShortcut) {
-          builder.add(beanCollectionShortcut(parameter, goal.goal.goalType, goal.goalCall));
+          builder.add(beanCollectionShortcut(parameter, goal.goal.goalType, goal.accept(invoke)));
         }
         return builder.build();
       } else {
-        return ImmutableList.of(beanRegularMethod(parameter, goal.goal.goalType, goal.goalCall));
+        return ImmutableList.of(beanRegularMethod(parameter, goal.goal.goalType, goal.accept(invoke)));
       }
     }
   };

@@ -29,15 +29,15 @@ public final class DtoShared {
     }
   }
 
-  public static abstract class ValidGoal {
-    public static abstract class ValidationResultCases<R> {
+  static abstract class ValidGoal {
+    static abstract class ValidationResultCases<R> {
       abstract R executableGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> parameters);
       abstract R beanGoal(BeanGoalElement beanGoal, ImmutableList<ValidBeanParameter> validBeanParameters);
     }
     abstract <R> R accept(ValidationResultCases<R> cases);
   }
 
-  public static abstract class AbstractGoal {
+  static abstract class AbstractGoal {
     public final String name;
     AbstractGoal(String name) {
       this.name = name;
@@ -45,7 +45,7 @@ public final class DtoShared {
     public abstract <R> R accept(AbstractGoalCases<R> cases);
   }
 
-  public interface AbstractGoalCases<R> {
+  interface AbstractGoalCases<R> {
     R regularGoal(RegularGoal goal);
     R beanGoal(BeanGoal goal);
   }
@@ -62,13 +62,21 @@ public final class DtoShared {
     /**
      * parameter names in original order
      */
-    public final ImmutableList<String> parameters;
-    RegularGoal(TypeName goalType, String name, GoalKind kind, ImmutableList<String> parameters) {
+    public final ImmutableList<String> parameterNames;
+
+    /**
+     * empty string for constructor goals
+     */
+    public final String methodName;
+
+    RegularGoal(TypeName goalType, String name, GoalKind kind, ImmutableList<String> parameterNames, String methodName) {
       super(name);
       this.goalType = goalType;
       this.kind = kind;
-      this.parameters = parameters;
+      this.parameterNames = parameterNames;
+      this.methodName = methodName;
     }
+
     @Override
     public <R> R accept(AbstractGoalCases<R> cases) {
       return cases.regularGoal(this);

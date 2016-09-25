@@ -73,7 +73,8 @@ final class DtoPackage {
       RegularGoalElement(ExecutableElement element, GoalKind kind, TypeName goalType, String name,
                          Elements elements) {
         super(element.getAnnotation(Goal.class), elements);
-        this.goal = new RegularGoal(goalType, name, kind, parameters(element));
+        this.goal = new RegularGoal(goalType, name, kind, parameterNames(element),
+            element.getSimpleName().toString());
         this.executableElement = element;
       }
       static RegularGoalElement create(ExecutableElement element, Elements elements) {
@@ -91,7 +92,7 @@ final class DtoPackage {
       }
     }
 
-    private static ImmutableList<String> parameters(ExecutableElement element) {
+    private static ImmutableList<String> parameterNames(ExecutableElement element) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       for (VariableElement parameter : element.getParameters()) {
         builder.add(parameter.getSimpleName().toString());

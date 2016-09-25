@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -12,6 +13,8 @@ import net.zerobuilder.compiler.generate.StepContext.AbstractStep;
 import net.zerobuilder.compiler.generate.StepContext.BeansStep;
 import net.zerobuilder.compiler.generate.StepContext.RegularStep;
 
+import static com.squareup.javapoet.TypeName.VOID;
+import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 
 public final class GoalContext {
@@ -24,21 +27,14 @@ public final class GoalContext {
 
     final ClassName contractName;
 
-    /**
-     * final statement(s) of {@code updater.build()} and {@code builder.build()}
-     */
-    final CodeBlock goalCall;
-
     @VisibleForTesting
     AbstractContext(BuildersType builders,
                     boolean toBuilder,
-                    boolean builder, ClassName contractName,
-                    CodeBlock goalCall) {
+                    boolean builder, ClassName contractName) {
       this.builders = builders;
       this.toBuilder = toBuilder;
       this.builder = builder;
       this.contractName = contractName;
-      this.goalCall = goalCall;
     }
 
     abstract <R> R accept(GoalCases<R> cases);
@@ -118,10 +114,9 @@ public final class GoalContext {
                               boolean toBuilder,
                               boolean builder,
                               ClassName contractName,
-                              ImmutableList<TypeName> thrownTypes,
                               ImmutableList<RegularStep> steps,
-                              CodeBlock goalCall) {
-      super(config, toBuilder, builder, contractName, goalCall);
+                              ImmutableList<TypeName> thrownTypes) {
+      super(config, toBuilder, builder, contractName);
       this.thrownTypes = thrownTypes;
       this.steps = steps;
       this.goal = goal;
@@ -145,9 +140,8 @@ public final class GoalContext {
                            boolean toBuilder,
                            boolean builder,
                            ClassName contractName,
-                           ImmutableList<BeansStep> steps,
-                           CodeBlock goalCall) {
-      super(config, toBuilder, builder, contractName, goalCall);
+                           ImmutableList<BeansStep> steps) {
+      super(config, toBuilder, builder, contractName);
       this.steps = steps;
       this.goal = goal;
     }
@@ -156,6 +150,38 @@ public final class GoalContext {
       return cases.beanGoal(this);
     }
   }
+
+  static final GoalCases<CodeBlock> invoke
+      = new GoalCases<CodeBlock>() {
+    @Override
+    CodeBlock regularGoal(RegularGoalContext goal) {
+      CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
+      CodeBlock.Builder builder = CodeBlock.builder();
+      builder.add(VOID.equals(goal.goal.goalType) ?
+          CodeBlock.of("") :
+          CodeBlock.of("return "));
+      switch (goal.goal.kind) {
+        case CONSTRUCTOR:
+          return builder
+              .addStatement("new $T($L)",
+                  goal.goal.goalType, parameters).build();
+        case INSTANCE_METHOD:
+          return builder.addStatement("$N.$N($L)",
+              goal.builders.field, goal.goal.methodName, parameters).build();
+        case STATIC_METHOD:
+          return builder.addStatement("$T.$N($L)",
+              goal.builders.type, goal.goal.methodName, parameters).build();
+        default:
+          throw new IllegalStateException("unknown kind: " + goal.goal.kind);
+      }
+    }
+    @Override
+    CodeBlock beanGoal(BeanGoalContext goal) {
+      return CodeBlock.builder()
+          .addStatement("return $L", downcase(goal.goal.goalType.simpleName()))
+          .build();
+    }
+  };
 
   private GoalContext() {
     throw new UnsupportedOperationException("no instances");

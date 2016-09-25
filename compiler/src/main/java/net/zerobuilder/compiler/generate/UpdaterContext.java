@@ -32,6 +32,7 @@ import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.GoalContext.always;
+import static net.zerobuilder.compiler.generate.GoalContext.invoke;
 import static net.zerobuilder.compiler.generate.StepContext.maybeIterationNullCheck;
 import static net.zerobuilder.compiler.generate.StepContext.maybeNullCheck;
 
@@ -152,7 +153,7 @@ final class UpdaterContext {
       return methodBuilder("build")
           .addModifiers(PUBLIC)
           .returns(goal.goal.goalType)
-          .addCode(goal.goalCall)
+          .addCode(goal.accept(invoke))
           .addExceptions(goal.thrownTypes)
           .build();
     }
@@ -161,7 +162,7 @@ final class UpdaterContext {
       return methodBuilder("build")
           .addModifiers(PUBLIC)
           .returns(goal.goal.goalType)
-          .addCode(goal.goalCall)
+          .addCode(goal.accept(invoke))
           .build();
     }
   };

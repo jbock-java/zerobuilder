@@ -4,7 +4,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
@@ -29,44 +28,30 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 public final class GoalContextFactory {
 
   static AbstractContext context(final ValidGoal validGoal, final BuildersType config,
-                                 final boolean toBuilder, final boolean builder,
-                                 final CodeBlock goalCall) throws ValidationException {
+                                 final boolean toBuilder, final boolean builder) throws ValidationException {
     return validGoal.accept(new ValidationResultCases<AbstractContext>() {
       @Override
       AbstractContext executableGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> validParameters) {
         ClassName contractName = contractName(goal.goal, config);
         ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
-        ImmutableList<RegularStep> parameters = steps(contractName,
+        ImmutableList<RegularStep> steps = steps(contractName,
             goal.goal.goalType,
             validParameters,
             thrownTypes,
             regularParameterFactory);
         return new GoalContext.RegularGoalContext(
-            goal.goal,
-            config,
-            toBuilder,
-            builder,
-            contractName,
-            thrownTypes,
-            parameters,
-            goalCall);
+            goal.goal, config, toBuilder, builder, contractName, steps, thrownTypes);
       }
       @Override
-      AbstractContext beanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validBeanParameters) {
+      AbstractContext beanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validParameters) {
         ClassName contractName = contractName(goal.goal, config);
-        ImmutableList<BeansStep> parameters = steps(contractName,
+        ImmutableList<BeansStep> steps = steps(contractName,
             goal.goal.goalType,
-            validBeanParameters,
+            validParameters,
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
         return new GoalContext.BeanGoalContext(
-            goal.goal,
-            config,
-            toBuilder,
-            builder,
-            contractName,
-            parameters,
-            goalCall);
+            goal.goal, config, toBuilder, builder, contractName, steps);
       }
     });
   }
