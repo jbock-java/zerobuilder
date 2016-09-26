@@ -6,8 +6,9 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoal;
-import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -19,8 +20,6 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.STATIC_METHOD;
 
 final class DtoGoalElement {
 
@@ -68,25 +67,25 @@ final class DtoGoalElement {
   static final class RegularGoalElement extends AbstractGoalElement {
     final RegularGoal goal;
     final ExecutableElement executableElement;
-    RegularGoalElement(ExecutableElement element, GoalKind kind, TypeName goalType, String name,
-                       Elements elements) {
+
+    private RegularGoalElement(ExecutableElement element, RegularGoal goal, Elements elements) {
       super(element.getAnnotation(Goal.class), elements);
-      this.goal = kind == GoalKind.CONSTRUCTOR
-          ? new DtoGoal.ConstructorGoal(goalType, name, parameterNames(element))
-          : new DtoGoal.MethodGoal(goalType, name, parameterNames(element),
-          element.getSimpleName().toString(), kind == INSTANCE_METHOD);
+      this.goal = goal;
       this.executableElement = element;
     }
+
     static RegularGoalElement create(ExecutableElement element, Elements elements) {
       TypeName goalType = goalType(element);
       String name = goalName(element.getAnnotation(Goal.class), goalType);
       return new RegularGoalElement(element,
           element.getKind() == CONSTRUCTOR
-              ? GoalKind.CONSTRUCTOR
-              : element.getModifiers().contains(STATIC) ? STATIC_METHOD : INSTANCE_METHOD,
-          goalType(element), name, elements);
+              ? new ConstructorGoal(goalType, name, parameterNames(element))
+              : new MethodGoal(goalType, name, parameterNames(element),
+              element.getSimpleName().toString(),
+              !element.getModifiers().contains(STATIC)), elements);
 
     }
+
     <R> R accept(GoalElementCases<R> goalElementCases) {
       return goalElementCases.regularGoal(this);
     }

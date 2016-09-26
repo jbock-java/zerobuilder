@@ -124,10 +124,6 @@ public final class GoalContextFactory {
     return config.generatedType.nestedClass(upcase(goal.name + "Builder"));
   }
 
-  public enum GoalKind {
-    CONSTRUCTOR, STATIC_METHOD, INSTANCE_METHOD
-  }
-
   private static ImmutableList<TypeName> thrownTypes(ExecutableElement executableElement) {
     return FluentIterable
         .from(executableElement.getThrownTypes())
