@@ -5,10 +5,8 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
-import net.zerobuilder.compiler.analyse.DtoShared.AnalysisResult;
-import net.zerobuilder.compiler.generate.DtoBuilders;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -84,5 +82,15 @@ public final class Analyser {
       throw new ValidationException(WARNING, NO_GOALS, buildElement);
     }
     return goals;
+  }
+
+  public static final class AnalysisResult {
+    public final BuildersContext builders;
+    public final ImmutableList<AbstractGoalContext> goals;
+
+    AnalysisResult(BuildersContext builders, ImmutableList<AbstractGoalContext> goals) {
+      this.builders = builders;
+      this.goals = goals;
+    }
   }
 }

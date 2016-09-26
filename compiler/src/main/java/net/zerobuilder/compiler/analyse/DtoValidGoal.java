@@ -7,37 +7,37 @@ import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 final class DtoValidGoal {
 
   static abstract class ValidGoal {
-    abstract <R> R accept(ValidationResultCases<R> cases);
+    abstract <R> R accept(ValidGoalCases<R> cases);
   }
 
-  interface ValidationResultCases<R> {
-    R regularGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> parameters);
-    R beanGoal(DtoPackage.GoalTypes.BeanGoalElement beanGoal, ImmutableList<DtoShared.ValidBeanParameter> validBeanParameters);
+  interface ValidGoalCases<R> {
+    R regularGoal(ValidRegularGoal goal);
+    R beanGoal(ValidBeanGoal goal);
   }
 
   static final class ValidRegularGoal extends ValidGoal {
-    private final RegularGoalElement goal;
-    private final ImmutableList<ValidRegularParameter> parameters;
+    final RegularGoalElement goal;
+    final ImmutableList<ValidRegularParameter> parameters;
     ValidRegularGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> parameters) {
       this.goal = goal;
       this.parameters = parameters;
     }
     @Override
-    <R> R accept(ValidationResultCases<R> cases) {
-      return cases.regularGoal(goal, parameters);
+    <R> R accept(ValidGoalCases<R> cases) {
+      return cases.regularGoal(this);
     }
   }
 
   static final class ValidBeanGoal extends ValidGoal {
-    private final DtoPackage.GoalTypes.BeanGoalElement goal;
-    private final ImmutableList<DtoShared.ValidBeanParameter> validBeanParameters;
-    ValidBeanGoal(DtoPackage.GoalTypes.BeanGoalElement goal, ImmutableList<DtoShared.ValidBeanParameter> validBeanParameters) {
+    final DtoPackage.GoalTypes.BeanGoalElement goal;
+    final ImmutableList<DtoShared.ValidBeanParameter> parameters;
+    ValidBeanGoal(DtoPackage.GoalTypes.BeanGoalElement goal, ImmutableList<DtoShared.ValidBeanParameter> parameters) {
       this.goal = goal;
-      this.validBeanParameters = validBeanParameters;
+      this.parameters = parameters;
     }
     @Override
-    <R> R accept(ValidationResultCases<R> cases) {
-      return cases.beanGoal(goal, validBeanParameters);
+    <R> R accept(ValidGoalCases<R> cases) {
+      return cases.beanGoal(this);
     }
   }
 

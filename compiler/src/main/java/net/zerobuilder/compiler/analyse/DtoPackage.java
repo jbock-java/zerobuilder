@@ -5,8 +5,8 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.analyse.DtoShared.BeanGoal;
-import net.zerobuilder.compiler.analyse.DtoShared.RegularGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoal;
 import net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind;
 
 import javax.lang.model.element.Element;

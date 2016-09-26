@@ -7,16 +7,16 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
-import net.zerobuilder.compiler.analyse.DtoShared.AbstractGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
+import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
+import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
@@ -33,31 +33,31 @@ public final class GoalContextFactory {
 
   static AbstractGoalContext context(final DtoValidGoal.ValidGoal validGoal, final BuildersContext builders,
                                      final boolean toBuilder, final boolean builder) throws ValidationException {
-    return validGoal.accept(new DtoValidGoal.ValidationResultCases<AbstractGoalContext>() {
+    return validGoal.accept(new DtoValidGoal.ValidGoalCases<AbstractGoalContext>() {
       @Override
-      public AbstractGoalContext regularGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> validParameters) {
-        ClassName contractName = contractName(goal.goal, builders);
-        ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
+      public AbstractGoalContext regularGoal(ValidRegularGoal goal) {
+        ClassName contractName = contractName(goal.goal.goal, builders);
+        ImmutableList<TypeName> thrownTypes = thrownTypes(goal.goal.executableElement);
         ImmutableList<RegularStep> steps = steps(contractName,
-            goal.goal.goalType,
-            validParameters,
+            goal.goal.goal.goalType,
+            goal.parameters,
             thrownTypes,
             regularParameterFactory);
         return new RegularGoalContext(
-            goal.goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
+            goal.goal.goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
       }
       @Override
-      public AbstractGoalContext beanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validParameters) {
-        ClassName contractName = contractName(goal.goal, builders);
+      public AbstractGoalContext beanGoal(ValidBeanGoal goal) {
+        ClassName contractName = contractName(goal.goal.goal, builders);
         ImmutableList<BeanStep> steps = steps(contractName,
-            goal.goal.goalType,
-            validParameters,
+            goal.goal.goal.goalType,
+            goal.parameters,
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
-        FieldSpec field = FieldSpec.builder(goal.goal.goalType,
-            downcase(goal.goal.goalType.simpleName()), PRIVATE).build();
+        FieldSpec field = FieldSpec.builder(goal.goal.goal.goalType,
+            downcase(goal.goal.goal.goalType.simpleName()), PRIVATE).build();
         return new BeanGoalContext(
-            goal.goal, builders, toBuilder, builder, contractName, steps, field);
+            goal.goal.goal, builders, toBuilder, builder, contractName, steps, field);
       }
     });
   }

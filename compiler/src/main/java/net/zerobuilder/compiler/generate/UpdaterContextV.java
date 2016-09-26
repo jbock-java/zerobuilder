@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;

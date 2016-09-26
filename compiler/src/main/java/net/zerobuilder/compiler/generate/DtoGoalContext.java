@@ -6,8 +6,8 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoShared.BeanGoal;
-import net.zerobuilder.compiler.analyse.DtoShared.RegularGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoal;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
@@ -15,7 +15,7 @@ import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
 
-public final class DtoGoal {
+public final class DtoGoalContext {
 
   public static abstract class AbstractGoalContext {
     final BuildersContext builders;
@@ -177,7 +177,7 @@ public final class DtoGoal {
     }
   }
 
-  private DtoGoal() {
+  private DtoGoalContext() {
     throw new UnsupportedOperationException("no instances");
   }
 }

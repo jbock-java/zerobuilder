@@ -11,10 +11,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.DtoShared.AnalysisResult;
+import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalCases;
+import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 
 import javax.lang.model.util.Elements;
 
@@ -34,10 +34,10 @@ import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotat
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineContract;
-import static net.zerobuilder.compiler.generate.DtoGoal.builderImplName;
-import static net.zerobuilder.compiler.generate.DtoGoal.getGoalName;
-import static net.zerobuilder.compiler.generate.DtoGoal.goalCases;
-import static net.zerobuilder.compiler.generate.DtoGoal.goalCasesFunction;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCasesFunction;
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 
 /**

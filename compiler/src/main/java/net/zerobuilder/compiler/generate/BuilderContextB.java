@@ -9,7 +9,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
 import static com.google.common.collect.Iterables.getLast;

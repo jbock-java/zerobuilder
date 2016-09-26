@@ -7,9 +7,9 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalCases;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalContextCommon;
+import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
+import net.zerobuilder.compiler.generate.DtoGoalContext.GoalContextCommon;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -19,9 +19,9 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.upcase;
-import static net.zerobuilder.compiler.generate.DtoGoal.always;
-import static net.zerobuilder.compiler.generate.DtoGoal.getGoalName;
-import static net.zerobuilder.compiler.generate.DtoGoal.goalCases;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.always;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 
 final class UpdaterContext {
 
