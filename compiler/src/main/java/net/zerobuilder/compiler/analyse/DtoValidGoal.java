@@ -31,8 +31,8 @@ final class DtoValidGoal {
 
   static final class ValidBeanGoal extends ValidGoal {
     final BeanGoalElement goal;
-    final ImmutableList<DtoValidParameter.ValidBeanParameter> parameters;
-    ValidBeanGoal(BeanGoalElement goal, ImmutableList<DtoValidParameter.ValidBeanParameter> parameters) {
+    final ImmutableList<DtoBeanParameter.ValidBeanParameter> parameters;
+    ValidBeanGoal(BeanGoalElement goal, ImmutableList<DtoBeanParameter.ValidBeanParameter> parameters) {
       this.goal = goal;
       this.parameters = parameters;
     }

@@ -6,9 +6,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter.CollectionType;
-import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
+import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
+import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
+import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
@@ -21,35 +22,42 @@ import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterfac
 
 final class StepContextB {
 
-  static final Function<BeanStep, TypeSpec> beanStepInterface
-      = new Function<BeanStep, TypeSpec>() {
+  static final Function<AbstractBeanStep, TypeSpec> beanStepInterface
+      = new Function<AbstractBeanStep, TypeSpec>() {
     @Override
-    public TypeSpec apply(BeanStep step) {
-      CollectionType collectionType = step.validParameter.collectionType;
-      if (collectionType.isPresent()) {
-        return interfaceBuilder(step.thisType)
-            .addModifiers(PUBLIC)
-            .addMethods(collectionMethods(step))
-            .build();
-      } else {
-        return regularStepInterface.apply(step);
-      }
+    public TypeSpec apply(AbstractBeanStep step) {
+      return step.acceptBean(beanStepInterfaceCases);
     }
   };
 
-  private static ImmutableList<MethodSpec> collectionMethods(BeanStep step) {
+  private static final DtoStep.BeanStepCases<TypeSpec> beanStepInterfaceCases
+      = new DtoStep.BeanStepCases<TypeSpec>() {
+    @Override
+    public TypeSpec accessorPair(AccessorPairStep step) {
+      return regularStepInterface.apply(step);
+    }
+    @Override
+    public TypeSpec loneGetter(LoneGetterStep step) {
+      return interfaceBuilder(step.thisType)
+          .addModifiers(PUBLIC)
+          .addMethods(collectionMethods(step))
+          .build();
+    }
+  };
+
+  private static ImmutableList<MethodSpec> collectionMethods(LoneGetterStep step) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(iterateCollection(step), emptyCollection(step));
-    if (step.validParameter.collectionType.allowShortcut) {
+    if (step.loneGetter.allowShortcut) {
       builder.add(singletonCollection(step));
     }
     return builder.build();
   }
 
 
-  private static MethodSpec singletonCollection(BeanStep step) {
-    String name = step.validParameter.name;
-    TypeName type = step.validParameter.collectionType.getType();
+  private static MethodSpec singletonCollection(LoneGetterStep step) {
+    String name = step.loneGetter.name;
+    TypeName type = step.loneGetter.iterationType();
     return methodBuilder(name)
         .addParameter(parameterSpec(type, name))
         .returns(step.nextType)
@@ -57,8 +65,8 @@ final class StepContextB {
         .build();
   }
 
-  private static MethodSpec emptyCollection(BeanStep step) {
-    ValidBeanParameter parameter = step.validParameter;
+  private static MethodSpec emptyCollection(LoneGetterStep step) {
+    LoneGetter parameter = step.loneGetter;
     String name = parameter.name;
     return methodBuilder(name)
         .returns(step.nextType)
@@ -66,11 +74,11 @@ final class StepContextB {
         .build();
   }
 
-  private static MethodSpec iterateCollection(BeanStep step) {
-    ValidBeanParameter parameter = step.validParameter;
+  private static MethodSpec iterateCollection(LoneGetterStep step) {
+    LoneGetter parameter = step.loneGetter;
     String name = parameter.name;
     TypeName type = ParameterizedTypeName.get(ITERABLE,
-        subtypeOf(parameter.collectionType.getType()));
+        subtypeOf(parameter.iterationType()));
     return methodBuilder(name)
         .addParameter(parameterSpec(type, name))
         .returns(step.nextType)

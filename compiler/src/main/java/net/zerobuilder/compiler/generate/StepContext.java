@@ -6,7 +6,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
-import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
+import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoStep.StepCases;
 
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
@@ -32,12 +32,12 @@ public final class StepContext {
     }
   });
 
-  static CodeBlock iterationVarNullCheck(BeanStep step, ParameterSpec parameter) {
-    if (!step.validParameter.nonNull) {
+  static CodeBlock iterationVarNullCheck(LoneGetterStep step, ParameterSpec parameter) {
+    if (!step.loneGetter.nonNull) {
       return emptyCodeBlock;
     }
-    String message = step.validParameter.name + " (element)";
-    ParameterSpec iterationVar = step.validParameter.collectionType.get(parameter);
+    String message = step.loneGetter.name + " (element)";
+    ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return nullCheck(iterationVar, message);
   }
 

@@ -6,11 +6,12 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Step;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter.CollectionType;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -92,7 +93,7 @@ public final class ProjectionValidator {
       }
     }
 
-    private static boolean nonNull(TypeMirror type, Step step, Goal goal) {
+    static boolean nonNull(TypeMirror type, Step step, Goal goal) {
       if (TypeName.get(type).isPrimitive()) {
         return false;
       }
@@ -114,17 +115,18 @@ public final class ProjectionValidator {
           return parameter.validBeanParameter;
         }
       };
-      static TmpAccessorPair create(ExecutableElement getter, CollectionType collectionType, Goal goalAnnotation) {
+      static TmpAccessorPair createAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
         Step stepAnnotation = getter.getAnnotation(Step.class);
+        TypeName type = TypeName.get(getter.getReturnType());
+        String name = getter.getSimpleName().toString();
         boolean nonNull = TmpValidParameter.nonNull(getter.getReturnType(), stepAnnotation, goalAnnotation);
-        ValidBeanParameter validBeanParameter = new ValidBeanParameter(TypeName.get(getter.getReturnType()),
-            getter.getSimpleName().toString(), collectionType, nonNull);
-        return new TmpAccessorPair(getter, fromNullable(stepAnnotation), validBeanParameter);
+        AccessorPair accessorPair = new AccessorPair(type, name, nonNull);
+        return new TmpAccessorPair(getter, fromNullable(stepAnnotation), accessorPair);
       }
-      static TmpAccessorPair createRegular(ExecutableElement getter, Goal goalAnnotation) {
-        return create(getter, CollectionType.ABSENT, goalAnnotation);
+      static TmpAccessorPair createLoneGetter(ExecutableElement getter, LoneGetter loneGetter) {
+        Step stepAnnotation = getter.getAnnotation(Step.class);
+        return new TmpAccessorPair(getter, fromNullable(stepAnnotation), loneGetter);
       }
-
     }
 
     private TmpValidParameter(Element element, Optional<Step> annotation) {

@@ -6,8 +6,10 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 
 public final class DtoStep {
@@ -24,18 +26,23 @@ public final class DtoStep {
 
   interface StepCases<R> {
     R regularStep(RegularStep step);
-    R beanStep(BeanStep step);
+    R beanStep(AbstractBeanStep step);
+  }
+
+  interface BeanStepCases<R> {
+    R accessorPair(AccessorPairStep step);
+    R loneGetter(LoneGetterStep step);
   }
 
   static <R> StepCases<R> stepCases(final Function<? super RegularStep, R> regularFunction,
-                                    final Function<? super BeanStep, R> beanFunction) {
+                                    final Function<? super AbstractBeanStep, R> beanFunction) {
     return new StepCases<R>() {
       @Override
       public R regularStep(RegularStep step) {
         return regularFunction.apply(step);
       }
       @Override
-      public R beanStep(BeanStep step) {
+      public R beanStep(AbstractBeanStep step) {
         return beanFunction.apply(step);
       }
     };
@@ -60,24 +67,48 @@ public final class DtoStep {
     }
   }
 
-  public static final class BeanStep extends AbstractStep {
-    final ValidBeanParameter validParameter;
-    final ParameterSpec parameter;
+  public static abstract class AbstractBeanStep extends AbstractStep {
+    AbstractBeanStep(ClassName thisType, TypeName nextType) {
+      super(thisType, nextType);
+    }
+    @Override
+    final <R> R accept(StepCases<R> cases) {
+      return cases.beanStep(this);
+    }
+    abstract <R> R acceptBean(BeanStepCases<R> cases);
+  }
+
+  public static final class AccessorPairStep extends AbstractBeanStep {
+    final AccessorPair accessorPair;
 
     /**
-     * empty iff {@link #validParameter} {@code .collectionType.isPresent()}
+     * Setter parameter
      */
+    final ParameterSpec parameter;
     final String setter;
-    public BeanStep(ClassName thisType, TypeName nextType, ValidBeanParameter validParameter,
-                    ParameterSpec parameter, String setter) {
+    public AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
+                            ParameterSpec parameter, String setter) {
       super(thisType, nextType);
-      this.validParameter = validParameter;
+      this.accessorPair = accessorPair;
       this.parameter = parameter;
       this.setter = setter;
     }
     @Override
-    <R> R accept(StepCases<R> cases) {
-      return cases.beanStep(this);
+    <R> R acceptBean(BeanStepCases<R> cases) {
+      return cases.accessorPair(this);
+    }
+  }
+
+  public static final class LoneGetterStep extends AbstractBeanStep {
+    final LoneGetter loneGetter;
+
+    public LoneGetterStep(ClassName thisType, TypeName nextType, LoneGetter loneGetter) {
+      super(thisType, nextType);
+      this.loneGetter = loneGetter;
+    }
+    @Override
+    <R> R acceptBean(BeanStepCases<R> cases) {
+      return cases.loneGetter(this);
     }
   }
 
@@ -88,8 +119,8 @@ public final class DtoStep {
       return step.validParameter;
     }
     @Override
-    public DtoValidParameter.ValidParameter beanStep(BeanStep step) {
-      return step.validParameter;
+    public DtoValidParameter.ValidParameter beanStep(AbstractBeanStep step) {
+      return step.acceptBean(validBeanParameter);
     }
   };
 
@@ -100,8 +131,20 @@ public final class DtoStep {
       return step.declaredExceptions;
     }
     @Override
-    public ImmutableList<TypeName> beanStep(BeanStep step) {
+    public ImmutableList<TypeName> beanStep(AbstractBeanStep step) {
       return ImmutableList.of();
+    }
+  };
+
+  static final BeanStepCases<DtoBeanParameter.ValidBeanParameter> validBeanParameter
+      = new BeanStepCases<DtoBeanParameter.ValidBeanParameter>() {
+    @Override
+    public DtoBeanParameter.ValidBeanParameter accessorPair(AccessorPairStep step) {
+      return step.accessorPair;
+    }
+    @Override
+    public DtoBeanParameter.ValidBeanParameter loneGetter(LoneGetterStep step) {
+      return step.loneGetter;
     }
   };
 
@@ -112,7 +155,7 @@ public final class DtoStep {
         return parameterFunction.apply(step);
       }
       @Override
-      public R beanStep(BeanStep step) {
+      public R beanStep(AbstractBeanStep step) {
         return parameterFunction.apply(step);
       }
     };

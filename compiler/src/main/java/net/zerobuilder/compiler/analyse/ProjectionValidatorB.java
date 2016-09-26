@@ -11,9 +11,9 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter.CollectionType;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
@@ -47,6 +47,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nonNull;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 
 public final class ProjectionValidatorB {
@@ -59,7 +60,7 @@ public final class ProjectionValidatorB {
     }
   });
 
-  private static final ClassName OBJECT = ClassName.get(Object.class);
+  public static final ClassName OBJECT = ClassName.get(Object.class);
   private static final ClassName COLLECTION = ClassName.get(Collection.class);
   public static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
@@ -84,20 +85,28 @@ public final class ProjectionValidatorB {
   };
 
   private static TmpAccessorPair setterlessAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
-    if (!isImplementationOf(getter.getReturnType(), COLLECTION)) {
+    TypeMirror type = getter.getReturnType();
+    String name = getter.getSimpleName().toString();
+    if (!isImplementationOf(type, COLLECTION)) {
       throw new ValidationException(COULD_NOT_FIND_SETTER, getter);
     }
     // no setter but we have a getter that returns something like List<E>
     // in this case we need to find what E is ("collectionType")
-    List<? extends TypeMirror> typeArguments = asDeclared(getter.getReturnType()).getTypeArguments();
+    List<? extends TypeMirror> typeArguments = asDeclared(type).getTypeArguments();
+    boolean nonNull = nonNull(type, getter.getAnnotation(Step.class), goalAnnotation);
     if (typeArguments.isEmpty()) {
       // raw collection
-      return TmpAccessorPair.create(getter, CollectionType.of(Object.class, false), goalAnnotation);
+      LoneGetter loneGetter = DtoBeanParameter.builder()
+          .build(TypeName.get(type), name, nonNull);
+      return TmpAccessorPair.createLoneGetter(getter, loneGetter);
     } else if (typeArguments.size() == 1) {
       // one type parameter
       TypeMirror collectionType = getOnlyElement(typeArguments);
       boolean allowShortcut = !ClassName.get(asTypeElement(collectionType)).equals(ITERABLE);
-      return TmpAccessorPair.create(getter, CollectionType.of(collectionType, allowShortcut), goalAnnotation);
+      DtoBeanParameter.LoneGetter loneGetter = DtoBeanParameter
+          .builder(collectionType, allowShortcut)
+          .build(TypeName.get(type), name, nonNull);
+      return TmpAccessorPair.createLoneGetter(getter, loneGetter);
     } else {
       // unlikely: subclass of Collection should not have more than one type parameter
       throw new ValidationException(BAD_GENERICS, getter);
@@ -113,7 +122,7 @@ public final class ProjectionValidatorB {
     if (!getter.getThrownTypes().isEmpty()) {
       throw new ValidationException(GETTER_EXCEPTION, getter);
     }
-    return TmpAccessorPair.createRegular(getter, goalAnnotation);
+    return TmpAccessorPair.createAccessorPair(getter, goalAnnotation);
   }
 
   private static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {

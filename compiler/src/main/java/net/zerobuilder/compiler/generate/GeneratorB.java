@@ -5,9 +5,12 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
 import net.zerobuilder.compiler.generate.DtoGoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
+import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
+import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
+import net.zerobuilder.compiler.generate.DtoStep.BeanStepCases;
+import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -33,12 +36,9 @@ final class GeneratorB {
           .addParameter(parameter);
       ParameterSpec updater = updaterInstance(goal);
       method.addCode(initializeUpdater(goal, updater));
-      for (BeanStep step : goal.steps) {
-        if (step.validParameter.collectionType.isPresent()) {
-          method.addCode(copyCollection(goal, step));
-        } else {
-          method.addCode(copyRegular(goal, step));
-        }
+      BeanStepCases<CodeBlock> copy = copy(goal);
+      for (AbstractBeanStep step : goal.steps) {
+        method.addCode(step.acceptBean(copy));
       }
       method.addStatement("return $N", updater);
       return method
@@ -47,35 +47,47 @@ final class GeneratorB {
     }
   };
 
-  private static CodeBlock copyCollection(BeanGoalContext goal, BeanStep step) {
+  private static BeanStepCases<CodeBlock> copy(final BeanGoalContext goal) {
+    return new BeanStepCases<CodeBlock>() {
+      @Override
+      public CodeBlock accessorPair(AccessorPairStep step) {
+        return copyRegular(goal, step);
+      }
+      @Override
+      public CodeBlock loneGetter(LoneGetterStep step) {
+        return copyCollection(goal, step);
+      }
+    };
+  }
+
+  private static CodeBlock copyCollection(BeanGoalContext goal, LoneGetterStep step) {
     ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
-    ParameterSpec iterationVar = step.validParameter.collectionType.get(parameter);
-    return CodeBlock.builder().add(nullCheck(parameter, step.validParameter, true))
+    ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
+    return CodeBlock.builder().add(nullCheck(parameter, step.loneGetter, true))
         .beginControlFlow("for ($T $N : $N.$N())",
             iterationVar.type, iterationVar, parameter,
-            step.validParameter.getter)
+            step.loneGetter.getter)
         .add(iterationVarNullCheck(step, parameter))
         .addStatement("$N.$N.$N().add($N)", updaterInstance(goal),
             downcase(goal.goal.goalType.simpleName()),
-            step.validParameter.getter,
+            step.loneGetter.getter,
             iterationVar)
         .endControlFlow()
         .build();
   }
 
-  private static CodeBlock copyRegular(BeanGoalContext goal, BeanStep step) {
+  private static CodeBlock copyRegular(BeanGoalContext goal, AccessorPairStep step) {
     ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
     ParameterSpec updater = updaterInstance(goal);
     return CodeBlock.builder()
-        .add(nullCheck(parameter, step.validParameter))
+        .add(nullCheck(parameter, step.accessorPair))
         .addStatement("$N.$N.$L($N.$N())", updater,
             goal.field,
             step.setter,
             parameter,
-            step.validParameter.getter)
+            step.accessorPair.getter)
         .build();
   }
-
 
   private static CodeBlock nullCheck(ParameterSpec parameter, ValidBeanParameter validParameter) {
     return nullCheck(parameter, validParameter, validParameter.nonNull);

@@ -7,18 +7,20 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
-import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
+import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
+import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import javax.lang.model.element.ExecutableElement;
@@ -49,7 +51,7 @@ public final class GoalContextFactory {
       @Override
       public AbstractGoalContext beanGoal(ValidBeanGoal goal) {
         ClassName contractName = contractName(goal.goal.goal, builders);
-        ImmutableList<BeanStep> steps = steps(contractName,
+        ImmutableList<? extends AbstractBeanStep> steps = steps(contractName,
             goal.goal.goal.goalType,
             goal.parameters,
             ImmutableList.<TypeName>of(),
@@ -81,13 +83,22 @@ public final class GoalContextFactory {
     abstract R create(ClassName typeThisStep, TypeName typeNextStep, P parameter, ImmutableList<TypeName> declaredExceptions);
   }
 
-  private static final ParameterFactory<ValidBeanParameter, BeanStep> beansParameterFactory
-      = new ParameterFactory<ValidBeanParameter, BeanStep>() {
+  private static final ParameterFactory<ValidBeanParameter, ? extends AbstractBeanStep> beansParameterFactory
+      = new ParameterFactory<ValidBeanParameter, AbstractBeanStep>() {
     @Override
-    BeanStep create(ClassName thisType, TypeName nextType, ValidBeanParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
-      ParameterSpec parameter = parameterSpec(validParameter.type, validParameter.name);
-      String setter = validParameter.collectionType.isPresent() ? "" : "set" + upcase(validParameter.name);
-      return new BeanStep(thisType, nextType, validParameter, parameter, setter);
+    AbstractBeanStep create(final ClassName thisType, final TypeName nextType, final ValidBeanParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
+      final ParameterSpec parameter = parameterSpec(validParameter.type, validParameter.name);
+      return validParameter.accept(new DtoBeanParameter.BeanParameterCases<AbstractBeanStep>() {
+        @Override
+        public AbstractBeanStep accessorPair(DtoBeanParameter.AccessorPair pair) {
+          String setter = "set" + upcase(pair.name);
+          return new AccessorPairStep(thisType, nextType, pair, parameter, setter);
+        }
+        @Override
+        public AbstractBeanStep loneGetter(DtoBeanParameter.LoneGetter loneGetter) {
+          return new LoneGetterStep(thisType, nextType, loneGetter);
+        }
+      });
     }
   };
 

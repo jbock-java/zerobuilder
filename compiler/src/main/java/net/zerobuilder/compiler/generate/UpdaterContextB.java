@@ -9,7 +9,10 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
+import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
+import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
+import net.zerobuilder.compiler.generate.DtoStep.BeanStepCases;
+import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
@@ -36,19 +39,29 @@ final class UpdaterContextB {
     @Override
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (BeanStep step : goal.steps) {
-        if (step.validParameter.collectionType.isPresent()) {
-          builder.addAll(collectionUpdaters(goal, step));
-        } else {
-          builder.add(regularUpdater(goal, step));
-        }
+      BeanStepCases<ImmutableList<MethodSpec>> handler = updateMethodsCases(goal);
+      for (AbstractBeanStep step : goal.steps) {
+        builder.addAll(step.acceptBean(handler));
       }
       return builder.build();
     }
   };
 
-  private static MethodSpec regularUpdater(BeanGoalContext goal, BeanStep step) {
-    String name = step.validParameter.name;
+  private static BeanStepCases<ImmutableList<MethodSpec>> updateMethodsCases(final BeanGoalContext goal) {
+    return new BeanStepCases<ImmutableList<MethodSpec>>() {
+      @Override
+      public ImmutableList<MethodSpec> accessorPair(AccessorPairStep step) {
+        return ImmutableList.of(regularUpdater(goal, step));
+      }
+      @Override
+      public ImmutableList<MethodSpec> loneGetter(LoneGetterStep step) {
+        return collectionUpdaters(goal, step);
+      }
+    };
+  }
+
+  private static MethodSpec regularUpdater(BeanGoalContext goal, AccessorPairStep step) {
+    String name = step.accessorPair.name;
     return methodBuilder(name)
         .returns(goal.accept(typeName))
         .addParameter(step.parameter)
@@ -59,22 +72,22 @@ final class UpdaterContextB {
         .build();
   }
 
-  private static ImmutableList<MethodSpec> collectionUpdaters(BeanGoalContext goal, BeanStep step) {
+  private static ImmutableList<MethodSpec> collectionUpdaters(BeanGoalContext goal, LoneGetterStep step) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(iterateCollection(goal, step));
     builder.add(emptyCollection(goal, step));
-    if (step.validParameter.collectionType.allowShortcut) {
+    if (step.loneGetter.allowShortcut) {
       builder.add(singletonCollection(goal, step));
     }
     return builder.build();
   }
 
-  private static MethodSpec iterateCollection(BeanGoalContext goal, BeanStep step) {
+  private static MethodSpec iterateCollection(BeanGoalContext goal, LoneGetterStep step) {
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
-        subtypeOf(step.validParameter.collectionType.getType()));
-    String name = step.validParameter.name;
+        subtypeOf(step.loneGetter.iterationType()));
+    String name = step.loneGetter.name;
     ParameterSpec parameter = parameterSpec(iterable, name);
-    ParameterSpec iterationVar = step.validParameter.collectionType.get(parameter);
+    ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
         .returns(goal.accept(typeName))
         .addParameter(parameter)
@@ -83,15 +96,15 @@ final class UpdaterContextB {
         .beginControlFlow("for ($T $N : $N)", iterationVar.type, iterationVar, name)
         .addCode(iterationVarNullCheck(step, parameter))
         .addStatement("this.$N.$N().add($N)",
-            goal.field, step.validParameter.getter, iterationVar)
+            goal.field, step.loneGetter.getter, iterationVar)
         .endControlFlow()
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static MethodSpec emptyCollection(BeanGoalContext goal, BeanStep step) {
-    String name = step.validParameter.name;
+  private static MethodSpec emptyCollection(BeanGoalContext goal, LoneGetterStep step) {
+    String name = step.loneGetter.name;
     return methodBuilder(name)
         .returns(goal.accept(typeName))
         .addCode(clearCollection(goal, step))
@@ -100,25 +113,25 @@ final class UpdaterContextB {
         .build();
   }
 
-  private static MethodSpec singletonCollection(BeanGoalContext goal, BeanStep step) {
-    String name = step.validParameter.name;
-    TypeName type = step.validParameter.collectionType.getType();
-    ParameterSpec parameter = parameterSpec(type, step.validParameter.name);
+  private static MethodSpec singletonCollection(BeanGoalContext goal, LoneGetterStep step) {
+    String name = step.loneGetter.name;
+    TypeName type = step.loneGetter.iterationType();
+    ParameterSpec parameter = parameterSpec(type, step.loneGetter.name);
     return methodBuilder(name)
         .returns(goal.accept(typeName))
         .addParameter(parameter)
         .addCode(step.accept(nullCheck))
         .addCode(clearCollection(goal, step))
         .addStatement("this.$N.$N().add($N)",
-            goal.field, step.validParameter.getter, name)
+            goal.field, step.loneGetter.getter, name)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static CodeBlock clearCollection(BeanGoalContext goal, BeanStep step) {
+  private static CodeBlock clearCollection(BeanGoalContext goal, LoneGetterStep step) {
     return CodeBlock.builder().addStatement("this.$N.$N().clear()",
-        goal.field, step.validParameter.getter).build();
+        goal.field, step.loneGetter.getter).build();
   }
 
   private UpdaterContextB() {
