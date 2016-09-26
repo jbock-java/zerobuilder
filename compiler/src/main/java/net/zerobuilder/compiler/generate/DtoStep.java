@@ -64,10 +64,6 @@ public final class DtoStep {
       this.field = field;
     }
 
-    ParameterSpec parameter() {
-      return parameterSpec(validParameter.type, validParameter.name);
-    }
-
     @Override
     <R> R accept(StepCases<R> cases) {
       return cases.regularStep(this);

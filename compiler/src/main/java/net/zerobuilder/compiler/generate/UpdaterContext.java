@@ -25,7 +25,7 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 
 final class UpdaterContext {
 
-  static final GoalCases<ClassName> typeName = always(new Function<GoalContextCommon, ClassName>() {
+  static final GoalCases<ClassName> updaterType = always(new Function<GoalContextCommon, ClassName>() {
     @Override
     public ClassName apply(GoalContextCommon goal) {
       return goal.goal.builders.generatedType.nestedClass(
@@ -53,11 +53,11 @@ final class UpdaterContext {
       });
 
   static TypeSpec defineUpdater(AbstractGoalContext goal) {
-    return classBuilder(goal.accept(typeName))
+    return classBuilder(goal.accept(updaterType))
         .addFields(goal.accept(fields))
         .addMethods(goal.accept(updateMethods))
         .addMethod(goal.accept(buildMethod))
-        .addModifiers(PUBLIC, FINAL, STATIC)
+        .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
   }

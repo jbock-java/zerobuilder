@@ -22,16 +22,16 @@ public final class DtoGoalContext {
     final boolean toBuilder;
     final boolean builder;
 
-    final ClassName contractName;
+    final ClassName builderContractType;
 
     @VisibleForTesting
     AbstractGoalContext(BuildersContext builders,
                         boolean toBuilder,
-                        boolean builder, ClassName contractName) {
+                        boolean builder, ClassName builderContractType) {
       this.builders = builders;
       this.toBuilder = toBuilder;
       this.builder = builder;
-      this.contractName = contractName;
+      this.builderContractType = builderContractType;
     }
 
     abstract <R> R accept(GoalCases<R> cases);
@@ -94,7 +94,7 @@ public final class DtoGoalContext {
     };
   }
 
-  static final GoalCases<ImmutableList<ClassName>> stepInterfaceNames = always(new Function<GoalContextCommon, ImmutableList<ClassName>>() {
+  static final GoalCases<ImmutableList<ClassName>> stepInterfaceTypes = always(new Function<GoalContextCommon, ImmutableList<ClassName>>() {
     @Override
     public ImmutableList<ClassName> apply(GoalContextCommon goal) {
       ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
@@ -105,7 +105,7 @@ public final class DtoGoalContext {
     }
   });
 
-  static final GoalCases<ClassName> builderImplName = always(new Function<GoalContextCommon, ClassName>() {
+  static final GoalCases<ClassName> builderImplType = always(new Function<GoalContextCommon, ClassName>() {
     @Override
     public ClassName apply(GoalContextCommon goal) {
       return goal.goal.builders.generatedType.nestedClass(

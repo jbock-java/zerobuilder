@@ -16,7 +16,7 @@ import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
@@ -97,7 +97,7 @@ final class GeneratorV {
   }
 
   private static ParameterSpec updaterInstance(RegularGoalContext goal) {
-    ClassName updaterType = goal.accept(UpdaterContext.typeName);
+    ClassName updaterType = goal.accept(UpdaterContext.updaterType);
     return parameterSpec(updaterType, "updater");
   }
 
@@ -128,7 +128,7 @@ final class GeneratorV {
   }
 
   private static ParameterSpec builderInstance(RegularGoalContext goal) {
-    ClassName stepsType = goal.accept(builderImplName);
+    ClassName stepsType = goal.accept(builderImplType);
     return parameterSpec(stepsType, downcase(stepsType.simpleName()));
   }
 

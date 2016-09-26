@@ -22,7 +22,7 @@ import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
-import static net.zerobuilder.compiler.generate.UpdaterContext.typeName;
+import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
 final class UpdaterContextB {
 
@@ -64,7 +64,7 @@ final class UpdaterContextB {
     String name = step.accessorPair.accept(beanStepName);
     ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
-        .returns(goal.accept(typeName))
+        .returns(goal.accept(updaterType))
         .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
             goal.field, step.setter, parameter)
@@ -90,7 +90,7 @@ final class UpdaterContextB {
     ParameterSpec parameter = parameterSpec(iterable, name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
-        .returns(goal.accept(typeName))
+        .returns(goal.accept(updaterType))
         .addParameter(parameter)
         .addCode(nullCheck(name, name))
         .addCode(clearCollection(goal, step))
@@ -106,7 +106,7 @@ final class UpdaterContextB {
   private static MethodSpec emptyCollection(BeanGoalContext goal, LoneGetterStep step) {
     String name = step.loneGetter.accept(beanStepName);
     return methodBuilder(name)
-        .returns(goal.accept(typeName))
+        .returns(goal.accept(updaterType))
         .addCode(clearCollection(goal, step))
         .addStatement("return this")
         .addModifiers(PUBLIC)
@@ -118,7 +118,7 @@ final class UpdaterContextB {
     TypeName type = step.loneGetter.iterationType();
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
-        .returns(goal.accept(typeName))
+        .returns(goal.accept(updaterType))
         .addParameter(parameter)
         .addCode(step.accept(nullCheck))
         .addCode(clearCollection(goal, step))

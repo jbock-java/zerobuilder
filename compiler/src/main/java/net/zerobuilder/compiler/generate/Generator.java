@@ -23,7 +23,7 @@ import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotat
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineContract;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCasesFunction;
@@ -105,13 +105,13 @@ public final class Generator {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
     for (AbstractGoalContext goal : analysisResult.goals) {
       if (goal.toBuilder) {
-        ClassName updaterType = goal.accept(UpdaterContext.typeName);
+        ClassName updaterType = goal.accept(UpdaterContext.updaterType);
         builder.add(FieldSpec.builder(updaterType,
             updaterField(goal), PRIVATE, FINAL)
             .initializer("new $T()", updaterType).build());
       }
       if (goal.builder) {
-        ClassName stepsType = goal.accept(builderImplName);
+        ClassName stepsType = goal.accept(builderImplType);
         builder.add(FieldSpec.builder(stepsType,
             stepsField(goal), PRIVATE, FINAL)
             .initializer("new $T()", stepsType).build());

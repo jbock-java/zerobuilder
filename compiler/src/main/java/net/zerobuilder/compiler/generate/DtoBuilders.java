@@ -32,7 +32,8 @@ public final class DtoBuilders {
     public final ClassName generatedType;
 
     /**
-     * Only used when kind is {@link net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind#INSTANCE_METHOD}
+     * Only used
+     * when {@link net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal#instance} is true
      */
     public final FieldSpec field;
 

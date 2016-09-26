@@ -17,9 +17,9 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.always;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceNames;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.StepContext.asStepInterface;
 
 final class BuilderContext {
@@ -36,26 +36,26 @@ final class BuilderContext {
   });
 
   private static final GoalCases<ImmutableList<MethodSpec>> stepsButLast
-      = goalCases(BuilderContextV.stepsButLast, BuilderContextB.stepsButLast);
+      = goalCases(BuilderContextV.allButLast, BuilderContextB.stepsButLast);
 
   private static final GoalCases<ImmutableList<MethodSpec>> lastStep
-      = goalCases(BuilderContextV.lastStep, BuilderContextB.lastStep);
+      = goalCases(BuilderContextV.last, BuilderContextB.lastStep);
 
   static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
-    return classBuilder(goal.accept(builderImplName))
-        .addSuperinterfaces(goal.accept(stepInterfaceNames))
+    return classBuilder(goal.accept(builderImplType))
+        .addSuperinterfaces(goal.accept(stepInterfaceTypes))
         .addFields(goal.accept(fields))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .addMethods(goal.accept(stepsButLast))
         .addMethods(goal.accept(lastStep))
-        .addModifiers(FINAL, STATIC)
+        .addModifiers(STATIC, FINAL)
         .build();
   }
 
   static TypeSpec defineContract(AbstractGoalContext goal) {
-    return classBuilder(goal.contractName)
+    return classBuilder(goal.builderContractType)
         .addTypes(goal.accept(stepInterfaces))
-        .addModifiers(PUBLIC, FINAL, STATIC)
+        .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
   }
