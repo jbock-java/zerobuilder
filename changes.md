@@ -41,3 +41,9 @@
 
 * add goal-level nonNull option
 * beans: add @Ignore annotation
+
+### 2016-09-26 zerobuilder 1.411 released
+
+* bugfix: elements of setterless collection should only be null-checked if nullCheck = true
+* fields in bean builders are now PRIVATE
+* detect and correct possible name collisions of local variables in generated code

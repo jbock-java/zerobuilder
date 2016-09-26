@@ -142,3 +142,9 @@ public List<Employee> getEmployees() {
 In this case (lone getter that returns a subclass of `Collection`),
 it is often not necessary to ignore the getter.
 Zerobuilder will assume that the collection is mutable and adapt the builder code accordingly.
+
+In this case, the `nullCheck` attribute works differently: Since the collection itself cannot be `null`,
+the <em>elements</em> of the collection are checked instead.
+
+Note, null-checking the collection elements of <em>other</em> collections (not the "lone getter" case) is not possible.
+Consider passing a different collection type, such as guava's `ImmutableList`, to the setter instead.
