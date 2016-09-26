@@ -7,6 +7,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
@@ -69,17 +70,18 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec iterateCollection(BeanGoalContext goal, BeanStep step) {
-    ParameterSpec iterationVar = step.validParameter.collectionType.get();
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
-        subtypeOf(iterationVar.type));
+        subtypeOf(step.validParameter.collectionType.getType()));
     String name = step.validParameter.name;
+    ParameterSpec parameter = parameterSpec(iterable, name);
+    ParameterSpec iterationVar = step.validParameter.collectionType.get(parameter);
     return methodBuilder(name)
         .returns(goal.accept(typeName))
-        .addParameter(parameterSpec(iterable, name))
+        .addParameter(parameter)
         .addCode(nullCheck(name, name))
         .addCode(clearCollection(goal, step))
         .beginControlFlow("for ($T $N : $N)", iterationVar.type, iterationVar, name)
-        .addCode(iterationVarNullCheck(step))
+        .addCode(iterationVarNullCheck(step, parameter))
         .addStatement("this.$N.$N().add($N)",
             goal.field, step.validParameter.getter, iterationVar)
         .endControlFlow()
@@ -99,9 +101,9 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec singletonCollection(BeanGoalContext goal, BeanStep step) {
-    ParameterSpec iterationVar = step.validParameter.collectionType.get();
     String name = step.validParameter.name;
-    ParameterSpec parameter = ParameterSpec.builder(iterationVar.type, step.validParameter.name).build();
+    TypeName type = step.validParameter.collectionType.getType();
+    ParameterSpec parameter = parameterSpec(type, step.validParameter.name);
     return methodBuilder(name)
         .returns(goal.accept(typeName))
         .addParameter(parameter)

@@ -49,12 +49,12 @@ final class GeneratorB {
 
   private static CodeBlock copyCollection(BeanGoalContext goal, BeanStep step) {
     ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
-    ParameterSpec iterationVar = step.validParameter.collectionType.get();
+    ParameterSpec iterationVar = step.validParameter.collectionType.get(parameter);
     return CodeBlock.builder().add(nullCheck(parameter, step.validParameter, true))
         .beginControlFlow("for ($T $N : $N.$N())",
             iterationVar.type, iterationVar, parameter,
             step.validParameter.getter)
-        .add(iterationVarNullCheck(step))
+        .add(iterationVarNullCheck(step, parameter))
         .addStatement("$N.$N.$N().add($N)", updaterInstance(goal),
             downcase(goal.goal.goalType.simpleName()),
             step.validParameter.getter,

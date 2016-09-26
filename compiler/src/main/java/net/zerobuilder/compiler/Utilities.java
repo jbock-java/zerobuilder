@@ -5,6 +5,9 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static java.lang.Character.isUpperCase;
@@ -57,6 +60,13 @@ public final class Utilities {
 
   public static CodeBlock nullCheck(ParameterSpec parameterSpec, String message) {
     return nullCheck(parameterSpec.name, message);
+  }
+
+  public static String distinctFrom(String string, String other) {
+    if (!string.equals(other)) {
+      return string;
+    }
+    return 'a' + upcase(string);
   }
 
   private Utilities() {

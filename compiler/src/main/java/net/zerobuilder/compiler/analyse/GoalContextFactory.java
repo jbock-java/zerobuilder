@@ -57,7 +57,7 @@ public final class GoalContextFactory {
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
         FieldSpec field = FieldSpec.builder(goal.goal.goalType,
-            downcase(goal.goal.goalType.simpleName())).build();
+            downcase(goal.goal.goalType.simpleName()), PRIVATE).build();
         return new BeanGoalContext(
             goal.goal, builders, toBuilder, builder, contractName, steps, field);
       }

@@ -13,8 +13,11 @@ import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
 
 import javax.lang.model.type.TypeMirror;
 
+import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.base.Preconditions.checkState;
+import static net.zerobuilder.compiler.Utilities.distinctFrom;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 
 public final class DtoShared {
 
@@ -168,8 +171,16 @@ public final class DtoShared {
       public boolean isPresent() {
         return iterationVar.isPresent();
       }
-      public ParameterSpec get() {
-        return iterationVar.get();
+      public TypeName getType() {
+        return iterationVar.get().type;
+      }
+      public ParameterSpec get(ParameterSpec avoid) {
+        ParameterSpec iterationVar = this.iterationVar.get();
+        if (!iterationVar.name.equals(avoid.name)) {
+          return iterationVar;
+        }
+        return parameterSpec(iterationVar.type,
+            distinctFrom(iterationVar.name, avoid.name));
       }
 
       private CollectionType(Optional<ParameterSpec> iterationVar, boolean allowShortcut) {
@@ -179,11 +190,14 @@ public final class DtoShared {
       }
       static final CollectionType ABSENT = new CollectionType(Optional.<ParameterSpec>absent(), false);
       static CollectionType of(TypeMirror type, boolean allowShortcut) {
-        ParameterSpec iterationVar = ParameterSpec.builder(TypeName.get(type), "v").build();
+        TypeName typeName = TypeName.get(type);
+        String name = downcase(ClassName.get(asTypeElement(type)).simpleName().toString());
+        ParameterSpec iterationVar = ParameterSpec.builder(typeName, name).build();
         return new CollectionType(Optional.of(iterationVar), allowShortcut);
       }
       static CollectionType of(Class clazz, boolean allowShortcut) {
-        ParameterSpec iterationVar = ParameterSpec.builder(ClassName.get(clazz), "v").build();
+        ClassName className = ClassName.get(clazz);
+        ParameterSpec iterationVar = parameterSpec(className, downcase(className.simpleName().toString()));
         return new CollectionType(Optional.of(iterationVar), allowShortcut);
       }
     }

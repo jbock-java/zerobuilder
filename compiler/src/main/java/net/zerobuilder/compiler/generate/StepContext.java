@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
@@ -31,12 +32,13 @@ public final class StepContext {
     }
   });
 
-  static CodeBlock iterationVarNullCheck(BeanStep step) {
+  static CodeBlock iterationVarNullCheck(BeanStep step, ParameterSpec parameter) {
     if (!step.validParameter.nonNull) {
       return emptyCodeBlock;
     }
-    return nullCheck(step.validParameter.collectionType.get(),
-        step.validParameter.name + " (element)");
+    String message = step.validParameter.name + " (element)";
+    ParameterSpec iterationVar = step.validParameter.collectionType.get(parameter);
+    return nullCheck(iterationVar, message);
   }
 
   static final Function<AbstractStep, TypeSpec> asStepInterface

@@ -2,7 +2,6 @@ package net.zerobuilder.examples.beans.more;
 
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
-import net.zerobuilder.Step;
 
 import java.util.ArrayList;
 import java.util.List;

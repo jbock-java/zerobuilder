@@ -3,8 +3,8 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter.CollectionType;
@@ -48,10 +48,10 @@ final class StepContextB {
 
 
   private static MethodSpec singletonCollection(BeanStep step) {
-    ValidBeanParameter parameter = step.validParameter;
-    String name = parameter.name;
+    String name = step.validParameter.name;
+    TypeName type = step.validParameter.collectionType.getType();
     return methodBuilder(name)
-        .addParameter(ParameterSpec.builder(parameter.collectionType.get().type, name).build())
+        .addParameter(parameterSpec(type, name))
         .returns(step.nextType)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
@@ -69,9 +69,10 @@ final class StepContextB {
   private static MethodSpec iterateCollection(BeanStep step) {
     ValidBeanParameter parameter = step.validParameter;
     String name = parameter.name;
+    TypeName type = ParameterizedTypeName.get(ITERABLE,
+        subtypeOf(parameter.collectionType.getType()));
     return methodBuilder(name)
-        .addParameter(parameterSpec(ParameterizedTypeName.get(ITERABLE,
-            subtypeOf(parameter.collectionType.get().type)), name))
+        .addParameter(parameterSpec(type, name))
         .returns(step.nextType)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();

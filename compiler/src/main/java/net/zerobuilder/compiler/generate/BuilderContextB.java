@@ -8,6 +8,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
@@ -85,10 +86,10 @@ final class BuilderContextB {
                                               BeanGoalContext goal,
                                               CodeBlock finalBlock) {
     String name = step.validParameter.name;
-    ParameterSpec iterationVar = step.validParameter.collectionType.get();
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ClassName.get(Iterable.class),
-        subtypeOf(iterationVar.type));
+        subtypeOf(step.validParameter.collectionType.getType()));
     ParameterSpec parameter = parameterSpec(iterable, name);
+    ParameterSpec iterationVar = step.validParameter.collectionType.get(parameter);
     return methodBuilder(step.validParameter.name)
         .addAnnotation(Override.class)
         .returns(step.nextType)
@@ -96,7 +97,7 @@ final class BuilderContextB {
         .addCode(nullCheck(parameter))
         .beginControlFlow("for ($T $N : $N)",
             iterationVar.type, iterationVar, parameter)
-        .addCode(iterationVarNullCheck(step))
+        .addCode(iterationVarNullCheck(step, parameter))
         .addStatement("this.$N.$L().add($N)", goal.field,
             step.validParameter.getter, iterationVar)
         .endControlFlow()
@@ -107,7 +108,8 @@ final class BuilderContextB {
 
   private static MethodSpec singletonCollection(BeanStep step, BeanGoalContext goal, CodeBlock finalBlock) {
     String name = step.validParameter.name;
-    ParameterSpec parameter = parameterSpec(step.validParameter.collectionType.get().type, name);
+    TypeName type = step.validParameter.collectionType.getType();
+    ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(step.nextType)
@@ -136,7 +138,7 @@ final class BuilderContextB {
     @Override
     public CodeBlock apply(BeanGoalContext goal) {
       return CodeBlock.builder()
-          .addStatement("return $N", goal.field)
+          .addStatement("return this.$N", goal.field)
           .build();
     }
   };
