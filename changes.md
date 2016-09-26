@@ -47,3 +47,7 @@
 * bugfix: elements of setterless collection should only be null-checked if nullCheck = true
 * fields in bean builders are now PRIVATE
 * detect and correct possible name collisions of local variables in generated code
+
+### 2016-09-26 zerobuilder 1.412 released
+
+* remove null checking option of collection elements (breaking)
