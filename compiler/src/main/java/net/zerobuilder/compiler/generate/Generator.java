@@ -30,7 +30,7 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCasesFunction
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 
 /**
- * Generates an FooBuilders class for each {@link net.zerobuilder.Builders} annotated class Foo.
+ * Generates a FooBuilders class for each {@link net.zerobuilder.Builders} annotated class Foo.
  */
 public final class Generator {
 

@@ -23,7 +23,6 @@ import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplName;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
-import static net.zerobuilder.compiler.generate.StepContext.iterationVarNullCheck;
 
 final class GeneratorB {
 
@@ -67,7 +66,6 @@ final class GeneratorB {
         .beginControlFlow("for ($T $N : $N.$N())",
             iterationVar.type, iterationVar, parameter,
             step.loneGetter.getter)
-        .add(iterationVarNullCheck(step, parameter))
         .addStatement("$N.$N.$N().add($N)", updaterInstance(goal),
             downcase(goal.goal.goalType.simpleName()),
             step.loneGetter.getter,

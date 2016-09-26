@@ -22,7 +22,6 @@ import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
-import static net.zerobuilder.compiler.generate.StepContext.iterationVarNullCheck;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 
 final class BuilderContextB {
@@ -107,7 +106,6 @@ final class BuilderContextB {
         .addCode(nullCheck(parameter))
         .beginControlFlow("for ($T $N : $N)",
             iterationVar.type, iterationVar, parameter)
-        .addCode(iterationVarNullCheck(step, parameter))
         .addStatement("this.$N.$L().add($N)", goal.field,
             step.loneGetter.getter, iterationVar)
         .endControlFlow()

@@ -2,18 +2,13 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoValidParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
-import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoStep.StepCases;
 
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.analyse.DtoValidParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.DtoStep.asFunction;
@@ -36,15 +31,6 @@ public final class StepContext {
       return nullCheck(name, name);
     }
   });
-
-  static CodeBlock iterationVarNullCheck(LoneGetterStep step, ParameterSpec parameter) {
-    if (!step.loneGetter.nonNull) {
-      return emptyCodeBlock;
-    }
-    String message = step.loneGetter.accept(beanStepName) + " (element)";
-    ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
-    return nullCheck(iterationVar, message);
-  }
 
   static final Function<AbstractStep, TypeSpec> asStepInterface
       = asFunction(stepCases(regularStepInterface, beanStepInterface));

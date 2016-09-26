@@ -26,10 +26,9 @@ public class NullChecksTest {
 
   @Test
   public void nullElementRejected() {
-    thrown.expect(NullPointerException.class);
-    thrown.expectMessage("strings (element)");
-    List<String> wrappedNull = nCopies(1, null);
-    checkedCollectionBuilder().strings(wrappedNull);
+    thrown.expectMessage("strings");
+    String nothing = null;
+    checkedCollectionBuilder().strings(nothing);
   }
 
   @Test
