@@ -8,7 +8,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStepCases;
@@ -62,11 +62,12 @@ final class UpdaterContextB {
 
   private static MethodSpec regularUpdater(BeanGoalContext goal, AccessorPairStep step) {
     String name = step.accessorPair.name;
+    ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
         .returns(goal.accept(typeName))
-        .addParameter(step.parameter)
+        .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
-            goal.field, step.setter, step.parameter)
+            goal.field, step.setter, parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();

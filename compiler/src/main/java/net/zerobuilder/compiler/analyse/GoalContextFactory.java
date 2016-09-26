@@ -13,10 +13,13 @@ import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
+import net.zerobuilder.compiler.generate.DtoBeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
@@ -38,15 +41,25 @@ public final class GoalContextFactory {
     return validGoal.accept(new DtoValidGoal.ValidGoalCases<AbstractGoalContext>() {
       @Override
       public AbstractGoalContext regularGoal(ValidRegularGoal goal) {
-        ClassName contractName = contractName(goal.goal.goal, builders);
-        ImmutableList<TypeName> thrownTypes = thrownTypes(goal.goal.executableElement);
-        ImmutableList<RegularStep> steps = steps(contractName,
+        final ClassName contractName = contractName(goal.goal.goal, builders);
+        final ImmutableList<TypeName> thrownTypes = thrownTypes(goal.goal.executableElement);
+        final ImmutableList<RegularStep> steps = steps(contractName,
             goal.goal.goal.goalType,
             goal.parameters,
             thrownTypes,
             regularParameterFactory);
-        return new RegularGoalContext(
-            goal.goal.goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
+        return goal.goal.goal.accept(new DtoGoal.RegularGoalCases<AbstractGoalContext>() {
+          @Override
+          public AbstractGoalContext method(DtoGoal.MethodGoal goal) {
+            return new MethodGoalContext(
+                goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
+          }
+          @Override
+          public AbstractGoalContext constructor(DtoGoal.ConstructorGoal goal) {
+            return new ConstructorGoalContext(
+                goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
+          }
+        });
       }
       @Override
       public AbstractGoalContext beanGoal(ValidBeanGoal goal) {
@@ -87,12 +100,11 @@ public final class GoalContextFactory {
       = new ParameterFactory<ValidBeanParameter, AbstractBeanStep>() {
     @Override
     AbstractBeanStep create(final ClassName thisType, final TypeName nextType, final ValidBeanParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
-      final ParameterSpec parameter = parameterSpec(validParameter.type, validParameter.name);
       return validParameter.accept(new DtoBeanParameter.BeanParameterCases<AbstractBeanStep>() {
         @Override
         public AbstractBeanStep accessorPair(DtoBeanParameter.AccessorPair pair) {
           String setter = "set" + upcase(pair.name);
-          return new AccessorPairStep(thisType, nextType, pair, parameter, setter);
+          return new AccessorPairStep(thisType, nextType, pair, setter);
         }
         @Override
         public AbstractBeanStep loneGetter(DtoBeanParameter.LoneGetter loneGetter) {
@@ -107,8 +119,7 @@ public final class GoalContextFactory {
     @Override
     RegularStep create(ClassName thisType, TypeName nextType, ValidRegularParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
       FieldSpec field = FieldSpec.builder(validParameter.type, validParameter.name, PRIVATE).build();
-      ParameterSpec parameter = parameterSpec(validParameter.type, validParameter.name);
-      return new RegularStep(thisType, nextType, validParameter, declaredExceptions, field, parameter);
+      return new RegularStep(thisType, nextType, validParameter, declaredExceptions, field);
     }
   };
 

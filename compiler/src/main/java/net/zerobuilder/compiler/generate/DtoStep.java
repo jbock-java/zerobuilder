@@ -12,6 +12,8 @@ import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
+
 public final class DtoStep {
 
   public static abstract class AbstractStep {
@@ -52,15 +54,19 @@ public final class DtoStep {
     final ValidRegularParameter validParameter;
     final ImmutableList<TypeName> declaredExceptions;
     final FieldSpec field;
-    final ParameterSpec parameter;
+
     public RegularStep(ClassName thisType, TypeName nextType, ValidRegularParameter validParameter,
-                       ImmutableList<TypeName> declaredExceptions, FieldSpec field, ParameterSpec parameter) {
+                       ImmutableList<TypeName> declaredExceptions, FieldSpec field) {
       super(thisType, nextType);
       this.declaredExceptions = declaredExceptions;
       this.validParameter = validParameter;
       this.field = field;
-      this.parameter = parameter;
     }
+
+    ParameterSpec parameter() {
+      return parameterSpec(validParameter.type, validParameter.name);
+    }
+
     @Override
     <R> R accept(StepCases<R> cases) {
       return cases.regularStep(this);
@@ -80,19 +86,20 @@ public final class DtoStep {
 
   public static final class AccessorPairStep extends AbstractBeanStep {
     final AccessorPair accessorPair;
-
-    /**
-     * Setter parameter
-     */
-    final ParameterSpec parameter;
     final String setter;
+
+
     public AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
-                            ParameterSpec parameter, String setter) {
+                            String setter) {
       super(thisType, nextType);
       this.accessorPair = accessorPair;
-      this.parameter = parameter;
       this.setter = setter;
     }
+
+    ParameterSpec parameter() {
+      return parameterSpec(accessorPair.type, accessorPair.name);
+    }
+
     @Override
     <R> R acceptBean(BeanStepCases<R> cases) {
       return cases.accessorPair(this);

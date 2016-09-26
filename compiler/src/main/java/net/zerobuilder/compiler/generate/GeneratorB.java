@@ -6,7 +6,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
-import net.zerobuilder.compiler.generate.DtoGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStepCases;

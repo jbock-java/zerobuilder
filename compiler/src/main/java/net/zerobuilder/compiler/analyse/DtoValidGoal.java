@@ -1,6 +1,8 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.google.common.collect.ImmutableList;
+import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
@@ -24,7 +26,7 @@ final class DtoValidGoal {
       this.parameters = parameters;
     }
     @Override
-    <R> R accept(ValidGoalCases<R> cases) {
+    final <R> R accept(ValidGoalCases<R> cases) {
       return cases.regularGoal(this);
     }
   }

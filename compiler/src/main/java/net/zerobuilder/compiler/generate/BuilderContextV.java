@@ -7,15 +7,21 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
+import static com.google.common.base.Optional.presentInstances;
+import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
+import static net.zerobuilder.compiler.generate.UpdaterContextV.instanceField;
 
 final class BuilderContextV {
 
@@ -24,9 +30,7 @@ final class BuilderContextV {
     @Override
     public ImmutableList<FieldSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-      if (goal.goal.kind == INSTANCE_METHOD) {
-        builder.add(goal.builders.field);
-      }
+      builder.addAll(presentInstances(of(goal.acceptRegular(instanceField))));
       for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
         builder.add(step.field);
       }
@@ -41,7 +45,7 @@ final class BuilderContextV {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
         CodeBlock finalBlock = CodeBlock.builder()
-            .addStatement("this.$N = $N", step.field, step.parameter)
+            .addStatement("this.$N = $N", step.field, step.parameter())
             .addStatement("return this")
             .build();
         builder.add(regularStep(step, finalBlock, ImmutableList.<TypeName>of()));
@@ -63,7 +67,7 @@ final class BuilderContextV {
                                         CodeBlock finalBlock, ImmutableList<TypeName> thrownTypes) {
     return methodBuilder(step.validParameter.name)
         .addAnnotation(Override.class)
-        .addParameter(step.parameter)
+        .addParameter(step.parameter())
         .addExceptions(thrownTypes)
         .addModifiers(PUBLIC)
         .returns(step.nextType)
@@ -75,23 +79,27 @@ final class BuilderContextV {
       = new Function<RegularGoalContext, CodeBlock>() {
     @Override
     public CodeBlock apply(RegularGoalContext goal) {
+      return goal.acceptRegular(invokeCases);
+    }
+  };
+
+  private static final RegularGoalContextCases<CodeBlock> invokeCases
+      = new RegularGoalContextCases<CodeBlock>() {
+    @Override
+    public CodeBlock constructorGoal(ConstructorGoalContext goal) {
+      CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
+      return statement("return new $T($L)", goal.goal.goalType, parameters);
+    }
+    @Override
+    public CodeBlock methodGoal(MethodGoalContext goal) {
       CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
       CodeBlock.Builder builder = CodeBlock.builder();
       builder.add(CodeBlock.of(VOID.equals(goal.goal.goalType) ? "" : "return "));
-      switch (goal.goal.kind) {
-        case CONSTRUCTOR:
-          return builder
-              .addStatement("new $T($L)",
-                  goal.goal.goalType, parameters).build();
-        case INSTANCE_METHOD:
-          return builder.addStatement("$N.$N($L)",
-              goal.builders.field, goal.goal.methodName, parameters).build();
-        case STATIC_METHOD:
-          return builder.addStatement("$T.$N($L)",
-              goal.builders.type, goal.goal.methodName, parameters).build();
-        default:
-          throw new IllegalStateException("unknown kind: " + goal.goal.kind);
-      }
+      String method = goal.goal.methodName;
+      builder.add(goal.goal.instance
+          ? statement("$N.$N($L)", goal.builders.field, method, parameters)
+          : statement("$T.$N($L)", goal.builders.type, method, parameters));
+      return builder.build();
     }
   };
 

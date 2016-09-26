@@ -71,8 +71,10 @@ final class DtoGoalElement {
     RegularGoalElement(ExecutableElement element, GoalKind kind, TypeName goalType, String name,
                        Elements elements) {
       super(element.getAnnotation(Goal.class), elements);
-      this.goal = new RegularGoal(goalType, name, kind, parameterNames(element),
-          element.getSimpleName().toString());
+      this.goal = kind == GoalKind.CONSTRUCTOR
+          ? new DtoGoal.ConstructorGoal(goalType, name, parameterNames(element))
+          : new DtoGoal.MethodGoal(goalType, name, parameterNames(element),
+          element.getSimpleName().toString(), kind == INSTANCE_METHOD);
       this.executableElement = element;
     }
     static RegularGoalElement create(ExecutableElement element, Elements elements) {

@@ -8,7 +8,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStepCases;
@@ -132,13 +132,14 @@ final class BuilderContextB {
   }
 
   private static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal, CodeBlock finalBlock) {
+    ParameterSpec parameter = step.parameter();
     return methodBuilder(step.accessorPair.name)
         .addAnnotation(Override.class)
-        .addParameter(step.parameter)
+        .addParameter(parameter)
         .addModifiers(PUBLIC)
         .returns(step.nextType)
         .addCode(step.accept(nullCheck))
-        .addStatement("this.$N.$L($N)", goal.field, step.setter, step.parameter)
+        .addStatement("this.$N.$L($N)", goal.field, step.setter, parameter)
         .addCode(finalBlock).build();
   }
 

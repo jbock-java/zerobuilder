@@ -5,7 +5,8 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import net.zerobuilder.compiler.generate.DtoGoalContext.RegularGoalContext;
+import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -15,9 +16,10 @@ import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.Generator.TL;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
@@ -28,9 +30,10 @@ final class GeneratorV {
       new Function<RegularGoalContext, MethodSpec>() {
         @Override
         public MethodSpec apply(RegularGoalContext goal) {
-          ParameterSpec parameter = parameterSpec(goal.goal.goalType,
-              downcase(((ClassName) goal.goal.goalType.box()).simpleName()));
-          String methodName = goal.goal.name + "ToBuilder";
+          TypeName goalType = goal.acceptRegular(DtoRegularGoalContext.goalType);
+          ParameterSpec parameter = parameterSpec(goalType,
+              downcase(((ClassName) goalType.box()).simpleName()));
+          String methodName = goal.acceptRegular(goalName) + "ToBuilder";
           ParameterSpec updater = updaterInstance(goal);
           MethodSpec.Builder method = methodBuilder(methodName)
               .addParameter(parameter)
@@ -104,27 +107,31 @@ final class GeneratorV {
       = new Function<RegularGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(RegularGoalContext goal) {
-      ClassName stepsType = goal.accept(builderImplName);
       MethodSpec.Builder method = methodBuilder(goal.accept(getGoalName) + "Builder")
           .returns(goal.steps.get(0).thisType)
           .addModifiers(PUBLIC, STATIC);
-      String steps = downcase(stepsType.simpleName());
-      method.addCode(goal.builders.recycle
-          ? statement("$T $N = $N.get().$N", stepsType, steps, TL, stepsField(goal))
-          : statement("$T $N = new $T()", stepsType, steps, stepsType));
-      if (goal.goal.kind == INSTANCE_METHOD) {
-        ClassName instanceType = goal.builders.type;
-        String instance = downcase(instanceType.simpleName());
-        return method
-            .addParameter(parameterSpec(instanceType, instance))
-            .addStatement("$N.$N = $N", steps, goal.builders.field, instance)
-            .addStatement("return $N", steps)
-            .build();
-      } else {
-        return method.addStatement("return $N", steps).build();
+      ParameterSpec builder = builderInstance(goal);
+      method.addCode(initBuilder(goal, builder));
+      if (goal.acceptRegular(isInstance)) {
+        ParameterSpec parameter = parameterSpec(goal.builders.type,
+            downcase(goal.builders.type.simpleName()));
+        method.addParameter(parameter)
+            .addStatement("$N.$N = $N", builder, goal.builders.field, parameter);
       }
+      return method.addStatement("return $N", builder).build();
     }
   };
+
+  private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder) {
+    return goal.builders.recycle
+        ? statement("$T $N = $N.get().$N", builder.type, builder, TL, stepsField(goal))
+        : statement("$T $N = new $T()", builder.type, builder, builder.type);
+  }
+
+  private static ParameterSpec builderInstance(RegularGoalContext goal) {
+    ClassName stepsType = goal.accept(builderImplName);
+    return parameterSpec(stepsType, downcase(stepsType.simpleName()));
+  }
 
   private GeneratorV() {
     throw new UnsupportedOperationException("no instances");
