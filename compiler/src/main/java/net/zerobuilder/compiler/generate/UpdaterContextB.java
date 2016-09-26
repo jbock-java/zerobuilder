@@ -19,6 +19,7 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.StepContext.iterationVarNullCheck;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
@@ -61,7 +62,7 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec regularUpdater(BeanGoalContext goal, AccessorPairStep step) {
-    String name = step.accessorPair.name;
+    String name = step.accessorPair.accept(beanStepName);
     ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
         .returns(goal.accept(typeName))
@@ -86,7 +87,7 @@ final class UpdaterContextB {
   private static MethodSpec iterateCollection(BeanGoalContext goal, LoneGetterStep step) {
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
-    String name = step.loneGetter.name;
+    String name = step.loneGetter.accept(beanStepName);
     ParameterSpec parameter = parameterSpec(iterable, name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
@@ -105,7 +106,7 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec emptyCollection(BeanGoalContext goal, LoneGetterStep step) {
-    String name = step.loneGetter.name;
+    String name = step.loneGetter.accept(beanStepName);
     return methodBuilder(name)
         .returns(goal.accept(typeName))
         .addCode(clearCollection(goal, step))
@@ -115,9 +116,9 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec singletonCollection(BeanGoalContext goal, LoneGetterStep step) {
-    String name = step.loneGetter.name;
+    String name = step.loneGetter.accept(beanStepName);
     TypeName type = step.loneGetter.iterationType();
-    ParameterSpec parameter = parameterSpec(type, step.loneGetter.name);
+    ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
         .returns(goal.accept(typeName))
         .addParameter(parameter)

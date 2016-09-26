@@ -11,6 +11,7 @@ import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.analyse.DtoValidParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;
 import static net.zerobuilder.compiler.generate.DtoStep.validParameter;
 
@@ -21,7 +22,7 @@ final class StepContextV {
     @Override
     public TypeSpec apply(AbstractStep step) {
       DtoValidParameter.ValidParameter parameter = step.accept(validParameter);
-      String name = parameter.name;
+      String name = parameter.acceptParameter(parameterName);
       TypeName type = parameter.type;
       return interfaceBuilder(step.thisType)
           .addMethod(methodBuilder(name)

@@ -5,7 +5,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
@@ -13,11 +12,9 @@ import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
-import net.zerobuilder.compiler.generate.DtoBeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
@@ -31,8 +28,8 @@ import javax.lang.model.type.TypeMirror;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.analyse.DtoValidParameter.parameterName;
 
 public final class GoalContextFactory {
 
@@ -85,7 +82,7 @@ public final class GoalContextFactory {
                          ParameterFactory<P, R> parameterFactory) {
     ImmutableList.Builder<R> builder = ImmutableList.builder();
     for (P parameter : parameters.reverse()) {
-      ClassName thisType = builderType.nestedClass(upcase(parameter.name));
+      ClassName thisType = builderType.nestedClass(upcase(parameter.acceptParameter(parameterName)));
       builder.add(parameterFactory.create(thisType, nextType, parameter, thrownTypes));
       nextType = thisType;
     }
@@ -103,7 +100,7 @@ public final class GoalContextFactory {
       return validParameter.accept(new DtoBeanParameter.BeanParameterCases<AbstractBeanStep>() {
         @Override
         public AbstractBeanStep accessorPair(DtoBeanParameter.AccessorPair pair) {
-          String setter = "set" + upcase(pair.name);
+          String setter = "set" + upcase(pair.acceptParameter(parameterName));
           return new AccessorPairStep(thisType, nextType, pair, setter);
         }
         @Override

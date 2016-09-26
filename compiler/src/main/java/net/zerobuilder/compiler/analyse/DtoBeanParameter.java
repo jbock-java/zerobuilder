@@ -23,16 +23,15 @@ public final class DtoBeanParameter {
     public final String getter;
 
     ValidBeanParameter(TypeName type, String getter, boolean nonNull) {
-      super(name(getter), type, nonNull);
+      super(type, nonNull);
       this.getter = getter;
     }
 
-    private static String name(String projectionMethodName) {
-      return downcase(projectionMethodName.substring(projectionMethodName.startsWith("is") ? 2 : 3));
+    public abstract <R> R accept(BeanParameterCases<R> cases);
+    @Override
+    public final <R> R acceptParameter(DtoValidParameter.ParameterCases<R> cases) {
+      return cases.beanParameter(this);
     }
-
-    abstract <R> R accept(BeanParameterCases<R> cases);
-
   }
 
   interface BeanParameterCases<R> {
@@ -45,7 +44,7 @@ public final class DtoBeanParameter {
       super(type, getter, nonNull);
     }
     @Override
-    <R> R accept(BeanParameterCases<R> cases) {
+    public <R> R accept(BeanParameterCases<R> cases) {
       return cases.accessorPair(this);
     }
   }
@@ -82,7 +81,7 @@ public final class DtoBeanParameter {
       this.allowShortcut = allowShortcut;
     }
     @Override
-    <R> R accept(BeanParameterCases<R> cases) {
+    public <R> R accept(BeanParameterCases<R> cases) {
       return cases.loneGetter(this);
     }
   }
@@ -109,6 +108,22 @@ public final class DtoBeanParameter {
   static LoneGetterBuilder builder() {
     ParameterSpec iterationVar = parameterSpec(OBJECT, "object");
     return new LoneGetterBuilder(iterationVar, false);
+  }
+
+  public static final DtoBeanParameter.BeanParameterCases<String> beanStepName
+      = new BeanParameterCases<String>() {
+    @Override
+    public String accessorPair(AccessorPair pair) {
+      return parameterName(pair);
+    }
+    @Override
+    public String loneGetter(LoneGetter getter) {
+      return parameterName(getter);
+    }
+  };
+
+  private static String parameterName(ValidBeanParameter parameter) {
+    return downcase(parameter.getter.substring(parameter.getter.startsWith("is") ? 2 : 3));
   }
 
   private DtoBeanParameter() {

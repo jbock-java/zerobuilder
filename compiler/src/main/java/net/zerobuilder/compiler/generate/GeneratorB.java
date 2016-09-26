@@ -19,6 +19,7 @@ import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplName;
 import static net.zerobuilder.compiler.generate.Generator.TL;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
@@ -101,7 +102,7 @@ final class GeneratorB {
         .beginControlFlow("if ($N.$N() == null)", parameter,
             validParameter.getter)
         .addStatement("throw new $T($S)",
-            NullPointerException.class, validParameter.name)
+            NullPointerException.class, validParameter.accept(beanStepName))
         .endControlFlow().build();
   }
 

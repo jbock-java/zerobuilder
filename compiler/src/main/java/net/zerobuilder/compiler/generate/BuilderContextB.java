@@ -20,6 +20,7 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.StepContext.iterationVarNullCheck;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
@@ -82,7 +83,7 @@ final class BuilderContextB {
   }
 
   private static MethodSpec emptyCollection(LoneGetterStep step, CodeBlock finalBlock) {
-    String name = step.loneGetter.name;
+    String name = step.loneGetter.accept(beanStepName);
     return methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(step.nextType)
@@ -94,12 +95,12 @@ final class BuilderContextB {
   private static MethodSpec iterateCollection(LoneGetterStep step,
                                               BeanGoalContext goal,
                                               CodeBlock finalBlock) {
-    String name = step.loneGetter.name;
+    String name = step.loneGetter.accept(beanStepName);
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
     ParameterSpec parameter = parameterSpec(iterable, name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
-    return methodBuilder(step.loneGetter.name)
+    return methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(step.nextType)
         .addParameter(parameter)
@@ -116,7 +117,7 @@ final class BuilderContextB {
   }
 
   private static MethodSpec singletonCollection(LoneGetterStep step, BeanGoalContext goal, CodeBlock finalBlock) {
-    String name = step.loneGetter.name;
+    String name = step.loneGetter.accept(beanStepName);
     TypeName type = step.loneGetter.iterationType();
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
@@ -133,7 +134,7 @@ final class BuilderContextB {
 
   private static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal, CodeBlock finalBlock) {
     ParameterSpec parameter = step.parameter();
-    return methodBuilder(step.accessorPair.name)
+    return methodBuilder(step.accessorPair.accept(beanStepName))
         .addAnnotation(Override.class)
         .addParameter(parameter)
         .addModifiers(PUBLIC)

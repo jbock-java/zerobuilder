@@ -4,6 +4,8 @@ import com.google.common.base.Function;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoValidParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
@@ -11,6 +13,8 @@ import net.zerobuilder.compiler.generate.DtoStep.StepCases;
 
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
+import static net.zerobuilder.compiler.analyse.DtoValidParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.DtoStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoStep.stepCases;
@@ -28,7 +32,8 @@ public final class StepContext {
       if (!parameter.nonNull || parameter.type.isPrimitive()) {
         return emptyCodeBlock;
       }
-      return nullCheck(parameter.name, parameter.name);
+      String name = parameter.acceptParameter(parameterName);
+      return nullCheck(name, name);
     }
   });
 
@@ -36,7 +41,7 @@ public final class StepContext {
     if (!step.loneGetter.nonNull) {
       return emptyCodeBlock;
     }
-    String message = step.loneGetter.name + " (element)";
+    String message = step.loneGetter.accept(beanStepName) + " (element)";
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return nullCheck(iterationVar, message);
   }
