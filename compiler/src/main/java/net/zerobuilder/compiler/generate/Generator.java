@@ -1,35 +1,24 @@
 package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
-import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 
 import javax.lang.model.util.Elements;
 
-import static com.google.common.base.Optional.absent;
-import static com.google.common.base.Optional.presentInstances;
-import static com.google.common.collect.ImmutableList.of;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
-import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static com.squareup.javapoet.TypeSpec.anonymousClassBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineBuilderImpl;
@@ -41,16 +30,11 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCasesFunction
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 
 /**
- * Generates an xyzBuilders class for each {@link net.zerobuilder.Builders} annotated class Xyz.
+ * Generates an FooBuilders class for each {@link net.zerobuilder.Builders} annotated class Foo.
  */
 public final class Generator {
 
   private final Elements elements;
-
-  /**
-   * Name of a {@code static ThreadLocal } that holds an instance of the generated type, if {@code recycle}.
-   */
-  static final String TL = "INSTANCE";
 
   public Generator(Elements elements) {
     this.elements = elements;
@@ -60,7 +44,9 @@ public final class Generator {
     return classBuilder(analysisResult.builders.generatedType)
         .addFields(instanceFields(analysisResult))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
-        .addFields(presentInstances(of(threadLocalField(analysisResult.builders))))
+        .addFields(analysisResult.builders.recycle
+            ? ImmutableList.of(analysisResult.builders.cache)
+            : ImmutableList.<FieldSpec>of())
         .addMethods(builderMethods(analysisResult))
         .addMethods(toBuilderMethods(analysisResult))
         .addAnnotations(generatedAnnotations(elements))
@@ -81,28 +67,6 @@ public final class Generator {
       }
     }
     return builder.build();
-  }
-
-  private Optional<FieldSpec> threadLocalField(BuildersContext builders) {
-    if (!builders.recycle) {
-      return absent();
-    }
-    ClassName generatedTypeName = builders.generatedType;
-    TypeName threadLocal = ParameterizedTypeName.get(ClassName.get(ThreadLocal.class),
-        generatedTypeName);
-    MethodSpec initialValue = methodBuilder("initialValue")
-        .addAnnotation(Override.class)
-        .addModifiers(PROTECTED)
-        .returns(generatedTypeName)
-        .addStatement("return new $T()", generatedTypeName)
-        .build();
-    return Optional.of(FieldSpec.builder(threadLocal, TL)
-        .initializer("$L", anonymousClassBuilder("")
-            .addSuperinterface(threadLocal)
-            .addMethod(initialValue)
-            .build())
-        .addModifiers(PRIVATE, STATIC, FINAL)
-        .build());
   }
 
   private ImmutableList<MethodSpec> toBuilderMethods(AnalysisResult analysisResult) {

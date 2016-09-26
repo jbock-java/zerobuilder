@@ -21,7 +21,6 @@ import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplName;
-import static net.zerobuilder.compiler.generate.Generator.TL;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
 import static net.zerobuilder.compiler.generate.StepContext.iterationVarNullCheck;
@@ -109,8 +108,8 @@ final class GeneratorB {
   private static CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec updater) {
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.builders.recycle) {
-      builder.addStatement("$T $N = $L.get().$N", updater.type, updater,
-          TL, updaterField(goal));
+      builder.addStatement("$T $N = $N.get().$N", updater.type, updater,
+          goal.builders.cache, updaterField(goal));
     } else {
       builder.addStatement("$T $N = new $T()", updater.type, updater, updater.type);
     }
@@ -133,7 +132,7 @@ final class GeneratorB {
           .addModifiers(PUBLIC, STATIC);
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.builders.recycle
-          ? statement("$T $N = $N.get().$N", stepsType, steps, TL, stepsField(goal))
+          ? statement("$T $N = $N.get().$N", stepsType, steps, goal.builders.cache, stepsField(goal))
           : statement("$T $N = new $T()", stepsType, steps, stepsType));
       return method.addStatement("$N.$N = new $T()", steps,
           downcase(goal.goal.goalType.simpleName()), goal.goal.goalType)

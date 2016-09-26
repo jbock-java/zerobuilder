@@ -3,11 +3,17 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Joiner;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
 import net.zerobuilder.Builders;
 
 import javax.lang.model.element.TypeElement;
 
+import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeSpec.anonymousClassBuilder;
+import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.PROTECTED;
+import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
 
 public final class DtoBuilders {
@@ -30,11 +36,17 @@ public final class DtoBuilders {
      */
     public final FieldSpec field;
 
-    private BuildersContext(boolean recycle, ClassName type, ClassName generatedType, FieldSpec field) {
+    /**
+     * An optional {@code ThreadLocal} that holds an instance of the generated type, if {@link #recycle}.
+     */
+    public final FieldSpec cache;
+
+    private BuildersContext(boolean recycle, ClassName type, ClassName generatedType, FieldSpec field, FieldSpec tl) {
       this.recycle = recycle;
       this.type = type;
       this.generatedType = generatedType;
       this.field = field;
+      this.cache = tl;
     }
   }
 
@@ -45,7 +57,25 @@ public final class DtoBuilders {
     ClassName annotatedType = ClassName.get(buildElement);
     FieldSpec field = FieldSpec.builder(
         annotatedType, '_' + downcase(annotatedType.simpleName()), PRIVATE).build();
-    return new BuildersContext(recycle, annotatedType, generatedType, field);
+    FieldSpec cache = defineCache(generatedType);
+    return new BuildersContext(recycle, annotatedType, generatedType, field, cache);
+  }
+
+  private static FieldSpec defineCache(ClassName generatedType) {
+    return FieldSpec.builder(ParameterizedTypeName.get(ClassName.get(ThreadLocal.class),
+          generatedType), "INSTANCE")
+          .initializer("$L", anonymousClassBuilder("")
+              .addSuperinterface(ParameterizedTypeName.get(ClassName.get(ThreadLocal.class),
+                  generatedType))
+              .addMethod(methodBuilder("initialValue")
+                  .addAnnotation(Override.class)
+                  .addModifiers(PROTECTED)
+                  .returns(generatedType)
+                  .addStatement("return new $T()", generatedType)
+                  .build())
+              .build())
+          .addModifiers(PRIVATE, STATIC, FINAL)
+          .build();
   }
 
   private static ClassName generatedClassName(TypeElement buildElement) {

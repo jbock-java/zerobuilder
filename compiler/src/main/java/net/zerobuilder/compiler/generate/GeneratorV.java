@@ -18,9 +18,8 @@ import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalName;
-import static net.zerobuilder.compiler.generate.Generator.TL;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
 
@@ -90,7 +89,7 @@ final class GeneratorV {
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.builders.recycle) {
       builder.addStatement("$T $N = $N.get().$N", updater.type, updater,
-          TL, updaterField(goal));
+          goal.builders.cache, updaterField(goal));
     } else {
       builder.addStatement("$T $N = new $T()", updater.type, updater, updater.type);
     }
@@ -124,7 +123,7 @@ final class GeneratorV {
 
   private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder) {
     return goal.builders.recycle
-        ? statement("$T $N = $N.get().$N", builder.type, builder, TL, stepsField(goal))
+        ? statement("$T $N = $N.get().$N", builder.type, builder, goal.builders.cache, stepsField(goal))
         : statement("$T $N = new $T()", builder.type, builder, builder.type);
   }
 
