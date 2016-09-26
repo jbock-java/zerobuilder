@@ -2,9 +2,9 @@ package net.zerobuilder.compiler.analyse;
 
 import com.google.common.collect.ImmutableList;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.AbstractGoalElement;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 

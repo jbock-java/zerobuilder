@@ -6,9 +6,9 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoShared;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
+import net.zerobuilder.compiler.analyse.DtoValidParameter;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 
 public final class DtoStep {
 
@@ -81,14 +81,14 @@ public final class DtoStep {
     }
   }
 
-  static final StepCases<DtoShared.ValidParameter> validParameter
-      = new StepCases<DtoShared.ValidParameter>() {
+  static final StepCases<DtoValidParameter.ValidParameter> validParameter
+      = new StepCases<DtoValidParameter.ValidParameter>() {
     @Override
-    public DtoShared.ValidParameter regularStep(RegularStep step) {
+    public DtoValidParameter.ValidParameter regularStep(RegularStep step) {
       return step.validParameter;
     }
     @Override
-    public DtoShared.ValidParameter beanStep(BeanStep step) {
+    public DtoValidParameter.ValidParameter beanStep(BeanStep step) {
       return step.validParameter;
     }
   };

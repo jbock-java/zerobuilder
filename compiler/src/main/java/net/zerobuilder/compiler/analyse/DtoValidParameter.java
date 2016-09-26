@@ -13,7 +13,7 @@ import static net.zerobuilder.compiler.Utilities.distinctFrom;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 
-public final class DtoShared {
+public final class DtoValidParameter {
 
   public abstract static class ValidParameter {
 
@@ -35,7 +35,7 @@ public final class DtoShared {
   public static final class ValidRegularParameter extends ValidParameter {
 
     /**
-     * method name; absent iff {@code toBuilder = false} or direct field access
+     * method name; absent iff {@code toBuilder == false} or direct field access
      */
     public final Optional<String> getter;
     ValidRegularParameter(String name, TypeName type, Optional<String> getter, boolean nonNull) {
@@ -47,7 +47,7 @@ public final class DtoShared {
   public static final class ValidBeanParameter extends ValidParameter {
 
     /**
-     * Name of the getter method (could start with "is")
+     * Name of the getter method (could start with {@code "is"})
      */
     public final String getter;
 
@@ -106,7 +106,7 @@ public final class DtoShared {
     }
   }
 
-  private DtoShared() {
+  private DtoValidParameter() {
     throw new UnsupportedOperationException("no instances");
   }
 }

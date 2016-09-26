@@ -6,8 +6,8 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter.CollectionType;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidBeanParameter.CollectionType;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;

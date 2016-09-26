@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.AbstractGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -22,8 +22,8 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
-import static net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.getElement;
-import static net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.getName;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.getElement;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.getName;
 
 final class GoalnameValidator {
 

@@ -3,7 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Function;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.DtoShared;
+import net.zerobuilder.compiler.analyse.DtoValidParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -20,7 +20,7 @@ final class StepContextV {
       = new Function<AbstractStep, TypeSpec>() {
     @Override
     public TypeSpec apply(AbstractStep step) {
-      DtoShared.ValidParameter parameter = step.accept(validParameter);
+      DtoValidParameter.ValidParameter parameter = step.accept(validParameter);
       String name = parameter.name;
       TypeName type = parameter.type;
       return interfaceBuilder(step.thisType)

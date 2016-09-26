@@ -4,7 +4,7 @@ import com.google.common.base.Function;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.BeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.StepCases;
