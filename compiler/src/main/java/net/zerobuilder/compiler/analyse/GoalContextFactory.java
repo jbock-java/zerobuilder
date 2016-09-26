@@ -11,8 +11,6 @@ import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoShared.AbstractGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal.ValidationResultCases;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
@@ -33,11 +31,11 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 
 public final class GoalContextFactory {
 
-  static AbstractGoalContext context(final ValidGoal validGoal, final BuildersContext builders,
+  static AbstractGoalContext context(final DtoValidGoal.ValidGoal validGoal, final BuildersContext builders,
                                      final boolean toBuilder, final boolean builder) throws ValidationException {
-    return validGoal.accept(new ValidationResultCases<AbstractGoalContext>() {
+    return validGoal.accept(new DtoValidGoal.ValidationResultCases<AbstractGoalContext>() {
       @Override
-      AbstractGoalContext executableGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> validParameters) {
+      public AbstractGoalContext regularGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> validParameters) {
         ClassName contractName = contractName(goal.goal, builders);
         ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
         ImmutableList<RegularStep> steps = steps(contractName,
@@ -49,7 +47,7 @@ public final class GoalContextFactory {
             goal.goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
       }
       @Override
-      AbstractGoalContext beanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validParameters) {
+      public AbstractGoalContext beanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validParameters) {
         ClassName contractName = contractName(goal.goal, builders);
         ImmutableList<BeanStep> steps = steps(contractName,
             goal.goal.goalType,

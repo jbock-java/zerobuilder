@@ -3,7 +3,6 @@ package net.zerobuilder.compiler.analyse;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Step;
@@ -11,6 +10,7 @@ import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.GoalElementCases;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter.CollectionType;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularParameter;
+import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -31,8 +31,8 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValu
 
 public final class ProjectionValidator {
 
-  static final GoalElementCases<DtoShared.ValidGoal> validate = goalElementCases(validateValue, validateBean);
-  static final GoalElementCases<DtoShared.ValidGoal> skip = goalElementCases(validateValueSkipProjections, validateBean);
+  static final GoalElementCases<ValidGoal> validate = goalElementCases(validateValue, validateBean);
+  static final GoalElementCases<ValidGoal> skip = goalElementCases(validateValueSkipProjections, validateBean);
 
   static <E extends TmpValidParameter> ImmutableList<E> shuffledParameters(ImmutableList<E> parameters)
       throws ValidationException {

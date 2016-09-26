@@ -6,7 +6,6 @@ import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.AbstractGoalElement
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoShared.AnalysisResult;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
 import net.zerobuilder.compiler.generate.DtoBuilders;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalContext;
@@ -49,7 +48,7 @@ public final class Analyser {
       validateBuildersType(buildElement);
       boolean toBuilder = goal.goalAnnotation.toBuilder();
       boolean isBuilder = goal.goalAnnotation.builder();
-      ValidGoal validGoal = goal.accept(toBuilder ? validate : skip);
+      DtoValidGoal.ValidGoal validGoal = goal.accept(toBuilder ? validate : skip);
       builder.add(context(validGoal, context, toBuilder, isBuilder));
     }
     return new AnalysisResult(context, builder.build());

@@ -12,10 +12,10 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.BeanGoalElement;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoShared.ValidBeanParameter.CollectionType;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
+import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
+import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
 
 import javax.lang.model.element.ElementKind;

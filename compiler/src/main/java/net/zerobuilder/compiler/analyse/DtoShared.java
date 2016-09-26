@@ -24,7 +24,8 @@ public final class DtoShared {
   public abstract static class ValidParameter {
 
     /**
-     * first char is generally lowercase unless overridden
+     * <p>for regular goals, this is the original parameter name</p>
+     * <p>if {@code goalType == FIELD_ACCESS}, then there is also a field with this name</p>
      */
     public final String name;
     public final TypeName type;
@@ -35,14 +36,6 @@ public final class DtoShared {
       this.type = type;
       this.nonNull = nonNull;
     }
-  }
-
-  static abstract class ValidGoal {
-    static abstract class ValidationResultCases<R> {
-      abstract R executableGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> parameters);
-      abstract R beanGoal(BeanGoalElement beanGoal, ImmutableList<ValidBeanParameter> validBeanParameters);
-    }
-    abstract <R> R accept(ValidationResultCases<R> cases);
   }
 
   static abstract class AbstractGoal {
@@ -103,41 +96,15 @@ public final class DtoShared {
     }
   }
 
-  static final class ValidRegularGoal extends ValidGoal {
-    private final RegularGoalElement goal;
-    private final ImmutableList<ValidRegularParameter> parameters;
-    ValidRegularGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> parameters) {
-      this.goal = goal;
-      this.parameters = parameters;
-    }
-    @Override
-    <R> R accept(ValidationResultCases<R> cases) {
-      return cases.executableGoal(goal, parameters);
-    }
-  }
-
-  static final class ValidBeanGoal extends ValidGoal {
-    private final BeanGoalElement goal;
-    private final ImmutableList<ValidBeanParameter> validBeanParameters;
-    ValidBeanGoal(BeanGoalElement goal, ImmutableList<ValidBeanParameter> validBeanParameters) {
-      this.goal = goal;
-      this.validBeanParameters = validBeanParameters;
-    }
-    @Override
-    <R> R accept(ValidationResultCases<R> cases) {
-      return cases.beanGoal(goal, validBeanParameters);
-    }
-  }
-
   public static final class ValidRegularParameter extends ValidParameter {
 
     /**
      * method name; absent iff {@code toBuilder = false} or direct field access
      */
-    public final Optional<String> projection;
-    ValidRegularParameter(String name, TypeName type, Optional<String> projection, boolean nonNull) {
+    public final Optional<String> getter;
+    ValidRegularParameter(String name, TypeName type, Optional<String> getter, boolean nonNull) {
       super(name, type, nonNull);
-      this.projection = projection;
+      this.getter = getter;
     }
   }
 

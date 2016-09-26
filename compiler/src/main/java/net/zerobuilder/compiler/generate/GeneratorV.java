@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -11,6 +12,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.analyse.GoalContextFactory.GoalKind.INSTANCE_METHOD;
@@ -26,49 +28,77 @@ final class GeneratorV {
       new Function<RegularGoalContext, MethodSpec>() {
         @Override
         public MethodSpec apply(RegularGoalContext goal) {
-          String instance = downcase(((ClassName) goal.goal.goalType.box()).simpleName());
+          ParameterSpec parameter = parameterSpec(goal.goal.goalType,
+              downcase(((ClassName) goal.goal.goalType.box()).simpleName()));
           String methodName = goal.goal.name + "ToBuilder";
+          ParameterSpec updater = updaterInstance(goal);
           MethodSpec.Builder method = methodBuilder(methodName)
-              .addParameter(goal.goal.goalType, instance);
-          String updater = "updater";
-          ClassName updaterType = goal.accept(UpdaterContext.typeName);
-          if (goal.builders.recycle) {
-            method.addStatement("$T $L = $L.get().$N", updaterType, updater,
-                TL, updaterField(goal));
-          } else {
-            method.addStatement("$T $L = new $T()", updaterType, updater,
-                updaterType);
+              .addParameter(parameter)
+              .returns(updater.type)
+              .addCode(initializeUpdater(goal, updater));
+          for (RegularStep step : goal.steps) {
+            method.addCode(copyField(parameter, updater, step));
           }
-          CodeBlock.Builder builder = CodeBlock.builder();
-          for (RegularStep parameter : goal.steps) {
-            if (parameter.validParameter.projection.isPresent()) {
-              if (parameter.validParameter.nonNull) {
-                builder.add(CodeBlock.builder()
-                    .beginControlFlow("if ($N.$N() == null)", instance, parameter.validParameter.projection.get())
-                    .addStatement("throw new $T($S)", NullPointerException.class, parameter.validParameter.name)
-                    .endControlFlow().build());
-              }
-              builder.addStatement("$N.$N = $N.$N()", updater, parameter.validParameter.name,
-                  instance, parameter.validParameter.projection.get());
-            } else {
-              if (parameter.validParameter.nonNull) {
-                builder.add(CodeBlock.builder()
-                    .beginControlFlow("if ($N.$N == null)", instance, parameter.validParameter.name)
-                    .addStatement("throw new $T($S)", NullPointerException.class, parameter.validParameter.name)
-                    .endControlFlow().build());
-              }
-              builder.add(CodeBlock.builder()
-                  .addStatement("$N.$N = $N.$N", updater, parameter.validParameter.name,
-                      instance, parameter.validParameter.name).build());
-            }
-          }
-          method.addCode(builder.build());
-          method.addStatement("return $L", updater);
-          return method
-              .returns(goal.accept(UpdaterContext.typeName))
-              .addModifiers(PUBLIC, STATIC).build();
+          method.addStatement("return $N", updater);
+          return method.addModifiers(PUBLIC, STATIC).build();
         }
       };
+
+  private static CodeBlock copyField(ParameterSpec parameter, ParameterSpec updater, RegularStep step) {
+    CodeBlock.Builder builder = CodeBlock.builder();
+    String field = step.validParameter.name;
+    if (step.validParameter.getter.isPresent()) {
+      String getter = step.validParameter.getter.get();
+      builder.add(nullCheckGetter(parameter, step))
+          .addStatement("$N.$N = $N.$N()",
+              updater, field, parameter, getter);
+    } else {
+      builder.add(nullCheckFieldAccess(parameter, step))
+          .addStatement("$N.$N = $N.$N",
+              updater, field, parameter, field);
+    }
+    return builder.build();
+  }
+
+  private static CodeBlock nullCheckFieldAccess(ParameterSpec parameter, RegularStep step) {
+    if (!step.validParameter.nonNull) {
+      return emptyCodeBlock;
+    }
+    String name = step.validParameter.name;
+    return CodeBlock.builder()
+        .beginControlFlow("if ($N.$N == null)", parameter, name)
+        .addStatement("throw new $T($S)", NullPointerException.class, name)
+        .endControlFlow().build();
+  }
+
+  private static CodeBlock nullCheckGetter(ParameterSpec parameter, RegularStep step) {
+    if (!step.validParameter.nonNull) {
+      return emptyCodeBlock;
+    }
+    String name = step.validParameter.name;
+    String getter = step.validParameter.getter.get();
+    return CodeBlock.builder()
+        .beginControlFlow("if ($N.$N() == null)", parameter, getter)
+        .addStatement("throw new $T($S)", NullPointerException.class, name)
+        .endControlFlow().build();
+  }
+
+  private static CodeBlock initializeUpdater(RegularGoalContext goal, ParameterSpec updater) {
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.builders.recycle) {
+      builder.addStatement("$T $N = $N.get().$N", updater.type, updater,
+          TL, updaterField(goal));
+    } else {
+      builder.addStatement("$T $N = new $T()", updater.type, updater, updater.type);
+    }
+    return builder.build();
+  }
+
+  private static ParameterSpec updaterInstance(RegularGoalContext goal) {
+    ClassName updaterType = goal.accept(UpdaterContext.typeName);
+    return parameterSpec(updaterType, "updater");
+  }
+
 
   static final Function<RegularGoalContext, MethodSpec> goalToBuilder
       = new Function<RegularGoalContext, MethodSpec>() {

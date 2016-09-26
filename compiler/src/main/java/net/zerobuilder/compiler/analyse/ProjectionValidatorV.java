@@ -8,8 +8,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoPackage.GoalTypes.RegularGoalElement;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidRegularGoal;
-import net.zerobuilder.compiler.analyse.DtoShared.ValidGoal;
+import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpRegularParameter;
 
 import javax.lang.model.element.ExecutableElement;
