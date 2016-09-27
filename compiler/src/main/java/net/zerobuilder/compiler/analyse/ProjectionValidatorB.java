@@ -12,7 +12,7 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
@@ -23,7 +23,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
@@ -34,6 +33,7 @@ import static com.google.common.base.Ascii.isUpperCase;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BAD_GENERICS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_FIND_SETTER;
@@ -126,11 +126,15 @@ final class ProjectionValidatorB {
   }
 
   private static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {
-    if (!typeMirror.getKind().equals(TypeKind.DECLARED)) {
+    if (typeMirror.getKind() != DECLARED) {
       return false;
     }
     TypeElement element = asTypeElement(typeMirror);
-    TypeName className = ClassName.get(element);
+    return implementationOf(element, test);
+  }
+
+  private static boolean implementationOf(TypeElement element, ClassName test) {
+    ClassName className = ClassName.get(element);
     if (className.equals(test)) {
       return true;
     }
@@ -138,7 +142,7 @@ final class ProjectionValidatorB {
       return false;
     }
     for (TypeMirror anInterface : element.getInterfaces()) {
-      if (isImplementationOf(anInterface, test)) {
+      if (implementationOf(asTypeElement(anInterface), test)) {
         return true;
       }
     }
@@ -240,7 +244,7 @@ final class ProjectionValidatorB {
   }
 
   private static ValidGoal createResult(BeanGoalElement goal, ImmutableList<TmpAccessorPair> tmpAccessorPairs) {
-    ImmutableList<ValidBeanParameter> validBeanParameters
+    ImmutableList<AbstractBeanParameter> validBeanParameters
         = FluentIterable.from(shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(tmpAccessorPairs)))
         .transform(toValidParameter)
         .toList();

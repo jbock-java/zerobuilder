@@ -6,12 +6,12 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Step;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
+import net.zerobuilder.compiler.analyse.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -72,14 +72,14 @@ final class ProjectionValidator {
     final Optional<Step> annotation;
 
     final static class TmpRegularParameter extends TmpValidParameter {
-      private final ValidRegularParameter parameter;
-      private TmpRegularParameter(Element element, Optional<Step> annotation, ValidRegularParameter parameter) {
+      private final RegularParameter parameter;
+      private TmpRegularParameter(Element element, Optional<Step> annotation, RegularParameter parameter) {
         super(element, annotation);
         this.parameter = parameter;
       }
-      static final Function<TmpRegularParameter, ValidRegularParameter> toValidParameter = new Function<TmpRegularParameter, ValidRegularParameter>() {
+      static final Function<TmpRegularParameter, RegularParameter> toValidParameter = new Function<TmpRegularParameter, RegularParameter>() {
         @Override
-        public ValidRegularParameter apply(TmpRegularParameter parameter) {
+        public RegularParameter apply(TmpRegularParameter parameter) {
           return parameter.parameter;
         }
       };
@@ -87,7 +87,7 @@ final class ProjectionValidator {
                                         Goal goalAnnotation) {
         Step stepAnnotation = element.getAnnotation(Step.class);
         boolean nonNull = TmpValidParameter.nonNull(element.asType(), stepAnnotation, goalAnnotation);
-        ValidRegularParameter parameter = new ValidRegularParameter(element.getSimpleName().toString(),
+        RegularParameter parameter = new RegularParameter(element.getSimpleName().toString(),
             TypeName.get(element.asType()), projectionMethodName, nonNull);
         return new TmpRegularParameter(element, fromNullable(stepAnnotation), parameter);
       }
@@ -104,14 +104,14 @@ final class ProjectionValidator {
     }
 
     static final class TmpAccessorPair extends TmpValidParameter {
-      final ValidBeanParameter validBeanParameter;
-      private TmpAccessorPair(Element element, Optional<Step> annotation, ValidBeanParameter validBeanParameter) {
+      final AbstractBeanParameter validBeanParameter;
+      private TmpAccessorPair(Element element, Optional<Step> annotation, AbstractBeanParameter validBeanParameter) {
         super(element, annotation);
         this.validBeanParameter = validBeanParameter;
       }
-      static final Function<TmpAccessorPair, ValidBeanParameter> toValidParameter = new Function<TmpAccessorPair, ValidBeanParameter>() {
+      static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = new Function<TmpAccessorPair, AbstractBeanParameter>() {
         @Override
-        public ValidBeanParameter apply(TmpAccessorPair parameter) {
+        public AbstractBeanParameter apply(TmpAccessorPair parameter) {
           return parameter.validBeanParameter;
         }
       };

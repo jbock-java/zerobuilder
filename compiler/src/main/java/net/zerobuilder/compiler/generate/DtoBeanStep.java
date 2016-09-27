@@ -5,7 +5,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
@@ -71,14 +71,14 @@ public final class DtoBeanStep {
     }
   }
 
-  static final BeanStepCases<ValidBeanParameter> validBeanParameter
-      = new BeanStepCases<ValidBeanParameter>() {
+  static final BeanStepCases<AbstractBeanParameter> validBeanParameter
+      = new BeanStepCases<AbstractBeanParameter>() {
     @Override
-    public ValidBeanParameter accessorPair(AccessorPairStep step) {
+    public AbstractBeanParameter accessorPair(AccessorPairStep step) {
       return step.accessorPair;
     }
     @Override
-    public ValidBeanParameter loneGetter(LoneGetterStep step) {
+    public AbstractBeanParameter loneGetter(LoneGetterStep step) {
       return step.loneGetter;
     }
   };

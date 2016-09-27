@@ -5,7 +5,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
@@ -87,11 +87,11 @@ final class GeneratorB {
         .build();
   }
 
-  private static CodeBlock nullCheck(ParameterSpec parameter, ValidBeanParameter validParameter) {
+  private static CodeBlock nullCheck(ParameterSpec parameter, AbstractBeanParameter validParameter) {
     return nullCheck(parameter, validParameter, validParameter.nonNull);
   }
 
-  private static CodeBlock nullCheck(ParameterSpec parameter, ValidBeanParameter validParameter, boolean nonNull) {
+  private static CodeBlock nullCheck(ParameterSpec parameter, AbstractBeanParameter validParameter, boolean nonNull) {
     if (!nonNull) {
       return emptyCodeBlock;
     }

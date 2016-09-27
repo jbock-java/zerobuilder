@@ -6,13 +6,17 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static java.lang.Character.isUpperCase;
+import static net.zerobuilder.compiler.Utilities.ClassNames.OBJECT;
 
 public final class Utilities {
 
@@ -76,10 +80,10 @@ public final class Utilities {
   }
 
   public static String distinctFrom(String string, String other) {
-    if (!string.equals(other)) {
-      return string;
+    if (string.equals(other)) {
+      return 'a' + upcase(string);
     }
-    return 'a' + upcase(string);
+    return string;
   }
 
   private Utilities() {

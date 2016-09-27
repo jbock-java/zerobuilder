@@ -3,7 +3,7 @@ package net.zerobuilder.compiler.analyse;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
+import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
 
 import javax.lang.model.type.TypeMirror;
 
@@ -15,21 +15,21 @@ import static net.zerobuilder.compiler.Utilities.parameterSpec;
 
 public final class DtoBeanParameter {
 
-  public static abstract class ValidBeanParameter extends ValidParameter {
+  public static abstract class AbstractBeanParameter extends AbstractParameter {
 
     /**
      * Name of the getter method (could start with {@code "is"})
      */
     public final String getter;
 
-    ValidBeanParameter(TypeName type, String getter, boolean nonNull) {
+    AbstractBeanParameter(TypeName type, String getter, boolean nonNull) {
       super(type, nonNull);
       this.getter = getter;
     }
 
     public abstract <R> R accept(BeanParameterCases<R> cases);
     @Override
-    public final <R> R acceptParameter(DtoValidParameter.ParameterCases<R> cases) {
+    public final <R> R acceptParameter(DtoParameter.ParameterCases<R> cases) {
       return cases.beanParameter(this);
     }
   }
@@ -39,7 +39,7 @@ public final class DtoBeanParameter {
     R loneGetter(LoneGetter getter);
   }
 
-  public static final class AccessorPair extends ValidBeanParameter {
+  public static final class AccessorPair extends AbstractBeanParameter {
     AccessorPair(TypeName type, String getter, boolean nonNull) {
       super(type, getter, nonNull);
     }
@@ -49,7 +49,7 @@ public final class DtoBeanParameter {
     }
   }
 
-  public static final class LoneGetter extends ValidBeanParameter {
+  public static final class LoneGetter extends AbstractBeanParameter {
 
     /**
      * Example: If getter returns {@code List<String>}, then this would be a variable of type
@@ -116,7 +116,7 @@ public final class DtoBeanParameter {
     }
   };
 
-  private static String parameterName(ValidBeanParameter parameter) {
+  private static String parameterName(AbstractBeanParameter parameter) {
     return downcase(parameter.getter.substring(parameter.getter.startsWith("is") ? 2 : 3));
   }
 

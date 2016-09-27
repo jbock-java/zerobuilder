@@ -39,7 +39,7 @@ final class BuilderContextB {
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       CodeBlock finalBlock = CodeBlock.builder().addStatement("return this").build();
-      BeanStepCases<ImmutableList<MethodSpec>> stepHandler = handleStep(goal, finalBlock);
+      BeanStepCases<ImmutableList<MethodSpec>> stepHandler = stepMethods(goal, finalBlock);
       for (AbstractBeanStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
         builder.addAll(step.acceptBean(stepHandler));
       }
@@ -47,7 +47,7 @@ final class BuilderContextB {
     }
   };
 
-  private static BeanStepCases<ImmutableList<MethodSpec>> handleStep(final BeanGoalContext goal, final CodeBlock finalBlock) {
+  private static BeanStepCases<ImmutableList<MethodSpec>> stepMethods(final BeanGoalContext goal, final CodeBlock finalBlock) {
     return new BeanStepCases<ImmutableList<MethodSpec>>() {
       @Override
       public ImmutableList<MethodSpec> accessorPair(AccessorPairStep step) {
@@ -64,7 +64,7 @@ final class BuilderContextB {
       = new Function<BeanGoalContext, ImmutableList<MethodSpec>>() {
     @Override
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
-      BeanStepCases<ImmutableList<MethodSpec>> handler = handleStep(goal, invoke.apply(goal));
+      BeanStepCases<ImmutableList<MethodSpec>> handler = stepMethods(goal, invoke.apply(goal));
       return getLast(goal.steps).acceptBean(handler);
     }
   };

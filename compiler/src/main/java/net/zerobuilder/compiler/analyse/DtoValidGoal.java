@@ -1,11 +1,9 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.google.common.collect.ImmutableList;
-import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
-import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
-import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
+import net.zerobuilder.compiler.analyse.DtoParameter.RegularParameter;
 
 final class DtoValidGoal {
 
@@ -20,8 +18,8 @@ final class DtoValidGoal {
 
   static final class ValidRegularGoal extends ValidGoal {
     final RegularGoalElement goal;
-    final ImmutableList<ValidRegularParameter> parameters;
-    ValidRegularGoal(RegularGoalElement goal, ImmutableList<ValidRegularParameter> parameters) {
+    final ImmutableList<RegularParameter> parameters;
+    ValidRegularGoal(RegularGoalElement goal, ImmutableList<RegularParameter> parameters) {
       this.goal = goal;
       this.parameters = parameters;
     }
@@ -33,8 +31,8 @@ final class DtoValidGoal {
 
   static final class ValidBeanGoal extends ValidGoal {
     final BeanGoalElement goal;
-    final ImmutableList<DtoBeanParameter.ValidBeanParameter> parameters;
-    ValidBeanGoal(BeanGoalElement goal, ImmutableList<DtoBeanParameter.ValidBeanParameter> parameters) {
+    final ImmutableList<DtoBeanParameter.AbstractBeanParameter> parameters;
+    ValidBeanGoal(BeanGoalElement goal, ImmutableList<DtoBeanParameter.AbstractBeanParameter> parameters) {
       this.goal = goal;
       this.parameters = parameters;
     }

@@ -2,18 +2,22 @@ package net.zerobuilder.compiler.analyse;
 
 import com.google.common.base.Optional;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 
-public final class DtoValidParameter {
+public final class DtoParameter {
 
-  public interface ParameterCases<R> {
-    R regularParameter(ValidRegularParameter parameter);
-    R beanParameter(ValidBeanParameter parameter);
+  enum EmptyOption {
+    LIST, SET, NONE
   }
 
-  public abstract static class ValidParameter {
+  interface ParameterCases<R> {
+    R regularParameter(RegularParameter parameter);
+    R beanParameter(AbstractBeanParameter parameter);
+  }
+
+  public abstract static class AbstractParameter {
 
     /**
      * <p>for beans, this is the type that's returned by the getter</p>
@@ -26,7 +30,7 @@ public final class DtoValidParameter {
      */
     public final boolean nonNull;
 
-    ValidParameter(TypeName type, boolean nonNull) {
+    AbstractParameter(TypeName type, boolean nonNull) {
       this.type = type;
       this.nonNull = nonNull;
     }
@@ -34,7 +38,7 @@ public final class DtoValidParameter {
     public abstract <R> R acceptParameter(ParameterCases<R> cases);
   }
 
-  public static final class ValidRegularParameter extends ValidParameter {
+  public static final class RegularParameter extends AbstractParameter {
 
     /**
      * <p>original parameter name</p>
@@ -46,7 +50,7 @@ public final class DtoValidParameter {
      * method name; absent iff {@code toBuilder == false} or field access
      */
     public final Optional<String> getter;
-    ValidRegularParameter(String name, TypeName type, Optional<String> getter, boolean nonNull) {
+    RegularParameter(String name, TypeName type, Optional<String> getter, boolean nonNull) {
       super(type, nonNull);
       this.getter = getter;
       this.name = name;
@@ -58,19 +62,19 @@ public final class DtoValidParameter {
     }
   }
 
-  public static final DtoValidParameter.ParameterCases<String> parameterName
-      = new DtoValidParameter.ParameterCases<String>() {
+  public static final DtoParameter.ParameterCases<String> parameterName
+      = new DtoParameter.ParameterCases<String>() {
     @Override
-    public String regularParameter(DtoValidParameter.ValidRegularParameter parameter) {
+    public String regularParameter(RegularParameter parameter) {
       return parameter.name;
     }
     @Override
-    public String beanParameter(ValidBeanParameter parameter) {
+    public String beanParameter(AbstractBeanParameter parameter) {
       return parameter.accept(beanParameterName);
     }
   };
 
-  private DtoValidParameter() {
+  private DtoParameter() {
     throw new UnsupportedOperationException("no instances");
   }
 }
