@@ -1,4 +1,4 @@
-package net.zerobuilder.examples.inheritance;
+package net.zerobuilder.examples.values.inheritance;
 
 import java.math.BigInteger;
 

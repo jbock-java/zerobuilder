@@ -1,8 +1,8 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
 import org.junit.Test;
 
-import static net.zerobuilder.examples.basic.SpaghettiBuilders.spaghettiToBuilder;
+import static net.zerobuilder.examples.values.SpaghettiBuilders.spaghettiToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 

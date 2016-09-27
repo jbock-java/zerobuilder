@@ -1,4 +1,4 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builders;
 import net.zerobuilder.Step;

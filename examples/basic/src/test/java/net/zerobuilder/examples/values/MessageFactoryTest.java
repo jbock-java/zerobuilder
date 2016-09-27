@@ -1,10 +1,10 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
-import net.zerobuilder.examples.basic.MessageFactory.Message;
+import net.zerobuilder.examples.values.MessageFactory.Message;
 import org.junit.Test;
 
-import static net.zerobuilder.examples.basic.MessageFactoryBuilders.messageFactoryBuilder;
-import static net.zerobuilder.examples.basic.MessageFactory_MessageBuilders.messageToBuilder;
+import static net.zerobuilder.examples.values.MessageFactoryBuilders.messageFactoryBuilder;
+import static net.zerobuilder.examples.values.MessageFactory_MessageBuilders.messageToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

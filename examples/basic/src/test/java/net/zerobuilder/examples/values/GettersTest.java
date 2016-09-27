@@ -1,4 +1,4 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
 import org.junit.Test;
 

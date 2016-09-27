@@ -1,9 +1,9 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
 import org.junit.Test;
 
-import static net.zerobuilder.examples.basic.RabbitBuilders.hareBuilder;
-import static net.zerobuilder.examples.basic.RabbitBuilders.hareToBuilder;
+import static net.zerobuilder.examples.values.RabbitBuilders.hareBuilder;
+import static net.zerobuilder.examples.values.RabbitBuilders.hareToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

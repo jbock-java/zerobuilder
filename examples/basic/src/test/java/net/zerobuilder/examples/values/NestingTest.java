@@ -1,13 +1,13 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
 import org.junit.Test;
 
-import static net.zerobuilder.examples.basic.Nesting_CrowsNestBuilders.crowsNestBuilder;
-import static net.zerobuilder.examples.basic.Nesting_CrowsNestBuilders.crowsNestToBuilder;
-import static net.zerobuilder.examples.basic.Nesting_CrowsNest_LizardsNestBuilders.lizardsNestBuilder;
-import static net.zerobuilder.examples.basic.Nesting_CrowsNest_LizardsNestBuilders.lizardsNestToBuilder;
-import static net.zerobuilder.examples.basic.Nesting_DovesNestBuilders.dovesNestBuilder;
-import static net.zerobuilder.examples.basic.Nesting_DovesNestBuilders.dovesNestToBuilder;
+import static net.zerobuilder.examples.values.Nesting_CrowsNestBuilders.crowsNestBuilder;
+import static net.zerobuilder.examples.values.Nesting_CrowsNestBuilders.crowsNestToBuilder;
+import static net.zerobuilder.examples.values.Nesting_CrowsNest_LizardsNestBuilders.lizardsNestBuilder;
+import static net.zerobuilder.examples.values.Nesting_CrowsNest_LizardsNestBuilders.lizardsNestToBuilder;
+import static net.zerobuilder.examples.values.Nesting_DovesNestBuilders.dovesNestBuilder;
+import static net.zerobuilder.examples.values.Nesting_DovesNestBuilders.dovesNestToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

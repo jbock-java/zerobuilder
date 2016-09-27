@@ -1,9 +1,9 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
 import org.junit.Test;
 
-import static net.zerobuilder.examples.basic.MessageBuilders.messageBuilder;
-import static net.zerobuilder.examples.basic.MessageBuilders.messageToBuilder;
+import static net.zerobuilder.examples.values.MessageBuilders.messageBuilder;
+import static net.zerobuilder.examples.values.MessageBuilders.messageToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

@@ -1,9 +1,9 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
 import org.junit.Test;
 
-import static net.zerobuilder.examples.basic.FieldAccessBuilders.fieldAccessBuilder;
-import static net.zerobuilder.examples.basic.FieldAccessBuilders.fieldAccessToBuilder;
+import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessBuilder;
+import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

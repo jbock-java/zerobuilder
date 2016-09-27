@@ -1,11 +1,11 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
-import net.zerobuilder.examples.basic.MoreValues.Interface;
+import net.zerobuilder.examples.values.MoreValues.Interface;
 import org.junit.Test;
 
-import static net.zerobuilder.examples.basic.MoreValues_InterfaceBuilders.interfaceBuilder;
-import static net.zerobuilder.examples.basic.MoreValues_NothingBuilders.appendBuilder;
-import static net.zerobuilder.examples.basic.MoreValues_SumBuilders.sumBuilder;
+import static net.zerobuilder.examples.values.MoreValues_InterfaceBuilders.interfaceBuilder;
+import static net.zerobuilder.examples.values.MoreValues_NothingBuilders.appendBuilder;
+import static net.zerobuilder.examples.values.MoreValues_SumBuilders.sumBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

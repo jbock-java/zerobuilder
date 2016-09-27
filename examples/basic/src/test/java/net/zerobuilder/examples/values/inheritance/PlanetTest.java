@@ -1,11 +1,11 @@
-package net.zerobuilder.examples.inheritance;
+package net.zerobuilder.examples.values.inheritance;
 
 import org.junit.Test;
 
 import java.math.BigInteger;
 
 import static java.math.BigInteger.TEN;
-import static net.zerobuilder.examples.inheritance.PlanetBuilders.planetToBuilder;
+import static net.zerobuilder.examples.values.inheritance.PlanetBuilders.planetToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

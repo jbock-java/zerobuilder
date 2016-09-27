@@ -1,9 +1,9 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
-// basic example
+// direct field access
 // see MessageTest
 @Builders(recycle = true)
 final class Message {

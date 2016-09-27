@@ -1,11 +1,11 @@
-package net.zerobuilder.examples.basic;
+package net.zerobuilder.examples.values;
 
-import net.zerobuilder.examples.basic.SimpleNull.BasicNull;
+import net.zerobuilder.examples.values.SimpleNull.BasicNull;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static net.zerobuilder.examples.basic.SimpleNull_BasicNullBuilders.basicNullToBuilder;
+import static net.zerobuilder.examples.values.SimpleNull_BasicNullBuilders.basicNullToBuilder;
 
 public class SimpleNullTest {
 
