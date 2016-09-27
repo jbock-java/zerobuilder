@@ -26,7 +26,7 @@ intellij will recognize `target/generated-sources/annotations` automatically.
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
-    <version>1.421</version>
+    <version>1.431</version>
     <scope>provided</scope>
 </dependency>
 ````

@@ -17,7 +17,7 @@ import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
 
@@ -53,9 +53,7 @@ final class StepContextB {
   }
 
   private static MethodSpec emptyCollection(LoneGetterStep step) {
-    LoneGetter parameter = step.loneGetter;
-    String name = parameter.accept(beanStepName);
-    return methodBuilder(name)
+    return methodBuilder(step.emptyMethod)
         .returns(step.nextType)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
@@ -63,7 +61,7 @@ final class StepContextB {
 
   private static MethodSpec iterateCollection(LoneGetterStep step) {
     LoneGetter parameter = step.loneGetter;
-    String name = parameter.accept(beanStepName);
+    String name = parameter.accept(beanParameterName);
     TypeName type = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(parameter.iterationType()));
     return methodBuilder(name)

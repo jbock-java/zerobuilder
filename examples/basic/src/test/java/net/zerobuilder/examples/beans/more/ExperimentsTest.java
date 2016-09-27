@@ -17,6 +17,7 @@ import static net.zerobuilder.examples.beans.more.Experiments_AeroExperimentBuil
 import static net.zerobuilder.examples.beans.more.Experiments_BioExperimentBuilders.bioExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_BioExperimentBuilders.bioExperimentToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_IgnorifyBuilders.ignorifyBuilder;
+import static net.zerobuilder.examples.beans.more.Experiments_IgnorifyBuilders.ignorifyToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_RawExperimentBuilders.rawExperimentBuilder;
@@ -85,7 +86,17 @@ public class ExperimentsTest {
 
   @Test
   public void ignoreTest() {
-    Ignorify ignore = ignorifyBuilder().things();
-    assertThat(ignore.getThings().size(), is(0));
+    Ignorify nothing = ignorifyBuilder().emptyThings();
+    Ignorify something = ignorifyToBuilder(nothing)
+        .things(singletonList(singletonList("a")))
+        .build();
+    Ignorify nothing2 = ignorifyToBuilder(nothing)
+        .emptyThings()
+        .build();
+    assertThat(nothing.getThings().size(), is(0));
+    assertThat(something.getThings().size(), is(1));
+    assertThat(something.getThings().get(0),
+        is((Iterable<String>) singletonList("a")));
+    assertThat(nothing2.getThings().size(), is(0));
   }
 }

@@ -12,7 +12,8 @@ import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
+import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 
 public final class DtoStep {
 
@@ -93,7 +94,7 @@ public final class DtoStep {
     }
 
     ParameterSpec parameter() {
-      return ParameterSpec.builder(accessorPair.type, accessorPair.accept(beanStepName)).build();
+      return ParameterSpec.builder(accessorPair.type, accessorPair.accept(beanParameterName)).build();
     }
 
     @Override
@@ -104,10 +105,16 @@ public final class DtoStep {
 
   public static final class LoneGetterStep extends AbstractBeanStep {
     final LoneGetter loneGetter;
+    final String emptyMethod;
 
-    public LoneGetterStep(ClassName thisType, TypeName nextType, LoneGetter loneGetter) {
+    private LoneGetterStep(ClassName thisType, TypeName nextType, LoneGetter loneGetter, String emptyMethod) {
       super(thisType, nextType);
       this.loneGetter = loneGetter;
+      this.emptyMethod = emptyMethod;
+    }
+    public static LoneGetterStep create(ClassName thisType, TypeName nextType, LoneGetter loneGetter) {
+      String emptyMethod = "empty" + upcase(loneGetter.accept(beanParameterName));
+      return new LoneGetterStep(thisType, nextType, loneGetter, emptyMethod);
     }
     @Override
     <R> R acceptBean(BeanStepCases<R> cases) {

@@ -105,7 +105,7 @@ public final class GoalContextFactory {
         }
         @Override
         public AbstractBeanStep loneGetter(DtoBeanParameter.LoneGetter loneGetter) {
-          return new LoneGetterStep(thisType, nextType, loneGetter);
+          return LoneGetterStep.create(thisType, nextType, loneGetter);
         }
       });
     }

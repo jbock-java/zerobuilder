@@ -82,7 +82,7 @@ public class Experiments {
 
   // ignore annotation
   @Builders
-  @Goal
+  @Goal(toBuilder = true)
   public static class Ignorify {
     private List<Iterable<String>> things;
     @Ignore

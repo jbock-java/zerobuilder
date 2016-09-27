@@ -7,7 +7,6 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
@@ -19,7 +18,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 
@@ -78,8 +77,7 @@ final class BuilderContextB {
   }
 
   private static MethodSpec emptyCollection(LoneGetterStep step, CodeBlock finalBlock) {
-    String name = step.loneGetter.accept(beanStepName);
-    return methodBuilder(name)
+    return methodBuilder(step.emptyMethod)
         .addAnnotation(Override.class)
         .returns(step.nextType)
         .addCode(finalBlock)
@@ -90,7 +88,7 @@ final class BuilderContextB {
   private static MethodSpec iterateCollection(LoneGetterStep step,
                                               BeanGoalContext goal,
                                               CodeBlock finalBlock) {
-    String name = step.loneGetter.accept(beanStepName);
+    String name = step.loneGetter.accept(beanParameterName);
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
     ParameterSpec parameter = ParameterSpec.builder(iterable, name).build();
@@ -110,25 +108,9 @@ final class BuilderContextB {
         .build();
   }
 
-  private static MethodSpec singletonCollection(LoneGetterStep step, BeanGoalContext goal, CodeBlock finalBlock) {
-    String name = step.loneGetter.accept(beanStepName);
-    TypeName type = step.loneGetter.iterationType();
-    ParameterSpec parameter = ParameterSpec.builder(type, name).build();
-    return methodBuilder(name)
-        .addAnnotation(Override.class)
-        .returns(step.nextType)
-        .addParameter(parameter)
-        .addCode(step.accept(nullCheck))
-        .addStatement("this.$N.$L().add($N)", goal.field,
-            step.loneGetter.getter, parameter)
-        .addCode(finalBlock)
-        .addModifiers(PUBLIC)
-        .build();
-  }
-
   private static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal, CodeBlock finalBlock) {
     ParameterSpec parameter = step.parameter();
-    return methodBuilder(step.accessorPair.accept(beanStepName))
+    return methodBuilder(step.accessorPair.accept(beanParameterName))
         .addAnnotation(Override.class)
         .addParameter(parameter)
         .addModifiers(PUBLIC)

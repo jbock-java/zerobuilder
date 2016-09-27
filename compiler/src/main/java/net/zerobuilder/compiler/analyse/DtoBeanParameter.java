@@ -103,7 +103,7 @@ public final class DtoBeanParameter {
     return new LoneGetterBuilder(ParameterSpec.builder(OBJECT, "object").build());
   }
 
-  public static final DtoBeanParameter.BeanParameterCases<String> beanStepName
+  public static final DtoBeanParameter.BeanParameterCases<String> beanParameterName
       = new BeanParameterCases<String>() {
     @Override
     public String accessorPair(AccessorPair pair) {

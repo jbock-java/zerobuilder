@@ -18,7 +18,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.statement;
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
@@ -98,7 +98,7 @@ final class GeneratorB {
         .beginControlFlow("if ($N.$N() == null)", parameter,
             validParameter.getter)
         .addStatement("throw new $T($S)",
-            NullPointerException.class, validParameter.accept(beanStepName))
+            NullPointerException.class, validParameter.accept(beanParameterName))
         .endControlFlow().build();
   }
 

@@ -46,7 +46,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRU
 import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nonNull;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
@@ -57,8 +57,8 @@ public final class ProjectionValidatorB {
       = Ordering.from(new Comparator<TmpAccessorPair>() {
     @Override
     public int compare(TmpAccessorPair pair0, TmpAccessorPair pair1) {
-      String name0 = pair0.validBeanParameter.accept(beanStepName);
-      String name1 = pair1.validBeanParameter.accept(beanStepName);
+      String name0 = pair0.validBeanParameter.accept(beanParameterName);
+      String name1 = pair1.validBeanParameter.accept(beanParameterName);
       return name0.compareTo(name1);
     }
   });

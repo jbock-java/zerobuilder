@@ -7,7 +7,6 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
@@ -18,9 +17,8 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
-import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
 final class UpdaterContextB {
@@ -60,7 +58,7 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec regularUpdater(BeanGoalContext goal, AccessorPairStep step) {
-    String name = step.accessorPair.accept(beanStepName);
+    String name = step.accessorPair.accept(beanParameterName);
     ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
         .returns(goal.accept(updaterType))
@@ -82,7 +80,7 @@ final class UpdaterContextB {
   private static MethodSpec iterateCollection(BeanGoalContext goal, LoneGetterStep step) {
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
-    String name = step.loneGetter.accept(beanStepName);
+    String name = step.loneGetter.accept(beanParameterName);
     ParameterSpec parameter = ParameterSpec.builder(iterable, name).build();
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
@@ -100,26 +98,9 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec emptyCollection(BeanGoalContext goal, LoneGetterStep step) {
-    String name = step.loneGetter.accept(beanStepName);
-    return methodBuilder(name)
+    return methodBuilder(step.emptyMethod)
         .returns(goal.accept(updaterType))
         .addCode(clearCollection(goal, step))
-        .addStatement("return this")
-        .addModifiers(PUBLIC)
-        .build();
-  }
-
-  private static MethodSpec singletonCollection(BeanGoalContext goal, LoneGetterStep step) {
-    String name = step.loneGetter.accept(beanStepName);
-    TypeName type = step.loneGetter.iterationType();
-    ParameterSpec parameter = ParameterSpec.builder(type, name).build();
-    return methodBuilder(name)
-        .returns(goal.accept(updaterType))
-        .addParameter(parameter)
-        .addCode(step.accept(nullCheck))
-        .addCode(clearCollection(goal, step))
-        .addStatement("this.$N.$N().add($N)",
-            goal.field, step.loneGetter.getter, name)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();

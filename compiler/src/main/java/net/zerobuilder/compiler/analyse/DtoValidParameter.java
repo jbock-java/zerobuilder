@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
 
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
+import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 
 public final class DtoValidParameter {
 
@@ -66,7 +66,7 @@ public final class DtoValidParameter {
     }
     @Override
     public String beanParameter(ValidBeanParameter parameter) {
-      return parameter.accept(beanStepName);
+      return parameter.accept(beanParameterName);
     }
   };
 
