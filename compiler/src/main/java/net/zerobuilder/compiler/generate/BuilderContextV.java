@@ -18,7 +18,6 @@ import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
@@ -48,7 +47,7 @@ final class BuilderContextV {
       for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
         TypeName type = step.validParameter.type;
         String name = step.validParameter.name;
-        ParameterSpec parameter = parameterSpec(type, name);
+        ParameterSpec parameter = ParameterSpec.builder(type, name).build();
         CodeBlock finalBlock = CodeBlock.builder()
             .addStatement("this.$N = $N", step.field, parameter)
             .addStatement("return this")
@@ -73,7 +72,7 @@ final class BuilderContextV {
                                         CodeBlock finalBlock, ImmutableList<TypeName> thrownTypes) {
     TypeName type = step.validParameter.type;
     String name = step.validParameter.name;
-    ParameterSpec parameter = parameterSpec(type, name);
+    ParameterSpec parameter = ParameterSpec.builder(type, name).build();
     return methodBuilder(step.validParameter.name)
         .addAnnotation(Override.class)
         .addParameter(parameter)
@@ -103,8 +102,9 @@ final class BuilderContextV {
     public CodeBlock methodGoal(MethodGoalContext goal) {
       CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
       CodeBlock.Builder builder = CodeBlock.builder();
-      builder.add(CodeBlock.of(VOID.equals(goal.goal.goalType) ? "" : "return "));
+      TypeName type = goal.goal.goalType;
       String method = goal.goal.methodName;
+      builder.add(CodeBlock.of(VOID.equals(type) ? "" : "return "));
       builder.add(goal.goal.instance
           ? statement("$N.$N($L)", goal.builders.field, method, parameters)
           : statement("$T.$N($L)", goal.builders.type, method, parameters));

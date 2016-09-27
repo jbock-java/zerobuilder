@@ -17,7 +17,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
@@ -30,7 +29,7 @@ final class GeneratorB {
       = new Function<BeanGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(BeanGoalContext goal) {
-      ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
+      ParameterSpec parameter = ParameterSpec.builder(goal.goal.goalType, goal.field.name).build();
       MethodSpec.Builder method = methodBuilder(downcase(goal.goal.name + "ToBuilder"))
           .addParameter(parameter);
       ParameterSpec updater = updaterInstance(goal);
@@ -60,7 +59,7 @@ final class GeneratorB {
   }
 
   private static CodeBlock copyCollection(BeanGoalContext goal, LoneGetterStep step) {
-    ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
+    ParameterSpec parameter = ParameterSpec.builder(goal.goal.goalType, goal.field.name).build();
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return CodeBlock.builder().add(nullCheck(parameter, step.loneGetter, true))
         .beginControlFlow("for ($T $N : $N.$N())",
@@ -75,7 +74,7 @@ final class GeneratorB {
   }
 
   private static CodeBlock copyRegular(BeanGoalContext goal, AccessorPairStep step) {
-    ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
+    ParameterSpec parameter = ParameterSpec.builder(goal.goal.goalType, goal.field.name).build();
     ParameterSpec updater = updaterInstance(goal);
     return CodeBlock.builder()
         .add(nullCheck(parameter, step.accessorPair))
@@ -117,7 +116,7 @@ final class GeneratorB {
 
   private static ParameterSpec updaterInstance(BeanGoalContext goal) {
     ClassName updaterType = goal.accept(UpdaterContext.updaterType);
-    return parameterSpec(updaterType, "updater");
+    return ParameterSpec.builder(updaterType, "updater").build();
   }
 
   static final Function<BeanGoalContext, MethodSpec> goalToBuilder

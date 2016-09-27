@@ -10,7 +10,6 @@ import org.junit.rules.ExpectedException;
 import java.util.List;
 
 import static java.util.Collections.nCopies;
-import static net.zerobuilder.examples.beans.more.NullChecks_CheckedCollectionBuilders.checkedCollectionBuilder;
 import static net.zerobuilder.examples.beans.more.NullChecks_CheckedStringBuilders.checkedStringBuilder;
 import static net.zerobuilder.examples.beans.more.NullChecks_DefaultBuilders.DefaultBuilder;
 import static net.zerobuilder.examples.beans.more.NullChecks_NullableElementsBuilders.nullableElementsBuilder;
@@ -23,13 +22,6 @@ public class NullChecksTest {
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
-
-  @Test
-  public void nullElementRejected() {
-    thrown.expectMessage("strings");
-    String nothing = null;
-    checkedCollectionBuilder().strings(nothing);
-  }
 
   @Test
   public void nullableElement() {

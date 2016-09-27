@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static net.zerobuilder.examples.beans.more.Experiments_AeroExperimentBuilders.aeroExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_AeroExperimentBuilders.aeroExperimentToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_BioExperimentBuilders.bioExperimentBuilder;
@@ -42,12 +43,12 @@ public class ExperimentsTest {
   @Test
   public void biologicalTest() {
     BioExperiment experiment1 = bioExperimentBuilder()
-        .pigs(asList(asList("Rosie", "Donna")));
+        .candidates(singletonList(asList("Goku", "Friesa")));
     BioExperiment experiment2 = bioExperimentToBuilder(experiment1)
-        .pigs(asList("Daisy"))
+        .candidates(singletonList(asList("Rohan")))
         .build();
-    assertThat(experiment1.getPigs(), is(asList(asList("Rosie", "Donna"))));
-    assertThat(experiment2.getPigs(), is(asList(asList("Daisy"))));
+    assertThat(experiment1.getCandidates(), is(singletonList(asList("Goku", "Friesa"))));
+    assertThat(experiment2.getCandidates(), is(singletonList(asList("Rohan"))));
   }
 
   @Test

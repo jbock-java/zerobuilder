@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static net.zerobuilder.examples.beans.more.BusinessAnalystBuilders.businessAnalystBuilder;
 import static net.zerobuilder.examples.beans.more.BusinessAnalystBuilders.businessAnalystToBuilder;
 import static org.hamcrest.core.Is.is;
@@ -17,19 +19,19 @@ public class BusinessAnalystTest {
         .age(36)
         .executive(false)
         .name("Peter")
-        .notes("entry");
+        .notes(asList("entry"));
     BusinessAnalyst updated = businessAnalystToBuilder(peter)
         .executive(true)
         .age(37)
-        .notes(Arrays.asList("entry0", "entry1"))
+        .notes(asList("entry0", "entry1"))
         .build();
     assertThat(peter.getAge(), is(36));
     assertThat(peter.getName(), is("Peter"));
-    assertThat(peter.getNotes(), is(Arrays.asList("entry")));
+    assertThat(peter.getNotes(), is(singletonList("entry")));
     assertThat(peter.isExecutive(), is(false));
     assertThat(updated.getAge(), is(37));
     assertThat(updated.getName(), is("Peter"));
-    assertThat(updated.getNotes(), is(Arrays.asList("entry0", "entry1")));
+    assertThat(updated.getNotes(), is(asList("entry0", "entry1")));
     assertThat(updated.isExecutive(), is(true));
   }
 
@@ -39,19 +41,19 @@ public class BusinessAnalystTest {
         .age(36)
         .executive(true)
         .name("Peter")
-        .notes(Arrays.asList("entry0", "entry1"));
+        .notes(asList("entry0", "entry1"));
     BusinessAnalyst updated = businessAnalystToBuilder(peter)
         .age(37)
         .executive(false)
-        .notes("entry")
+        .notes(singletonList("entry"))
         .build();
     assertThat(peter.getAge(), is(36));
     assertThat(peter.getName(), is("Peter"));
-    assertThat(peter.getNotes(), is(Arrays.asList("entry0", "entry1")));
+    assertThat(peter.getNotes(), is(asList("entry0", "entry1")));
     assertThat(peter.isExecutive(), is(true));
     assertThat(updated.getAge(), is(37));
     assertThat(updated.getName(), is("Peter"));
-    assertThat(updated.getNotes(), is(Arrays.asList("entry")));
+    assertThat(updated.getNotes(), is(singletonList("entry")));
     assertThat(updated.isExecutive(), is(false));
   }
 }

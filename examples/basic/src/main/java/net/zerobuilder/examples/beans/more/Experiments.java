@@ -41,13 +41,13 @@ public class Experiments {
   @Builders(recycle = true)
   @Goal(toBuilder = true)
   public static class BioExperiment {
-    private List<List<String>> pigs;
+    private List<List<String>> candidates;
 
-    public List<List<String>> getPigs() {
-      if (pigs == null) {
-        pigs = new ArrayList<>();
+    public List<List<String>> getCandidates() {
+      if (candidates == null) {
+        candidates = new ArrayList<>();
       }
-      return pigs;
+      return candidates;
     }
   }
 

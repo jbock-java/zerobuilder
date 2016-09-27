@@ -105,9 +105,8 @@ public final class ProjectionValidatorB {
     } else if (typeArguments.size() == 1) {
       // one type parameter
       TypeMirror collectionType = getOnlyElement(typeArguments);
-      boolean allowShortcut = !ClassName.get(asTypeElement(collectionType)).equals(ITERABLE);
       DtoBeanParameter.LoneGetter loneGetter = DtoBeanParameter
-          .builder(collectionType, allowShortcut)
+          .builder(collectionType)
           .build(TypeName.get(type), name, nonNull);
       return TmpAccessorPair.createLoneGetter(getter, loneGetter);
     } else {

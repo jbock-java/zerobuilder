@@ -10,7 +10,6 @@ import javax.lang.model.type.TypeMirror;
 import static com.google.auto.common.MoreTypes.asTypeElement;
 import static net.zerobuilder.compiler.Utilities.distinctFrom;
 import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.OBJECT;
 
 public final class DtoBeanParameter {
@@ -56,7 +55,6 @@ public final class DtoBeanParameter {
      * {@ccode String}
      */
     private final ParameterSpec iterationVar;
-    public final boolean allowShortcut;
     public TypeName iterationType() {
       return iterationVar.type;
     }
@@ -71,14 +69,12 @@ public final class DtoBeanParameter {
       if (!iterationVar.name.equals(avoid.name)) {
         return iterationVar;
       }
-      return parameterSpec(iterationVar.type,
-          distinctFrom(iterationVar.name, avoid.name));
+      return ParameterSpec.builder(iterationVar.type, distinctFrom(iterationVar.name, avoid.name)).build();
     }
 
-    private LoneGetter(TypeName type, String getter, boolean nonNull, ParameterSpec iterationVar, boolean allowShortcut) {
+    private LoneGetter(TypeName type, String getter, boolean nonNull, ParameterSpec iterationVar) {
       super(type, getter, nonNull);
       this.iterationVar = iterationVar;
-      this.allowShortcut = allowShortcut;
     }
     @Override
     public <R> R accept(BeanParameterCases<R> cases) {
@@ -88,26 +84,23 @@ public final class DtoBeanParameter {
 
   public static final class LoneGetterBuilder {
     private final ParameterSpec iterationVar;
-    private final boolean allowShortcut;
-    LoneGetterBuilder(ParameterSpec iterationVar, boolean allowShortcut) {
+    LoneGetterBuilder(ParameterSpec iterationVar) {
       this.iterationVar = iterationVar;
-      this.allowShortcut = allowShortcut;
     }
     public LoneGetter build(TypeName type, String getter, boolean nonNull) {
-      return new LoneGetter(type, getter, nonNull, iterationVar, allowShortcut);
+      return new LoneGetter(type, getter, nonNull, iterationVar);
     }
   }
 
-  static LoneGetterBuilder builder(TypeMirror type, boolean allowShortcut) {
+  static LoneGetterBuilder builder(TypeMirror type) {
     TypeName typeName = TypeName.get(type);
     String name = downcase(ClassName.get(asTypeElement(type)).simpleName().toString());
     ParameterSpec iterationVar = ParameterSpec.builder(typeName, name).build();
-    return new LoneGetterBuilder(iterationVar, allowShortcut);
+    return new LoneGetterBuilder(iterationVar);
   }
 
   static LoneGetterBuilder builder() {
-    ParameterSpec iterationVar = parameterSpec(OBJECT, "object");
-    return new LoneGetterBuilder(iterationVar, false);
+    return new LoneGetterBuilder(ParameterSpec.builder(OBJECT, "object").build());
   }
 
   public static final DtoBeanParameter.BeanParameterCases<String> beanStepName

@@ -43,10 +43,6 @@ public final class Utilities {
     return CodeBlock.builder().addStatement(format, args).build();
   }
 
-  public static ParameterSpec parameterSpec(TypeName type, String name) {
-    return ParameterSpec.builder(type, name).build();
-  }
-
   public static CodeBlock nullCheck(String varName, String message) {
     return CodeBlock.builder()
         .beginControlFlow("if ($N == null)", varName)

@@ -18,7 +18,6 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
@@ -77,9 +76,6 @@ final class UpdaterContextB {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(iterateCollection(goal, step));
     builder.add(emptyCollection(goal, step));
-    if (step.loneGetter.allowShortcut) {
-      builder.add(singletonCollection(goal, step));
-    }
     return builder.build();
   }
 
@@ -87,7 +83,7 @@ final class UpdaterContextB {
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
     String name = step.loneGetter.accept(beanStepName);
-    ParameterSpec parameter = parameterSpec(iterable, name);
+    ParameterSpec parameter = ParameterSpec.builder(iterable, name).build();
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
         .returns(goal.accept(updaterType))
@@ -116,7 +112,7 @@ final class UpdaterContextB {
   private static MethodSpec singletonCollection(BeanGoalContext goal, LoneGetterStep step) {
     String name = step.loneGetter.accept(beanStepName);
     TypeName type = step.loneGetter.iterationType();
-    ParameterSpec parameter = parameterSpec(type, name);
+    ParameterSpec parameter = ParameterSpec.builder(type, name).build();
     return methodBuilder(name)
         .returns(goal.accept(updaterType))
         .addParameter(parameter)

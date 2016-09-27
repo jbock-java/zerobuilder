@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -16,7 +17,6 @@ import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanStepName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
@@ -49,21 +49,7 @@ final class StepContextB {
   private static ImmutableList<MethodSpec> collectionMethods(LoneGetterStep step) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(iterateCollection(step), emptyCollection(step));
-    if (step.loneGetter.allowShortcut) {
-      builder.add(singletonCollection(step));
-    }
     return builder.build();
-  }
-
-
-  private static MethodSpec singletonCollection(LoneGetterStep step) {
-    String name = step.loneGetter.accept(beanStepName);
-    TypeName type = step.loneGetter.iterationType();
-    return methodBuilder(name)
-        .addParameter(parameterSpec(type, name))
-        .returns(step.nextType)
-        .addModifiers(PUBLIC, ABSTRACT)
-        .build();
   }
 
   private static MethodSpec emptyCollection(LoneGetterStep step) {
@@ -81,7 +67,7 @@ final class StepContextB {
     TypeName type = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(parameter.iterationType()));
     return methodBuilder(name)
-        .addParameter(parameterSpec(type, name))
+        .addParameter(ParameterSpec.builder(type, name).build())
         .returns(step.nextType)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
