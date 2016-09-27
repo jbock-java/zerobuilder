@@ -10,8 +10,8 @@ This project has two different use cases:
 ### How to use
 
 This is a standard Java &ge; 7 annotation processor.
-The generated code has no runtime dependencies.
-Neither does the annotated source code; see
+The generated source code has no runtime dependencies.
+After compilation, the zerobuilder-annotated code itself does not depend on zerobuilder; see
 [RetentionPolicy.SOURCE](https://docs.oracle.com/javase/7/docs/api/java/lang/annotation/RetentionPolicy.html#SOURCE).
 
 Maven compiler plugin version `3.5.1` or greater is recommended.
