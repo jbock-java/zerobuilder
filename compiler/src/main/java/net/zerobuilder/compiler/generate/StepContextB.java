@@ -3,14 +3,13 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
-import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
-import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
+import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
@@ -32,8 +31,8 @@ final class StepContextB {
     }
   };
 
-  private static final DtoStep.BeanStepCases<TypeSpec> beanStepInterfaceCases
-      = new DtoStep.BeanStepCases<TypeSpec>() {
+  private static final BeanStepCases<TypeSpec> beanStepInterfaceCases
+      = new BeanStepCases<TypeSpec>() {
     @Override
     public TypeSpec accessorPair(AccessorPairStep step) {
       return regularStepInterface.apply(step);

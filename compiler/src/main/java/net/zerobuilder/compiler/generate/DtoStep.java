@@ -10,11 +10,14 @@ import net.zerobuilder.compiler.analyse.DtoBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
+import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
 
 public final class DtoStep {
 
@@ -31,11 +34,6 @@ public final class DtoStep {
   interface StepCases<R> {
     R regularStep(RegularStep step);
     R beanStep(AbstractBeanStep step);
-  }
-
-  interface BeanStepCases<R> {
-    R accessorPair(AccessorPairStep step);
-    R loneGetter(LoneGetterStep step);
   }
 
   static <R> StepCases<R> stepCases(final Function<? super RegularStep, R> regularFunction,
@@ -71,66 +69,14 @@ public final class DtoStep {
     }
   }
 
-  public static abstract class AbstractBeanStep extends AbstractStep {
-    AbstractBeanStep(ClassName thisType, TypeName nextType) {
-      super(thisType, nextType);
-    }
+  static final StepCases<ValidParameter> validParameter
+      = new StepCases<ValidParameter>() {
     @Override
-    final <R> R accept(StepCases<R> cases) {
-      return cases.beanStep(this);
-    }
-    abstract <R> R acceptBean(BeanStepCases<R> cases);
-  }
-
-  public static final class AccessorPairStep extends AbstractBeanStep {
-    final AccessorPair accessorPair;
-    final String setter;
-
-
-    public AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
-                            String setter) {
-      super(thisType, nextType);
-      this.accessorPair = accessorPair;
-      this.setter = setter;
-    }
-
-    ParameterSpec parameter() {
-      return parameterSpec(accessorPair.type, accessorPair.accept(beanParameterName));
-    }
-
-    @Override
-    <R> R acceptBean(BeanStepCases<R> cases) {
-      return cases.accessorPair(this);
-    }
-  }
-
-  public static final class LoneGetterStep extends AbstractBeanStep {
-    final LoneGetter loneGetter;
-    final String emptyMethod;
-
-    private LoneGetterStep(ClassName thisType, TypeName nextType, LoneGetter loneGetter, String emptyMethod) {
-      super(thisType, nextType);
-      this.loneGetter = loneGetter;
-      this.emptyMethod = emptyMethod;
-    }
-    public static LoneGetterStep create(ClassName thisType, TypeName nextType, LoneGetter loneGetter) {
-      String emptyMethod = "empty" + upcase(loneGetter.accept(beanParameterName));
-      return new LoneGetterStep(thisType, nextType, loneGetter, emptyMethod);
-    }
-    @Override
-    <R> R acceptBean(BeanStepCases<R> cases) {
-      return cases.loneGetter(this);
-    }
-  }
-
-  static final StepCases<DtoValidParameter.ValidParameter> validParameter
-      = new StepCases<DtoValidParameter.ValidParameter>() {
-    @Override
-    public DtoValidParameter.ValidParameter regularStep(RegularStep step) {
+    public ValidParameter regularStep(RegularStep step) {
       return step.validParameter;
     }
     @Override
-    public DtoValidParameter.ValidParameter beanStep(AbstractBeanStep step) {
+    public ValidParameter beanStep(AbstractBeanStep step) {
       return step.acceptBean(validBeanParameter);
     }
   };
@@ -144,18 +90,6 @@ public final class DtoStep {
     @Override
     public ImmutableList<TypeName> beanStep(AbstractBeanStep step) {
       return ImmutableList.of();
-    }
-  };
-
-  static final BeanStepCases<DtoBeanParameter.ValidBeanParameter> validBeanParameter
-      = new BeanStepCases<DtoBeanParameter.ValidBeanParameter>() {
-    @Override
-    public DtoBeanParameter.ValidBeanParameter accessorPair(AccessorPairStep step) {
-      return step.accessorPair;
-    }
-    @Override
-    public DtoBeanParameter.ValidBeanParameter loneGetter(LoneGetterStep step) {
-      return step.loneGetter;
     }
   };
 

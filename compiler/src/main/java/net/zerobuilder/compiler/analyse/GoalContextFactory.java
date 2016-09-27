@@ -14,14 +14,15 @@ import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
-import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
-import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import javax.lang.model.element.ExecutableElement;

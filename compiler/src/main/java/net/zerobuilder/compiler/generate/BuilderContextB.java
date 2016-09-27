@@ -8,10 +8,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
-import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
-import net.zerobuilder.compiler.generate.DtoStep.BeanStepCases;
-import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
+import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;

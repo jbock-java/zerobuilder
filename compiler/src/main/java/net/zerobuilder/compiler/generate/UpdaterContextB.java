@@ -8,10 +8,9 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
-import net.zerobuilder.compiler.generate.DtoStep.AccessorPairStep;
-import net.zerobuilder.compiler.generate.DtoStep.BeanStepCases;
-import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
+import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
+import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
@@ -38,7 +37,7 @@ final class UpdaterContextB {
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       BeanStepCases<ImmutableList<MethodSpec>> handler = updateMethodsCases(goal);
-      for (AbstractBeanStep step : goal.steps) {
+      for (DtoBeanStep.AbstractBeanStep step : goal.steps) {
         builder.addAll(step.acceptBean(handler));
       }
       return builder.build();

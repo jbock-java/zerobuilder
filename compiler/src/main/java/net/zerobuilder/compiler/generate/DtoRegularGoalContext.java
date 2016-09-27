@@ -2,15 +2,12 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
-import net.zerobuilder.compiler.generate.DtoStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 public final class DtoRegularGoalContext {
