@@ -50,4 +50,8 @@
 
 ### 2016-09-26 zerobuilder 1.412 released
 
-* remove null checking option of collection elements (breaking)
+* beans: remove null checking option of collection elements (breaking)
+
+### 2016-09-27 zerobuilder 1.421 released
+
+* beans: remove singleton list shortcut for lone getters (breaking)
