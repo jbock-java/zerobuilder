@@ -9,7 +9,11 @@ This project has two different use cases:
 
 ### How to use
 
-This is a standard Java &ge; 7 annotation processor, with no runtime dependencies.
+This is a standard Java &ge; 7 annotation processor.
+The generated code has no runtime dependencies.
+Neither does the annotated source code; see
+[RetentionPolicy.SOURCE](https://docs.oracle.com/javase/7/docs/api/java/lang/annotation/RetentionPolicy.html#SOURCE).
+
 Maven compiler plugin version `3.5.1` or greater is recommended.
 
 Your IDE may need some initial help, to recognize that `target/generated-sources/annotations`
@@ -17,6 +21,10 @@ now contains generated sources.
 
 <em>Tip for intellij users:</em> If you do a `mvn install` before opening one of the example projects,
 intellij will recognize `target/generated-sources/annotations` automatically.
+
+### Why zero?
+
+Because using the generated builders has zero impact on garbage collection, if the `recycle` option is used.
 
 ### Maven
 
@@ -28,7 +36,3 @@ intellij will recognize `target/generated-sources/annotations` automatically.
     <scope>provided</scope>
 </dependency>
 ````
-
-### Why zero?
-
-Because using the generated builders has zero impact on garbage collection, if the `recycle` option is used.
