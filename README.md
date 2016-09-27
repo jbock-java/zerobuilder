@@ -2,17 +2,15 @@
 
 This project has two different use cases:
 
-* Create and update immutable value objects. 
-  See the [documentation for values](values.md).
-* Make it easier to create mutable Java Beans and to treat them as if they were immutable, 
-  so that they can be used with confidence as data in Java 8 streams.
-  See the [documentation for beans](beans.md).
+* Create and update immutable value objects with minimal effort. 
+  See [values](values.md).
+* Create mutable JavaBeans and update them with "immutable semantics", i.e. by making shallow copies.
+  See [beans](beans.md).
 
-### Use it in your project
+### How to use
 
-This is a standard annotation processor, compatible with Java 7 and higher.
-No compiler plugin or special IDE is needed.
-However, maven compiler plugin version `3.5.1` or greater is recommended.
+This is a standard Java &ge; 7 annotation processor, with no runtime dependencies.
+Maven compiler plugin version `3.5.1` or greater is recommended.
 
 Your IDE may need some initial help, to recognize that `target/generated-sources/annotations`
 now contains generated sources.
@@ -30,3 +28,7 @@ intellij will recognize `target/generated-sources/annotations` automatically.
     <scope>provided</scope>
 </dependency>
 ````
+
+### Why zero?
+
+Because using the generated builders has zero impact on garbage collection, if the `recycle` option is used.
