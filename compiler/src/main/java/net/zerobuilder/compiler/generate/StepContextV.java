@@ -5,12 +5,14 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.DtoValidParameter;
+import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.DtoValidParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;
 import static net.zerobuilder.compiler.generate.DtoStep.validParameter;
@@ -21,13 +23,13 @@ final class StepContextV {
       = new Function<AbstractStep, TypeSpec>() {
     @Override
     public TypeSpec apply(AbstractStep step) {
-      DtoValidParameter.ValidParameter parameter = step.accept(validParameter);
+      ValidParameter parameter = step.accept(validParameter);
       String name = parameter.acceptParameter(parameterName);
       TypeName type = parameter.type;
       return interfaceBuilder(step.thisType)
           .addMethod(methodBuilder(name)
               .returns(step.nextType)
-              .addParameter(ParameterSpec.builder(type, name).build())
+              .addParameter(parameterSpec(type, name))
               .addExceptions(step.accept(declaredExceptions))
               .addModifiers(PUBLIC, ABSTRACT)
               .build())

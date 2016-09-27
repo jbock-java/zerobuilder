@@ -16,9 +16,10 @@ import net.zerobuilder.compiler.generate.DtoStep.LoneGetterStep;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.ITERABLE;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
 final class UpdaterContextB {
@@ -81,7 +82,7 @@ final class UpdaterContextB {
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
     String name = step.loneGetter.accept(beanParameterName);
-    ParameterSpec parameter = ParameterSpec.builder(iterable, name).build();
+    ParameterSpec parameter = parameterSpec(iterable, name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
         .returns(goal.accept(updaterType))

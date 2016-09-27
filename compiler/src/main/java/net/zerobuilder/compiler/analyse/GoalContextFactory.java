@@ -8,6 +8,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.ValidBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoalCases;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
@@ -31,7 +32,7 @@ import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.DtoValidParameter.parameterName;
 
-public final class GoalContextFactory {
+final class GoalContextFactory {
 
   static AbstractGoalContext context(final DtoValidGoal.ValidGoal validGoal, final BuildersContext builders,
                                      final boolean toBuilder, final boolean builder) throws ValidationException {
@@ -45,7 +46,7 @@ public final class GoalContextFactory {
             goal.parameters,
             thrownTypes,
             regularParameterFactory);
-        return goal.goal.goal.accept(new DtoGoal.RegularGoalCases<AbstractGoalContext>() {
+        return goal.goal.goal.accept(new RegularGoalCases<AbstractGoalContext>() {
           @Override
           public AbstractGoalContext method(DtoGoal.MethodGoal goal) {
             return new MethodGoalContext(

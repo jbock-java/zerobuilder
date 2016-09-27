@@ -46,12 +46,14 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRU
 import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
+import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
+import static net.zerobuilder.compiler.Utilities.ClassNames.OBJECT;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nonNull;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 
-public final class ProjectionValidatorB {
+final class ProjectionValidatorB {
 
   private static final Ordering<TmpAccessorPair> ACCESSOR_PAIR_ORDERING
       = Ordering.from(new Comparator<TmpAccessorPair>() {
@@ -62,10 +64,6 @@ public final class ProjectionValidatorB {
       return name0.compareTo(name1);
     }
   });
-
-  public static final ClassName OBJECT = ClassName.get(Object.class);
-  private static final ClassName COLLECTION = ClassName.get(Collection.class);
-  public static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
   static final Function<BeanGoalElement, ValidGoal> validateBean
       = new Function<BeanGoalElement, ValidGoal>() {

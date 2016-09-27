@@ -17,7 +17,7 @@ import static net.zerobuilder.compiler.generate.DtoStep.validParameter;
 import static net.zerobuilder.compiler.generate.StepContextB.beanStepInterface;
 import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
 
-public final class StepContext {
+final class StepContext {
 
   static final StepCases<CodeBlock> nullCheck
       = always(new Function<AbstractStep, CodeBlock>() {

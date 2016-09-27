@@ -12,6 +12,7 @@ import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter;
 import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidRegularParameter;
 
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 
@@ -94,7 +95,7 @@ public final class DtoStep {
     }
 
     ParameterSpec parameter() {
-      return ParameterSpec.builder(accessorPair.type, accessorPair.accept(beanParameterName)).build();
+      return parameterSpec(accessorPair.type, accessorPair.accept(beanParameterName));
     }
 
     @Override

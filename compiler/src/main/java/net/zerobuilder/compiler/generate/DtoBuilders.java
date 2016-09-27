@@ -40,7 +40,7 @@ public final class DtoBuilders {
     /**
      * An optional {@code ThreadLocal} that holds an instance of the generated type, if {@link #recycle}.
      */
-    public final FieldSpec cache;
+    final FieldSpec cache;
 
     private BuildersContext(boolean recycle, ClassName type, ClassName generatedType, FieldSpec field, FieldSpec tl) {
       this.recycle = recycle;

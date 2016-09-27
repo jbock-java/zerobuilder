@@ -18,6 +18,7 @@ import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
@@ -47,7 +48,7 @@ final class BuilderContextV {
       for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
         TypeName type = step.validParameter.type;
         String name = step.validParameter.name;
-        ParameterSpec parameter = ParameterSpec.builder(type, name).build();
+        ParameterSpec parameter = parameterSpec(type, name);
         CodeBlock finalBlock = CodeBlock.builder()
             .addStatement("this.$N = $N", step.field, parameter)
             .addStatement("return this")
@@ -72,7 +73,7 @@ final class BuilderContextV {
                                         CodeBlock finalBlock, ImmutableList<TypeName> thrownTypes) {
     TypeName type = step.validParameter.type;
     String name = step.validParameter.name;
-    ParameterSpec parameter = ParameterSpec.builder(type, name).build();
+    ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(step.validParameter.name)
         .addAnnotation(Override.class)
         .addParameter(parameter)

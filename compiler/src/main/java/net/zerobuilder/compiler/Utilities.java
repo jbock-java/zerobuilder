@@ -1,11 +1,13 @@
 package net.zerobuilder.compiler;
 
 import com.google.common.collect.ImmutableSet;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
@@ -13,6 +15,17 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static java.lang.Character.isUpperCase;
 
 public final class Utilities {
+
+  public static final class ClassNames {
+
+    public static final ClassName OBJECT = ClassName.get(Object.class);
+    public static final ClassName COLLECTION = ClassName.get(Collection.class);
+    public static final ClassName ITERABLE = ClassName.get(Iterable.class);
+
+    private ClassNames() {
+      throw new UnsupportedOperationException("no instances");
+    }
+  }
 
   private static final ImmutableSet<String> reservedWords = ImmutableSet.of(
       "abstract", "continue", "for", "new", "switch", "assert", "default", "if", "package",
@@ -41,6 +54,10 @@ public final class Utilities {
 
   public static CodeBlock statement(String format, Object... args) {
     return CodeBlock.builder().addStatement(format, args).build();
+  }
+
+  public static ParameterSpec parameterSpec(TypeName type, String name) {
+    return ParameterSpec.builder(type, name).build();
   }
 
   public static CodeBlock nullCheck(String varName, String message) {

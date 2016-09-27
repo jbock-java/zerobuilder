@@ -12,6 +12,7 @@ import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
@@ -43,7 +44,7 @@ final class UpdaterContextV {
       for (RegularStep step : goal.steps) {
         String name = step.validParameter.name;
         TypeName type = step.validParameter.type;
-        ParameterSpec parameter = ParameterSpec.builder(type, name).build();
+        ParameterSpec parameter = parameterSpec(type, name);
         builder.add(methodBuilder(name)
             .returns(goal.accept(updaterType))
             .addParameter(parameter)

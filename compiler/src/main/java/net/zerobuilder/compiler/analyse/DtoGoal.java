@@ -13,7 +13,7 @@ public final class DtoGoal {
     }
   }
 
-  public interface RegularGoalCases<R> {
+  interface RegularGoalCases<R> {
     R method(MethodGoal goal);
     R constructor(ConstructorGoal goal);
   }

@@ -8,9 +8,10 @@ import net.zerobuilder.compiler.analyse.DtoValidParameter.ValidParameter;
 import javax.lang.model.type.TypeMirror;
 
 import static com.google.auto.common.MoreTypes.asTypeElement;
+import static net.zerobuilder.compiler.Utilities.ClassNames.OBJECT;
 import static net.zerobuilder.compiler.Utilities.distinctFrom;
 import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.OBJECT;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 
 public final class DtoBeanParameter {
 
@@ -69,7 +70,7 @@ public final class DtoBeanParameter {
       if (!iterationVar.name.equals(avoid.name)) {
         return iterationVar;
       }
-      return ParameterSpec.builder(iterationVar.type, distinctFrom(iterationVar.name, avoid.name)).build();
+      return parameterSpec(iterationVar.type, distinctFrom(iterationVar.name, avoid.name));
     }
 
     private LoneGetter(TypeName type, String getter, boolean nonNull, ParameterSpec iterationVar) {
@@ -95,12 +96,12 @@ public final class DtoBeanParameter {
   static LoneGetterBuilder builder(TypeMirror type) {
     TypeName typeName = TypeName.get(type);
     String name = downcase(ClassName.get(asTypeElement(type)).simpleName().toString());
-    ParameterSpec iterationVar = ParameterSpec.builder(typeName, name).build();
+    ParameterSpec iterationVar = parameterSpec(typeName, name);
     return new LoneGetterBuilder(iterationVar);
   }
 
   static LoneGetterBuilder builder() {
-    return new LoneGetterBuilder(ParameterSpec.builder(OBJECT, "object").build());
+    return new LoneGetterBuilder(parameterSpec(OBJECT, "object"));
   }
 
   public static final DtoBeanParameter.BeanParameterCases<String> beanParameterName

@@ -14,6 +14,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
+import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
@@ -29,7 +30,7 @@ final class GeneratorV {
         @Override
         public MethodSpec apply(RegularGoalContext goal) {
           TypeName goalType = goal.acceptRegular(DtoRegularGoalContext.goalType);
-          ParameterSpec parameter = ParameterSpec.builder(goalType, downcase(((ClassName) goalType.box()).simpleName())).build();
+          ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
           String methodName = goal.acceptRegular(goalName) + "ToBuilder";
           ParameterSpec updater = updaterInstance(goal);
           MethodSpec.Builder method = methodBuilder(methodName)
@@ -96,7 +97,7 @@ final class GeneratorV {
 
   private static ParameterSpec updaterInstance(RegularGoalContext goal) {
     ClassName updaterType = goal.accept(UpdaterContext.updaterType);
-    return ParameterSpec.builder(updaterType, "updater").build();
+    return parameterSpec(updaterType, "updater");
   }
 
 
@@ -110,7 +111,7 @@ final class GeneratorV {
       ParameterSpec builder = builderInstance(goal);
       method.addCode(initBuilder(goal, builder));
       if (goal.acceptRegular(isInstance)) {
-        ParameterSpec parameter = ParameterSpec.builder(goal.builders.type, downcase(goal.builders.type.simpleName())).build();
+        ParameterSpec parameter = parameterSpec(goal.builders.type, downcase(goal.builders.type.simpleName()));
         method.addParameter(parameter)
             .addStatement("$N.$N = $N", builder, goal.builders.field, parameter);
       }
@@ -126,7 +127,7 @@ final class GeneratorV {
 
   private static ParameterSpec builderInstance(RegularGoalContext goal) {
     ClassName stepsType = goal.accept(builderImplType);
-    return ParameterSpec.builder(stepsType, downcase(stepsType.simpleName())).build();
+    return parameterSpec(stepsType, downcase(stepsType.simpleName()));
   }
 
   private GeneratorV() {

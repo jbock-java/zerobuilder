@@ -30,7 +30,7 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValue;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValueSkipProjections;
 
-public final class ProjectionValidator {
+final class ProjectionValidator {
 
   static final GoalElementCases<ValidGoal> validate = goalElementCases(validateValue, validateBean);
   static final GoalElementCases<ValidGoal> skip = goalElementCases(validateValueSkipProjections, validateBean);
