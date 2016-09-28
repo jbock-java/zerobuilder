@@ -43,21 +43,31 @@ final class UpdaterContextV {
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (RegularStep step : goal.steps) {
-        String name = step.validParameter.name;
-        TypeName type = step.validParameter.type;
-        ParameterSpec parameter = parameterSpec(type, name);
-        builder.add(methodBuilder(name)
-            .returns(goal.accept(updaterType))
-            .addParameter(parameter)
-            .addCode(step.accept(nullCheck))
-            .addStatement("this.$N = $N", step.field, parameter)
-            .addStatement("return this")
-            .addModifiers(PUBLIC)
-            .build());
+        builder.addAll(updateMethods(goal, step));
       }
       return builder.build();
     }
   };
+
+  private static ImmutableList<MethodSpec> updateMethods(RegularGoalContext goal, RegularStep step) {
+    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+    builder.add(normalUpdate(goal, step));
+    return builder.build();
+  }
+
+  private static MethodSpec normalUpdate(RegularGoalContext goal, RegularStep step) {
+    String name = step.validParameter.name;
+    TypeName type = step.validParameter.type;
+    ParameterSpec parameter = parameterSpec(type, name);
+    return methodBuilder(name)
+        .returns(goal.accept(updaterType))
+        .addParameter(parameter)
+        .addCode(step.accept(nullCheck))
+        .addStatement("this.$N = $N", step.field, parameter)
+        .addStatement("return this")
+        .addModifiers(PUBLIC)
+        .build();
+  }
 
   private UpdaterContextV() {
     throw new UnsupportedOperationException("no instances");

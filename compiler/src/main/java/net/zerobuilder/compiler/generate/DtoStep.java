@@ -4,27 +4,37 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.Utilities;
 import net.zerobuilder.compiler.Utilities.ClassNames;
 import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.analyse.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 
+import java.util.Collections;
+
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
 
 public final class DtoStep {
 
   enum EmptyOption {
-    LIST, SET, NONE,;
+    LIST(CodeBlock.of("$T.emptyList()", Collections.class)),
+    SET(CodeBlock.of("$T.emptySet()", Collections.class)),
+    NONE(emptyCodeBlock);
+
+    final CodeBlock initializer;
 
     private static final ImmutableSet<ClassName> LIST_HIERARCHY
         = ImmutableSet.of(ClassNames.LIST, COLLECTION, ITERABLE);
+    EmptyOption(CodeBlock initializer) {
+      this.initializer = initializer;
+    }
 
     static EmptyOption forType(TypeName type) {
       if (LIST_HIERARCHY.contains(type)) {
