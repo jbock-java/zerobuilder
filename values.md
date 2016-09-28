@@ -70,13 +70,9 @@ The following structure will be generated (some implementation details left out)
 If you clone this project and do a `mvn install`, you will find the complete source code of `MessageBuilders.java`
 in the `examples/basic/target/generated-sources/annotations` folder.
 
-`MessageUpdater` looks like standard builder pattern.
-`MessageBuilder` on the other hand contains a "chain" of interfaces:
+The `messageBuilder` method returns the first step of a chain of interfaces, which ends in `Message`:
 
-
-
-
-
+![steps](https://raw.githubusercontent.com/h908714124/zerobuilder/master/dot/graph.png "steps diagram")
 
 ### Order of steps
 
