@@ -33,7 +33,7 @@ final class BuilderContextB {
     }
   };
 
-  static final Function<BeanGoalContext, ImmutableList<MethodSpec>> stepsButLast
+  static final Function<BeanGoalContext, ImmutableList<MethodSpec>> stepsExceptLast
       = new Function<BeanGoalContext, ImmutableList<MethodSpec>>() {
     @Override
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
@@ -51,13 +51,18 @@ final class BuilderContextB {
     return new BeanStepCases<ImmutableList<MethodSpec>>() {
       @Override
       public ImmutableList<MethodSpec> accessorPair(AccessorPairStep step) {
-        return ImmutableList.of(regularStep(step, goal, finalBlock));
+        return regularMethods(step, goal, finalBlock);
       }
       @Override
       public ImmutableList<MethodSpec> loneGetter(LoneGetterStep step) {
         return collectionMethods(step, goal, finalBlock);
       }
     };
+  }
+  private static ImmutableList<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal, CodeBlock finalBlock) {
+    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+    builder.add(regularStep(step, goal, finalBlock));
+    return builder.build();
   }
 
   static final Function<BeanGoalContext, ImmutableList<MethodSpec>> lastStep

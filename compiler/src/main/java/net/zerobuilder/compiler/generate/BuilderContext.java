@@ -35,8 +35,8 @@ final class BuilderContext {
     }
   });
 
-  private static final GoalCases<ImmutableList<MethodSpec>> stepsButLast
-      = goalCases(BuilderContextV.allButLast, BuilderContextB.stepsButLast);
+  private static final GoalCases<ImmutableList<MethodSpec>> stepsExceptLast
+      = goalCases(BuilderContextV.allExceptLast, BuilderContextB.stepsExceptLast);
 
   private static final GoalCases<ImmutableList<MethodSpec>> lastStep
       = goalCases(BuilderContextV.last, BuilderContextB.lastStep);
@@ -46,7 +46,7 @@ final class BuilderContext {
         .addSuperinterfaces(goal.accept(stepInterfaceTypes))
         .addFields(goal.accept(fields))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
-        .addMethods(goal.accept(stepsButLast))
+        .addMethods(goal.accept(stepsExceptLast))
         .addMethods(goal.accept(lastStep))
         .addModifiers(STATIC, FINAL)
         .build();

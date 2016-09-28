@@ -1,6 +1,8 @@
 package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
@@ -21,20 +23,30 @@ final class StepContextV {
       = new Function<AbstractStep, TypeSpec>() {
     @Override
     public TypeSpec apply(AbstractStep step) {
-      AbstractParameter parameter = step.accept(validParameter);
-      String name = parameter.acceptParameter(parameterName);
-      TypeName type = parameter.type;
       return interfaceBuilder(step.thisType)
-          .addMethod(methodBuilder(name)
-              .returns(step.nextType)
-              .addParameter(parameterSpec(type, name))
-              .addExceptions(step.accept(declaredExceptions))
-              .addModifiers(PUBLIC, ABSTRACT)
-              .build())
+          .addMethods(regularMethods(step))
           .addModifiers(PUBLIC)
           .build();
     }
   };
+
+  private static ImmutableList<MethodSpec> regularMethods(AbstractStep step) {
+    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+    builder.add(regularStepMethod(step));
+    return builder.build();
+  }
+
+  private static MethodSpec regularStepMethod(AbstractStep step) {
+    AbstractParameter parameter = step.accept(validParameter);
+    String name = parameter.acceptParameter(parameterName);
+    TypeName type = parameter.type;
+    return methodBuilder(name)
+        .returns(step.nextType)
+        .addParameter(parameterSpec(type, name))
+        .addExceptions(step.accept(declaredExceptions))
+        .addModifiers(PUBLIC, ABSTRACT)
+        .build();
+  }
 
   private StepContextV() {
     throw new UnsupportedOperationException("no instances");

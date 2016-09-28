@@ -40,7 +40,7 @@ final class BuilderContextV {
     }
   };
 
-  static final Function<RegularGoalContext, ImmutableList<MethodSpec>> allButLast
+  static final Function<RegularGoalContext, ImmutableList<MethodSpec>> allExceptLast
       = new Function<RegularGoalContext, ImmutableList<MethodSpec>>() {
     @Override
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {

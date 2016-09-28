@@ -48,13 +48,19 @@ final class UpdaterContextB {
     return new BeanStepCases<ImmutableList<MethodSpec>>() {
       @Override
       public ImmutableList<MethodSpec> accessorPair(AccessorPairStep step) {
-        return ImmutableList.of(regularUpdater(goal, step));
+        return regularMethods(step, goal);
       }
       @Override
       public ImmutableList<MethodSpec> loneGetter(LoneGetterStep step) {
         return collectionUpdaters(goal, step);
       }
     };
+  }
+
+  private static ImmutableList<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal) {
+    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+    builder.add(regularUpdater(goal, step));
+    return builder.build();
   }
 
   private static MethodSpec regularUpdater(BeanGoalContext goal, AccessorPairStep step) {

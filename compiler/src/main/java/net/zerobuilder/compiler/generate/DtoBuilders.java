@@ -15,6 +15,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.fieldSpec;
 
 public final class DtoBuilders {
 
@@ -56,8 +57,8 @@ public final class DtoBuilders {
     boolean recycle = buildElement.getAnnotation(Builders.class).recycle();
     ClassName generatedType = generatedClassName(buildElement);
     ClassName annotatedType = ClassName.get(buildElement);
-    FieldSpec field = FieldSpec.builder(
-        annotatedType, '_' + downcase(annotatedType.simpleName()), PRIVATE).build();
+    FieldSpec field = fieldSpec(
+        annotatedType, '_' + downcase(annotatedType.simpleName()), PRIVATE);
     FieldSpec cache = defineCache(generatedType);
     return new BuildersContext(recycle, annotatedType, generatedType, field, cache);
   }
