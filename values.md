@@ -72,7 +72,7 @@ in the `examples/basic/target/generated-sources/annotations` folder.
 
 The `messageBuilder` method returns the first step of a chain of interfaces, which ends in `Message`:
 
-![steps](https://raw.githubusercontent.com/h908714124/zerobuilder/master/dot/graph.png "steps diagram")
+![steps](https://raw.githubusercontent.com/h908714124/zerobuilder/a24575a7255178c4cac0e61b12bb1644d9f39443/dot/graph.png "steps diagram")
 
 ### Order of steps
 
