@@ -2,16 +2,40 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.Utilities;
+import net.zerobuilder.compiler.Utilities.ClassNames;
 import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.analyse.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
+import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
 
 public final class DtoStep {
+
+  enum EmptyOption {
+    LIST, SET, NONE,;
+
+    private static final ImmutableSet<ClassName> LIST_HIERARCHY
+        = ImmutableSet.of(ClassNames.LIST, COLLECTION, ITERABLE);
+
+    static EmptyOption forType(TypeName type) {
+      if (LIST_HIERARCHY.contains(type)) {
+        return LIST;
+      }
+      if (ClassNames.SET.equals(type)) {
+        return SET;
+      }
+      return NONE;
+    }
+  }
 
   public static abstract class AbstractStep {
     final ClassName thisType;
@@ -46,13 +70,22 @@ public final class DtoStep {
     final RegularParameter validParameter;
     final ImmutableList<TypeName> declaredExceptions;
     final FieldSpec field;
+    final EmptyOption emptyOption;
 
-    public RegularStep(ClassName thisType, TypeName nextType, RegularParameter validParameter,
-                       ImmutableList<TypeName> declaredExceptions, FieldSpec field) {
+    private RegularStep(ClassName thisType, TypeName nextType, RegularParameter validParameter,
+                        ImmutableList<TypeName> declaredExceptions, FieldSpec field, EmptyOption emptyOption) {
       super(thisType, nextType);
       this.declaredExceptions = declaredExceptions;
       this.validParameter = validParameter;
       this.field = field;
+      this.emptyOption = emptyOption;
+    }
+
+    public static RegularStep create(ClassName thisType, TypeName nextType, RegularParameter parameter,
+                                     ImmutableList<TypeName> declaredExceptions) {
+      FieldSpec field = fieldSpec(parameter.type, parameter.name, PRIVATE);
+      return new RegularStep(thisType, nextType, parameter, declaredExceptions, field,
+          EmptyOption.forType(parameter.type));
     }
 
     @Override

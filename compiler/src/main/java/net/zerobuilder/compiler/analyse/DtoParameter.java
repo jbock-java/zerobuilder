@@ -4,13 +4,12 @@ import com.google.common.base.Optional;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 
+import javax.lang.model.element.VariableElement;
+
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 
 public final class DtoParameter {
 
-  enum EmptyOption {
-    LIST, SET, NONE
-  }
 
   interface ParameterCases<R> {
     R regularParameter(RegularParameter parameter);
@@ -20,7 +19,8 @@ public final class DtoParameter {
   public abstract static class AbstractParameter {
 
     /**
-     * <p>for beans, this is the type that's returned by the getter</p>
+     * <p>for beans, this is the type that's returned by the getter,
+     * or equivalently the type of the setter parameter</p>
      * <p>for regular goals, it is the original parameter type</p>
      */
     public final TypeName type;
@@ -50,10 +50,16 @@ public final class DtoParameter {
      * method name; absent iff {@code toBuilder == false} or field access
      */
     public final Optional<String> getter;
-    RegularParameter(String name, TypeName type, Optional<String> getter, boolean nonNull) {
+    private RegularParameter(String name, TypeName type, Optional<String> getter, boolean nonNull) {
       super(type, nonNull);
       this.getter = getter;
       this.name = name;
+    }
+
+    static RegularParameter create(VariableElement parameter, Optional<String> getter, boolean nonNull) {
+      String name = parameter.getSimpleName().toString();
+      TypeName type = TypeName.get(parameter.asType());
+      return new RegularParameter(name, type, getter, nonNull);
     }
 
     @Override

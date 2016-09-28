@@ -125,30 +125,6 @@ final class ProjectionValidatorB {
     return TmpAccessorPair.createAccessorPair(getter, goalAnnotation);
   }
 
-  private static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {
-    if (typeMirror.getKind() != DECLARED) {
-      return false;
-    }
-    TypeElement element = asTypeElement(typeMirror);
-    return implementationOf(element, test);
-  }
-
-  private static boolean implementationOf(TypeElement element, ClassName test) {
-    ClassName className = ClassName.get(element);
-    if (className.equals(test)) {
-      return true;
-    }
-    if (className.equals(OBJECT)) {
-      return false;
-    }
-    for (TypeMirror anInterface : element.getInterfaces()) {
-      if (implementationOf(asTypeElement(anInterface), test)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   private static ImmutableList<ExecutableElement> getters(BeanGoalElement goal) {
     return FluentIterable.from(getLocalAndInheritedMethods(goal.beanTypeElement, goal.elements))
         .filter(new Predicate<ExecutableElement>() {
@@ -249,6 +225,30 @@ final class ProjectionValidatorB {
         .transform(toValidParameter)
         .toList();
     return new ValidBeanGoal(goal, validBeanParameters);
+  }
+
+  static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {
+    if (typeMirror.getKind() != DECLARED) {
+      return false;
+    }
+    TypeElement element = asTypeElement(typeMirror);
+    return implementationOf(element, test);
+  }
+
+  private static boolean implementationOf(TypeElement element, ClassName test) {
+    ClassName className = ClassName.get(element);
+    if (className.equals(test)) {
+      return true;
+    }
+    if (className.equals(OBJECT)) {
+      return false;
+    }
+    for (TypeMirror anInterface : element.getInterfaces()) {
+      if (implementationOf(asTypeElement(anInterface), test)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private ProjectionValidatorB() {

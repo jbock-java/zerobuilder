@@ -3,20 +3,18 @@ package net.zerobuilder.compiler;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-import java.util.Arrays;
+import javax.lang.model.element.Modifier;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
-import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static java.lang.Character.isUpperCase;
-import static net.zerobuilder.compiler.Utilities.ClassNames.OBJECT;
 
 public final class Utilities {
 
@@ -24,6 +22,8 @@ public final class Utilities {
 
     public static final ClassName OBJECT = ClassName.get(Object.class);
     public static final ClassName COLLECTION = ClassName.get(Collection.class);
+    public static final ClassName LIST = ClassName.get(List.class);
+    public static final ClassName SET = ClassName.get(Set.class);
     public static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
     private ClassNames() {
@@ -62,6 +62,10 @@ public final class Utilities {
 
   public static ParameterSpec parameterSpec(TypeName type, String name) {
     return ParameterSpec.builder(type, name).build();
+  }
+
+  public static FieldSpec fieldSpec(TypeName type, String name, Modifier... modifiers) {
+    return FieldSpec.builder(type, name, modifiers).build();
   }
 
   public static CodeBlock nullCheck(String varName, String message) {

@@ -5,6 +5,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
 import static com.google.auto.common.MoreTypes.asTypeElement;
@@ -40,8 +41,12 @@ public final class DtoBeanParameter {
   }
 
   public static final class AccessorPair extends AbstractBeanParameter {
-    AccessorPair(TypeName type, String getter, boolean nonNull) {
+
+    private AccessorPair(TypeName type, String getter, boolean nonNull) {
       super(type, getter, nonNull);
+    }
+    static AccessorPair create(TypeName type, ExecutableElement getter, boolean nonNull) {
+      return new AccessorPair(type, getter.getSimpleName().toString(), nonNull);
     }
     @Override
     public <R> R accept(BeanParameterCases<R> cases) {

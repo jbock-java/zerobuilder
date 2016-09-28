@@ -9,6 +9,10 @@ import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.Utilities.fieldSpec;
+
 public final class DtoBeanGoalContext {
 
   public final static class BeanGoalContext extends AbstractGoalContext {
@@ -20,16 +24,27 @@ public final class DtoBeanGoalContext {
     final BeanGoal goal;
     final FieldSpec field;
 
-    public BeanGoalContext(BeanGoal goal,
-                           BuildersContext builders,
-                           boolean toBuilder,
-                           boolean builder,
-                           ClassName contractName,
-                           ImmutableList<? extends AbstractBeanStep> steps, FieldSpec field) {
+    private BeanGoalContext(BeanGoal goal,
+                            BuildersContext builders,
+                            boolean toBuilder,
+                            boolean builder,
+                            ClassName contractName,
+                            ImmutableList<? extends AbstractBeanStep> steps, FieldSpec field) {
       super(builders, toBuilder, builder, contractName);
       this.steps = steps;
       this.goal = goal;
       this.field = field;
+    }
+
+    public static BeanGoalContext create(BeanGoal goal,
+                                         BuildersContext builders,
+                                         boolean toBuilder,
+                                         boolean builder,
+                                         ClassName contractName,
+                                         ImmutableList<? extends AbstractBeanStep> steps) {
+      FieldSpec field = fieldSpec(goal.goalType,
+          downcase(goal.goalType.simpleName()), PRIVATE);
+      return new BeanGoalContext(goal, builders, toBuilder, builder, contractName, steps, field);
     }
 
     <R> R accept(GoalCases<R> cases) {

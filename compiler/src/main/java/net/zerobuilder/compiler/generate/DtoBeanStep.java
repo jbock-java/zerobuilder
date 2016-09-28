@@ -7,6 +7,7 @@ import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
+import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
 
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
@@ -33,13 +34,20 @@ public final class DtoBeanStep {
   public static final class AccessorPairStep extends AbstractBeanStep {
     final AccessorPair accessorPair;
     final String setter;
+    final EmptyOption emptyOption;
 
-
-    public AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
-                            String setter) {
+    private AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
+                             String setter, EmptyOption emptyOption) {
       super(thisType, nextType);
       this.accessorPair = accessorPair;
       this.setter = setter;
+      this.emptyOption = emptyOption;
+    }
+
+    public static AccessorPairStep create(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
+                                          String setter) {
+      return new AccessorPairStep(thisType, nextType, accessorPair, setter,
+          EmptyOption.forType(accessorPair.type));
     }
 
     ParameterSpec parameter() {

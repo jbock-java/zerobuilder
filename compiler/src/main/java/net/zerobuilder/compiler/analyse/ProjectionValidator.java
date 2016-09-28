@@ -83,13 +83,12 @@ final class ProjectionValidator {
           return parameter.parameter;
         }
       };
-      static TmpRegularParameter create(VariableElement element, Optional<String> projectionMethodName,
+      static TmpRegularParameter create(VariableElement parameter, Optional<String> getter,
                                         Goal goalAnnotation) {
-        Step stepAnnotation = element.getAnnotation(Step.class);
-        boolean nonNull = TmpValidParameter.nonNull(element.asType(), stepAnnotation, goalAnnotation);
-        RegularParameter parameter = new RegularParameter(element.getSimpleName().toString(),
-            TypeName.get(element.asType()), projectionMethodName, nonNull);
-        return new TmpRegularParameter(element, fromNullable(stepAnnotation), parameter);
+        Step stepAnnotation = parameter.getAnnotation(Step.class);
+        boolean nonNull = TmpValidParameter.nonNull(parameter.asType(), stepAnnotation, goalAnnotation);
+        RegularParameter regularParameter = RegularParameter.create(parameter, getter, nonNull);
+        return new TmpRegularParameter(parameter, fromNullable(stepAnnotation), regularParameter);
       }
     }
 
@@ -118,9 +117,8 @@ final class ProjectionValidator {
       static TmpAccessorPair createAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
         Step stepAnnotation = getter.getAnnotation(Step.class);
         TypeName type = TypeName.get(getter.getReturnType());
-        String name = getter.getSimpleName().toString();
         boolean nonNull = TmpValidParameter.nonNull(getter.getReturnType(), stepAnnotation, goalAnnotation);
-        AccessorPair accessorPair = new AccessorPair(type, name, nonNull);
+        AccessorPair accessorPair = AccessorPair.create(type, getter, nonNull);
         return new TmpAccessorPair(getter, fromNullable(stepAnnotation), accessorPair);
       }
       static TmpAccessorPair createLoneGetter(ExecutableElement getter, LoneGetter loneGetter) {
