@@ -12,6 +12,7 @@ import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.presentInstances;
@@ -22,9 +23,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
-import static net.zerobuilder.compiler.generate.DtoStep.EmptyOption.NONE;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
 final class UpdaterContextB {
@@ -71,14 +70,14 @@ final class UpdaterContextB {
   }
 
   private static Optional<MethodSpec> emptyCollection(BeanGoalContext goal, AccessorPairStep step) {
-    if (step.emptyOption == NONE) {
+    if (!step.emptyOption.isPresent()) {
       return absent();
     }
-    String name = step.accessorPair.accept(beanParameterName);
-    return Optional.of(methodBuilder("empty" + upcase(name))
+    EmptyOption emptyOption = step.emptyOption.get();
+    return Optional.of(methodBuilder(emptyOption.name)
         .returns(goal.accept(updaterType))
         .addStatement("this.$N.$L($L)",
-            goal.field, step.setter, step.emptyOption.initializer)
+            goal.field, step.setter, emptyOption.initializer)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build());

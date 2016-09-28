@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
@@ -17,33 +18,41 @@ import java.util.Collections;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
+import static net.zerobuilder.compiler.Utilities.ClassNames.SET;
 import static net.zerobuilder.compiler.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
 
 public final class DtoStep {
 
-  enum EmptyOption {
-    LIST(CodeBlock.of("$T.emptyList()", Collections.class)),
-    SET(CodeBlock.of("$T.emptySet()", Collections.class)),
-    NONE(emptyCodeBlock);
+  private static final ImmutableSet<ClassName> LIST_HIERARCHY
+      = ImmutableSet.of(ClassNames.LIST, COLLECTION, ITERABLE);
 
+  static final class EmptyOption {
     final CodeBlock initializer;
+    final String name;
 
-    private static final ImmutableSet<ClassName> LIST_HIERARCHY
-        = ImmutableSet.of(ClassNames.LIST, COLLECTION, ITERABLE);
-    EmptyOption(CodeBlock initializer) {
+    private EmptyOption(CodeBlock initializer, String name) {
       this.initializer = initializer;
+      this.name = name;
     }
 
-    static EmptyOption forType(TypeName type) {
+    static Optional<EmptyOption> create(TypeName type, String name) {
       if (LIST_HIERARCHY.contains(type)) {
-        return LIST;
+        return Optional.of(new EmptyOption(
+            CodeBlock.of("$T.emptyList()", Collections.class),
+            emptyOptionName(name)));
       }
-      if (ClassNames.SET.equals(type)) {
-        return SET;
+      if (SET.equals(type)) {
+        return Optional.of(new EmptyOption(
+            CodeBlock.of("$T.emptySet()", Collections.class),
+            emptyOptionName(name)));
       }
-      return NONE;
+      return Optional.absent();
+    }
+
+    private static String emptyOptionName(String name) {
+      return "empty" + upcase(name);
     }
   }
 
@@ -80,10 +89,10 @@ public final class DtoStep {
     final RegularParameter validParameter;
     final ImmutableList<TypeName> declaredExceptions;
     final FieldSpec field;
-    final EmptyOption emptyOption;
+    final Optional<EmptyOption> emptyOption;
 
     private RegularStep(ClassName thisType, TypeName nextType, RegularParameter validParameter,
-                        ImmutableList<TypeName> declaredExceptions, FieldSpec field, EmptyOption emptyOption) {
+                        ImmutableList<TypeName> declaredExceptions, FieldSpec field, Optional<EmptyOption> emptyOption) {
       super(thisType, nextType);
       this.declaredExceptions = declaredExceptions;
       this.validParameter = validParameter;
@@ -95,7 +104,7 @@ public final class DtoStep {
                                      ImmutableList<TypeName> declaredExceptions) {
       FieldSpec field = fieldSpec(parameter.type, parameter.name, PRIVATE);
       return new RegularStep(thisType, nextType, parameter, declaredExceptions, field,
-          EmptyOption.forType(parameter.type));
+          EmptyOption.create(parameter.type, parameter.name));
     }
 
     @Override
@@ -140,6 +149,18 @@ public final class DtoStep {
       }
     };
   }
+
+  static final StepCases<Optional<EmptyOption>> emptyOption
+      = new StepCases<Optional<EmptyOption>>() {
+    @Override
+    public Optional<EmptyOption> regularStep(RegularStep step) {
+      return step.emptyOption;
+    }
+    @Override
+    public Optional<EmptyOption> beanStep(AbstractBeanStep step) {
+      return step.acceptBean(DtoBeanStep.emptyOption);
+    }
+  };
 
   static <R> Function<AbstractStep, R> asFunction(final StepCases<R> cases) {
     return new Function<AbstractStep, R>() {

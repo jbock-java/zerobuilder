@@ -1,11 +1,12 @@
 package net.zerobuilder.compiler.generate;
 
+import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
 
@@ -34,10 +35,10 @@ public final class DtoBeanStep {
   public static final class AccessorPairStep extends AbstractBeanStep {
     final AccessorPair accessorPair;
     final String setter;
-    final EmptyOption emptyOption;
+    final Optional<EmptyOption> emptyOption;
 
     private AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
-                             String setter, EmptyOption emptyOption) {
+                             String setter, Optional<EmptyOption> emptyOption) {
       super(thisType, nextType);
       this.accessorPair = accessorPair;
       this.setter = setter;
@@ -46,8 +47,9 @@ public final class DtoBeanStep {
 
     public static AccessorPairStep create(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
                                           String setter) {
+      String name = accessorPair.accept(beanParameterName);
       return new AccessorPairStep(thisType, nextType, accessorPair, setter,
-          EmptyOption.forType(accessorPair.type));
+          EmptyOption.create(accessorPair.type, name));
     }
 
     ParameterSpec parameter() {
@@ -90,6 +92,19 @@ public final class DtoBeanStep {
       return step.loneGetter;
     }
   };
+
+  static final BeanStepCases<Optional<EmptyOption>> emptyOption
+      = new BeanStepCases<Optional<EmptyOption>>() {
+    @Override
+    public Optional<EmptyOption> accessorPair(AccessorPairStep step) {
+      return step.emptyOption;
+    }
+    @Override
+    public Optional<EmptyOption> loneGetter(LoneGetterStep step) {
+      return Optional.absent();
+    }
+  };
+
 
   private DtoBeanStep() {
     throw new UnsupportedOperationException("no instances");
