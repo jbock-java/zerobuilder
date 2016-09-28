@@ -76,7 +76,7 @@ The `messageBuilder` method returns the first step of a chain of interfaces, whi
 
 ### Order of steps
 
-Just like the arguments of a method or constructor, the goal "steps" have a fixed order.
+Unlike the methods of `MessageUpdater`, the steps defined in `MessageBuilder` have a fixed order.
 By default, they are in the original order of the goal arguments.
 
 If for some reason you would like to call them in a different order, you have some options:
