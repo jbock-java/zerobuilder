@@ -29,14 +29,12 @@ final class Message {
   final String sender;
   final String body;
   final String recipient;
-  final String subject;
 
   @Goal(toBuilder = true)
-  Message(String sender, String body, String recipient, String subject) {
+  Message(String sender, String body, String recipient) {
     this.sender = sender;
     this.body = body;
     this.recipient = recipient;
-    this.subject = subject;
   }
 }
 
@@ -58,15 +56,13 @@ The following structure will be generated (some implementation details left out)
     MessageUpdater sender(String sender) { ... }
     MessageUpdater body(String body) { ... }
     MessageUpdater recipient(String recipient) { ... }
-    MessageUpdater subject(String subject) { ... }
     Message build() { ... }
   }
   
   static final class MessageBuilder {
     interface Sender { Body sender(String sender); }
     interface Body { Recipient body(String body); }
-    interface Recipient { Subject recipient(String recipient); }
-    interface Subject { Message subject(String subject); }
+    interface Recipient { Message recipient(String recipient); }
   }
 }
 ````
@@ -74,14 +70,13 @@ The following structure will be generated (some implementation details left out)
 If you clone this project and do a `mvn install`, you will find the complete source code of `MessageBuilders.java`
 in the `examples/basic/target/generated-sources/annotations` folder.
 
-Let's take a closer look at the generated code:
+`MessageUpdater` looks like standard builder pattern.
+`MessageBuilder` on the other hand contains a "chain" of interfaces:
 
-* The `messageBuilder` and `messageToBuilder` methods return different things.
-* There is a `MessageUpdater` class, which looks like the familiar builder pattern.
-  Each method can be called `0..n` times, and there is an extra `build()` method that returns `Message`.
-* For each of the four goal parameters, there is one corresponding "step" interface: `Sender`, `Body`, `Recipient` and `Subject`.
-* Each step interface has a single method.
-  None of these methods returns the same step. It is a linear chain that leads to the goal type `Message`.
+
+
+
+
 
 ### Order of steps
 
@@ -94,12 +89,12 @@ If for some reason you would like to call them in a different order, you have so
   It is possible to have multiple versions of the same factory method or constructor, with different argument order.
   The `@Goal(name = ...)` attribute can resolve the potential goal name conflict.
 * Give the steps an order that is different from the order of arguments, by using `@Step`.
-  See [Spaghetti.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/basic/Spaghetti.java).
+  See [Spaghetti.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/values/Spaghetti.java).
 
 ### Factory methods
 
 In addition to constructors, the `@Goal` annotation can appear on methods, even non-static ones. 
-Have a look at the [MessageFactory](../master/examples/basic/src/main/java/net/zerobuilder/examples/basic/MessageFactory.java) example,
+Have a look at the [MessageFactory](../master/examples/basic/src/main/java/net/zerobuilder/examples/values/MessageFactory.java) example,
 to see what this can be used for.
 
 ### Other frameworks
