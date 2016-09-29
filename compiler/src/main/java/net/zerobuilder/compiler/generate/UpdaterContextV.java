@@ -66,14 +66,10 @@ final class UpdaterContextV {
       return absent();
     }
     EmptyOption emptyOption = step.emptyOption.get();
-    TypeName type = step.validParameter.type;
-    String name = step.validParameter.name;
-    ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(emptyOption.name)
         .returns(goal.accept(updaterType))
-        .addStatement("$T $N = $L", emptyColl.type, emptyColl, emptyOption.initializer)
-        .addStatement("this.$N = $N",
-            step.field, emptyColl)
+        .addStatement("this.$N = $L",
+            step.field, emptyOption.initializer)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build());
