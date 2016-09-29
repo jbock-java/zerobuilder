@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.Utilities.ClassNames;
 import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
@@ -38,6 +39,9 @@ public final class DtoStep {
     }
 
     static Optional<EmptyOption> create(TypeName type, String name) {
+      if (type instanceof ParameterizedTypeName) {
+        type = ((ParameterizedTypeName) type).rawType;
+      }
       if (LIST_HIERARCHY.contains(type)) {
         return Optional.of(new EmptyOption(
             CodeBlock.of("$T.emptyList()", Collections.class),

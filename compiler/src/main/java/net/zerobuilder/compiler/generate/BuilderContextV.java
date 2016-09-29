@@ -51,14 +51,7 @@ final class BuilderContextV {
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
-        TypeName type = step.validParameter.type;
-        String name = step.validParameter.name;
-        ParameterSpec parameter = parameterSpec(type, name);
-        CodeBlock finalBlock = CodeBlock.builder()
-            .addStatement("this.$N = $N", step.field, parameter)
-            .addStatement("return this")
-            .build();
-        builder.addAll(regularSteps(step, finalBlock));
+        builder.addAll(regularSteps(step, goal, false));
       }
       return builder.build();
     }
@@ -69,15 +62,13 @@ final class BuilderContextV {
     @Override
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       RegularStep step = getLast(goal.steps);
-      CodeBlock goalInvocation = invoke.apply(goal);
-      return regularSteps(step, goalInvocation);
+      return regularSteps(step, goal, true);
     }
   };
 
-  private static ImmutableList<MethodSpec> regularSteps(RegularStep step,
-                                                        CodeBlock finalBlock) {
+  private static ImmutableList<MethodSpec> regularSteps(RegularStep step, RegularGoalContext goal, boolean isLast) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    builder.add(regularStep(step, finalBlock));
+    builder.add(regularStep(step, goal, isLast));
     builder.addAll(presentInstances(of(emptyCollection(step))));
     return builder.build();
   }
@@ -89,14 +80,14 @@ final class BuilderContextV {
     DtoStep.EmptyOption emptyOption = step.emptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
         .returns(step.nextType)
-        .addStatement("this.$N = $N", step.field, emptyOption.initializer)
+        .addStatement("this.$N = $L", step.field, emptyOption.initializer)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build());
   }
 
 
-  private static MethodSpec regularStep(RegularStep step, CodeBlock finalBlock) {
+  private static MethodSpec regularStep(RegularStep step, RegularGoalContext goal, boolean isLast) {
     TypeName type = step.validParameter.type;
     String name = step.validParameter.name;
     ParameterSpec parameter = parameterSpec(type, name);
@@ -105,10 +96,24 @@ final class BuilderContextV {
         .addParameter(parameter)
         .returns(step.nextType)
         .addCode(step.accept(nullCheck))
-        .addCode(finalBlock)
+        .addCode(finalBlock(step, goal, isLast))
         .addModifiers(PUBLIC)
         .addExceptions(step.accept(declaredExceptions))
         .build();
+  }
+
+  private static CodeBlock finalBlock(RegularStep step, RegularGoalContext goal, boolean isLast) {
+    TypeName type = step.validParameter.type;
+    String name = step.validParameter.name;
+    ParameterSpec parameter = parameterSpec(type, name);
+    if (isLast) {
+      return invoke.apply(goal);
+    } else {
+      return CodeBlock.builder()
+          .addStatement("this.$N = $N", step.field, parameter)
+          .addStatement("return this")
+          .build();
+    }
   }
 
   static final Function<RegularGoalContext, CodeBlock> invoke

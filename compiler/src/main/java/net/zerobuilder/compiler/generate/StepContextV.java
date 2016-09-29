@@ -50,7 +50,7 @@ final class StepContextV {
     return Optional.of(methodBuilder(emptyOption.name)
         .returns(step.nextType)
         .addExceptions(step.accept(declaredExceptions))
-        .addModifiers(PUBLIC)
+        .addModifiers(PUBLIC, ABSTRACT)
         .build());
   }
 
