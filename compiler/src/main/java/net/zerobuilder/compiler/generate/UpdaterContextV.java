@@ -1,14 +1,19 @@
 package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.presentInstances;
+import static com.google.common.collect.ImmutableList.of;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -52,7 +57,26 @@ final class UpdaterContextV {
   private static ImmutableList<MethodSpec> updateMethods(RegularGoalContext goal, RegularStep step) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(normalUpdate(goal, step));
+    builder.addAll(presentInstances(of(regularEmptyCollection(goal, step))));
     return builder.build();
+  }
+
+  private static Optional<MethodSpec> regularEmptyCollection(RegularGoalContext goal, RegularStep step) {
+    if (!step.emptyOption.isPresent()) {
+      return absent();
+    }
+    EmptyOption emptyOption = step.emptyOption.get();
+    TypeName type = step.validParameter.type;
+    String name = step.validParameter.name;
+    ParameterSpec emptyColl = parameterSpec(type, name);
+    return Optional.of(methodBuilder(emptyOption.name)
+        .returns(goal.accept(updaterType))
+        .addStatement("$T $N = $L", emptyColl.type, emptyColl, emptyOption.initializer)
+        .addStatement("this.$N = $N",
+            step.field, emptyColl)
+        .addStatement("return this")
+        .addModifiers(PUBLIC)
+        .build());
   }
 
   private static MethodSpec normalUpdate(RegularGoalContext goal, RegularStep step) {

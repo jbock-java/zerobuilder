@@ -54,7 +54,7 @@ final class UpdaterContextB {
     return new BeanStepCases<ImmutableList<MethodSpec>>() {
       @Override
       public ImmutableList<MethodSpec> accessorPair(AccessorPairStep step) {
-        return regularMethods(step, goal);
+        return updateMethods(step, goal);
       }
       @Override
       public ImmutableList<MethodSpec> loneGetter(LoneGetterStep step) {
@@ -63,7 +63,7 @@ final class UpdaterContextB {
     };
   }
 
-  private static ImmutableList<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal) {
+  private static ImmutableList<MethodSpec> updateMethods(AccessorPairStep step, BeanGoalContext goal) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(normalUpdate(goal, step));
     builder.addAll(presentInstances(of(regularEmptyCollection(goal, step))));
