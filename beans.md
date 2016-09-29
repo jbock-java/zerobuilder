@@ -1,4 +1,4 @@
-## Zerobuilder for beans
+# zerobuilder for beans
 
 ### Why?
 
