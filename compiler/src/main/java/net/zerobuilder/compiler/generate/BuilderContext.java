@@ -35,19 +35,15 @@ final class BuilderContext {
     }
   });
 
-  private static final GoalCases<ImmutableList<MethodSpec>> stepsExceptLast
-      = goalCases(BuilderContextV.stepsExceptLast, BuilderContextB.stepsExceptLast);
-
-  private static final GoalCases<ImmutableList<MethodSpec>> lastStep
-      = goalCases(BuilderContextV.last, BuilderContextB.lastStep);
+  private static final GoalCases<ImmutableList<MethodSpec>> steps
+      = goalCases(BuilderContextV.steps, BuilderContextB.steps);
 
   static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
     return classBuilder(goal.accept(builderImplType))
         .addSuperinterfaces(goal.accept(stepInterfaceTypes))
         .addFields(goal.accept(fields))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
-        .addMethods(goal.accept(stepsExceptLast))
-        .addMethods(goal.accept(lastStep))
+        .addMethods(goal.accept(steps))
         .addModifiers(STATIC, FINAL)
         .build();
   }

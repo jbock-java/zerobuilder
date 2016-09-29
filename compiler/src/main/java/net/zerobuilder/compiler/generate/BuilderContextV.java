@@ -46,42 +46,34 @@ final class BuilderContextV {
     }
   };
 
-  static final Function<RegularGoalContext, ImmutableList<MethodSpec>> stepsExceptLast
+  static final Function<RegularGoalContext, ImmutableList<MethodSpec>> steps
       = new Function<RegularGoalContext, ImmutableList<MethodSpec>>() {
     @Override
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
-        builder.addAll(regularSteps(step, goal, false));
+        builder.addAll(regularMethods(step, goal, false));
       }
+      builder.addAll(regularMethods(getLast(goal.steps), goal, true));
       return builder.build();
     }
   };
 
-  static final Function<RegularGoalContext, ImmutableList<MethodSpec>> last
-      = new Function<RegularGoalContext, ImmutableList<MethodSpec>>() {
-    @Override
-    public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
-      RegularStep step = getLast(goal.steps);
-      return regularSteps(step, goal, true);
-    }
-  };
-
-  private static ImmutableList<MethodSpec> regularSteps(RegularStep step, RegularGoalContext goal, boolean isLast) {
+  private static ImmutableList<MethodSpec> regularMethods(RegularStep step, RegularGoalContext goal, boolean isLast) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(regularStep(step, goal, isLast));
-    builder.addAll(presentInstances(of(emptyCollection(step, goal, isLast))));
+    builder.addAll(presentInstances(of(regularEmptyCollection(step, goal, isLast))));
     return builder.build();
   }
 
-  private static Optional<MethodSpec> emptyCollection(RegularStep step, RegularGoalContext goal, boolean isLast) {
+  private static Optional<MethodSpec> regularEmptyCollection(RegularStep step, RegularGoalContext goal, boolean isLast) {
     if (!step.emptyOption.isPresent()) {
       return absent();
     }
     EmptyOption emptyOption = step.emptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
         .returns(step.nextType)
-        .addCode(emptyCollectionFinalBlock(step, goal, isLast))
+        .addCode(regularEmptyCollectionFinalBlock(step, goal, isLast))
         .addModifiers(PUBLIC)
         .build());
   }
@@ -116,7 +108,7 @@ final class BuilderContextV {
     }
   }
 
-  private static CodeBlock emptyCollectionFinalBlock(RegularStep step, RegularGoalContext goal, boolean isLast) {
+  private static CodeBlock regularEmptyCollectionFinalBlock(RegularStep step, RegularGoalContext goal, boolean isLast) {
     TypeName type = step.validParameter.type;
     String name = step.validParameter.name;
     ParameterSpec parameter = parameterSpec(type, name);

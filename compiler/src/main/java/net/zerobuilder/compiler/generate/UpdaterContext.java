@@ -19,6 +19,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.BuilderContextB.returnBean;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.always;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
@@ -71,7 +72,7 @@ final class UpdaterContext {
   };
 
   private static final GoalCases<CodeBlock> invoke
-      = goalCases(regularInvoke, BuilderContextB.invoke);
+      = goalCases(regularInvoke, returnBean);
 
   private UpdaterContext() {
     throw new UnsupportedOperationException("no instances");

@@ -30,6 +30,10 @@ public final class DtoStep {
       = ImmutableSet.of(ClassNames.LIST, COLLECTION, ITERABLE);
 
   static final class EmptyOption {
+
+    /**
+     * Can be assigned to {@link AbstractParameter#type}
+     */
     final CodeBlock initializer;
     final String name;
 
