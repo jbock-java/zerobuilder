@@ -36,7 +36,7 @@ final class BuilderContext {
   });
 
   private static final GoalCases<ImmutableList<MethodSpec>> stepsExceptLast
-      = goalCases(BuilderContextV.allExceptLast, BuilderContextB.stepsExceptLast);
+      = goalCases(BuilderContextV.stepsExceptLast, BuilderContextB.stepsExceptLast);
 
   private static final GoalCases<ImmutableList<MethodSpec>> lastStep
       = goalCases(BuilderContextV.last, BuilderContextB.lastStep);

@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -14,6 +15,9 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContex
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.presentInstances;
+import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Iterables.getLast;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
@@ -21,6 +25,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
+import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 
 final class BuilderContextV {
@@ -40,7 +45,7 @@ final class BuilderContextV {
     }
   };
 
-  static final Function<RegularGoalContext, ImmutableList<MethodSpec>> allExceptLast
+  static final Function<RegularGoalContext, ImmutableList<MethodSpec>> stepsExceptLast
       = new Function<RegularGoalContext, ImmutableList<MethodSpec>>() {
     @Override
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
@@ -53,7 +58,7 @@ final class BuilderContextV {
             .addStatement("this.$N = $N", step.field, parameter)
             .addStatement("return this")
             .build();
-        builder.add(regularStep(step, finalBlock, ImmutableList.<TypeName>of()));
+        builder.addAll(regularSteps(step, finalBlock));
       }
       return builder.build();
     }
@@ -65,23 +70,45 @@ final class BuilderContextV {
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       RegularStep step = getLast(goal.steps);
       CodeBlock goalInvocation = invoke.apply(goal);
-      return ImmutableList.of(regularStep(step, goalInvocation, goal.thrownTypes));
+      return regularSteps(step, goalInvocation);
     }
   };
 
-  private static MethodSpec regularStep(RegularStep step,
-                                        CodeBlock finalBlock, ImmutableList<TypeName> thrownTypes) {
+  private static ImmutableList<MethodSpec> regularSteps(RegularStep step,
+                                                        CodeBlock finalBlock) {
+    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+    builder.add(regularStep(step, finalBlock));
+    builder.addAll(presentInstances(of(emptyCollection(step))));
+    return builder.build();
+  }
+
+  private static Optional<MethodSpec> emptyCollection(RegularStep step) {
+    if (!step.emptyOption.isPresent()) {
+      return absent();
+    }
+    DtoStep.EmptyOption emptyOption = step.emptyOption.get();
+    return Optional.of(methodBuilder(emptyOption.name)
+        .returns(step.nextType)
+        .addStatement("this.$N = $N", step.field, emptyOption.initializer)
+        .addStatement("return this")
+        .addModifiers(PUBLIC)
+        .build());
+  }
+
+
+  private static MethodSpec regularStep(RegularStep step, CodeBlock finalBlock) {
     TypeName type = step.validParameter.type;
     String name = step.validParameter.name;
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(step.validParameter.name)
         .addAnnotation(Override.class)
         .addParameter(parameter)
-        .addExceptions(thrownTypes)
-        .addModifiers(PUBLIC)
         .returns(step.nextType)
         .addCode(step.accept(nullCheck))
-        .addCode(finalBlock).build();
+        .addCode(finalBlock)
+        .addModifiers(PUBLIC)
+        .addExceptions(step.accept(declaredExceptions))
+        .build();
   }
 
   static final Function<RegularGoalContext, CodeBlock> invoke
