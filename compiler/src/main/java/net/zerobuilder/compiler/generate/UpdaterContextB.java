@@ -8,6 +8,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
@@ -65,19 +66,23 @@ final class UpdaterContextB {
   private static ImmutableList<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(normalUpdate(goal, step));
-    builder.addAll(presentInstances(of(emptyCollection(goal, step))));
+    builder.addAll(presentInstances(of(regularEmptyCollection(goal, step))));
     return builder.build();
   }
 
-  private static Optional<MethodSpec> emptyCollection(BeanGoalContext goal, AccessorPairStep step) {
+  private static Optional<MethodSpec> regularEmptyCollection(BeanGoalContext goal, AccessorPairStep step) {
     if (!step.emptyOption.isPresent()) {
       return absent();
     }
     EmptyOption emptyOption = step.emptyOption.get();
+    TypeName type = step.accessorPair.type;
+    String name = step.accessorPair.accept(beanParameterName);
+    ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(emptyOption.name)
         .returns(goal.accept(updaterType))
-        .addStatement("this.$N.$L($L)",
-            goal.field, step.setter, emptyOption.initializer)
+        .addStatement("$T $N = $L", emptyColl.type, emptyColl, emptyOption.initializer)
+        .addStatement("this.$N.$L($N)",
+            goal.field, step.setter, emptyColl)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build());
@@ -99,7 +104,7 @@ final class UpdaterContextB {
   private static ImmutableList<MethodSpec> collectionUpdaters(BeanGoalContext goal, LoneGetterStep step) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(iterateCollection(goal, step));
-    builder.add(emptyCollection(goal, step));
+    builder.add(loneGetterEmptyCollection(goal, step));
     return builder.build();
   }
 
@@ -123,7 +128,7 @@ final class UpdaterContextB {
         .build();
   }
 
-  private static MethodSpec emptyCollection(BeanGoalContext goal, LoneGetterStep step) {
+  private static MethodSpec loneGetterEmptyCollection(BeanGoalContext goal, LoneGetterStep step) {
     return methodBuilder(step.emptyMethod)
         .returns(goal.accept(updaterType))
         .addCode(clearCollection(goal, step))

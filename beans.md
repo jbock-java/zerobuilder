@@ -21,7 +21,9 @@ The situation changes if all _create_ and _update_ operations are handled by zer
 
 ### How?
 
-Just add two annotations `@Builders` and `@Goal` to a POJO class:
+Zerobuilder will not extend your classes. It generates code that helps you work with them.
+
+This happens if you add two annotations `@Builders` and `@Goal` to a POJO class:
 
 ````java
 @Builders(recycle = true)

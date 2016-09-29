@@ -19,6 +19,9 @@ which makes it a compile error to not specify one of the constructor arguments.
 
 ### How?
 
+Unlike `auto-value` for instance, zerobuilder doesn't extend your classes.
+Instead, it generates code that helps you work with them.
+
 Add a `@Builders` annotation to the class, and a `@Goal` 
 annotations to one or more constructors (or static methods):
 

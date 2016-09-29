@@ -72,6 +72,7 @@ final class BuilderContextV {
     }
     EmptyOption emptyOption = step.emptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
+        .addAnnotation(Override.class)
         .returns(step.nextType)
         .addCode(regularEmptyCollectionFinalBlock(step, goal, isLast))
         .addModifiers(PUBLIC)
@@ -109,14 +110,12 @@ final class BuilderContextV {
   }
 
   private static CodeBlock regularEmptyCollectionFinalBlock(RegularStep step, RegularGoalContext goal, boolean isLast) {
-    TypeName type = step.validParameter.type;
-    String name = step.validParameter.name;
-    ParameterSpec parameter = parameterSpec(type, name);
     if (isLast) {
       return goal.acceptRegular(emptyCollectionInvoke(step));
     } else {
+      EmptyOption emptyOption = step.emptyOption.get();
       return CodeBlock.builder()
-          .addStatement("this.$N = $N", step.field, parameter)
+          .addStatement("this.$N = $L", step.field, emptyOption.initializer)
           .addStatement("return this")
           .build();
     }

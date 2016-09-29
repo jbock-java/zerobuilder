@@ -82,6 +82,7 @@ final class BuilderContextB {
     String name = step.accessorPair.accept(beanParameterName);
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(emptyOption.name)
+        .addAnnotation(Override.class)
         .returns(step.nextType)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, emptyOption.initializer)
         .addStatement("this.$N.$L($N)", goal.field, step.setter, emptyColl)
