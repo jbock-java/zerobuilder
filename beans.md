@@ -145,3 +145,7 @@ In this case (lone getter that returns a subclass of `Collection`),
 it is often not necessary to ignore the getter.
 Zerobuilder will assume that the collection is mutable and adapt the builder code accordingly.
 
+### Empty collections
+
+Zerobuilder generates convenience methods to define empty collections of type `java.util.Set`
+or `java.util.List`. The [documentation for values](values.md) explains this in more detail.
