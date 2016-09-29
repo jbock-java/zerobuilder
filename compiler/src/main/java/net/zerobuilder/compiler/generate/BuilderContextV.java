@@ -13,9 +13,8 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoalCo
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContextCases;
+import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
-
-import java.util.Iterator;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.presentInstances;
@@ -79,7 +78,7 @@ final class BuilderContextV {
     if (!step.emptyOption.isPresent()) {
       return absent();
     }
-    DtoStep.EmptyOption emptyOption = step.emptyOption.get();
+    EmptyOption emptyOption = step.emptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
         .returns(step.nextType)
         .addCode(emptyCollectionFinalBlock(step, goal, isLast))
@@ -149,15 +148,26 @@ final class BuilderContextV {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
       public CodeBlock constructorGoal(ConstructorGoalContext goal) {
-        CodeBlock parameters = invocationParameters(goal.goal.parameterNames,
-            step.validParameter.name, step.emptyOption.get().initializer);
-        return statement("return new $T($L)", goal.goal.goalType, parameters);
+        CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
+        TypeName type = step.validParameter.type;
+        String name = step.validParameter.name;
+        EmptyOption emptyOption = step.emptyOption.get();
+        return CodeBlock.builder()
+            .addStatement("$T $N = $L", type, name, emptyOption.initializer)
+            .addStatement("return new $T($L)", goal.goal.goalType, parameters)
+            .build();
       }
+
       @Override
       public CodeBlock methodGoal(MethodGoalContext goal) {
-        CodeBlock parameters = invocationParameters(goal.goal.parameterNames,
-            step.validParameter.name, step.emptyOption.get().initializer);
-        return methodGoalInvocation(goal, parameters);
+        CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
+        TypeName type = step.validParameter.type;
+        String name = step.validParameter.name;
+        EmptyOption emptyOption = step.emptyOption.get();
+        return CodeBlock.builder()
+            .addStatement("$T $N = $L", type, name, emptyOption.initializer)
+            .add(methodGoalInvocation(goal, parameters))
+            .build();
       }
     };
   }
@@ -175,31 +185,6 @@ final class BuilderContextV {
 
   private static CodeBlock invocationParameters(ImmutableList<String> parameterNames) {
     return CodeBlock.of(Joiner.on(", ").join(parameterNames));
-  }
-
-  private static CodeBlock invocationParameters(ImmutableList<String> parameterNames,
-                                                String toReplace, CodeBlock replacement) {
-    ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
-    for (String parameterName : parameterNames) {
-      if (parameterName.equals(toReplace)) {
-        builder.add(replacement);
-      } else {
-        builder.add(CodeBlock.of(parameterName));
-      }
-    }
-    return join(builder.build());
-  }
-
-  private static CodeBlock join(Iterable<CodeBlock> codeBlocks) {
-    CodeBlock.Builder builder = CodeBlock.builder();
-    Iterator<CodeBlock> iterator = codeBlocks.iterator();
-    while (iterator.hasNext()) {
-      builder.add(iterator.next());
-      if (iterator.hasNext()) {
-        builder.add(", ");
-      }
-    }
-    return builder.build();
   }
 
   private BuilderContextV() {
