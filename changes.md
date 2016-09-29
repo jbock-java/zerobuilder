@@ -59,3 +59,7 @@
 ### 2016-09-27 zerobuilder 1.431 released
 
 * rename `collection()` to `emptyCollection()` (beans) (lone getters) (breaking)
+
+### 2016-09-29 zerobuilder 1.441 released
+
+* `emptyCollection()` convenience for `java.util.Set` and `java.util.List`
