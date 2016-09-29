@@ -1,10 +1,11 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.examples.beans.EmptyBeanConvenience;
 import org.junit.Test;
 
+import java.util.Collections;
+import java.util.List;
+
 import static java.util.Collections.singletonList;
-import static net.zerobuilder.examples.beans.EmptyBeanConvenienceBuilders.emptyBeanConvenienceToBuilder;
 import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.emptyListConvenienceBuilder;
 import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.emptyListConvenienceToBuilder;
 import static org.hamcrest.core.Is.is;
@@ -37,6 +38,11 @@ public class EmptyListConvenienceTest {
     assertThat(notEmpty.collection.size(), is(1));
     assertThat(notEmpty.sets.size(), is(0));
     assertThat(notEmpty.iterables.iterator().hasNext(), is(false));
+    myMethod(Collections.<String>emptyList());
+  }
+
+  static String myMethod(List<String> foo) {
+    return "bar";
   }
 
 }

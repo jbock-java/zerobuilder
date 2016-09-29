@@ -126,3 +126,22 @@ public MyBean(String name) {
   this.name = name;
 }
 ````
+
+### Empty collections
+
+In java, specifying an <em>empty</em> collection is more work than it should be:
+
+````java
+  myObject.callMethod(Collections.<String>emptyList());
+````
+
+Because of a restriction in the java type system,
+the explicit type argument `<String>` is needed.
+
+For parameters of type `java.util.List` and `java.util.Set`, 
+zerobuilder adds `emptyFoo()` convenience methods in all generated builders.
+The ugly generics are still there, but hidden in the generated code.
+
+Check out the example projects, or have a look at 
+[EmptyListConvenience.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/values/EmptyListConvenience.java) 
+and its companion unit test.
