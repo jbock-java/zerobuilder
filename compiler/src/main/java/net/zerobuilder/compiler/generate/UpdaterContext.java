@@ -62,8 +62,16 @@ final class UpdaterContext {
         .build();
   }
 
+  static final Function<DtoRegularGoalContext.RegularGoalContext, CodeBlock> regularInvoke
+      = new Function<DtoRegularGoalContext.RegularGoalContext, CodeBlock>() {
+    @Override
+    public CodeBlock apply(DtoRegularGoalContext.RegularGoalContext goal) {
+      return goal.acceptRegular(BuilderContextV.regularInvoke);
+    }
+  };
+
   private static final GoalCases<CodeBlock> invoke
-      = goalCases(BuilderContextV.invoke, BuilderContextB.invoke);
+      = goalCases(regularInvoke, BuilderContextB.invoke);
 
   private UpdaterContext() {
     throw new UnsupportedOperationException("no instances");

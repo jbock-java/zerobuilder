@@ -15,6 +15,8 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContex
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
+import java.util.Iterator;
+
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.presentInstances;
 import static com.google.common.collect.ImmutableList.of;
@@ -69,19 +71,18 @@ final class BuilderContextV {
   private static ImmutableList<MethodSpec> regularSteps(RegularStep step, RegularGoalContext goal, boolean isLast) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(regularStep(step, goal, isLast));
-    builder.addAll(presentInstances(of(emptyCollection(step))));
+    builder.addAll(presentInstances(of(emptyCollection(step, goal, isLast))));
     return builder.build();
   }
 
-  private static Optional<MethodSpec> emptyCollection(RegularStep step) {
+  private static Optional<MethodSpec> emptyCollection(RegularStep step, RegularGoalContext goal, boolean isLast) {
     if (!step.emptyOption.isPresent()) {
       return absent();
     }
     DtoStep.EmptyOption emptyOption = step.emptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
         .returns(step.nextType)
-        .addStatement("this.$N = $L", step.field, emptyOption.initializer)
-        .addStatement("return this")
+        .addCode(emptyCollectionFinalBlock(step, goal, isLast))
         .addModifiers(PUBLIC)
         .build());
   }
@@ -96,18 +97,18 @@ final class BuilderContextV {
         .addParameter(parameter)
         .returns(step.nextType)
         .addCode(step.accept(nullCheck))
-        .addCode(finalBlock(step, goal, isLast))
+        .addCode(regularFinalBlock(step, goal, isLast))
         .addModifiers(PUBLIC)
         .addExceptions(step.accept(declaredExceptions))
         .build();
   }
 
-  private static CodeBlock finalBlock(RegularStep step, RegularGoalContext goal, boolean isLast) {
+  private static CodeBlock regularFinalBlock(RegularStep step, RegularGoalContext goal, boolean isLast) {
     TypeName type = step.validParameter.type;
     String name = step.validParameter.name;
     ParameterSpec parameter = parameterSpec(type, name);
     if (isLast) {
-      return invoke.apply(goal);
+      return goal.acceptRegular(regularInvoke);
     } else {
       return CodeBlock.builder()
           .addStatement("this.$N = $N", step.field, parameter)
@@ -116,34 +117,90 @@ final class BuilderContextV {
     }
   }
 
-  static final Function<RegularGoalContext, CodeBlock> invoke
-      = new Function<RegularGoalContext, CodeBlock>() {
-    @Override
-    public CodeBlock apply(RegularGoalContext goal) {
-      return goal.acceptRegular(invokeCases);
+  private static CodeBlock emptyCollectionFinalBlock(RegularStep step, RegularGoalContext goal, boolean isLast) {
+    TypeName type = step.validParameter.type;
+    String name = step.validParameter.name;
+    ParameterSpec parameter = parameterSpec(type, name);
+    if (isLast) {
+      return goal.acceptRegular(emptyCollectionInvoke(step));
+    } else {
+      return CodeBlock.builder()
+          .addStatement("this.$N = $N", step.field, parameter)
+          .addStatement("return this")
+          .build();
     }
-  };
+  }
 
-  private static final RegularGoalContextCases<CodeBlock> invokeCases
+  static final RegularGoalContextCases<CodeBlock> regularInvoke
       = new RegularGoalContextCases<CodeBlock>() {
     @Override
     public CodeBlock constructorGoal(ConstructorGoalContext goal) {
-      CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
+      CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
       return statement("return new $T($L)", goal.goal.goalType, parameters);
     }
     @Override
     public CodeBlock methodGoal(MethodGoalContext goal) {
-      CodeBlock parameters = CodeBlock.of(Joiner.on(", ").join(goal.goal.parameterNames));
-      CodeBlock.Builder builder = CodeBlock.builder();
-      TypeName type = goal.goal.goalType;
-      String method = goal.goal.methodName;
-      builder.add(CodeBlock.of(VOID.equals(type) ? "" : "return "));
-      builder.add(goal.goal.instance
-          ? statement("$N.$N($L)", goal.builders.field, method, parameters)
-          : statement("$T.$N($L)", goal.builders.type, method, parameters));
-      return builder.build();
+      CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
+      return methodGoalInvocation(goal, parameters);
     }
   };
+
+  private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final RegularStep step) {
+    return new RegularGoalContextCases<CodeBlock>() {
+      @Override
+      public CodeBlock constructorGoal(ConstructorGoalContext goal) {
+        CodeBlock parameters = invocationParameters(goal.goal.parameterNames,
+            step.validParameter.name, step.emptyOption.get().initializer);
+        return statement("return new $T($L)", goal.goal.goalType, parameters);
+      }
+      @Override
+      public CodeBlock methodGoal(MethodGoalContext goal) {
+        CodeBlock parameters = invocationParameters(goal.goal.parameterNames,
+            step.validParameter.name, step.emptyOption.get().initializer);
+        return methodGoalInvocation(goal, parameters);
+      }
+    };
+  }
+
+  private static CodeBlock methodGoalInvocation(MethodGoalContext goal, CodeBlock parameters) {
+    CodeBlock.Builder builder = CodeBlock.builder();
+    TypeName type = goal.goal.goalType;
+    String method = goal.goal.methodName;
+    builder.add(CodeBlock.of(VOID.equals(type) ? "" : "return "));
+    builder.add(goal.goal.instance
+        ? statement("$N.$N($L)", goal.builders.field, method, parameters)
+        : statement("$T.$N($L)", goal.builders.type, method, parameters));
+    return builder.build();
+  }
+
+  private static CodeBlock invocationParameters(ImmutableList<String> parameterNames) {
+    return CodeBlock.of(Joiner.on(", ").join(parameterNames));
+  }
+
+  private static CodeBlock invocationParameters(ImmutableList<String> parameterNames,
+                                                String toReplace, CodeBlock replacement) {
+    ImmutableList.Builder<CodeBlock> builder = ImmutableList.builder();
+    for (String parameterName : parameterNames) {
+      if (parameterName.equals(toReplace)) {
+        builder.add(replacement);
+      } else {
+        builder.add(CodeBlock.of(parameterName));
+      }
+    }
+    return join(builder.build());
+  }
+
+  private static CodeBlock join(Iterable<CodeBlock> codeBlocks) {
+    CodeBlock.Builder builder = CodeBlock.builder();
+    Iterator<CodeBlock> iterator = codeBlocks.iterator();
+    while (iterator.hasNext()) {
+      builder.add(iterator.next());
+      if (iterator.hasNext()) {
+        builder.add(", ");
+      }
+    }
+    return builder.build();
+  }
 
   private BuilderContextV() {
     throw new UnsupportedOperationException("no instances");
