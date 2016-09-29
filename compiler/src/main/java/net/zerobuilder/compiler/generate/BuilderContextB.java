@@ -20,6 +20,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 
@@ -38,8 +39,7 @@ final class BuilderContextB {
     @Override
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      CodeBlock finalBlock = CodeBlock.builder().addStatement("return this").build();
-      BeanStepCases<ImmutableList<MethodSpec>> stepHandler = stepMethods(goal, finalBlock);
+      BeanStepCases<ImmutableList<MethodSpec>> stepHandler = stepMethods(goal, false);
       for (AbstractBeanStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
         builder.addAll(step.acceptBean(stepHandler));
       }
@@ -47,21 +47,22 @@ final class BuilderContextB {
     }
   };
 
-  private static BeanStepCases<ImmutableList<MethodSpec>> stepMethods(final BeanGoalContext goal, final CodeBlock finalBlock) {
+  private static BeanStepCases<ImmutableList<MethodSpec>> stepMethods(final BeanGoalContext goal, final boolean isLast) {
     return new BeanStepCases<ImmutableList<MethodSpec>>() {
       @Override
       public ImmutableList<MethodSpec> accessorPair(AccessorPairStep step) {
-        return regularMethods(step, goal, finalBlock);
+        return regularMethods(step, goal, isLast);
       }
       @Override
       public ImmutableList<MethodSpec> loneGetter(LoneGetterStep step) {
-        return collectionMethods(step, goal, finalBlock);
+        return collectionMethods(step, goal, isLast);
       }
     };
   }
-  private static ImmutableList<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal, CodeBlock finalBlock) {
+
+  private static ImmutableList<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    builder.add(regularStep(step, goal, finalBlock));
+    builder.add(regularStep(step, goal, isLast));
     return builder.build();
   }
 
@@ -69,31 +70,40 @@ final class BuilderContextB {
       = new Function<BeanGoalContext, ImmutableList<MethodSpec>>() {
     @Override
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
-      BeanStepCases<ImmutableList<MethodSpec>> handler = stepMethods(goal, invoke.apply(goal));
+      BeanStepCases<ImmutableList<MethodSpec>> handler = stepMethods(goal, true);
       return getLast(goal.steps).acceptBean(handler);
     }
   };
 
-  private static ImmutableList<MethodSpec> collectionMethods(LoneGetterStep step, BeanGoalContext goal, CodeBlock finalBlock) {
-    MethodSpec fromIterable = iterateCollection(step, goal, finalBlock);
-    MethodSpec fromEmpty = emptyCollection(step, finalBlock);
+  private static ImmutableList<MethodSpec> collectionMethods(LoneGetterStep step, BeanGoalContext goal, boolean isLast) {
+    MethodSpec fromIterable = iterateCollection(step, goal, isLast);
+    MethodSpec fromEmpty = emptyCollection(step, goal, isLast);
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
     builder.add(fromIterable, fromEmpty);
     return builder.build();
   }
 
-  private static MethodSpec emptyCollection(LoneGetterStep step, CodeBlock finalBlock) {
+  private static MethodSpec emptyCollection(LoneGetterStep step, BeanGoalContext goal, boolean isLast) {
     return methodBuilder(step.emptyMethod)
         .addAnnotation(Override.class)
         .returns(step.nextType)
-        .addCode(finalBlock)
+        .addCode(regularFinalBlock(goal, isLast))
         .addModifiers(PUBLIC)
         .build();
   }
 
+  private static CodeBlock regularFinalBlock(BeanGoalContext goal, boolean isLast) {
+    if (isLast) {
+      return invoke.apply(goal);
+    } else {
+      return statement("return this");
+    }
+  }
+
+
   private static MethodSpec iterateCollection(LoneGetterStep step,
                                               BeanGoalContext goal,
-                                              CodeBlock finalBlock) {
+                                              boolean isLast) {
     String name = step.loneGetter.accept(beanParameterName);
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
@@ -109,12 +119,12 @@ final class BuilderContextB {
         .addStatement("this.$N.$L().add($N)", goal.field,
             step.loneGetter.getter, iterationVar)
         .endControlFlow()
-        .addCode(finalBlock)
+        .addCode(regularFinalBlock(goal, isLast))
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal, CodeBlock finalBlock) {
+  private static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
     ParameterSpec parameter = step.parameter();
     return methodBuilder(step.accessorPair.accept(beanParameterName))
         .addAnnotation(Override.class)
@@ -123,7 +133,7 @@ final class BuilderContextB {
         .returns(step.nextType)
         .addCode(step.accept(nullCheck))
         .addStatement("this.$N.$L($N)", goal.field, step.setter, parameter)
-        .addCode(finalBlock).build();
+        .addCode(regularFinalBlock(goal, isLast)).build();
   }
 
   static final Function<BeanGoalContext, CodeBlock> invoke
