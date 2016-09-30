@@ -21,8 +21,9 @@ Zerobuilder takes care of the boilerplate by generating two different variants o
 
 ### How?
 
-Unlike `auto-value` for instance, zerobuilder does not extend abstract classes.
-Instead, it generates one standalone "utility" class per `@Builders` annotation.
+Unlike `auto-value` for instance, zerobuilder does not help with the definition of data types.
+Instead, it makes it easier to work with the existing ones,
+by generating one standalone "utility" class per `@Builders` annotation.
 
 A valid example:
 
