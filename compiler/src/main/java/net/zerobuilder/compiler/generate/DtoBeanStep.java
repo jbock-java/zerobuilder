@@ -35,21 +35,22 @@ public final class DtoBeanStep {
   public static final class AccessorPairStep extends AbstractBeanStep {
     final AccessorPair accessorPair;
     final String setter;
-    final Optional<EmptyOption> emptyOption;
 
     private AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
-                             String setter, Optional<EmptyOption> emptyOption) {
+                             String setter) {
       super(thisType, nextType);
       this.accessorPair = accessorPair;
       this.setter = setter;
-      this.emptyOption = emptyOption;
     }
 
     public static AccessorPairStep create(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
                                           String setter) {
+      return new AccessorPairStep(thisType, nextType, accessorPair, setter);
+    }
+
+    Optional<EmptyOption> emptyOption() {
       String name = accessorPair.accept(beanParameterName);
-      return new AccessorPairStep(thisType, nextType, accessorPair, setter,
-          EmptyOption.create(accessorPair.type, name));
+      return EmptyOption.create(accessorPair.type, name);
     }
 
     ParameterSpec parameter() {
@@ -97,7 +98,7 @@ public final class DtoBeanStep {
       = new BeanStepCases<Optional<EmptyOption>>() {
     @Override
     public Optional<EmptyOption> accessorPair(AccessorPairStep step) {
-      return step.emptyOption;
+      return step.emptyOption();
     }
     @Override
     public Optional<EmptyOption> loneGetter(LoneGetterStep step) {

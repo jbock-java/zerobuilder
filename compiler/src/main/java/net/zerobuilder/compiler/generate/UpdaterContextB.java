@@ -71,10 +71,11 @@ final class UpdaterContextB {
   }
 
   private static Optional<MethodSpec> regularEmptyCollection(BeanGoalContext goal, AccessorPairStep step) {
-    if (!step.emptyOption.isPresent()) {
+    Optional<EmptyOption> maybeEmptyOption = step.emptyOption();
+    if (!maybeEmptyOption.isPresent()) {
       return absent();
     }
-    EmptyOption emptyOption = step.emptyOption.get();
+    EmptyOption emptyOption = maybeEmptyOption.get();
     TypeName type = step.accessorPair.type;
     String name = step.accessorPair.accept(beanParameterName);
     ParameterSpec emptyColl = parameterSpec(type, name);

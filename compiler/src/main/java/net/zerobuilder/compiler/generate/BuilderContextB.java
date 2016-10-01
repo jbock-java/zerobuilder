@@ -74,10 +74,11 @@ final class BuilderContextB {
   }
 
   private static Optional<MethodSpec> regularEmptyCollection(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
-    if (!step.emptyOption.isPresent()) {
+    Optional<DtoStep.EmptyOption> maybeEmptyOption = step.emptyOption();
+    if (!maybeEmptyOption.isPresent()) {
       return absent();
     }
-    DtoStep.EmptyOption emptyOption = step.emptyOption.get();
+    DtoStep.EmptyOption emptyOption = maybeEmptyOption.get();
     TypeName type = step.accessorPair.type;
     String name = step.accessorPair.accept(beanParameterName);
     ParameterSpec emptyColl = parameterSpec(type, name);

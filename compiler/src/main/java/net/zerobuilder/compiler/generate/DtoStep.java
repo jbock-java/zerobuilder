@@ -32,7 +32,8 @@ public final class DtoStep {
   static final class EmptyOption {
 
     /**
-     * Can be assigned to {@link AbstractParameter#type}
+     * Initializer for a variable of type {@link AbstractParameter#type}.
+     * It evaluates to an empty List or Set.
      */
     final CodeBlock initializer;
 
