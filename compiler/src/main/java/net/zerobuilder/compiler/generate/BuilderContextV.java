@@ -67,14 +67,15 @@ final class BuilderContextV {
   }
 
   private static Optional<MethodSpec> regularEmptyCollection(RegularStep step, RegularGoalContext goal, boolean isLast) {
-    if (!step.emptyOption.isPresent()) {
+    Optional<EmptyOption> maybeEmptyOption = step.emptyOption();
+    if (!maybeEmptyOption.isPresent()) {
       return absent();
     }
-    EmptyOption emptyOption = step.emptyOption.get();
+    EmptyOption emptyOption = maybeEmptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
         .addAnnotation(Override.class)
         .returns(step.nextType)
-        .addCode(regularEmptyCollectionFinalBlock(step, goal, isLast))
+        .addCode(regularEmptyCollectionFinalBlock(step, goal, emptyOption, isLast))
         .addModifiers(PUBLIC)
         .build());
   }
@@ -109,11 +110,11 @@ final class BuilderContextV {
     }
   }
 
-  private static CodeBlock regularEmptyCollectionFinalBlock(RegularStep step, RegularGoalContext goal, boolean isLast) {
+  private static CodeBlock regularEmptyCollectionFinalBlock(RegularStep step, RegularGoalContext goal,
+                                                            EmptyOption emptyOption, boolean isLast) {
     if (isLast) {
-      return goal.acceptRegular(emptyCollectionInvoke(step));
+      return goal.acceptRegular(emptyCollectionInvoke(step, emptyOption));
     } else {
-      EmptyOption emptyOption = step.emptyOption.get();
       return CodeBlock.builder()
           .addStatement("this.$N = $L", step.field(), emptyOption.initializer)
           .addStatement("return this")
@@ -135,26 +136,24 @@ final class BuilderContextV {
     }
   };
 
-  private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final RegularStep step) {
+  private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final RegularStep step,
+                                                                          final EmptyOption emptyOption) {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
       public CodeBlock constructorGoal(ConstructorGoalContext goal) {
         CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
         TypeName type = step.validParameter.type;
         String name = step.validParameter.name;
-        EmptyOption emptyOption = step.emptyOption.get();
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, emptyOption.initializer)
             .addStatement("return new $T($L)", goal.goal.goalType, parameters)
             .build();
       }
-
       @Override
       public CodeBlock methodGoal(MethodGoalContext goal) {
         CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
         TypeName type = step.validParameter.type;
         String name = step.validParameter.name;
-        EmptyOption emptyOption = step.emptyOption.get();
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, emptyOption.initializer)
             .add(methodGoalInvocation(goal, parameters))

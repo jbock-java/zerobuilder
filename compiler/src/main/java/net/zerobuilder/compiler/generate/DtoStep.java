@@ -100,20 +100,21 @@ public final class DtoStep {
   public static final class RegularStep extends AbstractStep {
     final RegularParameter validParameter;
     final ImmutableList<TypeName> declaredExceptions;
-    final Optional<EmptyOption> emptyOption;
 
     private RegularStep(ClassName thisType, TypeName nextType, RegularParameter validParameter,
-                        ImmutableList<TypeName> declaredExceptions, Optional<EmptyOption> emptyOption) {
+                        ImmutableList<TypeName> declaredExceptions) {
       super(thisType, nextType);
       this.declaredExceptions = declaredExceptions;
       this.validParameter = validParameter;
-      this.emptyOption = emptyOption;
     }
 
     public static RegularStep create(ClassName thisType, TypeName nextType, RegularParameter parameter,
                                      ImmutableList<TypeName> declaredExceptions) {
-      return new RegularStep(thisType, nextType, parameter, declaredExceptions,
-          EmptyOption.create(parameter.type, parameter.name));
+      return new RegularStep(thisType, nextType, parameter, declaredExceptions);
+    }
+
+    Optional<EmptyOption> emptyOption() {
+      return EmptyOption.create(validParameter.type, validParameter.name);
     }
 
     FieldSpec field() {
@@ -167,7 +168,7 @@ public final class DtoStep {
       = new StepCases<Optional<EmptyOption>>() {
     @Override
     public Optional<EmptyOption> regularStep(RegularStep step) {
-      return step.emptyOption;
+      return step.emptyOption();
     }
     @Override
     public Optional<EmptyOption> beanStep(AbstractBeanStep step) {

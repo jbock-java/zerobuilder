@@ -62,10 +62,11 @@ final class UpdaterContextV {
   }
 
   private static Optional<MethodSpec> regularEmptyCollection(RegularGoalContext goal, RegularStep step) {
-    if (!step.emptyOption.isPresent()) {
+    Optional<EmptyOption> maybeEmptyOption = step.emptyOption();
+    if (!maybeEmptyOption.isPresent()) {
       return absent();
     }
-    EmptyOption emptyOption = step.emptyOption.get();
+    EmptyOption emptyOption = maybeEmptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
         .returns(goal.accept(updaterType))
         .addStatement("this.$N = $L",
