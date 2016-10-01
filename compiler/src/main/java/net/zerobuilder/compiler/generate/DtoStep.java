@@ -35,6 +35,10 @@ public final class DtoStep {
      * Can be assigned to {@link AbstractParameter#type}
      */
     final CodeBlock initializer;
+
+    /**
+     * Name of the convenience method to be generated, e.g. {@code "emptyFoo"}
+     */
     final String name;
 
     private EmptyOption(CodeBlock initializer, String name) {
@@ -96,23 +100,24 @@ public final class DtoStep {
   public static final class RegularStep extends AbstractStep {
     final RegularParameter validParameter;
     final ImmutableList<TypeName> declaredExceptions;
-    final FieldSpec field;
     final Optional<EmptyOption> emptyOption;
 
     private RegularStep(ClassName thisType, TypeName nextType, RegularParameter validParameter,
-                        ImmutableList<TypeName> declaredExceptions, FieldSpec field, Optional<EmptyOption> emptyOption) {
+                        ImmutableList<TypeName> declaredExceptions, Optional<EmptyOption> emptyOption) {
       super(thisType, nextType);
       this.declaredExceptions = declaredExceptions;
       this.validParameter = validParameter;
-      this.field = field;
       this.emptyOption = emptyOption;
     }
 
     public static RegularStep create(ClassName thisType, TypeName nextType, RegularParameter parameter,
                                      ImmutableList<TypeName> declaredExceptions) {
-      FieldSpec field = fieldSpec(parameter.type, parameter.name, PRIVATE);
-      return new RegularStep(thisType, nextType, parameter, declaredExceptions, field,
+      return new RegularStep(thisType, nextType, parameter, declaredExceptions,
           EmptyOption.create(parameter.type, parameter.name));
+    }
+
+    FieldSpec field() {
+      return fieldSpec(validParameter.type, validParameter.name, PRIVATE);
     }
 
     @Override

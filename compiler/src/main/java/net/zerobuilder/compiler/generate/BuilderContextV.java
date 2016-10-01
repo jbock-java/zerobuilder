@@ -40,7 +40,7 @@ final class BuilderContextV {
           ? ImmutableList.of(goal.builders.field)
           : ImmutableList.<FieldSpec>of());
       for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
-        builder.add(step.field);
+        builder.add(step.field());
       }
       return builder.build();
     }
@@ -103,7 +103,7 @@ final class BuilderContextV {
       return goal.acceptRegular(regularInvoke);
     } else {
       return CodeBlock.builder()
-          .addStatement("this.$N = $N", step.field, parameter)
+          .addStatement("this.$N = $N", step.field(), parameter)
           .addStatement("return this")
           .build();
     }
@@ -115,7 +115,7 @@ final class BuilderContextV {
     } else {
       EmptyOption emptyOption = step.emptyOption.get();
       return CodeBlock.builder()
-          .addStatement("this.$N = $L", step.field, emptyOption.initializer)
+          .addStatement("this.$N = $L", step.field(), emptyOption.initializer)
           .addStatement("return this")
           .build();
     }
