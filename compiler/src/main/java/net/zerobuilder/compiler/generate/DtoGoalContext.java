@@ -42,6 +42,15 @@ public final class DtoGoalContext {
     R beanGoal(BeanGoalContext goal);
   }
 
+  static <R> Function<AbstractGoalContext, R> asFunction(final GoalCases<R> cases) {
+    return new Function<AbstractGoalContext, R>() {
+      @Override
+      public R apply(AbstractGoalContext goal) {
+        return goal.accept(cases);
+      }
+    };
+  }
+
   static <R> GoalCases<R> goalCases(final Function<RegularGoalContext, R> regularFunction,
                                     final Function<BeanGoalContext, R> beanFunction) {
     return new GoalCases<R>() {
@@ -109,11 +118,11 @@ public final class DtoGoalContext {
     @Override
     public ClassName apply(GoalContextCommon goal) {
       return goal.goal.builders.generatedType.nestedClass(
-          upcase(goal.goal.accept(getGoalName) + "BuilderImpl"));
+          upcase(getGoalName.apply(goal.goal) + "BuilderImpl"));
     }
   });
 
-  static final GoalCases<String> getGoalName = new GoalCases<String>() {
+  static final Function<AbstractGoalContext, String> getGoalName = asFunction(new GoalCases<String>() {
     @Override
     public String regularGoal(RegularGoalContext goal) {
       return goal.acceptRegular(goalName);
@@ -122,7 +131,7 @@ public final class DtoGoalContext {
     public String beanGoal(BeanGoalContext goal) {
       return goal.goal.name;
     }
-  };
+  });
 
   private DtoGoalContext() {
     throw new UnsupportedOperationException("no instances");

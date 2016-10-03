@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
@@ -21,11 +22,11 @@ public final class DtoRegularGoalContext {
     final ImmutableList<TypeName> thrownTypes;
 
     RegularGoalContext(BuildersContext builders,
-                              boolean toBuilder,
-                              boolean builder,
-                              ClassName contractName,
-                              ImmutableList<RegularStep> steps,
-                              ImmutableList<TypeName> thrownTypes) {
+                       boolean toBuilder,
+                       boolean builder,
+                       ClassName contractName,
+                       ImmutableList<RegularStep> steps,
+                       ImmutableList<TypeName> thrownTypes) {
       super(builders, toBuilder, builder, contractName);
       this.thrownTypes = thrownTypes;
       this.steps = steps;
@@ -40,6 +41,15 @@ public final class DtoRegularGoalContext {
   interface RegularGoalContextCases<R> {
     R constructorGoal(ConstructorGoalContext goal);
     R methodGoal(MethodGoalContext goal);
+  }
+
+  static <R> Function<RegularGoalContext, R> asFunction(final RegularGoalContextCases<R> cases) {
+    return new Function<RegularGoalContext, R>() {
+      @Override
+      public R apply(RegularGoalContext goal) {
+        return goal.acceptRegular(cases);
+      }
+    };
   }
 
   public final static class ConstructorGoalContext extends RegularGoalContext {

@@ -127,10 +127,10 @@ public final class Generator {
       = goalCases(GeneratorV.goalToBuilder, GeneratorB.goalToBuilder);
 
   static String updaterField(AbstractGoalContext goal) {
-    return downcase(goal.accept(getGoalName) + "Updater");
+    return downcase(getGoalName.apply(goal) + "Updater");
   }
 
   static String stepsField(AbstractGoalContext goal) {
-    return downcase(goal.accept(getGoalName) + "BuilderImpl");
+    return downcase(getGoalName.apply(goal) + "BuilderImpl");
   }
 }

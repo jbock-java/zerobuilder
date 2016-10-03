@@ -25,6 +25,7 @@ import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.asFunction;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
@@ -101,7 +102,7 @@ final class BuilderContextV {
     String name = step.validParameter.name;
     ParameterSpec parameter = parameterSpec(type, name);
     if (isLast) {
-      return goal.acceptRegular(regularInvoke);
+      return regularInvoke.apply(goal);
     } else {
       return CodeBlock.builder()
           .addStatement("this.$N = $N", step.field(), parameter)
@@ -122,8 +123,8 @@ final class BuilderContextV {
     }
   }
 
-  static final RegularGoalContextCases<CodeBlock> regularInvoke
-      = new RegularGoalContextCases<CodeBlock>() {
+  static final Function<RegularGoalContext, CodeBlock> regularInvoke
+      = asFunction(new RegularGoalContextCases<CodeBlock>() {
     @Override
     public CodeBlock constructorGoal(ConstructorGoalContext goal) {
       CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
@@ -134,7 +135,7 @@ final class BuilderContextV {
       CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
       return methodGoalInvocation(goal, parameters);
     }
-  };
+  });
 
   private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final RegularStep step,
                                                                           final EmptyOption emptyOption) {

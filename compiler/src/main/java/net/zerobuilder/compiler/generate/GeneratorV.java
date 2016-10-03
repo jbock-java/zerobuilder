@@ -105,7 +105,7 @@ final class GeneratorV {
       = new Function<RegularGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(RegularGoalContext goal) {
-      MethodSpec.Builder method = methodBuilder(goal.accept(getGoalName) + "Builder")
+      MethodSpec.Builder method = methodBuilder(getGoalName.apply(goal) + "Builder")
           .returns(goal.steps.get(0).thisType)
           .addModifiers(PUBLIC, STATIC);
       ParameterSpec builder = builderInstance(goal);

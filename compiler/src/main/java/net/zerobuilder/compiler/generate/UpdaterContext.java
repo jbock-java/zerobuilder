@@ -7,6 +7,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalContextCommon;
@@ -18,8 +19,9 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
-import static net.zerobuilder.compiler.generate.BuilderContextB.returnBean;
+import static net.zerobuilder.compiler.generate.BuilderContextV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.always;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
@@ -30,7 +32,7 @@ final class UpdaterContext {
     @Override
     public ClassName apply(GoalContextCommon goal) {
       return goal.goal.builders.generatedType.nestedClass(
-          upcase(goal.goal.accept(getGoalName) + "Updater"));
+          upcase(getGoalName.apply(goal.goal) + "Updater"));
     }
   });
 
@@ -63,11 +65,11 @@ final class UpdaterContext {
         .build();
   }
 
-  static final Function<DtoRegularGoalContext.RegularGoalContext, CodeBlock> regularInvoke
-      = new Function<DtoRegularGoalContext.RegularGoalContext, CodeBlock>() {
+  private static final Function<BeanGoalContext, CodeBlock> returnBean
+      = new Function<BeanGoalContext, CodeBlock>() {
     @Override
-    public CodeBlock apply(DtoRegularGoalContext.RegularGoalContext goal) {
-      return goal.acceptRegular(BuilderContextV.regularInvoke);
+    public CodeBlock apply(BeanGoalContext goal) {
+      return statement("return this.$N", goal.field);
     }
   };
 

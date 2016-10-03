@@ -108,11 +108,9 @@ final class BuilderContextB {
   }
 
   private static CodeBlock regularFinalBlock(BeanGoalContext goal, boolean isLast) {
-    if (isLast) {
-      return returnBean.apply(goal);
-    } else {
-      return statement("return this");
-    }
+    return isLast
+        ? statement("return this.$N", goal.field)
+        : statement("return this");
   }
 
   private static MethodSpec iterateCollection(LoneGetterStep step,
@@ -149,16 +147,6 @@ final class BuilderContextB {
         .addStatement("this.$N.$L($N)", goal.field, step.setter, parameter)
         .addCode(regularFinalBlock(goal, isLast)).build();
   }
-
-  static final Function<BeanGoalContext, CodeBlock> returnBean
-      = new Function<BeanGoalContext, CodeBlock>() {
-    @Override
-    public CodeBlock apply(BeanGoalContext goal) {
-      return CodeBlock.builder()
-          .addStatement("return this.$N", goal.field)
-          .build();
-    }
-  };
 
   private BuilderContextB() {
     throw new UnsupportedOperationException("no instances");
