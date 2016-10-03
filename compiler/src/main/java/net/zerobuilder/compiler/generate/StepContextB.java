@@ -19,20 +19,13 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
+import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
 
 final class StepContextB {
 
   static final Function<AbstractBeanStep, TypeSpec> beanStepInterface
-      = new Function<AbstractBeanStep, TypeSpec>() {
-    @Override
-    public TypeSpec apply(AbstractBeanStep step) {
-      return step.acceptBean(beanStepInterfaceCases);
-    }
-  };
-
-  private static final BeanStepCases<TypeSpec> beanStepInterfaceCases
-      = new BeanStepCases<TypeSpec>() {
+      = asFunction(new BeanStepCases<TypeSpec>() {
     @Override
     public TypeSpec accessorPair(AccessorPairStep step) {
       return regularStepInterface.apply(step);
@@ -44,7 +37,7 @@ final class StepContextB {
           .addMethods(collectionMethods(step))
           .build();
     }
-  };
+  });
 
   private static ImmutableList<MethodSpec> collectionMethods(LoneGetterStep step) {
     ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();

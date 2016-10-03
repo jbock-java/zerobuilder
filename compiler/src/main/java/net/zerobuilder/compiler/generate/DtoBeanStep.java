@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
@@ -106,6 +107,14 @@ public final class DtoBeanStep {
     }
   };
 
+  static <R> Function<AbstractBeanStep, R> asFunction(final BeanStepCases<R> cases) {
+    return new Function<AbstractBeanStep, R>() {
+      @Override
+      public R apply(AbstractBeanStep abstractStep) {
+        return abstractStep.acceptBean(cases);
+      }
+    };
+  }
 
   private DtoBeanStep() {
     throw new UnsupportedOperationException("no instances");

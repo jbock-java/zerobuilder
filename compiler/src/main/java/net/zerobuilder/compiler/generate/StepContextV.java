@@ -28,17 +28,23 @@ final class StepContextV {
     @Override
     public TypeSpec apply(AbstractStep step) {
       return interfaceBuilder(step.thisType)
-          .addMethods(regularMethods(step))
+          .addMethod(regularStepMethod(step))
+          .addMethods(presentInstances(of(emptyCollection(step))))
           .addModifiers(PUBLIC)
           .build();
     }
   };
 
-  private static ImmutableList<MethodSpec> regularMethods(AbstractStep step) {
-    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    builder.add(regularStepMethod(step));
-    builder.addAll(presentInstances(of(emptyCollection(step))));
-    return builder.build();
+  private static MethodSpec regularStepMethod(AbstractStep step) {
+    AbstractParameter parameter = step.accept(validParameter);
+    String name = parameter.acceptParameter(parameterName);
+    TypeName type = parameter.type;
+    return methodBuilder(name)
+        .returns(step.nextType)
+        .addParameter(parameterSpec(type, name))
+        .addExceptions(step.accept(declaredExceptions))
+        .addModifiers(PUBLIC, ABSTRACT)
+        .build();
   }
 
   private static Optional<MethodSpec> emptyCollection(AbstractStep step) {
@@ -52,18 +58,6 @@ final class StepContextV {
         .addExceptions(step.accept(declaredExceptions))
         .addModifiers(PUBLIC, ABSTRACT)
         .build());
-  }
-
-  private static MethodSpec regularStepMethod(AbstractStep step) {
-    AbstractParameter parameter = step.accept(validParameter);
-    String name = parameter.acceptParameter(parameterName);
-    TypeName type = parameter.type;
-    return methodBuilder(name)
-        .returns(step.nextType)
-        .addParameter(parameterSpec(type, name))
-        .addExceptions(step.accept(declaredExceptions))
-        .addModifiers(PUBLIC, ABSTRACT)
-        .build();
   }
 
   private StepContextV() {
