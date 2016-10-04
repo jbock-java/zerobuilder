@@ -50,13 +50,13 @@ In order for the `toBuilder = true` option to make sense,
 there has to exist one corresponding _projection_, i.e. a getter or instance field, for each goal parameter.
 This is the case in `Message.java`.
 
-The following structure will be generated:
+The following structure will be generated (omitting `public` keyword and other code):
 
 ````java
-@Generated public final class MessageBuilders {
+@Generated final class MessageBuilders {
 
-  public static MessageBuilder.Sender messageBuilder() { ... }
-  public static MessageUpdater messageToBuilder(Message message) { ... }
+  static MessageBuilder.Sender messageBuilder() { ... }
+  static MessageUpdater messageToBuilder(Message message) { ... }
 
   static final class MessageUpdater {
     MessageUpdater sender(String sender) { ... }
