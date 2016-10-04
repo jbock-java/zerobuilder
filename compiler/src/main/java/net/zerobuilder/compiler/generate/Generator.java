@@ -23,7 +23,7 @@ import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineContract;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 
@@ -87,11 +87,7 @@ public final class Generator {
             return goal.builder;
           }
         })
-        .transform(new Function<AbstractGoalContext, MethodSpec>() {
-          public MethodSpec apply(AbstractGoalContext goal) {
-            return goalToBuilder.apply(goal);
-          }
-        })
+        .transform(goalToBuilder)
         .toList();
   }
 
@@ -124,10 +120,10 @@ public final class Generator {
       = goalCases(GeneratorV.goalToBuilder, GeneratorB.goalToBuilder);
 
   static String updaterField(AbstractGoalContext goal) {
-    return downcase(getGoalName.apply(goal) + "Updater");
+    return downcase(goalName.apply(goal) + "Updater");
   }
 
   static String stepsField(AbstractGoalContext goal) {
-    return downcase(getGoalName.apply(goal) + "BuilderImpl");
+    return downcase(goalName.apply(goal) + "BuilderImpl");
   }
 }

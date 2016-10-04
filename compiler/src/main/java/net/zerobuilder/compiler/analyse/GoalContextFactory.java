@@ -53,12 +53,12 @@ final class GoalContextFactory {
           @Override
           public AbstractGoalContext method(MethodGoal goal) {
             return new MethodGoalContext(
-                goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
+                goal, goal.goalOptions, builders, toBuilder, builder, contractName, steps, thrownTypes);
           }
           @Override
           public AbstractGoalContext constructor(ConstructorGoal goal) {
             return new ConstructorGoalContext(
-                goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
+                goal, goal.goalOptions, builders, toBuilder, builder, contractName, steps, thrownTypes);
           }
         });
       }
@@ -71,7 +71,7 @@ final class GoalContextFactory {
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
         return BeanGoalContext.create(
-            goal.goal.goal, builders, toBuilder, builder, contractName, steps);
+            goal.goal.goal, goal.goal.goal.goalOptions, builders, toBuilder, builder, contractName, steps);
       }
     });
   }

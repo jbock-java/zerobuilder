@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
@@ -22,12 +23,13 @@ public final class DtoRegularGoalContext {
     final ImmutableList<TypeName> thrownTypes;
 
     RegularGoalContext(BuildersContext builders,
+                       GoalOptions goalOptions,
                        boolean toBuilder,
                        boolean builder,
                        ClassName contractName,
                        ImmutableList<RegularStep> steps,
                        ImmutableList<TypeName> thrownTypes) {
-      super(builders, toBuilder, builder, contractName);
+      super(builders, goalOptions, toBuilder, builder, contractName);
       this.thrownTypes = thrownTypes;
       this.steps = steps;
     }
@@ -55,8 +57,15 @@ public final class DtoRegularGoalContext {
   public final static class ConstructorGoalContext extends RegularGoalContext {
     final ConstructorGoal goal;
 
-    public ConstructorGoalContext(ConstructorGoal goal, BuildersContext builders, boolean toBuilder, boolean builder, ClassName contractName, ImmutableList<RegularStep> steps, ImmutableList<TypeName> thrownTypes) {
-      super(builders, toBuilder, builder, contractName, steps, thrownTypes);
+    public ConstructorGoalContext(ConstructorGoal goal,
+                                  GoalOptions goalOptions,
+                                  BuildersContext builders,
+                                  boolean toBuilder,
+                                  boolean builder,
+                                  ClassName contractName,
+                                  ImmutableList<RegularStep> steps,
+                                  ImmutableList<TypeName> thrownTypes) {
+      super(builders, goalOptions, toBuilder, builder, contractName, steps, thrownTypes);
       this.goal = goal;
     }
     @Override
@@ -68,8 +77,15 @@ public final class DtoRegularGoalContext {
   public final static class MethodGoalContext extends RegularGoalContext {
     final MethodGoal goal;
 
-    public MethodGoalContext(MethodGoal goal, BuildersContext builders, boolean toBuilder, boolean builder, ClassName contractName, ImmutableList<RegularStep> steps, ImmutableList<TypeName> thrownTypes) {
-      super(builders, toBuilder, builder, contractName, steps, thrownTypes);
+    public MethodGoalContext(MethodGoal goal,
+                             GoalOptions goalOptions,
+                             BuildersContext builders,
+                             boolean toBuilder,
+                             boolean builder,
+                             ClassName contractName,
+                             ImmutableList<RegularStep> steps,
+                             ImmutableList<TypeName> thrownTypes) {
+      super(builders, goalOptions, toBuilder, builder, contractName, steps, thrownTypes);
       this.goal = goal;
     }
     @Override

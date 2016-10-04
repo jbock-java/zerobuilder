@@ -9,7 +9,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalContextCommon;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
@@ -23,7 +22,7 @@ import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.BuilderContextV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.always;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 
 final class UpdaterContext {
@@ -33,7 +32,7 @@ final class UpdaterContext {
     @Override
     public ClassName apply(GoalContextCommon goal) {
       return goal.goal.builders.generatedType.nestedClass(
-          upcase(getGoalName.apply(goal.goal) + "Updater"));
+          upcase(goalName.apply(goal.goal) + "Updater"));
     }
   });
 

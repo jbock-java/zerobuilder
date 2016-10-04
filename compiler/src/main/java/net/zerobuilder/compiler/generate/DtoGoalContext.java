@@ -5,19 +5,21 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.analyse.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalType;
 
 public final class DtoGoalContext {
 
   public static abstract class AbstractGoalContext {
     final BuildersContext builders;
+
+    final GoalOptions goalOptions;
 
     final boolean toBuilder;
     final boolean builder;
@@ -26,9 +28,10 @@ public final class DtoGoalContext {
 
     @VisibleForTesting
     AbstractGoalContext(BuildersContext builders,
-                        boolean toBuilder,
+                        GoalOptions goalOptions, boolean toBuilder,
                         boolean builder, ClassName builderContractType) {
       this.builders = builders;
+      this.goalOptions = goalOptions;
       this.toBuilder = toBuilder;
       this.builder = builder;
       this.builderContractType = builderContractType;
@@ -112,14 +115,14 @@ public final class DtoGoalContext {
     @Override
     public ClassName apply(GoalContextCommon goal) {
       return goal.goal.builders.generatedType.nestedClass(
-          upcase(getGoalName.apply(goal.goal) + "BuilderImpl"));
+          upcase(goalName.apply(goal.goal) + "BuilderImpl"));
     }
   });
 
-  static final Function<AbstractGoalContext, String> getGoalName = asFunction(new GoalCases<String>() {
+  static final Function<AbstractGoalContext, String> goalName = asFunction(new GoalCases<String>() {
     @Override
     public String regularGoal(RegularGoalContext goal) {
-      return goal.acceptRegular(goalName);
+      return goal.acceptRegular(DtoRegularGoalContext.goalName);
     }
     @Override
     public String beanGoal(BeanGoalContext goal) {

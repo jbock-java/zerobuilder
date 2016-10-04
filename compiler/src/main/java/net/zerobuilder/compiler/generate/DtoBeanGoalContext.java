@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
@@ -25,18 +26,20 @@ public final class DtoBeanGoalContext {
     final FieldSpec field;
 
     private BeanGoalContext(BeanGoal goal,
+                            GoalOptions goalOptions,
                             BuildersContext builders,
                             boolean toBuilder,
                             boolean builder,
                             ClassName contractName,
                             ImmutableList<? extends AbstractBeanStep> steps, FieldSpec field) {
-      super(builders, toBuilder, builder, contractName);
+      super(builders, goalOptions, toBuilder, builder, contractName);
       this.steps = steps;
       this.goal = goal;
       this.field = field;
     }
 
     public static BeanGoalContext create(BeanGoal goal,
+                                         GoalOptions goalOptions,
                                          BuildersContext builders,
                                          boolean toBuilder,
                                          boolean builder,
@@ -44,7 +47,7 @@ public final class DtoBeanGoalContext {
                                          ImmutableList<? extends AbstractBeanStep> steps) {
       FieldSpec field = fieldSpec(goal.goalType,
           downcase(goal.goalType.simpleName()), PRIVATE);
-      return new BeanGoalContext(goal, builders, toBuilder, builder, contractName, steps, field);
+      return new BeanGoalContext(goal, goalOptions, builders, toBuilder, builder, contractName, steps, field);
     }
 
     <R> R accept(GoalCases<R> cases) {

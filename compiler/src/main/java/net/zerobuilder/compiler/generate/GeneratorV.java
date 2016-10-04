@@ -6,6 +6,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.analyse.DtoGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -17,8 +18,6 @@ import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
@@ -31,7 +30,7 @@ final class GeneratorV {
         public MethodSpec apply(RegularGoalContext goal) {
           TypeName goalType = goal.acceptRegular(DtoRegularGoalContext.goalType);
           ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
-          String methodName = goal.acceptRegular(goalName) + "ToBuilder";
+          String methodName = goal.acceptRegular(DtoRegularGoalContext.goalName) + "ToBuilder";
           ParameterSpec updater = updaterInstance(goal);
           MethodSpec.Builder method = methodBuilder(methodName)
               .addParameter(parameter)
@@ -41,7 +40,7 @@ final class GeneratorV {
             method.addCode(copyField(parameter, updater, step));
           }
           method.addStatement("return $N", updater);
-          return method.addModifiers(PUBLIC, STATIC).build();
+          return method.addModifiers(goal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
         }
       };
 
@@ -105,9 +104,9 @@ final class GeneratorV {
       = new Function<RegularGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(RegularGoalContext goal) {
-      MethodSpec.Builder method = methodBuilder(getGoalName.apply(goal) + "Builder")
+      MethodSpec.Builder method = methodBuilder(DtoGoalContext.goalName.apply(goal) + "Builder")
           .returns(goal.steps.get(0).thisType)
-          .addModifiers(PUBLIC, STATIC);
+          .addModifiers(goal.goalOptions.builderAccess.modifiers(STATIC));
       ParameterSpec builder = builderInstance(goal);
       method.addCode(initBuilder(goal, builder));
       if (goal.acceptRegular(isInstance)) {

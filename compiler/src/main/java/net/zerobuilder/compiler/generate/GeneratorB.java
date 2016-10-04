@@ -43,7 +43,7 @@ final class GeneratorB {
       method.addStatement("return $N", updater);
       return method
           .returns(UpdaterContext.updaterType.apply(goal))
-          .addModifiers(PUBLIC, STATIC).build();
+          .addModifiers(goal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
     }
   };
 
@@ -128,7 +128,7 @@ final class GeneratorB {
       ClassName stepsType = builderImplType.apply(goal);
       MethodSpec.Builder method = methodBuilder(goal.goal.name + "Builder")
           .returns(goal.steps.get(0).thisType)
-          .addModifiers(PUBLIC, STATIC);
+          .addModifiers(goal.goalOptions.builderAccess.modifiers(STATIC));
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.builders.recycle
           ? statement("$T $N = $N.get().$N", stepsType, steps, goal.builders.cache, stepsField(goal))
