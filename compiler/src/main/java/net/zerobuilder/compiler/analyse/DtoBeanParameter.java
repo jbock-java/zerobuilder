@@ -88,7 +88,7 @@ public final class DtoBeanParameter {
     }
   }
 
-  public static final class LoneGetterBuilder {
+  static final class LoneGetterBuilder {
     private final ParameterSpec iterationVar;
     LoneGetterBuilder(ParameterSpec iterationVar) {
       this.iterationVar = iterationVar;

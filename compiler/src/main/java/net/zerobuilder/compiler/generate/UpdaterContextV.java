@@ -30,7 +30,7 @@ final class UpdaterContextV {
     @Override
     public ImmutableList<FieldSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-      builder.addAll(goal.acceptRegular(isInstance)
+      builder.addAll(isInstance.apply(goal)
           ? ImmutableList.of(goal.builders.field)
           : ImmutableList.<FieldSpec>of());
       for (RegularStep step : goal.steps) {

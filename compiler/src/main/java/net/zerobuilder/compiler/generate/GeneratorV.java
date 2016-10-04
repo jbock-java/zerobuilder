@@ -11,7 +11,6 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContex
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
@@ -28,9 +27,10 @@ final class GeneratorV {
       new Function<RegularGoalContext, MethodSpec>() {
         @Override
         public MethodSpec apply(RegularGoalContext goal) {
-          TypeName goalType = goal.acceptRegular(DtoRegularGoalContext.goalType);
+          DtoGoal.RegularGoal regularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
+          TypeName goalType = regularGoal.goalType;
           ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
-          String methodName = goal.acceptRegular(DtoRegularGoalContext.goalName) + "ToBuilder";
+          String methodName = regularGoal.name + "ToBuilder";
           ParameterSpec updater = updaterInstance(goal);
           MethodSpec.Builder method = methodBuilder(methodName)
               .addParameter(parameter)
@@ -40,7 +40,7 @@ final class GeneratorV {
             method.addCode(copyField(parameter, updater, step));
           }
           method.addStatement("return $N", updater);
-          return method.addModifiers(goal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
+          return method.addModifiers(regularGoal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
         }
       };
 
@@ -104,12 +104,13 @@ final class GeneratorV {
       = new Function<RegularGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(RegularGoalContext goal) {
+      DtoGoal.RegularGoal regularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
       MethodSpec.Builder method = methodBuilder(DtoGoalContext.goalName.apply(goal) + "Builder")
           .returns(goal.steps.get(0).thisType)
-          .addModifiers(goal.goalOptions.builderAccess.modifiers(STATIC));
+          .addModifiers(regularGoal.goalOptions.builderAccess.modifiers(STATIC));
       ParameterSpec builder = builderInstance(goal);
       method.addCode(initBuilder(goal, builder));
-      if (goal.acceptRegular(isInstance)) {
+      if (isInstance.apply(goal)) {
         ParameterSpec parameter = parameterSpec(goal.builders.type, downcase(goal.builders.type.simpleName()));
         method.addParameter(parameter)
             .addStatement("$N.$N = $N", builder, goal.builders.field, parameter);

@@ -5,21 +5,18 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoGoal.GoalOptions;
+import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoal;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalType;
 
 public final class DtoGoalContext {
 
   public static abstract class AbstractGoalContext {
     final BuildersContext builders;
-
-    final GoalOptions goalOptions;
 
     final boolean toBuilder;
     final boolean builder;
@@ -27,11 +24,9 @@ public final class DtoGoalContext {
     final ClassName builderContractType;
 
     @VisibleForTesting
-    AbstractGoalContext(BuildersContext builders,
-                        GoalOptions goalOptions, boolean toBuilder,
+    AbstractGoalContext(BuildersContext builders, boolean toBuilder,
                         boolean builder, ClassName builderContractType) {
       this.builders = builders;
-      this.goalOptions = goalOptions;
       this.toBuilder = toBuilder;
       this.builder = builder;
       this.builderContractType = builderContractType;
@@ -87,8 +82,9 @@ public final class DtoGoalContext {
     return asFunction(new GoalCases<R>() {
       @Override
       public R regularGoal(RegularGoalContext goal) {
+        RegularGoal regularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
         return function.apply(new GoalContextCommon(goal,
-            goal.acceptRegular(goalType), goal.steps, goal.thrownTypes));
+            regularGoal.goalType, goal.steps, goal.thrownTypes));
       }
       @Override
       public R beanGoal(BeanGoalContext goal) {
@@ -122,7 +118,8 @@ public final class DtoGoalContext {
   static final Function<AbstractGoalContext, String> goalName = asFunction(new GoalCases<String>() {
     @Override
     public String regularGoal(RegularGoalContext goal) {
-      return goal.acceptRegular(DtoRegularGoalContext.goalName);
+      RegularGoal regularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
+      return regularGoal.name;
     }
     @Override
     public String beanGoal(BeanGoalContext goal) {

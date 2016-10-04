@@ -22,8 +22,8 @@ import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.BuilderContextV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.always;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 
 final class UpdaterContext {
 

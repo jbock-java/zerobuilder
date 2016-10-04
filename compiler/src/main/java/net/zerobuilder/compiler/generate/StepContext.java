@@ -9,10 +9,10 @@ import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.analyse.DtoParameter.parameterName;
+import static net.zerobuilder.compiler.generate.DtoStep.abstractParameter;
 import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.DtoStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoStep.stepCases;
-import static net.zerobuilder.compiler.generate.DtoStep.abstractParameter;
 import static net.zerobuilder.compiler.generate.StepContextB.beanStepInterface;
 import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
 

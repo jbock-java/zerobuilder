@@ -13,7 +13,6 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
@@ -43,7 +42,7 @@ final class GeneratorB {
       method.addStatement("return $N", updater);
       return method
           .returns(UpdaterContext.updaterType.apply(goal))
-          .addModifiers(goal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
+          .addModifiers(goal.goal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
     }
   };
 
@@ -128,7 +127,7 @@ final class GeneratorB {
       ClassName stepsType = builderImplType.apply(goal);
       MethodSpec.Builder method = methodBuilder(goal.goal.name + "Builder")
           .returns(goal.steps.get(0).thisType)
-          .addModifiers(goal.goalOptions.builderAccess.modifiers(STATIC));
+          .addModifiers(goal.goal.goalOptions.builderAccess.modifiers(STATIC));
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.builders.recycle
           ? statement("$T $N = $N.get().$N", stepsType, steps, goal.builders.cache, stepsField(goal))

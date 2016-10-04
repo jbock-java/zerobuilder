@@ -40,12 +40,12 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIN
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_SETTER_TYPE_MISMATCH;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_IGNORE_AND_STEP;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_ACCESSOR_PAIRS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_DEFAULT_CONSTRUCTOR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SETTER_EXCEPTION;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_PRIVATE_CLASS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SETTER_EXCEPTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.Utilities.ClassNames.OBJECT;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
