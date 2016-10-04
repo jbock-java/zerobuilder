@@ -71,31 +71,31 @@ public final class Messages {
     public static final String GOALNAME_NN =
         "There is another goal with this goal name." + GOAL_NAME_HINT;
 
-    public static final String NO_DEFAULT_CONSTRUCTOR
-        = "Class not public or no public default constructor found." + POJO_HINT;
+    public static final String BEAN_NO_DEFAULT_CONSTRUCTOR
+        = "The default constructor may not be private or absent." + POJO_HINT;
 
-    public static final String TARGET_PUBLIC
-        = "Target type must be public." + POJO_HINT;
+    public static final String BEAN_PRIVATE_CLASS
+        = "The annotated class may not be private." + POJO_HINT;
 
-    public static final String GETTER_EXCEPTION
+    public static final String BEAN_GETTER_EXCEPTION
         = "POJO getters may not declare exceptions." + POJO_HINT;
 
-    public static final String GETTER_SETTER_TYPE_MISMATCH
+    public static final String BEAN_GETTER_SETTER_TYPE_MISMATCH
         = "Getter/setter type mismatch." + POJO_HINT;
 
-    public static final String BAD_GENERICS
+    public static final String BEAN_BAD_GENERICS
         = "Can't understand the generics of this accessor pair." + POJO_HINT;
 
-    public static final String COULD_NOT_FIND_SETTER
+    public static final String BEAN_COULD_NOT_FIND_SETTER
         = "Could not find setter." + POJO_HINT;
 
-    public static final String SETTER_EXCEPTION
+    public static final String BEAN_SETTER_EXCEPTION
         = "Setters may not declare exceptions." + POJO_HINT;
 
     public static final String NO_PROJECTION
         = "Could not find a projection (getter or field).";
 
-    public static final String IGNORE_AND_STEP =
+    public static final String BEAN_IGNORE_AND_STEP =
         "@Ignore and @Step don't make sense together." + POJO_HINT;
 
     public static final String STEP_ON_SETTER
@@ -104,7 +104,7 @@ public final class Messages {
     public static final String IGNORE_ON_SETTER
         = "The @Ignore annotation goes on getters, not setters.";
 
-    public static final String NO_ACCESSOR_PAIRS
+    public static final String BEAN_NO_ACCESSOR_PAIRS
         = "No accessor pairs found." + POJO_HINT;
 
     private ErrorMessages() {

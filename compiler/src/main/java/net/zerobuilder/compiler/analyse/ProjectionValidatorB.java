@@ -11,8 +11,8 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
@@ -31,21 +31,21 @@ import static com.google.auto.common.MoreTypes.asDeclared;
 import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.base.Ascii.isUpperCase;
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BAD_GENERICS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.COULD_NOT_FIND_SETTER;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_EXCEPTION;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GETTER_SETTER_TYPE_MISMATCH;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_AND_STEP;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_BAD_GENERICS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIND_SETTER;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_EXCEPTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_SETTER_TYPE_MISMATCH;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_IGNORE_AND_STEP;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_ACCESSOR_PAIRS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_DEFAULT_CONSTRUCTOR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.SETTER_EXCEPTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_ACCESSOR_PAIRS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_DEFAULT_CONSTRUCTOR;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.TARGET_PUBLIC;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_PRIVATE_CLASS;
 import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.Utilities.ClassNames.OBJECT;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
@@ -79,7 +79,7 @@ final class ProjectionValidatorB {
       }
       ImmutableList<TmpAccessorPair> tmpAccessorPairs = builder.build();
       if (tmpAccessorPairs.isEmpty()) {
-        throw new ValidationException(NO_ACCESSOR_PAIRS, goal.beanType);
+        throw new ValidationException(BEAN_NO_ACCESSOR_PAIRS, goal.beanType);
       }
       return createResult(goal, tmpAccessorPairs);
     }
@@ -89,7 +89,7 @@ final class ProjectionValidatorB {
     TypeMirror type = getter.getReturnType();
     String name = getter.getSimpleName().toString();
     if (!isImplementationOf(type, COLLECTION)) {
-      throw new ValidationException(COULD_NOT_FIND_SETTER, getter);
+      throw new ValidationException(BEAN_COULD_NOT_FIND_SETTER, getter);
     }
     // no setter but we have a getter that returns something like List<E>
     // in this case we need to find what E is ("collectionType")
@@ -109,7 +109,7 @@ final class ProjectionValidatorB {
       return TmpAccessorPair.createLoneGetter(getter, loneGetter);
     } else {
       // unlikely: subclass of Collection should not have more than one type parameter
-      throw new ValidationException(BAD_GENERICS, getter);
+      throw new ValidationException(BEAN_BAD_GENERICS, getter);
     }
   }
 
@@ -117,10 +117,10 @@ final class ProjectionValidatorB {
     TypeName setterType = TypeName.get(setter.getParameters().get(0).asType());
     TypeName getterType = TypeName.get(getter.getReturnType());
     if (!setterType.equals(getterType)) {
-      throw new ValidationException(GETTER_SETTER_TYPE_MISMATCH, setter);
+      throw new ValidationException(BEAN_GETTER_SETTER_TYPE_MISMATCH, setter);
     }
     if (!getter.getThrownTypes().isEmpty()) {
-      throw new ValidationException(GETTER_EXCEPTION, getter);
+      throw new ValidationException(BEAN_GETTER_EXCEPTION, getter);
     }
     return TmpAccessorPair.createAccessorPair(getter, goalAnnotation);
   }
@@ -132,7 +132,7 @@ final class ProjectionValidatorB {
           public boolean apply(ExecutableElement method) {
             String name = method.getSimpleName().toString();
             return method.getParameters().isEmpty()
-                && method.getModifiers().contains(PUBLIC)
+                && !method.getModifiers().contains(PRIVATE)
                 && !method.getModifiers().contains(STATIC)
                 && !method.getReturnType().getKind().equals(TypeKind.VOID)
                 && !method.getReturnType().getKind().equals(TypeKind.NONE)
@@ -145,7 +145,7 @@ final class ProjectionValidatorB {
           public boolean apply(ExecutableElement getter) {
             Ignore ignoreAnnotation = getter.getAnnotation(Ignore.class);
             if (ignoreAnnotation != null && getter.getAnnotation(Step.class) != null) {
-              throw new ValidationException(IGNORE_AND_STEP, getter);
+              throw new ValidationException(BEAN_IGNORE_AND_STEP, getter);
             }
             return ignoreAnnotation == null;
           }
@@ -156,17 +156,17 @@ final class ProjectionValidatorB {
   private static ImmutableMap<String, ExecutableElement> setters(BeanGoalElement goal) throws ValidationException {
     TypeElement beanType = goal.beanType;
     if (!hasParameterlessConstructor(beanType)) {
-      throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, beanType);
+      throw new ValidationException(BEAN_NO_DEFAULT_CONSTRUCTOR, beanType);
     }
-    if (!beanType.getModifiers().contains(PUBLIC)) {
-      throw new ValidationException(TARGET_PUBLIC, beanType);
+    if (beanType.getModifiers().contains(PRIVATE)) {
+      throw new ValidationException(BEAN_PRIVATE_CLASS, beanType);
     }
     return FluentIterable.from(getLocalAndInheritedMethods(beanType, goal.elements))
         .filter(new Predicate<ExecutableElement>() {
           @Override
           public boolean apply(ExecutableElement method) {
             return method.getKind() == ElementKind.METHOD
-                && method.getModifiers().contains(PUBLIC)
+                && !method.getModifiers().contains(PRIVATE)
                 && method.getSimpleName().length() >= 4
                 && isUpperCase(method.getSimpleName().charAt(3))
                 && method.getSimpleName().toString().startsWith("set")
@@ -180,7 +180,7 @@ final class ProjectionValidatorB {
             if (setter.getThrownTypes().isEmpty()) {
               return true;
             } else {
-              throw new ValidationException(SETTER_EXCEPTION, setter);
+              throw new ValidationException(BEAN_SETTER_EXCEPTION, setter);
             }
           }
         })
@@ -212,7 +212,7 @@ final class ProjectionValidatorB {
   private static boolean hasParameterlessConstructor(TypeElement type) {
     for (ExecutableElement constructor : constructorsIn(type.getEnclosedElements())) {
       if (constructor.getParameters().isEmpty()
-          && constructor.getModifiers().contains(PUBLIC)) {
+          && !constructor.getModifiers().contains(PRIVATE)) {
         return true;
       }
     }
