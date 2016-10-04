@@ -28,7 +28,8 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 
 final class UpdaterContext {
 
-  static final GoalCases<ClassName> updaterType = always(new Function<GoalContextCommon, ClassName>() {
+  static final Function<AbstractGoalContext, ClassName> updaterType
+      = always(new Function<GoalContextCommon, ClassName>() {
     @Override
     public ClassName apply(GoalContextCommon goal) {
       return goal.goal.builders.generatedType.nestedClass(
@@ -36,30 +37,30 @@ final class UpdaterContext {
     }
   });
 
-  private static final GoalCases<ImmutableList<FieldSpec>> fields
+  private static final Function<AbstractGoalContext, ImmutableList<FieldSpec>> fields
       = goalCases(UpdaterContextV.fields, UpdaterContextB.fields);
 
-  private static final GoalCases<ImmutableList<MethodSpec>> updateMethods
+  private static final Function<AbstractGoalContext, ImmutableList<MethodSpec>> updateMethods
       = goalCases(UpdaterContextV.updateMethods, UpdaterContextB.updateMethods);
 
-  private static final GoalCases<MethodSpec> buildMethod =
+  private static final Function<AbstractGoalContext, MethodSpec> buildMethod =
       always(new Function<GoalContextCommon, MethodSpec>() {
         @Override
         public MethodSpec apply(GoalContextCommon goal) {
           return methodBuilder("build")
               .addModifiers(PUBLIC)
               .returns(goal.goalType)
-              .addCode(goal.goal.accept(invoke))
+              .addCode(invoke.apply(goal.goal))
               .addExceptions(goal.thrownTypes)
               .build();
         }
       });
 
   static TypeSpec defineUpdater(AbstractGoalContext goal) {
-    return classBuilder(goal.accept(updaterType))
-        .addFields(goal.accept(fields))
-        .addMethods(goal.accept(updateMethods))
-        .addMethod(goal.accept(buildMethod))
+    return classBuilder(updaterType.apply(goal))
+        .addFields(fields.apply(goal))
+        .addMethods(updateMethods.apply(goal))
+        .addMethod(buildMethod.apply(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
@@ -73,7 +74,7 @@ final class UpdaterContext {
     }
   };
 
-  private static final GoalCases<CodeBlock> invoke
+  private static final Function<AbstractGoalContext, CodeBlock> invoke
       = goalCases(regularInvoke, returnBean);
 
   private UpdaterContext() {

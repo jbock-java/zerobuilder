@@ -24,10 +24,10 @@ import static net.zerobuilder.compiler.generate.StepContext.asStepInterface;
 
 final class BuilderContext {
 
-  private static final GoalCases<ImmutableList<FieldSpec>> fields
+  private static final Function<AbstractGoalContext, ImmutableList<FieldSpec>> fields
       = goalCases(BuilderContextV.fields, BuilderContextB.fields);
 
-  private static final GoalCases<ImmutableList<TypeSpec>> stepInterfaces
+  private static final Function<AbstractGoalContext, ImmutableList<TypeSpec>> stepInterfaces
       = always(new Function<GoalContextCommon, ImmutableList<TypeSpec>>() {
     @Override
     public ImmutableList<TypeSpec> apply(GoalContextCommon goal) {
@@ -35,22 +35,22 @@ final class BuilderContext {
     }
   });
 
-  private static final GoalCases<ImmutableList<MethodSpec>> steps
+  private static final Function<AbstractGoalContext, ImmutableList<MethodSpec>> steps
       = goalCases(BuilderContextV.steps, BuilderContextB.steps);
 
   static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
-    return classBuilder(goal.accept(builderImplType))
-        .addSuperinterfaces(goal.accept(stepInterfaceTypes))
-        .addFields(goal.accept(fields))
+    return classBuilder(builderImplType.apply(goal))
+        .addSuperinterfaces(stepInterfaceTypes.apply(goal))
+        .addFields(fields.apply(goal))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
-        .addMethods(goal.accept(steps))
+        .addMethods(steps.apply(goal))
         .addModifiers(STATIC, FINAL)
         .build();
   }
 
   static TypeSpec defineContract(AbstractGoalContext goal) {
     return classBuilder(goal.builderContractType)
-        .addTypes(goal.accept(stepInterfaces))
+        .addTypes(stepInterfaces.apply(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();

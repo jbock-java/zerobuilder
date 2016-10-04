@@ -96,7 +96,7 @@ final class GeneratorV {
   }
 
   private static ParameterSpec updaterInstance(RegularGoalContext goal) {
-    ClassName updaterType = goal.accept(UpdaterContext.updaterType);
+    ClassName updaterType = UpdaterContext.updaterType.apply(goal);
     return parameterSpec(updaterType, "updater");
   }
 
@@ -126,7 +126,7 @@ final class GeneratorV {
   }
 
   private static ParameterSpec builderInstance(RegularGoalContext goal) {
-    ClassName stepsType = goal.accept(builderImplType);
+    ClassName stepsType = builderImplType.apply(goal);
     return parameterSpec(stepsType, downcase(stepsType.simpleName()));
   }
 

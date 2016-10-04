@@ -41,7 +41,7 @@ final class GeneratorB {
       }
       method.addStatement("return $N", updater);
       return method
-          .returns(goal.accept(UpdaterContext.updaterType))
+          .returns(UpdaterContext.updaterType.apply(goal))
           .addModifiers(PUBLIC, STATIC).build();
     }
   };
@@ -116,7 +116,7 @@ final class GeneratorB {
   }
 
   private static ParameterSpec updaterInstance(BeanGoalContext goal) {
-    ClassName updaterType = goal.accept(UpdaterContext.updaterType);
+    ClassName updaterType = UpdaterContext.updaterType.apply(goal);
     return parameterSpec(updaterType, "updater");
   }
 
@@ -124,7 +124,7 @@ final class GeneratorB {
       = new Function<BeanGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(BeanGoalContext goal) {
-      ClassName stepsType = goal.accept(builderImplType);
+      ClassName stepsType = builderImplType.apply(goal);
       MethodSpec.Builder method = methodBuilder(goal.goal.name + "Builder")
           .returns(goal.steps.get(0).thisType)
           .addModifiers(PUBLIC, STATIC);

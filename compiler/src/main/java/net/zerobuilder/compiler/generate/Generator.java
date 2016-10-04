@@ -10,7 +10,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 
 import javax.lang.model.util.Elements;
 
@@ -26,11 +25,10 @@ import static net.zerobuilder.compiler.generate.BuilderContext.defineContract;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.getGoalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCasesFunction;
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 
 /**
- * Generates a FooBuilders class for each {@link net.zerobuilder.Builders} annotated class Foo.
+ * Generates a class {@code FooBuilders} for each {@link net.zerobuilder.Builders} annotated class {@code Foo}.
  */
 public final class Generator {
 
@@ -77,7 +75,7 @@ public final class Generator {
             return goal.toBuilder;
           }
         })
-        .transform(goalCasesFunction(goalToToBuilder))
+        .transform(goalToToBuilder)
         .toList();
   }
 
@@ -91,8 +89,7 @@ public final class Generator {
         })
         .transform(new Function<AbstractGoalContext, MethodSpec>() {
           public MethodSpec apply(AbstractGoalContext goal) {
-            return goal
-                .accept(goalToBuilder);
+            return goalToBuilder.apply(goal);
           }
         })
         .toList();
@@ -105,13 +102,13 @@ public final class Generator {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
     for (AbstractGoalContext goal : analysisResult.goals) {
       if (goal.toBuilder) {
-        ClassName updaterType = goal.accept(UpdaterContext.updaterType);
+        ClassName updaterType = UpdaterContext.updaterType.apply(goal);
         builder.add(FieldSpec.builder(updaterType,
             updaterField(goal), PRIVATE, FINAL)
             .initializer("new $T()", updaterType).build());
       }
       if (goal.builder) {
-        ClassName stepsType = goal.accept(builderImplType);
+        ClassName stepsType = builderImplType.apply(goal);
         builder.add(FieldSpec.builder(stepsType,
             stepsField(goal), PRIVATE, FINAL)
             .initializer("new $T()", stepsType).build());
@@ -120,10 +117,10 @@ public final class Generator {
     return builder.build();
   }
 
-  private static final GoalCases<MethodSpec> goalToToBuilder
+  private static final Function<AbstractGoalContext, MethodSpec> goalToToBuilder
       = goalCases(GeneratorV.goalToToBuilder, GeneratorB.goalToToBuilder);
 
-  private static final GoalCases<MethodSpec> goalToBuilder
+  private static final Function<AbstractGoalContext, MethodSpec> goalToBuilder
       = goalCases(GeneratorV.goalToBuilder, GeneratorB.goalToBuilder);
 
   static String updaterField(AbstractGoalContext goal) {

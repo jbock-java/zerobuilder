@@ -68,7 +68,7 @@ final class UpdaterContextV {
     }
     EmptyOption emptyOption = maybeEmptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
-        .returns(goal.accept(updaterType))
+        .returns(updaterType.apply(goal))
         .addStatement("this.$N = $L",
             step.field(), emptyOption.initializer)
         .addStatement("return this")
@@ -81,7 +81,7 @@ final class UpdaterContextV {
     TypeName type = step.validParameter.type;
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
-        .returns(goal.accept(updaterType))
+        .returns(updaterType.apply(goal))
         .addParameter(parameter)
         .addCode(step.accept(nullCheck))
         .addStatement("this.$N = $N", step.field(), parameter)
