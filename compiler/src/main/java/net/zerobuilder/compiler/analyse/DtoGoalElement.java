@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
@@ -84,11 +85,11 @@ final class DtoGoalElement {
       this.executableElement = element;
     }
 
-    static RegularGoalElement create(ExecutableElement element, Elements elements) {
+    static RegularGoalElement create(ExecutableElement element, Elements elements, AccessLevel defaultAccess) {
       TypeName goalType = goalType(element);
       Goal goalAnnotation = element.getAnnotation(Goal.class);
       String name = goalName(goalAnnotation, goalType);
-      GoalOptions goalOptions = goalOptions(goalAnnotation);
+      GoalOptions goalOptions = goalOptions(goalAnnotation, defaultAccess);
       String methodName = element.getSimpleName().toString();
       boolean instance = !element.getModifiers().contains(STATIC);
       ImmutableList<String> parameterNames = parameterNames(element);
@@ -115,16 +116,17 @@ final class DtoGoalElement {
     final BeanGoal goal;
     final TypeElement beanType;
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType, Elements elements,
-                            Goal goalAnnotation) {
+                            Goal goalAnnotation, GoalOptions goalOptions) {
       super(goalAnnotation, elements);
-      this.goal = new BeanGoal(goalType, name, goalOptions(goalAnnotation));
+      this.goal = new BeanGoal(goalType, name, goalOptions);
       this.beanType = beanType;
     }
-    static BeanGoalElement create(TypeElement beanType, Elements elements) {
+    static BeanGoalElement create(TypeElement beanType, Elements elements, AccessLevel defaultAccess) {
       ClassName goalType = ClassName.get(beanType);
       Goal goalAnnotation = beanType.getAnnotation(Goal.class);
       String name = goalName(goalAnnotation, goalType);
-      return new BeanGoalElement(goalType, name, beanType, elements, goalAnnotation);
+      GoalOptions goalOptions = goalOptions(goalAnnotation, defaultAccess);
+      return new BeanGoalElement(goalType, name, beanType, elements, goalAnnotation, goalOptions);
     }
     <R> R accept(GoalElementCases<R> goalElementCases) {
       return goalElementCases.beanGoal(this);
@@ -148,10 +150,19 @@ final class DtoGoalElement {
         : goalAnnotation.name();
   }
 
-  private static GoalOptions goalOptions(Goal goalAnnotation) {
+  private static AccessLevel accessLevelOverride(AccessLevel override, AccessLevel defaultAccess) {
+    defaultAccess = defaultAccess == AccessLevel.UNSPECIFIED
+        ? AccessLevel.PUBLIC
+        : defaultAccess;
+    return override == AccessLevel.UNSPECIFIED
+        ? defaultAccess
+        : override;
+  }
+
+  private static GoalOptions goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
     return new GoalOptions(
-        goalAnnotation.builderAccess(),
-        goalAnnotation.toBuilderAccess());
+        accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess),
+        accessLevelOverride(goalAnnotation.toBuilderAccess(), defaultAccess));
   }
 
   private static TypeName goalType(ExecutableElement goal) {

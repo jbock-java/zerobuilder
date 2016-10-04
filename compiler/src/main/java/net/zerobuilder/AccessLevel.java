@@ -21,6 +21,11 @@ public enum AccessLevel {
     public Modifier[] modifiers(Modifier... modifiers) {
       return modifiers;
     }
+  }, UNSPECIFIED {
+    @Override
+    public Modifier[] modifiers(Modifier... modifiers) {
+      throw new UnsupportedOperationException("not implemented");
+    }
   };
   public abstract Modifier[] modifiers(Modifier... modifiers);
 }

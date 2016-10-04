@@ -1,11 +1,15 @@
 package net.zerobuilder.examples.beans.more;
 
+import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static net.zerobuilder.AccessLevel.PACKAGE;
+import static net.zerobuilder.AccessLevel.PUBLIC;
 
 // various beans
 // see ExperimentsTest
@@ -94,6 +98,19 @@ public class Experiments {
         things = new ArrayList();
       }
       return things;
+    }
+  }
+
+  // access rules: default is PACKAGE, but toBuilder is PUBLIC
+  @Builders(access = PACKAGE)
+  @Goal(toBuilder = true, toBuilderAccess = PUBLIC)
+  public static class Access {
+    private String foo;
+    public String getFoo() {
+      return foo;
+    }
+    public void setFoo(String foo) {
+      this.foo = foo;
     }
   }
 }

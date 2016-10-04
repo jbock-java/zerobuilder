@@ -1,6 +1,8 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.google.common.collect.ImmutableList;
+import net.zerobuilder.AccessLevel;
+import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
@@ -59,9 +61,11 @@ public final class Analyser {
    * @throws ValidationException if validation fails
    */
   private ImmutableList<AbstractGoalElement> goals(TypeElement buildElement) throws ValidationException {
+    Builders buildersAnnotation = buildElement.getAnnotation(Builders.class);
     ImmutableList.Builder<AbstractGoalElement> builder = ImmutableList.builder();
+    AccessLevel defaultAccess = buildersAnnotation.access();
     if (buildElement.getAnnotation(Goal.class) != null) {
-      builder.add(BeanGoalElement.create(buildElement, elements));
+      builder.add(BeanGoalElement.create(buildElement, elements, defaultAccess));
     }
     for (Element element : buildElement.getEnclosedElements()) {
       if (element.getAnnotation(Goal.class) != null) {
@@ -74,7 +78,7 @@ public final class Analyser {
           if (executableElement.getParameters().isEmpty()) {
             throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
           }
-          builder.add(RegularGoalElement.create(executableElement, elements));
+          builder.add(RegularGoalElement.create(executableElement, elements, defaultAccess));
         }
       }
     }

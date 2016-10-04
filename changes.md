@@ -63,3 +63,8 @@
 ### 2016-09-29 zerobuilder 1.441 released
 
 * `emptyCollection()` convenience for `java.util.Set` and `java.util.List`
+
+### 2016-10-04 zerobuilder 1.451 released
+
+* allow package-visible beans
+* add `builderAccess` and `toBuilderAccess` flags
