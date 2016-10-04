@@ -12,7 +12,7 @@ import static net.zerobuilder.compiler.analyse.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.DtoStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoStep.stepCases;
-import static net.zerobuilder.compiler.generate.DtoStep.validParameter;
+import static net.zerobuilder.compiler.generate.DtoStep.abstractParameter;
 import static net.zerobuilder.compiler.generate.StepContextB.beanStepInterface;
 import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
 
@@ -21,12 +21,12 @@ final class StepContext {
   static final Function<AbstractStep, CodeBlock> nullCheck
       = always(new Function<AbstractStep, CodeBlock>() {
     @Override
-    public CodeBlock apply(AbstractStep context) {
-      AbstractParameter parameter = context.accept(validParameter);
+    public CodeBlock apply(AbstractStep step) {
+      AbstractParameter parameter = abstractParameter.apply(step);
       if (!parameter.nonNull || parameter.type.isPrimitive()) {
         return emptyCodeBlock;
       }
-      String name = parameter.acceptParameter(parameterName);
+      String name = parameterName.apply(parameter);
       return nullCheck(name, name);
     }
   });

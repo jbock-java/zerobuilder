@@ -137,8 +137,8 @@ public final class DtoStep {
     }
   }
 
-  static final StepCases<AbstractParameter> validParameter
-      = new StepCases<AbstractParameter>() {
+  static final Function<AbstractStep, AbstractParameter> abstractParameter
+      = asFunction(new StepCases<AbstractParameter>() {
     @Override
     public AbstractParameter regularStep(RegularStep step) {
       return step.validParameter;
@@ -147,10 +147,10 @@ public final class DtoStep {
     public AbstractParameter beanStep(AbstractBeanStep step) {
       return step.acceptBean(validBeanParameter);
     }
-  };
+  });
 
-  static final StepCases<ImmutableList<TypeName>> declaredExceptions
-      = new StepCases<ImmutableList<TypeName>>() {
+  static final Function<AbstractStep, ImmutableList<TypeName>> declaredExceptions
+      = asFunction(new StepCases<ImmutableList<TypeName>>() {
     @Override
     public ImmutableList<TypeName> regularStep(RegularStep step) {
       return step.declaredExceptions;
@@ -159,7 +159,7 @@ public final class DtoStep {
     public ImmutableList<TypeName> beanStep(AbstractBeanStep step) {
       return ImmutableList.of();
     }
-  };
+  });
 
   static <R> Function<AbstractStep, R> always(final Function<AbstractStep, R> parameterFunction) {
     return asFunction(new StepCases<R>() {
@@ -174,8 +174,8 @@ public final class DtoStep {
     });
   }
 
-  static final StepCases<Optional<EmptyOption>> emptyOption
-      = new StepCases<Optional<EmptyOption>>() {
+  static final Function<AbstractStep, Optional<EmptyOption>> emptyOption
+      = asFunction(new StepCases<Optional<EmptyOption>>() {
     @Override
     public Optional<EmptyOption> regularStep(RegularStep step) {
       return step.emptyOption();
@@ -184,7 +184,7 @@ public final class DtoStep {
     public Optional<EmptyOption> beanStep(AbstractBeanStep step) {
       return step.acceptBean(DtoBeanStep.emptyOption);
     }
-  };
+  });
 
   private DtoStep() {
     throw new UnsupportedOperationException("no instances");

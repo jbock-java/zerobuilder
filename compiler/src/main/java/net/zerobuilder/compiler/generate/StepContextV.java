@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -19,7 +18,8 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;
-import static net.zerobuilder.compiler.generate.DtoStep.validParameter;
+import static net.zerobuilder.compiler.generate.DtoStep.emptyOption;
+import static net.zerobuilder.compiler.generate.DtoStep.abstractParameter;
 
 final class StepContextV {
 
@@ -36,26 +36,26 @@ final class StepContextV {
   };
 
   private static MethodSpec regularStepMethod(AbstractStep step) {
-    AbstractParameter parameter = step.accept(validParameter);
-    String name = parameter.acceptParameter(parameterName);
+    AbstractParameter parameter = abstractParameter.apply(step);
+    String name = parameterName.apply(parameter);
     TypeName type = parameter.type;
     return methodBuilder(name)
         .returns(step.nextType)
         .addParameter(parameterSpec(type, name))
-        .addExceptions(step.accept(declaredExceptions))
+        .addExceptions(declaredExceptions.apply(step))
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
   }
 
   private static Optional<MethodSpec> emptyCollection(AbstractStep step) {
-    Optional<DtoStep.EmptyOption> maybeEmptyOption = step.accept(DtoStep.emptyOption);
+    Optional<DtoStep.EmptyOption> maybeEmptyOption = emptyOption.apply(step);
     if (!maybeEmptyOption.isPresent()) {
       return absent();
     }
     DtoStep.EmptyOption emptyOption = maybeEmptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
         .returns(step.nextType)
-        .addExceptions(step.accept(declaredExceptions))
+        .addExceptions(declaredExceptions.apply(step))
         .addModifiers(PUBLIC, ABSTRACT)
         .build());
   }

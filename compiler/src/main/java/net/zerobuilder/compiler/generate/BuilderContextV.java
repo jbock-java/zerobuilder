@@ -93,7 +93,7 @@ final class BuilderContextV {
         .addCode(nullCheck.apply(step))
         .addCode(regularFinalBlock(step, goal, isLast))
         .addModifiers(PUBLIC)
-        .addExceptions(step.accept(declaredExceptions))
+        .addExceptions(declaredExceptions.apply(step))
         .build();
   }
 

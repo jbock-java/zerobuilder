@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
@@ -14,6 +15,15 @@ public final class DtoParameter {
   interface ParameterCases<R> {
     R regularParameter(RegularParameter parameter);
     R beanParameter(AbstractBeanParameter parameter);
+  }
+
+  static <R> Function<AbstractParameter, R> asFunction(final ParameterCases<R> cases) {
+    return new Function<AbstractParameter, R>() {
+      @Override
+      public R apply(AbstractParameter parameter) {
+        return parameter.acceptParameter(cases);
+      }
+    };
   }
 
   public abstract static class AbstractParameter {
@@ -68,8 +78,8 @@ public final class DtoParameter {
     }
   }
 
-  public static final DtoParameter.ParameterCases<String> parameterName
-      = new DtoParameter.ParameterCases<String>() {
+  public static final Function<AbstractParameter, String> parameterName
+      = asFunction(new ParameterCases<String>() {
     @Override
     public String regularParameter(RegularParameter parameter) {
       return parameter.name;
@@ -78,7 +88,7 @@ public final class DtoParameter {
     public String beanParameter(AbstractBeanParameter parameter) {
       return parameter.accept(beanParameterName);
     }
-  };
+  });
 
   private DtoParameter() {
     throw new UnsupportedOperationException("no instances");

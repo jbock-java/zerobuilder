@@ -84,7 +84,7 @@ final class GoalContextFactory {
                          ParameterFactory<P, R> parameterFactory) {
     ImmutableList.Builder<R> builder = ImmutableList.builder();
     for (P parameter : parameters.reverse()) {
-      ClassName thisType = builderType.nestedClass(upcase(parameter.acceptParameter(parameterName)));
+      ClassName thisType = builderType.nestedClass(upcase(parameterName.apply(parameter)));
       builder.add(parameterFactory.create(thisType, nextType, parameter, thrownTypes));
       nextType = thisType;
     }
@@ -102,7 +102,7 @@ final class GoalContextFactory {
       return validParameter.accept(new DtoBeanParameter.BeanParameterCases<AbstractBeanStep>() {
         @Override
         public AbstractBeanStep accessorPair(AccessorPair pair) {
-          String setter = "set" + upcase(pair.acceptParameter(parameterName));
+          String setter = "set" + upcase(parameterName.apply(pair));
           return AccessorPairStep.create(thisType, nextType, pair, setter);
         }
         @Override
