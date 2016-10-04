@@ -7,6 +7,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoal;
 
@@ -26,6 +27,15 @@ final class DtoGoalElement {
   interface GoalElementCases<R> {
     R regularGoal(RegularGoalElement goal);
     R beanGoal(BeanGoalElement goal);
+  }
+
+  static <R> Function<AbstractGoalElement, R> asFunction(final GoalElementCases<R> cases) {
+    return new Function<AbstractGoalElement, R>() {
+      @Override
+      public R apply(AbstractGoalElement goal) {
+        return goal.accept(cases);
+      }
+    };
   }
 
   static abstract class AbstractGoalElement {
@@ -53,7 +63,7 @@ final class DtoGoalElement {
     };
   }
 
-  static final GoalElementCases<String> getName = new GoalElementCases<String>() {
+  static final Function<AbstractGoalElement, String> goalName = asFunction(new GoalElementCases<String>() {
     @Override
     public String regularGoal(RegularGoalElement goal) {
       return goal.goal.name;
@@ -62,7 +72,7 @@ final class DtoGoalElement {
     public String beanGoal(BeanGoalElement goal) {
       return goal.goal.name;
     }
-  };
+  });
 
   static final class RegularGoalElement extends AbstractGoalElement {
     final RegularGoal goal;
@@ -76,14 +86,16 @@ final class DtoGoalElement {
 
     static RegularGoalElement create(ExecutableElement element, Elements elements) {
       TypeName goalType = goalType(element);
-      String name = goalName(element.getAnnotation(Goal.class), goalType);
-      return new RegularGoalElement(element,
-          element.getKind() == CONSTRUCTOR
-              ? new ConstructorGoal(goalType, name, parameterNames(element))
-              : new MethodGoal(goalType, name, parameterNames(element),
-              element.getSimpleName().toString(),
-              !element.getModifiers().contains(STATIC)), elements);
-
+      Goal goalAnnotation = element.getAnnotation(Goal.class);
+      String name = goalName(goalAnnotation, goalType);
+      GoalOptions goalOptions = goalOptions(goalAnnotation);
+      String methodName = element.getSimpleName().toString();
+      boolean instance = !element.getModifiers().contains(STATIC);
+      ImmutableList<String> parameterNames = parameterNames(element);
+      RegularGoal goal = element.getKind() == CONSTRUCTOR
+          ? new ConstructorGoal(goalType, name, parameterNames, goalOptions)
+          : new MethodGoal(goalType, name, parameterNames, methodName, instance, goalOptions);
+      return new RegularGoalElement(element, goal, elements);
     }
 
     <R> R accept(GoalElementCases<R> goalElementCases) {
@@ -101,16 +113,18 @@ final class DtoGoalElement {
 
   static final class BeanGoalElement extends AbstractGoalElement {
     final BeanGoal goal;
-    final TypeElement beanTypeElement;
-    private BeanGoalElement(Element field, ClassName goalType, String name, TypeElement beanTypeElement, Elements elements) {
-      super(field.getAnnotation(Goal.class), elements);
-      this.goal = new BeanGoal(goalType, name);
-      this.beanTypeElement = beanTypeElement;
+    final TypeElement beanType;
+    private BeanGoalElement(ClassName goalType, String name, TypeElement beanType, Elements elements,
+                            Goal goalAnnotation) {
+      super(goalAnnotation, elements);
+      this.goal = new BeanGoal(goalType, name, goalOptions(goalAnnotation));
+      this.beanType = beanType;
     }
     static BeanGoalElement create(TypeElement beanType, Elements elements) {
       ClassName goalType = ClassName.get(beanType);
-      String name = goalName(beanType.getAnnotation(Goal.class), goalType);
-      return new BeanGoalElement(beanType, goalType, name, beanType, elements);
+      Goal goalAnnotation = beanType.getAnnotation(Goal.class);
+      String name = goalName(goalAnnotation, goalType);
+      return new BeanGoalElement(goalType, name, beanType, elements, goalAnnotation);
     }
     <R> R accept(GoalElementCases<R> goalElementCases) {
       return goalElementCases.beanGoal(this);
@@ -124,7 +138,7 @@ final class DtoGoalElement {
     }
     @Override
     public Element beanGoal(BeanGoalElement beanGoal) {
-      return beanGoal.beanTypeElement;
+      return beanGoal.beanType;
     }
   };
 
@@ -132,6 +146,12 @@ final class DtoGoalElement {
     return isNullOrEmpty(goalAnnotation.name())
         ? downcase(((ClassName) goalType.box()).simpleName())
         : goalAnnotation.name();
+  }
+
+  private static GoalOptions goalOptions(Goal goalAnnotation) {
+    return new GoalOptions(
+        goalAnnotation.builderAccess(),
+        goalAnnotation.toBuilderAccess());
   }
 
   private static TypeName goalType(ExecutableElement goal) {

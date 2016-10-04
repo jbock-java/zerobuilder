@@ -3,13 +3,26 @@ package net.zerobuilder.compiler.analyse;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.AccessLevel;
 
 public final class DtoGoal {
 
+  public static final class GoalOptions {
+    public final AccessLevel builderAccess;
+    public final AccessLevel toBuilderAccess;
+
+    GoalOptions(AccessLevel builderAccess, AccessLevel toBuilderAccess) {
+      this.builderAccess = builderAccess;
+      this.toBuilderAccess = toBuilderAccess;
+    }
+  }
+
   static abstract class AbstractGoal {
     public final String name;
-    AbstractGoal(String name) {
+    public final GoalOptions goalOptions;
+    AbstractGoal(String name, GoalOptions goalOptions) {
       this.name = name;
+      this.goalOptions = goalOptions;
     }
   }
 
@@ -31,8 +44,9 @@ public final class DtoGoal {
      */
     public final ImmutableList<String> parameterNames;
 
-    RegularGoal(TypeName goalType, String name, ImmutableList<String> parameterNames) {
-      super(name);
+    RegularGoal(TypeName goalType, String name, ImmutableList<String> parameterNames,
+                GoalOptions goalOptions) {
+      super(name, goalOptions);
       this.goalType = goalType;
       this.parameterNames = parameterNames;
     }
@@ -41,8 +55,9 @@ public final class DtoGoal {
 
   public static final class ConstructorGoal extends RegularGoal {
 
-    ConstructorGoal(TypeName goalType, String name, ImmutableList<String> parameterNames) {
-      super(goalType, name, parameterNames);
+    ConstructorGoal(TypeName goalType, String name, ImmutableList<String> parameterNames,
+                    GoalOptions goalOptions) {
+      super(goalType, name, parameterNames, goalOptions);
     }
     @Override
     <R> R accept(RegularGoalCases<R> cases) {
@@ -58,8 +73,9 @@ public final class DtoGoal {
      */
     public final boolean instance;
 
-    MethodGoal(TypeName goalType, String name, ImmutableList<String> parameterNames, String methodName, boolean instance) {
-      super(goalType, name, parameterNames);
+    MethodGoal(TypeName goalType, String name, ImmutableList<String> parameterNames, String methodName,
+               boolean instance, GoalOptions goalOptions) {
+      super(goalType, name, parameterNames, goalOptions);
       this.methodName = methodName;
       this.instance = instance;
     }
@@ -71,8 +87,8 @@ public final class DtoGoal {
 
   public static final class BeanGoal extends AbstractGoal {
     public final ClassName goalType;
-    BeanGoal(ClassName goalType, String name) {
-      super(name);
+    BeanGoal(ClassName goalType, String name, GoalOptions goalOptions) {
+      super(name, goalOptions);
       this.goalType = goalType;
     }
   }

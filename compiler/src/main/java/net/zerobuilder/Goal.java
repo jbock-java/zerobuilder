@@ -7,6 +7,7 @@ import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
+import static net.zerobuilder.AccessLevel.PUBLIC;
 
 /**
  * <p>
@@ -74,4 +75,6 @@ public @interface Goal {
    */
   boolean nonNull() default false;
 
+  AccessLevel builderAccess() default PUBLIC;
+  AccessLevel toBuilderAccess() default PUBLIC;
 }

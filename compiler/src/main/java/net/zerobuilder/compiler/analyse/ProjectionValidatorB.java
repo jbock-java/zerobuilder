@@ -79,7 +79,7 @@ final class ProjectionValidatorB {
       }
       ImmutableList<TmpAccessorPair> tmpAccessorPairs = builder.build();
       if (tmpAccessorPairs.isEmpty()) {
-        throw new ValidationException(NO_ACCESSOR_PAIRS, goal.beanTypeElement);
+        throw new ValidationException(NO_ACCESSOR_PAIRS, goal.beanType);
       }
       return createResult(goal, tmpAccessorPairs);
     }
@@ -126,7 +126,7 @@ final class ProjectionValidatorB {
   }
 
   private static ImmutableList<ExecutableElement> getters(BeanGoalElement goal) {
-    return FluentIterable.from(getLocalAndInheritedMethods(goal.beanTypeElement, goal.elements))
+    return FluentIterable.from(getLocalAndInheritedMethods(goal.beanType, goal.elements))
         .filter(new Predicate<ExecutableElement>() {
           @Override
           public boolean apply(ExecutableElement method) {
@@ -154,7 +154,7 @@ final class ProjectionValidatorB {
   }
 
   private static ImmutableMap<String, ExecutableElement> setters(BeanGoalElement goal) throws ValidationException {
-    TypeElement beanType = goal.beanTypeElement;
+    TypeElement beanType = goal.beanType;
     if (!hasParameterlessConstructor(beanType)) {
       throw new ValidationException(NO_DEFAULT_CONSTRUCTOR, beanType);
     }
