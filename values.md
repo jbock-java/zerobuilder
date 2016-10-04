@@ -151,3 +151,9 @@ The ugly generics are still there, but hidden in the generated code.
 Check out the example projects, or have a look at 
 [EmptyListConvenience.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/values/EmptyListConvenience.java) 
 and its companion unit test.
+
+### Access level
+
+By default, the generated static methods `fooBuilder` and `fooToBuilder` are public.
+You can change this to default (package) visibility using `@Builders(access = AccessLevel.DEFAULT)`.
+The setting can also be overridden on the goal level with `@Goal(builderAccess)` and `@Goal(toBuilderAccess)`.
