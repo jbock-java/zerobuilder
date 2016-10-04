@@ -22,6 +22,15 @@ public final class DtoBeanStep {
     R loneGetter(LoneGetterStep step);
   }
 
+  static <R> Function<AbstractBeanStep, R> asFunction(final BeanStepCases<R> cases) {
+    return new Function<AbstractBeanStep, R>() {
+      @Override
+      public R apply(AbstractBeanStep abstractStep) {
+        return abstractStep.acceptBean(cases);
+      }
+    };
+  }
+
   public static abstract class AbstractBeanStep extends AbstractStep {
     AbstractBeanStep(ClassName thisType, TypeName nextType) {
       super(thisType, nextType);
@@ -106,15 +115,6 @@ public final class DtoBeanStep {
       return Optional.absent();
     }
   };
-
-  static <R> Function<AbstractBeanStep, R> asFunction(final BeanStepCases<R> cases) {
-    return new Function<AbstractBeanStep, R>() {
-      @Override
-      public R apply(AbstractBeanStep abstractStep) {
-        return abstractStep.acceptBean(cases);
-      }
-    };
-  }
 
   private DtoBeanStep() {
     throw new UnsupportedOperationException("no instances");

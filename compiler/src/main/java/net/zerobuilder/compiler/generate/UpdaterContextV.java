@@ -83,7 +83,7 @@ final class UpdaterContextV {
     return methodBuilder(name)
         .returns(updaterType.apply(goal))
         .addParameter(parameter)
-        .addCode(step.accept(nullCheck))
+        .addCode(nullCheck.apply(step))
         .addStatement("this.$N = $N", step.field(), parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)

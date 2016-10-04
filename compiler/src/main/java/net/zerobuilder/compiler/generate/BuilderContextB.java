@@ -27,6 +27,7 @@ import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
+import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 
 final class BuilderContextB {
@@ -44,17 +45,18 @@ final class BuilderContextB {
     @Override
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      BeanStepCases<ImmutableList<MethodSpec>> notLastHandler = stepMethods(goal, false);
+      Function<AbstractBeanStep, ImmutableList<MethodSpec>> stepToMethods = stepToMethods(goal, false);
       for (AbstractBeanStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
-        builder.addAll(step.acceptBean(notLastHandler));
+        builder.addAll(stepToMethods.apply(step));
       }
-      builder.addAll(getLast(goal.steps).acceptBean(stepMethods(goal, true)));
+      builder.addAll(stepToMethods(goal, true).apply(getLast(goal.steps)));
       return builder.build();
     }
   };
 
-  private static BeanStepCases<ImmutableList<MethodSpec>> stepMethods(final BeanGoalContext goal, final boolean isLast) {
-    return new BeanStepCases<ImmutableList<MethodSpec>>() {
+  private static Function<AbstractBeanStep, ImmutableList<MethodSpec>>
+  stepToMethods(final BeanGoalContext goal, final boolean isLast) {
+    return asFunction(new BeanStepCases<ImmutableList<MethodSpec>>() {
       @Override
       public ImmutableList<MethodSpec> accessorPair(AccessorPairStep step) {
         return regularMethods(step, goal, isLast);
@@ -63,7 +65,7 @@ final class BuilderContextB {
       public ImmutableList<MethodSpec> loneGetter(LoneGetterStep step) {
         return collectionMethods(step, goal, isLast);
       }
-    };
+    });
   }
 
   private static ImmutableList<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
@@ -143,7 +145,7 @@ final class BuilderContextB {
         .addParameter(parameter)
         .addModifiers(PUBLIC)
         .returns(step.nextType)
-        .addCode(step.accept(nullCheck))
+        .addCode(nullCheck.apply(step))
         .addStatement("this.$N.$L($N)", goal.field, step.setter, parameter)
         .addCode(regularFinalBlock(goal, isLast)).build();
   }

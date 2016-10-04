@@ -90,7 +90,7 @@ final class BuilderContextV {
         .addAnnotation(Override.class)
         .addParameter(parameter)
         .returns(step.nextType)
-        .addCode(step.accept(nullCheck))
+        .addCode(nullCheck.apply(step))
         .addCode(regularFinalBlock(step, goal, isLast))
         .addModifiers(PUBLIC)
         .addExceptions(step.accept(declaredExceptions))

@@ -10,6 +10,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
@@ -25,6 +26,7 @@ import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.Utilities.nullCheck;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
+import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
 final class UpdaterContextB {
@@ -42,16 +44,17 @@ final class UpdaterContextB {
     @Override
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      BeanStepCases<ImmutableList<MethodSpec>> handler = updateMethodsCases(goal);
-      for (DtoBeanStep.AbstractBeanStep step : goal.steps) {
-        builder.addAll(step.acceptBean(handler));
+      Function<AbstractBeanStep, ImmutableList<MethodSpec>> updateMethods = stepToMethods(goal);
+      for (AbstractBeanStep step : goal.steps) {
+        builder.addAll(updateMethods.apply(step));
       }
       return builder.build();
     }
   };
 
-  private static BeanStepCases<ImmutableList<MethodSpec>> updateMethodsCases(final BeanGoalContext goal) {
-    return new BeanStepCases<ImmutableList<MethodSpec>>() {
+  private static Function<AbstractBeanStep, ImmutableList<MethodSpec>>
+  stepToMethods(final BeanGoalContext goal) {
+    return asFunction(new BeanStepCases<ImmutableList<MethodSpec>>() {
       @Override
       public ImmutableList<MethodSpec> accessorPair(AccessorPairStep step) {
         return regularMethods(step, goal);
@@ -60,7 +63,7 @@ final class UpdaterContextB {
       public ImmutableList<MethodSpec> loneGetter(LoneGetterStep step) {
         return collectionUpdaters(goal, step);
       }
-    };
+    });
   }
 
   private static ImmutableList<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal) {

@@ -84,6 +84,15 @@ public final class DtoStep {
     R beanStep(AbstractBeanStep step);
   }
 
+  static <R> Function<AbstractStep, R> asFunction(final StepCases<R> cases) {
+    return new Function<AbstractStep, R>() {
+      @Override
+      public R apply(AbstractStep abstractStep) {
+        return abstractStep.accept(cases);
+      }
+    };
+  }
+
   static <R> StepCases<R> stepCases(final Function<? super RegularStep, R> regularFunction,
                                     final Function<? super AbstractBeanStep, R> beanFunction) {
     return new StepCases<R>() {
@@ -152,8 +161,8 @@ public final class DtoStep {
     }
   };
 
-  static <R> StepCases<R> always(final Function<AbstractStep, R> parameterFunction) {
-    return new StepCases<R>() {
+  static <R> Function<AbstractStep, R> always(final Function<AbstractStep, R> parameterFunction) {
+    return asFunction(new StepCases<R>() {
       @Override
       public R regularStep(RegularStep step) {
         return parameterFunction.apply(step);
@@ -162,7 +171,7 @@ public final class DtoStep {
       public R beanStep(AbstractBeanStep step) {
         return parameterFunction.apply(step);
       }
-    };
+    });
   }
 
   static final StepCases<Optional<EmptyOption>> emptyOption
@@ -176,15 +185,6 @@ public final class DtoStep {
       return step.acceptBean(DtoBeanStep.emptyOption);
     }
   };
-
-  static <R> Function<AbstractStep, R> asFunction(final StepCases<R> cases) {
-    return new Function<AbstractStep, R>() {
-      @Override
-      public R apply(AbstractStep abstractStep) {
-        return abstractStep.accept(cases);
-      }
-    };
-  }
 
   private DtoStep() {
     throw new UnsupportedOperationException("no instances");

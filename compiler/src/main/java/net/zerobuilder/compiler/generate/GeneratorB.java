@@ -20,6 +20,7 @@ import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
+import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
@@ -35,9 +36,9 @@ final class GeneratorB {
           .addParameter(parameter);
       ParameterSpec updater = updaterInstance(goal);
       method.addCode(initializeUpdater(goal, updater));
-      BeanStepCases<CodeBlock> copy = copy(goal);
+      Function<AbstractBeanStep, CodeBlock> copy = copy(goal);
       for (AbstractBeanStep step : goal.steps) {
-        method.addCode(step.acceptBean(copy));
+        method.addCode(copy.apply(step));
       }
       method.addStatement("return $N", updater);
       return method
@@ -46,8 +47,8 @@ final class GeneratorB {
     }
   };
 
-  private static BeanStepCases<CodeBlock> copy(final BeanGoalContext goal) {
-    return new BeanStepCases<CodeBlock>() {
+  private static Function<AbstractBeanStep, CodeBlock> copy(final BeanGoalContext goal) {
+    return asFunction(new BeanStepCases<CodeBlock>() {
       @Override
       public CodeBlock accessorPair(AccessorPairStep step) {
         return copyRegular(goal, step);
@@ -56,7 +57,7 @@ final class GeneratorB {
       public CodeBlock loneGetter(LoneGetterStep step) {
         return copyCollection(goal, step);
       }
-    };
+    });
   }
 
   private static CodeBlock copyCollection(BeanGoalContext goal, LoneGetterStep step) {
