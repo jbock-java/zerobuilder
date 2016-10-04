@@ -24,11 +24,11 @@ public class Employee {
     this.salary = salary;
   }
 
+  @Step(0)
   public String getName() {
     return name;
   }
 
-  @Step(1)
   public void setName(String name) {
     this.name = name;
   }

@@ -1,24 +1,10 @@
 package net.zerobuilder.examples.beans;
 
-public class Manager {
+import net.zerobuilder.Builders;
+import net.zerobuilder.Goal;
 
-  private int id;
-  private String name;
-
-  public int getId() {
-    return id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setId(int id) {
-    this.id = id;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
+// inheritance
+@Builders
+@Goal(toBuilder = true)
+public class Manager extends Employee {
 }

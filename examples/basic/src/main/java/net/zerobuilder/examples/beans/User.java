@@ -1,30 +1,38 @@
 package net.zerobuilder.examples.beans;
 
-public class User {
+import net.zerobuilder.Builders;
+import net.zerobuilder.Goal;
+
+import static net.zerobuilder.AccessLevel.PACKAGE;
+
+// not public
+@Builders
+@Goal(toBuilder = true, builderAccess = PACKAGE, toBuilderAccess = PACKAGE)
+class User {
 
   private int id;
   private String name;
   private boolean power;
 
-  public int getId() {
+  int getId() {
     return id;
   }
 
-  public String getName() {
+  String getName() {
     return name;
   }
 
-  public void setId(int id) {
+  void setId(int id) {
     this.id = id;
   }
 
-  public void setName(String name) {
+  void setName(String name) {
     this.name = name;
   }
-  public boolean isPower() {
+  boolean isPower() {
     return power;
   }
-  public void setPower(boolean power) {
+  void setPower(boolean power) {
     this.power = power;
   }
 }
