@@ -23,12 +23,15 @@ public final class DtoBeanGoalContext {
     final BeanGoal goal;
     final FieldSpec field;
 
+    final BuildersContext builders;
+
     private BeanGoalContext(BeanGoal goal,
                             BuildersContext builders,
                             boolean toBuilder,
                             boolean builder,
                             ImmutableList<? extends AbstractBeanStep> steps, FieldSpec field) {
-      super(builders, toBuilder, builder);
+      super(toBuilder, builder);
+      this.builders = builders;
       this.steps = steps;
       this.goal = goal;
       this.field = field;

@@ -23,6 +23,7 @@ import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
+import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
 final class GeneratorB {
 
@@ -41,7 +42,7 @@ final class GeneratorB {
       }
       method.addStatement("return $N", updater);
       return method
-          .returns(UpdaterContext.updaterType.apply(goal))
+          .returns(updaterType(goal))
           .addModifiers(goal.goal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
     }
   };
@@ -116,7 +117,7 @@ final class GeneratorB {
   }
 
   private static ParameterSpec updaterInstance(BeanGoalContext goal) {
-    ClassName updaterType = UpdaterContext.updaterType.apply(goal);
+    ClassName updaterType = updaterType(goal);
     return parameterSpec(updaterType, "updater");
   }
 
@@ -124,7 +125,7 @@ final class GeneratorB {
       = new Function<BeanGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(BeanGoalContext goal) {
-      ClassName stepsType = builderImplType.apply(goal);
+      ClassName stepsType = builderImplType(goal);
       MethodSpec.Builder method = methodBuilder(goal.goal.name + "Builder")
           .returns(goal.steps.get(0).thisType)
           .addModifiers(goal.goal.goalOptions.builderAccess.modifiers(STATIC));

@@ -37,8 +37,9 @@ final class BuilderContextV {
     @Override
     public ImmutableList<FieldSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
+      DtoBuilders.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
       builder.addAll(isInstance.apply(goal)
-          ? ImmutableList.of(goal.builders.field)
+          ? ImmutableList.of(buildersContext.field)
           : ImmutableList.<FieldSpec>of());
       for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
         builder.add(step.field());

@@ -83,7 +83,7 @@ final class UpdaterContextB {
     String name = step.accessorPair.accept(beanParameterName);
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(emptyOption.name)
-        .returns(updaterType.apply(goal))
+        .returns(updaterType(goal))
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, emptyOption.initializer)
         .addStatement("this.$N.$L($N)",
             goal.field, step.setter, emptyColl)
@@ -96,7 +96,7 @@ final class UpdaterContextB {
     String name = step.accessorPair.accept(beanParameterName);
     ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
-        .returns(updaterType.apply(goal))
+        .returns(updaterType(goal))
         .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
             goal.field, step.setter, parameter)
@@ -119,7 +119,7 @@ final class UpdaterContextB {
     ParameterSpec parameter = parameterSpec(iterable, name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
-        .returns(updaterType.apply(goal))
+        .returns(updaterType(goal))
         .addParameter(parameter)
         .addCode(nullCheck(name, name))
         .addCode(clearCollection(goal, step))
@@ -134,7 +134,7 @@ final class UpdaterContextB {
 
   private static MethodSpec loneGetterEmptyCollection(BeanGoalContext goal, LoneGetterStep step) {
     return methodBuilder(step.emptyMethod)
-        .returns(updaterType.apply(goal))
+        .returns(updaterType(goal))
         .addCode(clearCollection(goal, step))
         .addStatement("return this")
         .addModifiers(PUBLIC)

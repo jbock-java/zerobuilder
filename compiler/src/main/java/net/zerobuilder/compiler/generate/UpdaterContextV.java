@@ -29,9 +29,10 @@ final class UpdaterContextV {
       = new Function<RegularGoalContext, ImmutableList<FieldSpec>>() {
     @Override
     public ImmutableList<FieldSpec> apply(RegularGoalContext goal) {
+      DtoBuilders.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       builder.addAll(isInstance.apply(goal)
-          ? ImmutableList.of(goal.builders.field)
+          ? ImmutableList.of(buildersContext.field)
           : ImmutableList.<FieldSpec>of());
       for (RegularStep step : goal.steps) {
         String name = step.validParameter.name;
@@ -68,7 +69,7 @@ final class UpdaterContextV {
     }
     EmptyOption emptyOption = maybeEmptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
-        .returns(updaterType.apply(goal))
+        .returns(updaterType(goal))
         .addStatement("this.$N = $L",
             step.field(), emptyOption.initializer)
         .addStatement("return this")
@@ -81,7 +82,7 @@ final class UpdaterContextV {
     TypeName type = step.validParameter.type;
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
-        .returns(updaterType.apply(goal))
+        .returns(updaterType(goal))
         .addParameter(parameter)
         .addCode(nullCheck.apply(step))
         .addStatement("this.$N = $N", step.field(), parameter)

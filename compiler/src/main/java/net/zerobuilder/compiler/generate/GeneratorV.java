@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Function;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -20,6 +21,7 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
+import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
 final class GeneratorV {
 
@@ -85,9 +87,12 @@ final class GeneratorV {
 
   private static CodeBlock initializeUpdater(RegularGoalContext goal, ParameterSpec updater) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.builders.recycle) {
-      builder.addStatement("$T $N = $N.get().$N", updater.type, updater,
-          goal.builders.cache, updaterField(goal));
+    DtoBuilders.BuildersContext buildersContext = DtoGoalContext.buildersContext.apply(goal);
+    boolean recycle = buildersContext.recycle;
+    if (recycle) {
+      FieldSpec cache = buildersContext.cache;
+      String updaterField = updaterField(goal);
+      builder.addStatement("$T $N = $N.get().$N", updater.type, updater, cache, updaterField);
     } else {
       builder.addStatement("$T $N = new $T()", updater.type, updater, updater.type);
     }
@@ -95,7 +100,7 @@ final class GeneratorV {
   }
 
   private static ParameterSpec updaterInstance(RegularGoalContext goal) {
-    ClassName updaterType = UpdaterContext.updaterType.apply(goal);
+    ClassName updaterType = updaterType(goal);
     return parameterSpec(updaterType, "updater");
   }
 
@@ -111,22 +116,25 @@ final class GeneratorV {
       ParameterSpec builder = builderInstance(goal);
       method.addCode(initBuilder(goal, builder));
       if (isInstance.apply(goal)) {
-        ParameterSpec parameter = parameterSpec(goal.builders.type, downcase(goal.builders.type.simpleName()));
+        DtoBuilders.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+        ParameterSpec parameter = parameterSpec(buildersContext.type,
+            downcase(buildersContext.type.simpleName()));
         method.addParameter(parameter)
-            .addStatement("$N.$N = $N", builder, goal.builders.field, parameter);
+            .addStatement("$N.$N = $N", builder, buildersContext.field, parameter);
       }
       return method.addStatement("return $N", builder).build();
     }
   };
 
   private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder) {
-    return goal.builders.recycle
-        ? statement("$T $N = $N.get().$N", builder.type, builder, goal.builders.cache, stepsField(goal))
+    DtoBuilders.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+    return buildersContext.recycle
+        ? statement("$T $N = $N.get().$N", builder.type, builder, buildersContext.cache, stepsField(goal))
         : statement("$T $N = new $T()", builder.type, builder, builder.type);
   }
 
   private static ParameterSpec builderInstance(RegularGoalContext goal) {
-    ClassName stepsType = builderImplType.apply(goal);
+    ClassName stepsType = builderImplType(goal);
     return parameterSpec(stepsType, downcase(stepsType.simpleName()));
   }
 

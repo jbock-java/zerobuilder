@@ -26,6 +26,7 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
+import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
 /**
  * Generates a class {@code FooBuilders} for each {@link net.zerobuilder.Builders} annotated class {@code Foo}.
@@ -98,13 +99,13 @@ public final class Generator {
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
     for (AbstractGoalContext goal : analysisResult.goals) {
       if (goal.toBuilder) {
-        ClassName updaterType = UpdaterContext.updaterType.apply(goal);
+        ClassName updaterType = updaterType(goal);
         builder.add(FieldSpec.builder(updaterType,
             updaterField(goal), PRIVATE, FINAL)
             .initializer("new $T()", updaterType).build());
       }
       if (goal.builder) {
-        ClassName stepsType = builderImplType.apply(goal);
+        ClassName stepsType = builderImplType(goal);
         builder.add(FieldSpec.builder(stepsType,
             stepsField(goal), PRIVATE, FINAL)
             .initializer("new $T()", stepsType).build());

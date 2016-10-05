@@ -9,7 +9,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.GoalContextCommon;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -21,20 +20,18 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.BuilderContextV.regularInvoke;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.always;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.goalType;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.thrownTypes;
 
 final class UpdaterContext {
 
-  static final Function<AbstractGoalContext, ClassName> updaterType
-      = always(new Function<GoalContextCommon, ClassName>() {
-    @Override
-    public ClassName apply(GoalContextCommon goal) {
-      return goal.goal.builders.generatedType.nestedClass(
-          upcase(goalName.apply(goal.goal) + "Updater"));
-    }
-  });
+  static final ClassName updaterType(AbstractGoalContext goal) {
+    return buildersContext.apply(goal).generatedType.nestedClass(
+        upcase(goalName.apply(goal) + "Updater"));
+  }
 
   private static final Function<AbstractGoalContext, ImmutableList<FieldSpec>> fields
       = goalCases(UpdaterContextV.fields, UpdaterContextB.fields);
@@ -42,24 +39,20 @@ final class UpdaterContext {
   private static final Function<AbstractGoalContext, ImmutableList<MethodSpec>> updateMethods
       = goalCases(UpdaterContextV.updateMethods, UpdaterContextB.updateMethods);
 
-  private static final Function<AbstractGoalContext, MethodSpec> buildMethod =
-      always(new Function<GoalContextCommon, MethodSpec>() {
-        @Override
-        public MethodSpec apply(GoalContextCommon goal) {
-          return methodBuilder("build")
-              .addModifiers(PUBLIC)
-              .returns(goal.goalType)
-              .addCode(invoke.apply(goal.goal))
-              .addExceptions(goal.thrownTypes)
-              .build();
-        }
-      });
+  private static MethodSpec buildMethod(AbstractGoalContext goal) {
+    return methodBuilder("build")
+        .addModifiers(PUBLIC)
+        .returns(goalType.apply(goal))
+        .addCode(invoke.apply(goal))
+        .addExceptions(thrownTypes.apply(goal))
+        .build();
+  }
 
   static TypeSpec defineUpdater(AbstractGoalContext goal) {
-    return classBuilder(updaterType.apply(goal))
+    return classBuilder(updaterType(goal))
         .addFields(fields.apply(goal))
         .addMethods(updateMethods.apply(goal))
-        .addMethod(buildMethod.apply(goal))
+        .addMethod(buildMethod(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();

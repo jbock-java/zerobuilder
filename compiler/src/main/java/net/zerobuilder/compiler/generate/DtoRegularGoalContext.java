@@ -21,12 +21,11 @@ public final class DtoRegularGoalContext {
     final ImmutableList<RegularStep> steps;
     final ImmutableList<TypeName> thrownTypes;
 
-    RegularGoalContext(BuildersContext builders,
-                       boolean toBuilder,
+    RegularGoalContext(boolean toBuilder,
                        boolean builder,
                        ImmutableList<RegularStep> steps,
                        ImmutableList<TypeName> thrownTypes) {
-      super(builders, toBuilder, builder);
+      super(toBuilder, builder);
       this.thrownTypes = thrownTypes;
       this.steps = steps;
     }
@@ -53,6 +52,7 @@ public final class DtoRegularGoalContext {
 
   public final static class ConstructorGoalContext extends RegularGoalContext {
     final ConstructorGoal goal;
+    final BuildersContext builders;
 
     public ConstructorGoalContext(ConstructorGoal goal,
                                   BuildersContext builders,
@@ -60,7 +60,8 @@ public final class DtoRegularGoalContext {
                                   boolean builder,
                                   ImmutableList<RegularStep> steps,
                                   ImmutableList<TypeName> thrownTypes) {
-      super(builders, toBuilder, builder, steps, thrownTypes);
+      super(toBuilder, builder, steps, thrownTypes);
+      this.builders = builders;
       this.goal = goal;
     }
 
@@ -72,6 +73,7 @@ public final class DtoRegularGoalContext {
 
   public final static class MethodGoalContext extends RegularGoalContext {
     final MethodGoal goal;
+    final BuildersContext builders;
 
     public MethodGoalContext(MethodGoal goal,
                              BuildersContext builders,
@@ -79,7 +81,8 @@ public final class DtoRegularGoalContext {
                              boolean builder,
                              ImmutableList<RegularStep> steps,
                              ImmutableList<TypeName> thrownTypes) {
-      super(builders, toBuilder, builder, steps, thrownTypes);
+      super(toBuilder, builder, steps, thrownTypes);
+      this.builders = builders;
       this.goal = goal;
     }
 
@@ -110,6 +113,18 @@ public final class DtoRegularGoalContext {
     @Override
     public Boolean methodGoal(MethodGoalContext goal) {
       return goal.goal.instance;
+    }
+  });
+
+  static final Function<RegularGoalContext, BuildersContext> buildersContext
+      = asFunction(new RegularGoalContextCases<BuildersContext>() {
+    @Override
+    public BuildersContext constructorGoal(ConstructorGoalContext goal) {
+      return goal.builders;
+    }
+    @Override
+    public BuildersContext methodGoal(MethodGoalContext goal) {
+      return goal.builders;
     }
   });
 
