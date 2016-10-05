@@ -14,7 +14,7 @@ import static net.zerobuilder.compiler.Utilities.fieldSpec;
 
 public final class DtoBeanGoalContext {
 
-  public static abstract class BeanContext extends AbstractGoalContext {
+  public static abstract class BeanContext {
     /**
      * alphabetic order unless {@link net.zerobuilder.Step} was used
      */
@@ -30,7 +30,7 @@ public final class DtoBeanGoalContext {
     }
   }
 
-  public static final class BeanGoalContext extends BeanContext {
+  public static final class BeanGoalContext extends BeanContext implements AbstractGoalContext {
 
     final BuildersContext builders;
 
@@ -50,7 +50,7 @@ public final class DtoBeanGoalContext {
       return new BeanGoalContext(goal, builders, steps, field);
     }
 
-    <R> R accept(GoalCases<R> cases) {
+    public <R> R accept(GoalCases<R> cases) {
       return cases.beanGoal(this);
     }
   }

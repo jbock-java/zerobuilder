@@ -13,7 +13,7 @@ import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 public final class DtoRegularGoalContext {
 
-  static abstract class RegularGoalContext extends AbstractGoalContext {
+  static abstract class RegularGoalContext implements AbstractGoalContext {
 
     /**
      * original parameter order unless {@link net.zerobuilder.Step} was used
@@ -27,7 +27,7 @@ public final class DtoRegularGoalContext {
       this.steps = steps;
     }
 
-    final <R> R accept(GoalCases<R> cases) {
+    public final <R> R accept(GoalCases<R> cases) {
       return cases.regularGoal(this);
     }
     abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);

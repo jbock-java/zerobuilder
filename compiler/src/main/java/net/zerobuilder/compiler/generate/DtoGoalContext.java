@@ -1,11 +1,9 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoal;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
@@ -17,9 +15,9 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 
 public final class DtoGoalContext {
 
-  public static abstract class AbstractGoalContext {
+  public interface AbstractGoalContext {
 
-    abstract <R> R accept(GoalCases<R> cases);
+    <R> R accept(GoalCases<R> cases);
   }
 
   interface GoalCases<R> {
