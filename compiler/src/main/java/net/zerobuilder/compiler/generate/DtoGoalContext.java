@@ -12,6 +12,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContex
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 
 public final class DtoGoalContext {
 
@@ -117,7 +118,7 @@ public final class DtoGoalContext {
       = asFunction(new GoalCases<ImmutableList<? extends AbstractStep>>() {
     @Override
     public ImmutableList<? extends AbstractStep> regularGoal(RegularGoalContext goal) {
-      return goal.steps;
+      return regularSteps.apply(goal);
     }
     @Override
     public ImmutableList<? extends AbstractStep> beanGoal(BeanGoalContext goal) {
@@ -129,7 +130,7 @@ public final class DtoGoalContext {
       = asFunction(new GoalCases<ImmutableList<TypeName>>() {
     @Override
     public ImmutableList<TypeName> regularGoal(RegularGoalContext goal) {
-      return goal.thrownTypes;
+      return DtoRegularGoalContext.thrownTypes.apply(goal);
     }
     @Override
     public ImmutableList<TypeName> beanGoal(BeanGoalContext goal) {

@@ -27,6 +27,7 @@ import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.asFunction;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 
@@ -41,7 +42,8 @@ final class BuilderContextV {
       builder.addAll(isInstance.apply(goal)
           ? ImmutableList.of(buildersContext.field)
           : ImmutableList.<FieldSpec>of());
-      for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
+      ImmutableList<RegularStep> steps = regularSteps.apply(goal);
+      for (RegularStep step : steps.subList(0, steps.size() - 1)) {
         builder.add(step.field());
       }
       return builder.build();
@@ -52,11 +54,12 @@ final class BuilderContextV {
       = new Function<RegularGoalContext, ImmutableList<MethodSpec>>() {
     @Override
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
+      ImmutableList<RegularStep> steps = regularSteps.apply(goal);
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (RegularStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
+      for (RegularStep step : steps.subList(0, steps.size() - 1)) {
         builder.addAll(regularMethods(step, goal, false));
       }
-      builder.addAll(regularMethods(getLast(goal.steps), goal, true));
+      builder.addAll(regularMethods(getLast(steps), goal, true));
       return builder.build();
     }
   };

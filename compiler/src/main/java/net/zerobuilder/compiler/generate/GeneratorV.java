@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -19,6 +20,7 @@ import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
@@ -38,7 +40,7 @@ final class GeneratorV {
               .addParameter(parameter)
               .returns(updater.type)
               .addCode(initializeUpdater(goal, updater));
-          for (RegularStep step : goal.steps) {
+          for (RegularStep step : regularSteps.apply(goal)) {
             method.addCode(copyField(parameter, updater, step));
           }
           method.addStatement("return $N", updater);
@@ -87,7 +89,7 @@ final class GeneratorV {
 
   private static CodeBlock initializeUpdater(RegularGoalContext goal, ParameterSpec updater) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    DtoBuilders.BuildersContext buildersContext = DtoGoalContext.buildersContext.apply(goal);
+    DtoBuilders.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
     boolean recycle = buildersContext.recycle;
     if (recycle) {
       FieldSpec cache = buildersContext.cache;
@@ -110,8 +112,9 @@ final class GeneratorV {
     @Override
     public MethodSpec apply(RegularGoalContext goal) {
       DtoGoal.RegularGoal regularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
+      ImmutableList<RegularStep> steps = regularSteps.apply(goal);
       MethodSpec.Builder method = methodBuilder(DtoGoalContext.goalName.apply(goal) + "Builder")
-          .returns(goal.steps.get(0).thisType)
+          .returns(steps.get(0).thisType)
           .addModifiers(regularGoal.goalOptions.builderAccess.modifiers(STATIC));
       ParameterSpec builder = builderInstance(goal);
       method.addCode(initBuilder(goal, builder));

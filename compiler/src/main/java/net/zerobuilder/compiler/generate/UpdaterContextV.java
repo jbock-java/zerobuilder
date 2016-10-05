@@ -20,6 +20,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
@@ -34,7 +35,7 @@ final class UpdaterContextV {
       builder.addAll(isInstance.apply(goal)
           ? ImmutableList.of(buildersContext.field)
           : ImmutableList.<FieldSpec>of());
-      for (RegularStep step : goal.steps) {
+      for (RegularStep step : regularSteps.apply(goal)) {
         String name = step.validParameter.name;
         TypeName type = step.validParameter.type;
         builder.add(fieldSpec(type, name, PRIVATE));
@@ -48,7 +49,7 @@ final class UpdaterContextV {
     @Override
     public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (RegularStep step : goal.steps) {
+      for (RegularStep step : regularSteps.apply(goal)) {
         builder.addAll(updateMethods(goal, step));
       }
       return builder.build();
