@@ -57,7 +57,8 @@ final class BuilderContext {
   }
 
   private static ClassName contractName(AbstractGoalContext goal) {
-    return DtoGoalContext.contractName(goalName.apply(goal), buildersContext.apply(goal));
+    DtoBuilders.BuildersContext buildersContext = DtoGoalContext.buildersContext.apply(goal);
+    return DtoGoalContext.contractName(goalName.apply(goal), buildersContext.generatedType);
   }
 
   private BuilderContext() {

@@ -8,7 +8,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
+import net.zerobuilder.compiler.analyse.Analyser.Goals;
 import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
@@ -40,18 +40,19 @@ public final class Generator {
     this.elements = elements;
   }
 
-  public TypeSpec generate(AnalysisResult analysisResult) {
-    return classBuilder(analysisResult.builders.generatedType)
-        .addFields(instanceFields(analysisResult))
+  public TypeSpec generate(Goals analysisResult) {
+    ImmutableList<AbstractGoalContext> goals = goals(analysisResult);
+    return classBuilder(analysisResult.buildersContext.generatedType)
+        .addFields(instanceFields(analysisResult, goals))
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
-        .addFields(analysisResult.builders.recycle
-            ? ImmutableList.of(analysisResult.builders.cache)
+        .addFields(analysisResult.buildersContext.recycle
+            ? ImmutableList.of(analysisResult.buildersContext.cache)
             : ImmutableList.<FieldSpec>of())
-        .addMethods(builderMethods(analysisResult))
-        .addMethods(toBuilderMethods(analysisResult))
+        .addMethods(builderMethods(goals))
+        .addMethods(toBuilderMethods(goals))
         .addAnnotations(generatedAnnotations(elements))
         .addModifiers(PUBLIC, FINAL)
-        .addTypes(nestedGoalTypes(analysisResult.goals))
+        .addTypes(nestedGoalTypes(goals))
         .build();
   }
 
@@ -70,8 +71,8 @@ public final class Generator {
     return builder.build();
   }
 
-  private ImmutableList<MethodSpec> toBuilderMethods(AnalysisResult analysisResult) {
-    return FluentIterable.from(analysisResult.goals)
+  private ImmutableList<MethodSpec> toBuilderMethods(ImmutableList<AbstractGoalContext> goals) {
+    return FluentIterable.from(goals)
         .filter(new Predicate<AbstractGoalContext>() {
           @Override
           public boolean apply(AbstractGoalContext goal) {
@@ -83,8 +84,8 @@ public final class Generator {
         .toList();
   }
 
-  private ImmutableList<MethodSpec> builderMethods(AnalysisResult analysisResult) {
-    return FluentIterable.from(analysisResult.goals)
+  private ImmutableList<MethodSpec> builderMethods(ImmutableList<AbstractGoalContext> goals) {
+    return FluentIterable.from(goals)
         .filter(new Predicate<AbstractGoalContext>() {
           @Override
           public boolean apply(AbstractGoalContext goal) {
@@ -96,12 +97,13 @@ public final class Generator {
         .toList();
   }
 
-  private ImmutableList<FieldSpec> instanceFields(AnalysisResult analysisResult) {
-    if (!analysisResult.builders.recycle) {
+  private ImmutableList<FieldSpec> instanceFields(Goals analysisResult,
+                                                  ImmutableList<AbstractGoalContext> goals) {
+    if (!analysisResult.buildersContext.recycle) {
       return ImmutableList.of();
     }
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-    for (AbstractGoalContext goal : analysisResult.goals) {
+    for (AbstractGoalContext goal : goals) {
       AbstractGoal abstractGoal = DtoGoalContext.abstractGoal.apply(goal);
       if (abstractGoal.goalOptions.toBuilder) {
         ClassName updaterType = updaterType(goal);
@@ -124,6 +126,17 @@ public final class Generator {
 
   private static final Function<AbstractGoalContext, MethodSpec> goalToBuilder
       = goalCases(GeneratorV.goalToBuilder, GeneratorB.goalToBuilder);
+
+  private ImmutableList<DtoGoalContext.AbstractGoalContext> goals(final Goals goals) {
+    return FluentIterable.from(goals.goals)
+        .transform(new Function<DtoGoalContext.IGoal, DtoGoalContext.AbstractGoalContext>() {
+          @Override
+          public DtoGoalContext.AbstractGoalContext apply(DtoGoalContext.IGoal goal) {
+            return goal.withContext(goals.buildersContext);
+          }
+        })
+        .toList();
+  }
 
   static String updaterField(AbstractGoalContext goal) {
     return downcase(goalName.apply(goal) + "Updater");

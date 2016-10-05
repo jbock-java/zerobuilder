@@ -62,7 +62,7 @@ final class UpdaterContext {
       = new Function<BeanGoalContext, CodeBlock>() {
     @Override
     public CodeBlock apply(BeanGoalContext goal) {
-      return statement("return this.$N", goal.field);
+      return statement("return this.$N", goal.goal.field);
     }
   };
 

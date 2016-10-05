@@ -6,10 +6,10 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoal;
-import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoalDetails;
+import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.analyse.DtoGoal.GoalOptions;
-import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoal;
 
 import javax.lang.model.element.Element;
@@ -94,8 +94,8 @@ final class DtoGoalElement {
       boolean instance = !element.getModifiers().contains(STATIC);
       ImmutableList<String> parameterNames = parameterNames(element);
       RegularGoal goal = element.getKind() == CONSTRUCTOR
-          ? new ConstructorGoal(goalType, name, parameterNames, goalOptions)
-          : new MethodGoal(goalType, name, parameterNames, methodName, instance, goalOptions);
+          ? new ConstructorGoalDetails(goalType, name, parameterNames, goalOptions)
+          : new MethodGoalDetails(goalType, name, parameterNames, methodName, instance, goalOptions);
       return new RegularGoalElement(element, goal, elements);
     }
 
@@ -113,12 +113,12 @@ final class DtoGoalElement {
   }
 
   static final class BeanGoalElement extends AbstractGoalElement {
-    final BeanGoal goal;
+    final BeanGoalDetails goal;
     final TypeElement beanType;
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType, Elements elements,
                             Goal goalAnnotation, GoalOptions goalOptions) {
       super(goalAnnotation, elements);
-      this.goal = new BeanGoal(goalType, name, goalOptions);
+      this.goal = new BeanGoalDetails(goalType, name, goalOptions);
       this.beanType = beanType;
     }
     static BeanGoalElement create(TypeElement beanType, Elements elements, AccessLevel defaultAccess) {

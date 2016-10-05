@@ -131,12 +131,12 @@ final class BuilderContextV {
       = asFunction(new RegularGoalContextCases<CodeBlock>() {
     @Override
     public CodeBlock constructorGoal(ConstructorGoalContext goal) {
-      CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
-      return statement("return new $T($L)", goal.goal.goalType, parameters);
+      CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
+      return statement("return new $T($L)", goal.goal.details.goalType, parameters);
     }
     @Override
     public CodeBlock methodGoal(MethodGoalContext goal) {
-      CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
+      CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
       return methodGoalInvocation(goal, parameters);
     }
   });
@@ -146,17 +146,17 @@ final class BuilderContextV {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
       public CodeBlock constructorGoal(ConstructorGoalContext goal) {
-        CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
+        CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
         TypeName type = step.validParameter.type;
         String name = step.validParameter.name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, emptyOption.initializer)
-            .addStatement("return new $T($L)", goal.goal.goalType, parameters)
+            .addStatement("return new $T($L)", goal.goal.details.goalType, parameters)
             .build();
       }
       @Override
       public CodeBlock methodGoal(MethodGoalContext goal) {
-        CodeBlock parameters = invocationParameters(goal.goal.parameterNames);
+        CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
         TypeName type = step.validParameter.type;
         String name = step.validParameter.name;
         return CodeBlock.builder()
@@ -169,10 +169,10 @@ final class BuilderContextV {
 
   private static CodeBlock methodGoalInvocation(MethodGoalContext goal, CodeBlock parameters) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    TypeName type = goal.goal.goalType;
-    String method = goal.goal.methodName;
+    TypeName type = goal.goal.details.goalType;
+    String method = goal.goal.details.methodName;
     builder.add(CodeBlock.of(VOID.equals(type) ? "" : "return "));
-    builder.add(goal.goal.instance
+    builder.add(goal.goal.details.instance
         ? statement("$N.$N($L)", goal.builders.field, method, parameters)
         : statement("$T.$N($L)", goal.builders.type, method, parameters));
     return builder.build();

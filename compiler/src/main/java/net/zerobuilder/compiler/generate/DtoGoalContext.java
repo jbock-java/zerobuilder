@@ -16,6 +16,11 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSte
 
 public final class DtoGoalContext {
 
+  public interface IGoal {
+
+    AbstractGoalContext withContext(BuildersContext context);
+  }
+
   public interface AbstractGoalContext {
 
     <R> R accept(GoalCases<R> cases);
@@ -84,7 +89,7 @@ public final class DtoGoalContext {
         }
         @Override
         public TypeName beanGoal(BeanGoalContext goal) {
-          return goal.goal.goalType;
+          return goal.goal.details.goalType;
         }
       });
 
@@ -97,7 +102,7 @@ public final class DtoGoalContext {
     }
     @Override
     public String beanGoal(BeanGoalContext goal) {
-      return goal.goal.name;
+      return goal.goal.details.name;
     }
   });
 
@@ -110,7 +115,7 @@ public final class DtoGoalContext {
     }
     @Override
     public AbstractGoal beanGoal(BeanGoalContext goal) {
-      return goal.goal;
+      return goal.goal.details;
     }
   });
 
@@ -122,7 +127,7 @@ public final class DtoGoalContext {
     }
     @Override
     public ImmutableList<? extends AbstractStep> beanGoal(BeanGoalContext goal) {
-      return goal.steps;
+      return goal.goal.steps;
     }
   });
 
@@ -139,8 +144,8 @@ public final class DtoGoalContext {
   });
 
 
-  public static ClassName contractName(String goalName, BuildersContext buildersContext) {
-    return buildersContext.generatedType.nestedClass(upcase(goalName + "Builder"));
+  public static ClassName contractName(String goalName, ClassName generatedType) {
+    return generatedType.nestedClass(upcase(goalName + "Builder"));
   }
 
   private DtoGoalContext() {

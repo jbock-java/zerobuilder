@@ -31,19 +31,19 @@ final class GeneratorB {
       = new Function<BeanGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(BeanGoalContext goal) {
-      ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
-      MethodSpec.Builder method = methodBuilder(downcase(goal.goal.name + "ToBuilder"))
+      ParameterSpec parameter = parameterSpec(goal.goal.details.goalType, goal.goal.field.name);
+      MethodSpec.Builder method = methodBuilder(downcase(goal.goal.details.name + "ToBuilder"))
           .addParameter(parameter);
       ParameterSpec updater = updaterInstance(goal);
       method.addCode(initializeUpdater(goal, updater));
       Function<AbstractBeanStep, CodeBlock> copy = copy(goal);
-      for (AbstractBeanStep step : goal.steps) {
+      for (AbstractBeanStep step : goal.goal.steps) {
         method.addCode(copy.apply(step));
       }
       method.addStatement("return $N", updater);
       return method
           .returns(updaterType(goal))
-          .addModifiers(goal.goal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
+          .addModifiers(goal.goal.details.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
     }
   };
 
@@ -61,14 +61,14 @@ final class GeneratorB {
   }
 
   private static CodeBlock copyCollection(BeanGoalContext goal, LoneGetterStep step) {
-    ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
+    ParameterSpec parameter = parameterSpec(goal.goal.details.goalType, goal.goal.field.name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return CodeBlock.builder().add(nullCheck(parameter, step.loneGetter, true))
         .beginControlFlow("for ($T $N : $N.$N())",
             iterationVar.type, iterationVar, parameter,
             step.loneGetter.getter)
         .addStatement("$N.$N.$N().add($N)", updaterInstance(goal),
-            downcase(goal.goal.goalType.simpleName()),
+            downcase(goal.goal.details.goalType.simpleName()),
             step.loneGetter.getter,
             iterationVar)
         .endControlFlow()
@@ -76,12 +76,12 @@ final class GeneratorB {
   }
 
   private static CodeBlock copyRegular(BeanGoalContext goal, AccessorPairStep step) {
-    ParameterSpec parameter = parameterSpec(goal.goal.goalType, goal.field.name);
+    ParameterSpec parameter = parameterSpec(goal.goal.details.goalType, goal.goal.field.name);
     ParameterSpec updater = updaterInstance(goal);
     return CodeBlock.builder()
         .add(nullCheck(parameter, step.accessorPair))
         .addStatement("$N.$N.$L($N.$N())", updater,
-            goal.field,
+            goal.goal.field,
             step.setter,
             parameter,
             step.accessorPair.getter)
@@ -112,7 +112,7 @@ final class GeneratorB {
     } else {
       builder.addStatement("$T $N = new $T()", updater.type, updater, updater.type);
     }
-    builder.addStatement("$N.$N = new $T()", updater, goal.field, goal.goal.goalType);
+    builder.addStatement("$N.$N = new $T()", updater, goal.goal.field, goal.goal.details.goalType);
     return builder.build();
   }
 
@@ -126,15 +126,15 @@ final class GeneratorB {
     @Override
     public MethodSpec apply(BeanGoalContext goal) {
       ClassName stepsType = builderImplType(goal);
-      MethodSpec.Builder method = methodBuilder(goal.goal.name + "Builder")
-          .returns(goal.steps.get(0).thisType)
-          .addModifiers(goal.goal.goalOptions.builderAccess.modifiers(STATIC));
+      MethodSpec.Builder method = methodBuilder(goal.goal.details.name + "Builder")
+          .returns(goal.goal.steps.get(0).thisType)
+          .addModifiers(goal.goal.details.goalOptions.builderAccess.modifiers(STATIC));
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.builders.recycle
           ? statement("$T $N = $N.get().$N", stepsType, steps, goal.builders.cache, stepsField(goal))
           : statement("$T $N = new $T()", stepsType, steps, stepsType));
       return method.addStatement("$N.$N = new $T()", steps,
-          downcase(goal.goal.goalType.simpleName()), goal.goal.goalType)
+          downcase(goal.goal.details.goalType.simpleName()), goal.goal.details.goalType)
           .addStatement("return $N", steps)
           .build();
     }

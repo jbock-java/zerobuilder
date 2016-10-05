@@ -35,7 +35,7 @@ final class UpdaterContextB {
       = new Function<BeanGoalContext, ImmutableList<FieldSpec>>() {
     @Override
     public ImmutableList<FieldSpec> apply(BeanGoalContext goal) {
-      return of(goal.field);
+      return of(goal.goal.field);
     }
   };
 
@@ -45,7 +45,7 @@ final class UpdaterContextB {
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       Function<AbstractBeanStep, ImmutableList<MethodSpec>> updateMethods = stepToMethods(goal);
-      for (AbstractBeanStep step : goal.steps) {
+      for (AbstractBeanStep step : goal.goal.steps) {
         builder.addAll(updateMethods.apply(step));
       }
       return builder.build();
@@ -86,7 +86,7 @@ final class UpdaterContextB {
         .returns(updaterType(goal))
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, emptyOption.initializer)
         .addStatement("this.$N.$L($N)",
-            goal.field, step.setter, emptyColl)
+            goal.goal.field, step.setter, emptyColl)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build());
@@ -99,7 +99,7 @@ final class UpdaterContextB {
         .returns(updaterType(goal))
         .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
-            goal.field, step.setter, parameter)
+            goal.goal.field, step.setter, parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
@@ -125,7 +125,7 @@ final class UpdaterContextB {
         .addCode(clearCollection(goal, step))
         .beginControlFlow("for ($T $N : $N)", iterationVar.type, iterationVar, name)
         .addStatement("this.$N.$N().add($N)",
-            goal.field, step.loneGetter.getter, iterationVar)
+            goal.goal.field, step.loneGetter.getter, iterationVar)
         .endControlFlow()
         .addStatement("return this")
         .addModifiers(PUBLIC)
@@ -143,7 +143,7 @@ final class UpdaterContextB {
 
   private static CodeBlock clearCollection(BeanGoalContext goal, LoneGetterStep step) {
     return CodeBlock.builder().addStatement("this.$N.$N().clear()",
-        goal.field, step.loneGetter.getter).build();
+        goal.goal.field, step.loneGetter.getter).build();
   }
 
   private UpdaterContextB() {

@@ -35,13 +35,13 @@ public final class DtoGoal {
 
   interface AbstractGoalCases<R> {
     R regular(RegularGoal goal);
-    R bean(BeanGoal goal);
+    R bean(BeanGoalDetails goal);
   }
 
 
   interface RegularGoalCases<R> {
-    R method(MethodGoal goal);
-    R constructor(ConstructorGoal goal);
+    R method(MethodGoalDetails goal);
+    R constructor(ConstructorGoalDetails goal);
   }
 
   static <R> Function<AbstractGoal, R> asFunction(final AbstractGoalCases<R> cases) {
@@ -80,10 +80,10 @@ public final class DtoGoal {
     }
   }
 
-  public static final class ConstructorGoal extends RegularGoal {
+  public static final class ConstructorGoalDetails extends RegularGoal {
 
-    ConstructorGoal(TypeName goalType, String name, ImmutableList<String> parameterNames,
-                    GoalOptions goalOptions) {
+    ConstructorGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames,
+                           GoalOptions goalOptions) {
       super(goalType, name, parameterNames, goalOptions);
     }
     @Override
@@ -92,7 +92,7 @@ public final class DtoGoal {
     }
   }
 
-  public static final class MethodGoal extends RegularGoal {
+  public static final class MethodGoalDetails extends RegularGoal {
     public final String methodName;
 
     /**
@@ -100,8 +100,8 @@ public final class DtoGoal {
      */
     public final boolean instance;
 
-    MethodGoal(TypeName goalType, String name, ImmutableList<String> parameterNames, String methodName,
-               boolean instance, GoalOptions goalOptions) {
+    MethodGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames, String methodName,
+                      boolean instance, GoalOptions goalOptions) {
       super(goalType, name, parameterNames, goalOptions);
       this.methodName = methodName;
       this.instance = instance;
@@ -112,9 +112,9 @@ public final class DtoGoal {
     }
   }
 
-  public static final class BeanGoal extends AbstractGoal {
+  public static final class BeanGoalDetails extends AbstractGoal {
     public final ClassName goalType;
-    BeanGoal(ClassName goalType, String name, GoalOptions goalOptions) {
+    BeanGoalDetails(ClassName goalType, String name, GoalOptions goalOptions) {
       super(name, goalOptions);
       this.goalType = goalType;
     }
@@ -132,7 +132,7 @@ public final class DtoGoal {
       return goal.goalType;
     }
     @Override
-    public TypeName bean(BeanGoal goal) {
+    public TypeName bean(BeanGoalDetails goal) {
       return goal.goalType;
     }
   });

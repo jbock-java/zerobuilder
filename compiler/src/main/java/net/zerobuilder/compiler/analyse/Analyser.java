@@ -9,7 +9,7 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -40,18 +40,18 @@ public final class Analyser {
     this.elements = elements;
   }
 
-  public AnalysisResult analyse(TypeElement buildElement) throws ValidationException {
+  public Goals analyse(TypeElement buildElement) throws ValidationException {
     BuildersContext context = createBuildersContext(buildElement);
-    ImmutableList.Builder<AbstractGoalContext> builder = ImmutableList.builder();
+    ImmutableList.Builder<IGoal> builder = ImmutableList.builder();
     ImmutableList<AbstractGoalElement> goals = goals(buildElement);
     checkNameConflict(goals);
     for (AbstractGoalElement goal : goals) {
       validateBuildersType(buildElement);
       boolean toBuilder = goal.goalAnnotation.toBuilder();
       ValidGoal validGoal = goal.accept(toBuilder ? validate : skip);
-      builder.add(context(validGoal, context));
+      builder.add(context(validGoal, context.generatedType));
     }
-    return new AnalysisResult(context, builder.build());
+    return new Goals(context, builder.build());
   }
 
   /**
@@ -88,12 +88,12 @@ public final class Analyser {
     return goals;
   }
 
-  public static final class AnalysisResult {
-    public final BuildersContext builders;
-    public final ImmutableList<AbstractGoalContext> goals;
+  public static final class Goals {
+    public final BuildersContext buildersContext;
+    public final ImmutableList<IGoal> goals;
 
-    AnalysisResult(BuildersContext builders, ImmutableList<AbstractGoalContext> goals) {
-      this.builders = builders;
+    Goals(BuildersContext buildersContext, ImmutableList<IGoal> goals) {
+      this.buildersContext = buildersContext;
       this.goals = goals;
     }
   }

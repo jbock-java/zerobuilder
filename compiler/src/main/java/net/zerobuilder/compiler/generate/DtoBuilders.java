@@ -5,6 +5,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import net.zerobuilder.Builders;
+import net.zerobuilder.compiler.analyse.DtoGoal;
 
 import javax.lang.model.element.TypeElement;
 
@@ -28,13 +29,13 @@ public final class DtoBuilders {
     public final ClassName type;
 
     /**
-     * The type that will be generated: {@link #type} {@code + "Builders"}
+     * The type that should be generated.
      */
     public final ClassName generatedType;
 
     /**
      * Only used
-     * when {@link net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal#instance} is true
+     * when {@link DtoGoal.MethodGoalDetails#instance} is true
      */
     public final FieldSpec field;
 

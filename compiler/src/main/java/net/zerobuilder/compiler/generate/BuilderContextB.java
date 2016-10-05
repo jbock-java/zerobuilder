@@ -36,7 +36,7 @@ final class BuilderContextB {
       = new Function<BeanGoalContext, ImmutableList<FieldSpec>>() {
     @Override
     public ImmutableList<FieldSpec> apply(BeanGoalContext goal) {
-      return ImmutableList.of(goal.field);
+      return ImmutableList.of(goal.goal.field);
     }
   };
 
@@ -46,10 +46,10 @@ final class BuilderContextB {
     public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
       ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
       Function<AbstractBeanStep, ImmutableList<MethodSpec>> stepToMethods = stepToMethods(goal, false);
-      for (AbstractBeanStep step : goal.steps.subList(0, goal.steps.size() - 1)) {
+      for (AbstractBeanStep step : goal.goal.steps.subList(0, goal.goal.steps.size() - 1)) {
         builder.addAll(stepToMethods.apply(step));
       }
-      builder.addAll(stepToMethods(goal, true).apply(getLast(goal.steps)));
+      builder.addAll(stepToMethods(goal, true).apply(getLast(goal.goal.steps)));
       return builder.build();
     }
   };
@@ -88,7 +88,7 @@ final class BuilderContextB {
         .addAnnotation(Override.class)
         .returns(step.nextType)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, emptyOption.initializer)
-        .addStatement("this.$N.$L($N)", goal.field, step.setter, emptyColl)
+        .addStatement("this.$N.$L($N)", goal.goal.field, step.setter, emptyColl)
         .addCode(regularFinalBlock(goal, isLast))
         .addModifiers(PUBLIC)
         .build());
@@ -111,7 +111,7 @@ final class BuilderContextB {
 
   private static CodeBlock regularFinalBlock(BeanGoalContext goal, boolean isLast) {
     return isLast
-        ? statement("return this.$N", goal.field)
+        ? statement("return this.$N", goal.goal.field)
         : statement("return this");
   }
 
@@ -130,7 +130,7 @@ final class BuilderContextB {
         .addCode(nullCheck(parameter))
         .beginControlFlow("for ($T $N : $N)",
             iterationVar.type, iterationVar, parameter)
-        .addStatement("this.$N.$L().add($N)", goal.field,
+        .addStatement("this.$N.$L().add($N)", goal.goal.field,
             step.loneGetter.getter, iterationVar)
         .endControlFlow()
         .addCode(regularFinalBlock(goal, isLast))
@@ -146,7 +146,7 @@ final class BuilderContextB {
         .addModifiers(PUBLIC)
         .returns(step.nextType)
         .addCode(nullCheck.apply(step))
-        .addStatement("this.$N.$L($N)", goal.field, step.setter, parameter)
+        .addStatement("this.$N.$L($N)", goal.goal.field, step.setter, parameter)
         .addCode(regularFinalBlock(goal, isLast)).build();
   }
 

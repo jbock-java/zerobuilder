@@ -8,8 +8,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
-import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoalCases;
 import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.analyse.DtoParameter.RegularParameter;
@@ -17,14 +16,12 @@ import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoalCases;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
-import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
-import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -39,49 +36,46 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
 
 public final class GoalContextFactory {
 
-  static AbstractGoalContext context(final ValidGoal validGoal, final BuildersContext buildersContext) throws ValidationException {
-    return validGoal.accept(new ValidGoalCases<AbstractGoalContext>() {
+  static IGoal context(final ValidGoal validGoal, final ClassName generatedType) throws ValidationException {
+    return validGoal.accept(new ValidGoalCases<IGoal>() {
       @Override
-      public AbstractGoalContext regularGoal(ValidRegularGoal goal) {
+      public IGoal regularGoal(ValidRegularGoal goal) {
         final ImmutableList<TypeName> thrownTypes = thrownTypes(goal.goal.executableElement);
         final ImmutableList<RegularStep> steps = steps(goal,
-            buildersContext,
+            generatedType,
             goal.parameters,
             thrownTypes,
             regularParameterFactory);
-        return goal.goal.goal.accept(new RegularGoalCases<AbstractGoalContext>() {
+        return goal.goal.goal.accept(new RegularGoalCases<IGoal>() {
           @Override
-          public AbstractGoalContext method(MethodGoal goal) {
-            return new MethodGoalContext(
-                goal, buildersContext, steps, thrownTypes);
+          public IGoal method(DtoGoal.MethodGoalDetails goal) {
+            return new DtoRegularGoalContext.MethodGoal(goal, steps, thrownTypes);
           }
           @Override
-          public AbstractGoalContext constructor(ConstructorGoal goal) {
-            return new ConstructorGoalContext(
-                goal, buildersContext, steps, thrownTypes);
+          public IGoal constructor(ConstructorGoalDetails goal) {
+            return new DtoRegularGoalContext.ConstructorGoal(goal, steps, thrownTypes);
           }
         });
       }
       @Override
-      public AbstractGoalContext beanGoal(ValidBeanGoal goal) {
+      public IGoal beanGoal(ValidBeanGoal goal) {
         ImmutableList<? extends AbstractBeanStep> steps = steps(goal,
-            buildersContext,
+            generatedType,
             goal.parameters,
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
-        return BeanGoalContext.create(
-            goal.goal.goal, buildersContext, steps);
+        return DtoBeanGoalContext.BeanGoal.create(goal.goal.goal, steps);
       }
     });
   }
 
   private static <P extends AbstractParameter, S extends AbstractStep>
   ImmutableList<S> steps(ValidGoal goal,
-                         BuildersContext buildersContext,
+                         ClassName generatedType,
                          ImmutableList<P> parameters,
                          ImmutableList<TypeName> thrownTypes,
                          ParameterFactory<P, S> parameterFactory) {
-    ClassName contractName = contractName(goalName(goal), buildersContext);
+    ClassName contractName = contractName(goalName(goal), generatedType);
     TypeName nextType = goalType(goal);
     ImmutableList.Builder<S> builder = ImmutableList.builder();
     for (P parameter : parameters.reverse()) {
@@ -133,5 +127,4 @@ public final class GoalContextFactory {
         })
         .toList();
   }
-
 }
