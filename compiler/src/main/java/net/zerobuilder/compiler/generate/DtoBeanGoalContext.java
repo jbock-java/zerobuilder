@@ -14,8 +14,7 @@ import static net.zerobuilder.compiler.Utilities.fieldSpec;
 
 public final class DtoBeanGoalContext {
 
-  public final static class BeanGoalContext extends AbstractGoalContext {
-
+  public static abstract class BeanContext extends AbstractGoalContext {
     /**
      * alphabetic order unless {@link net.zerobuilder.Step} was used
      */
@@ -23,18 +22,29 @@ public final class DtoBeanGoalContext {
     final BeanGoal goal;
     final FieldSpec field;
 
+    private BeanContext(BeanGoal goal,
+                        boolean toBuilder,
+                        boolean builder,
+                        ImmutableList<? extends AbstractBeanStep> steps, FieldSpec field) {
+      super(toBuilder, builder);
+      this.steps = steps;
+      this.goal = goal;
+      this.field = field;
+    }
+  }
+
+  public static final class BeanGoalContext extends BeanContext {
+
     final BuildersContext builders;
 
     private BeanGoalContext(BeanGoal goal,
                             BuildersContext builders,
                             boolean toBuilder,
                             boolean builder,
-                            ImmutableList<? extends AbstractBeanStep> steps, FieldSpec field) {
-      super(toBuilder, builder);
+                            ImmutableList<? extends AbstractBeanStep> steps,
+                            FieldSpec field) {
+      super(goal, toBuilder, builder, steps, field);
       this.builders = builders;
-      this.steps = steps;
-      this.goal = goal;
-      this.field = field;
     }
 
     public static BeanGoalContext create(BeanGoal goal,
