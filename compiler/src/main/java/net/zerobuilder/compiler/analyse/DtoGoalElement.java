@@ -160,9 +160,11 @@ final class DtoGoalElement {
   }
 
   private static GoalOptions goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
+    boolean toBuilder = goalAnnotation.toBuilder();
+    boolean builder = goalAnnotation.builder();
     return new GoalOptions(
         accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess),
-        accessLevelOverride(goalAnnotation.toBuilderAccess(), defaultAccess));
+        accessLevelOverride(goalAnnotation.toBuilderAccess(), defaultAccess), toBuilder, builder);
   }
 
   private static TypeName goalType(ExecutableElement goal) {

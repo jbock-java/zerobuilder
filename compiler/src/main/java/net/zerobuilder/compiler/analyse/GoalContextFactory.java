@@ -39,8 +39,7 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
 
 public final class GoalContextFactory {
 
-  static AbstractGoalContext context(final ValidGoal validGoal, final BuildersContext buildersContext,
-                                     final boolean toBuilder, final boolean builder) throws ValidationException {
+  static AbstractGoalContext context(final ValidGoal validGoal, final BuildersContext buildersContext) throws ValidationException {
     return validGoal.accept(new ValidGoalCases<AbstractGoalContext>() {
       @Override
       public AbstractGoalContext regularGoal(ValidRegularGoal goal) {
@@ -54,12 +53,12 @@ public final class GoalContextFactory {
           @Override
           public AbstractGoalContext method(MethodGoal goal) {
             return new MethodGoalContext(
-                goal, buildersContext, toBuilder, builder, steps, thrownTypes);
+                goal, buildersContext, steps, thrownTypes);
           }
           @Override
           public AbstractGoalContext constructor(ConstructorGoal goal) {
             return new ConstructorGoalContext(
-                goal, buildersContext, toBuilder, builder, steps, thrownTypes);
+                goal, buildersContext, steps, thrownTypes);
           }
         });
       }
@@ -71,7 +70,7 @@ public final class GoalContextFactory {
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
         return BeanGoalContext.create(
-            goal.goal.goal, buildersContext, toBuilder, builder, steps);
+            goal.goal.goal, buildersContext, steps);
       }
     });
   }

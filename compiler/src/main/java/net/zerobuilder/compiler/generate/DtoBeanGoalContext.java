@@ -23,10 +23,7 @@ public final class DtoBeanGoalContext {
     final FieldSpec field;
 
     private BeanContext(BeanGoal goal,
-                        boolean toBuilder,
-                        boolean builder,
                         ImmutableList<? extends AbstractBeanStep> steps, FieldSpec field) {
-      super(toBuilder, builder);
       this.steps = steps;
       this.goal = goal;
       this.field = field;
@@ -39,22 +36,18 @@ public final class DtoBeanGoalContext {
 
     private BeanGoalContext(BeanGoal goal,
                             BuildersContext builders,
-                            boolean toBuilder,
-                            boolean builder,
                             ImmutableList<? extends AbstractBeanStep> steps,
                             FieldSpec field) {
-      super(goal, toBuilder, builder, steps, field);
+      super(goal, steps, field);
       this.builders = builders;
     }
 
     public static BeanGoalContext create(BeanGoal goal,
                                          BuildersContext builders,
-                                         boolean toBuilder,
-                                         boolean builder,
                                          ImmutableList<? extends AbstractBeanStep> steps) {
       FieldSpec field = fieldSpec(goal.goalType,
           downcase(goal.goalType.simpleName()), PRIVATE);
-      return new BeanGoalContext(goal, builders, toBuilder, builder, steps, field);
+      return new BeanGoalContext(goal, builders, steps, field);
     }
 
     <R> R accept(GoalCases<R> cases) {

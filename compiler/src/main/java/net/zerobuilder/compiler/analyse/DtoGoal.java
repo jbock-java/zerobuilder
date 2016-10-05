@@ -11,14 +11,19 @@ public final class DtoGoal {
   public static final class GoalOptions {
     public final AccessLevel builderAccess;
     public final AccessLevel toBuilderAccess;
+    public final boolean toBuilder;
+    public final boolean builder;
 
-    GoalOptions(AccessLevel builderAccess, AccessLevel toBuilderAccess) {
+
+    GoalOptions(AccessLevel builderAccess, AccessLevel toBuilderAccess, boolean toBuilder, boolean builder) {
       this.builderAccess = builderAccess;
       this.toBuilderAccess = toBuilderAccess;
+      this.toBuilder = toBuilder;
+      this.builder = builder;
     }
   }
 
-  static abstract class AbstractGoal {
+  public static abstract class AbstractGoal {
     public final String name;
     public final GoalOptions goalOptions;
     AbstractGoal(String name, GoalOptions goalOptions) {

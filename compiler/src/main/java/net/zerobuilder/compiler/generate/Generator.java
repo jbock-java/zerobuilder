@@ -9,6 +9,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.analyse.Analyser.AnalysisResult;
+import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
 import javax.lang.model.util.Elements;
@@ -57,10 +58,11 @@ public final class Generator {
   private ImmutableList<TypeSpec> nestedGoalTypes(ImmutableList<AbstractGoalContext> goals) {
     ImmutableList.Builder<TypeSpec> builder = ImmutableList.builder();
     for (AbstractGoalContext goal : goals) {
-      if (goal.toBuilder) {
+      AbstractGoal abstractGoal = DtoGoalContext.abstractGoal.apply(goal);
+      if (abstractGoal.goalOptions.toBuilder) {
         builder.add(defineUpdater(goal));
       }
-      if (goal.builder) {
+      if (abstractGoal.goalOptions.builder) {
         builder.add(defineBuilderImpl(goal));
         builder.add(defineContract(goal));
       }
@@ -73,7 +75,8 @@ public final class Generator {
         .filter(new Predicate<AbstractGoalContext>() {
           @Override
           public boolean apply(AbstractGoalContext goal) {
-            return goal.toBuilder;
+            AbstractGoal abstractGoal = DtoGoalContext.abstractGoal.apply(goal);
+            return abstractGoal.goalOptions.toBuilder;
           }
         })
         .transform(goalToToBuilder)
@@ -85,7 +88,8 @@ public final class Generator {
         .filter(new Predicate<AbstractGoalContext>() {
           @Override
           public boolean apply(AbstractGoalContext goal) {
-            return goal.builder;
+            AbstractGoal abstractGoal = DtoGoalContext.abstractGoal.apply(goal);
+            return abstractGoal.goalOptions.builder;
           }
         })
         .transform(goalToBuilder)
@@ -98,13 +102,14 @@ public final class Generator {
     }
     ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
     for (AbstractGoalContext goal : analysisResult.goals) {
-      if (goal.toBuilder) {
+      AbstractGoal abstractGoal = DtoGoalContext.abstractGoal.apply(goal);
+      if (abstractGoal.goalOptions.toBuilder) {
         ClassName updaterType = updaterType(goal);
         builder.add(FieldSpec.builder(updaterType,
             updaterField(goal), PRIVATE, FINAL)
             .initializer("new $T()", updaterType).build());
       }
-      if (goal.builder) {
+      if (abstractGoal.goalOptions.builder) {
         ClassName stepsType = builderImplType(goal);
         builder.add(FieldSpec.builder(stepsType,
             stepsField(goal), PRIVATE, FINAL)

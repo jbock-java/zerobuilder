@@ -21,11 +21,8 @@ public final class DtoRegularGoalContext {
     final ImmutableList<RegularStep> steps;
     final ImmutableList<TypeName> thrownTypes;
 
-    RegularGoalContext(boolean toBuilder,
-                       boolean builder,
-                       ImmutableList<RegularStep> steps,
+    RegularGoalContext(ImmutableList<RegularStep> steps,
                        ImmutableList<TypeName> thrownTypes) {
-      super(toBuilder, builder);
       this.thrownTypes = thrownTypes;
       this.steps = steps;
     }
@@ -54,11 +51,9 @@ public final class DtoRegularGoalContext {
     final ConstructorGoal goal;
 
     public ConstructorContext(ConstructorGoal goal,
-                              boolean toBuilder,
-                              boolean builder,
                               ImmutableList<RegularStep> steps,
                               ImmutableList<TypeName> thrownTypes) {
-      super(toBuilder, builder, steps, thrownTypes);
+      super(steps, thrownTypes);
       this.goal = goal;
     }
   }
@@ -68,11 +63,9 @@ public final class DtoRegularGoalContext {
 
     public ConstructorGoalContext(ConstructorGoal goal,
                                   BuildersContext builders,
-                                  boolean toBuilder,
-                                  boolean builder,
                                   ImmutableList<RegularStep> steps,
                                   ImmutableList<TypeName> thrownTypes) {
-      super(goal, toBuilder, builder, steps, thrownTypes);
+      super(goal, steps, thrownTypes);
       this.builders = builders;
     }
 
@@ -86,11 +79,9 @@ public final class DtoRegularGoalContext {
     final MethodGoal goal;
 
     public MethodContext(MethodGoal goal,
-                         boolean toBuilder,
-                         boolean builder,
                          ImmutableList<RegularStep> steps,
                          ImmutableList<TypeName> thrownTypes) {
-      super(toBuilder, builder, steps, thrownTypes);
+      super(steps, thrownTypes);
       this.goal = goal;
     }
   }
@@ -100,11 +91,9 @@ public final class DtoRegularGoalContext {
 
     public MethodGoalContext(MethodGoal goal,
                              BuildersContext builders,
-                             boolean toBuilder,
-                             boolean builder,
                              ImmutableList<RegularStep> steps,
                              ImmutableList<TypeName> thrownTypes) {
-      super(goal, toBuilder, builder, steps, thrownTypes);
+      super(goal, steps, thrownTypes);
       this.builders = builders;
     }
 

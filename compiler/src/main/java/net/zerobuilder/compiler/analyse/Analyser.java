@@ -48,9 +48,8 @@ public final class Analyser {
     for (AbstractGoalElement goal : goals) {
       validateBuildersType(buildElement);
       boolean toBuilder = goal.goalAnnotation.toBuilder();
-      boolean isBuilder = goal.goalAnnotation.builder();
       ValidGoal validGoal = goal.accept(toBuilder ? validate : skip);
-      builder.add(context(validGoal, context, toBuilder, isBuilder));
+      builder.add(context(validGoal, context));
     }
     return new AnalysisResult(context, builder.build());
   }
