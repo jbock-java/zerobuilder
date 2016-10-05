@@ -15,21 +15,26 @@ import static net.zerobuilder.compiler.Utilities.upcase;
 
 public final class DtoGoalContext {
 
-  public static abstract class AbstractGoalContext {
-    final BuildersContext builders;
+  public static abstract class ProtoGoalContext {
 
     final boolean toBuilder;
     final boolean builder;
 
-    final ClassName builderContractType;
+    @VisibleForTesting
+    ProtoGoalContext(boolean toBuilder, boolean builder) {
+      this.toBuilder = toBuilder;
+      this.builder = builder;
+    }
+  }
+
+  public static abstract class AbstractGoalContext extends ProtoGoalContext {
+    final BuildersContext builders;
 
     @VisibleForTesting
     AbstractGoalContext(BuildersContext builders, boolean toBuilder,
-                        boolean builder, ClassName builderContractType) {
+                        boolean builder) {
+      super(toBuilder, builder);
       this.builders = builders;
-      this.toBuilder = toBuilder;
-      this.builder = builder;
-      this.builderContractType = builderContractType;
     }
 
     abstract <R> R accept(GoalCases<R> cases);
@@ -126,6 +131,10 @@ public final class DtoGoalContext {
       return goal.goal.name;
     }
   });
+
+  public static ClassName contractName(String goalName, BuildersContext buildersContext) {
+    return buildersContext.generatedType.nestedClass(upcase(goalName + "Builder"));
+  }
 
   private DtoGoalContext() {
     throw new UnsupportedOperationException("no instances");

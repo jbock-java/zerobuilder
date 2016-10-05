@@ -8,7 +8,6 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoalCases;
@@ -34,18 +33,20 @@ import javax.lang.model.type.TypeMirror;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.DtoParameter.parameterName;
+import static net.zerobuilder.compiler.analyse.DtoValidGoal.goalName;
+import static net.zerobuilder.compiler.analyse.DtoValidGoal.goalType;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
 
-final class GoalContextFactory {
+public final class GoalContextFactory {
 
-  static AbstractGoalContext context(final ValidGoal validGoal, final BuildersContext builders,
+  static AbstractGoalContext context(final ValidGoal validGoal, final BuildersContext buildersContext,
                                      final boolean toBuilder, final boolean builder) throws ValidationException {
     return validGoal.accept(new ValidGoalCases<AbstractGoalContext>() {
       @Override
       public AbstractGoalContext regularGoal(ValidRegularGoal goal) {
-        final ClassName contractName = contractName(goal.goal.goal, builders);
         final ImmutableList<TypeName> thrownTypes = thrownTypes(goal.goal.executableElement);
-        final ImmutableList<RegularStep> steps = steps(contractName,
-            goal.goal.goal.goalType,
+        final ImmutableList<RegularStep> steps = steps(goal,
+            buildersContext,
             goal.parameters,
             thrownTypes,
             regularParameterFactory);
@@ -53,38 +54,39 @@ final class GoalContextFactory {
           @Override
           public AbstractGoalContext method(MethodGoal goal) {
             return new MethodGoalContext(
-                goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
+                goal, buildersContext, toBuilder, builder, steps, thrownTypes);
           }
           @Override
           public AbstractGoalContext constructor(ConstructorGoal goal) {
             return new ConstructorGoalContext(
-                goal, builders, toBuilder, builder, contractName, steps, thrownTypes);
+                goal, buildersContext, toBuilder, builder, steps, thrownTypes);
           }
         });
       }
       @Override
       public AbstractGoalContext beanGoal(ValidBeanGoal goal) {
-        ClassName contractName = contractName(goal.goal.goal, builders);
-        ImmutableList<? extends AbstractBeanStep> steps = steps(contractName,
-            goal.goal.goal.goalType,
+        ImmutableList<? extends AbstractBeanStep> steps = steps(goal,
+            buildersContext,
             goal.parameters,
             ImmutableList.<TypeName>of(),
             beansParameterFactory);
         return BeanGoalContext.create(
-            goal.goal.goal, builders, toBuilder, builder, contractName, steps);
+            goal.goal.goal, buildersContext, toBuilder, builder, steps);
       }
     });
   }
 
-  private static <P extends AbstractParameter, R extends AbstractStep>
-  ImmutableList<R> steps(ClassName builderType,
-                         TypeName nextType,
+  private static <P extends AbstractParameter, S extends AbstractStep>
+  ImmutableList<S> steps(ValidGoal goal,
+                         BuildersContext buildersContext,
                          ImmutableList<P> parameters,
                          ImmutableList<TypeName> thrownTypes,
-                         ParameterFactory<P, R> parameterFactory) {
-    ImmutableList.Builder<R> builder = ImmutableList.builder();
+                         ParameterFactory<P, S> parameterFactory) {
+    ClassName contractName = contractName(goalName(goal), buildersContext);
+    TypeName nextType = goalType(goal);
+    ImmutableList.Builder<S> builder = ImmutableList.builder();
     for (P parameter : parameters.reverse()) {
-      ClassName thisType = builderType.nestedClass(upcase(parameterName.apply(parameter)));
+      ClassName thisType = contractName.nestedClass(upcase(parameterName.apply(parameter)));
       builder.add(parameterFactory.create(thisType, nextType, parameter, thrownTypes));
       nextType = thisType;
     }
@@ -121,10 +123,6 @@ final class GoalContextFactory {
     }
   };
 
-  private static ClassName contractName(AbstractGoal goal, BuildersContext config) {
-    return config.generatedType.nestedClass(upcase(goal.name + "Builder"));
-  }
-
   private static ImmutableList<TypeName> thrownTypes(ExecutableElement executableElement) {
     return FluentIterable
         .from(executableElement.getThrownTypes())
@@ -137,7 +135,4 @@ final class GoalContextFactory {
         .toList();
   }
 
-  private GoalContextFactory() {
-    throw new UnsupportedOperationException("no instances");
-  }
 }

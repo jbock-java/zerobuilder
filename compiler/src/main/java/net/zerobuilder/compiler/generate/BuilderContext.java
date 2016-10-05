@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
@@ -18,6 +19,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.always;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.StepContext.asStepInterface;
 
@@ -48,11 +50,15 @@ final class BuilderContext {
   }
 
   static TypeSpec defineContract(AbstractGoalContext goal) {
-    return classBuilder(goal.builderContractType)
+    return classBuilder(contractName(goal))
         .addTypes(stepInterfaces.apply(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
         .build();
+  }
+
+  private static ClassName contractName(AbstractGoalContext goal) {
+    return DtoGoalContext.contractName(goalName.apply(goal), goal.builders);
   }
 
   private BuilderContext() {

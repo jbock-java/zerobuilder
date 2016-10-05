@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoal;
 import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoal;
@@ -25,10 +24,9 @@ public final class DtoRegularGoalContext {
     RegularGoalContext(BuildersContext builders,
                        boolean toBuilder,
                        boolean builder,
-                       ClassName contractName,
                        ImmutableList<RegularStep> steps,
                        ImmutableList<TypeName> thrownTypes) {
-      super(builders, toBuilder, builder, contractName);
+      super(builders, toBuilder, builder);
       this.thrownTypes = thrownTypes;
       this.steps = steps;
     }
@@ -60,12 +58,12 @@ public final class DtoRegularGoalContext {
                                   BuildersContext builders,
                                   boolean toBuilder,
                                   boolean builder,
-                                  ClassName contractName,
                                   ImmutableList<RegularStep> steps,
                                   ImmutableList<TypeName> thrownTypes) {
-      super(builders, toBuilder, builder, contractName, steps, thrownTypes);
+      super(builders, toBuilder, builder, steps, thrownTypes);
       this.goal = goal;
     }
+
     @Override
     <R> R acceptRegular(RegularGoalContextCases<R> cases) {
       return cases.constructorGoal(this);
@@ -79,12 +77,12 @@ public final class DtoRegularGoalContext {
                              BuildersContext builders,
                              boolean toBuilder,
                              boolean builder,
-                             ClassName contractName,
                              ImmutableList<RegularStep> steps,
                              ImmutableList<TypeName> thrownTypes) {
-      super(builders, toBuilder, builder, contractName, steps, thrownTypes);
+      super(builders, toBuilder, builder, steps, thrownTypes);
       this.goal = goal;
     }
+
     @Override
     <R> R acceptRegular(RegularGoalContextCases<R> cases) {
       return cases.methodGoal(this);
