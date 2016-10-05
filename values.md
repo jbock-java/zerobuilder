@@ -155,5 +155,5 @@ and its companion unit test.
 ### Access level
 
 By default, the generated static methods `fooBuilder` and `fooToBuilder` are public.
-You can change this to default (package) visibility using `@Builders(access = AccessLevel.DEFAULT)`.
+You can change this to default (package) visibility using `@Builders(access = AccessLevel.PACKAGE)`.
 The setting can also be overridden on the goal level with `@Goal(builderAccess)` and `@Goal(toBuilderAccess)`.
