@@ -11,16 +11,15 @@ import static net.zerobuilder.AccessLevel.UNSPECIFIED;
 
 /**
  * <p>
- * Marks this method, constructor or class as a build goal.
+ * Marks a method, constructor or class as a build goal.
  * </p><p>
- * An annotated constructor or method may not be {@code private}.
- * </p><p>
- * If this annotation is present on a non-static method,
- * the generated {@code static someGoalBuilder} method will take a parameter of type {@code MyObject}.
+ * If this annotation appears on a method or constructor,
+ * the enclosing class <em>must</em> have the {@link Builders} annotation.
+ * The annotated elements may not be {@code private}.
  * </p><p>
  * If this annotation appears on a class, it marks the class as a bean goal.
- * In this case, the class must also have the {@link Builders} annotation.
- * It must have public accessor pairs and a public default constructor.
+ * In this case, the same class <em>must</em> also have the {@link Builders} annotation,
+ * and it has to comply with the the &quot;beans standard&quot;.
  * </p>
  *
  * @see Builders
@@ -75,6 +74,21 @@ public @interface Goal {
    */
   boolean nonNull() default false;
 
+  /**
+   * <p>A handle to override the default access level of the generated static builder method.</p>
+   * <p>If {@link #builder} {@code == false}, then this setting has no effect.</p>
+   *
+   * @return builder access level
+   * @see Builders#access()
+   */
   AccessLevel builderAccess() default UNSPECIFIED;
+
+  /**
+   * <p>A handle to override the default access level of the generated static toBuilder method.</p>
+   * <p>If {@link #toBuilder} is not set to {@code true}, then this setting has no effect.</p>
+   *
+   * @return toBuilder access level
+   * @see Builders#access()
+   */
   AccessLevel toBuilderAccess() default UNSPECIFIED;
 }
