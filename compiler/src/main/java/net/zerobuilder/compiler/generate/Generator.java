@@ -9,7 +9,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.Analyser.ValidGoals;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
@@ -39,11 +38,19 @@ public final class Generator {
 
   private final ImmutableList<AnnotationSpec> generatedAnnotations;
 
-  public Generator(ImmutableList<AnnotationSpec> generatedAnnotations) {
+  private Generator(ImmutableList<AnnotationSpec> generatedAnnotations) {
     this.generatedAnnotations = generatedAnnotations;
   }
 
-  public TypeSpec generate(ValidGoals goals) {
+  public static Generator create(List<AnnotationSpec> generatedAnnotations) {
+    return new Generator(ImmutableList.copyOf(generatedAnnotations));
+  }
+
+  public static Generator create() {
+    return new Generator(ImmutableList.<AnnotationSpec>of());
+  }
+
+  public TypeSpec generate(GeneratorInput goals) {
     Function<ValidGoal, IGoal> prepare = prepareGoal(goals.buildersContext.generatedType);
     ImmutableList.Builder<IGoal> builder = ImmutableList.builder();
     for (ValidGoal validGoal : goals.validGoals) {

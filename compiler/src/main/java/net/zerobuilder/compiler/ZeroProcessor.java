@@ -9,7 +9,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.Analyser;
-import net.zerobuilder.compiler.analyse.Analyser.ValidGoals;
+import net.zerobuilder.compiler.generate.GeneratorInput;
 import net.zerobuilder.compiler.analyse.ValidationException;
 import net.zerobuilder.compiler.generate.Generator;
 
@@ -58,11 +58,11 @@ public final class ZeroProcessor extends AbstractProcessor {
     }
     Elements elements = processingEnv.getElementUtils();
     Analyser analyser = new Analyser(elements);
-    Generator generator = new Generator(generatedAnnotations(elements));
+    Generator generator = Generator.create(generatedAnnotations(elements));
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builders.class));
     for (TypeElement annotatedType : types) {
       try {
-        ValidGoals goals = analyser.analyse(annotatedType);
+        GeneratorInput goals = analyser.analyse(annotatedType);
         TypeSpec typeSpec = generator.generate(goals);
         try {
           write(goals.buildersContext.generatedType, typeSpec);

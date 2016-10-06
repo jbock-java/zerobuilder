@@ -8,16 +8,15 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
-import net.zerobuilder.compiler.generate.DtoBuilders;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.GeneratorInput;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import java.util.List;
 
 import static com.google.auto.common.MoreElements.asExecutable;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
@@ -42,7 +41,7 @@ public final class Analyser {
     this.elements = elements;
   }
 
-  public ValidGoals analyse(TypeElement buildersAnnotatedClass) throws ValidationException {
+  public GeneratorInput analyse(TypeElement buildersAnnotatedClass) throws ValidationException {
     boolean recycle = buildersAnnotatedClass.getAnnotation(Builders.class).recycle();
     ClassName type = ClassName.get(buildersAnnotatedClass);
     ClassName generatedType = appendSuffix(type, "Builders");
@@ -56,7 +55,7 @@ public final class Analyser {
       ValidGoal validGoal = goal.accept(toBuilder ? validate : skip);
       validGoals.add(validGoal);
     }
-    return new ValidGoals(context, validGoals.build());
+    return GeneratorInput.create(context, validGoals.build());
   }
 
   /**
@@ -93,16 +92,4 @@ public final class Analyser {
     return goals;
   }
 
-  public static final class ValidGoals {
-    public final ImmutableList<? extends ValidGoal> validGoals;
-    public final DtoBuilders.BuildersContext buildersContext;
-
-    private ValidGoals(BuildersContext buildersContext, ImmutableList<? extends ValidGoal> validGoals) {
-      this.validGoals = validGoals;
-      this.buildersContext = buildersContext;
-    }
-    public static ValidGoals create(BuildersContext buildersContext, List<? extends ValidGoal> validGoals) {
-      return new ValidGoals(buildersContext, ImmutableList.copyOf(validGoals));
-    }
-  }
 }
