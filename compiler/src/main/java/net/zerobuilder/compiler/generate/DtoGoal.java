@@ -8,26 +8,59 @@ import net.zerobuilder.AccessLevel;
 
 import java.util.List;
 
+import static net.zerobuilder.AccessLevel.UNSPECIFIED;
+
 public final class DtoGoal {
 
   public static final class GoalOptions {
-    public final AccessLevel builderAccess;
-    public final AccessLevel toBuilderAccess;
-    public final boolean toBuilder;
-    public final boolean builder;
+    final AccessLevel builderAccess;
+    final AccessLevel toBuilderAccess;
+    final boolean toBuilder;
+    final boolean builder;
 
-
-    public GoalOptions(AccessLevel builderAccess, AccessLevel toBuilderAccess, boolean toBuilder, boolean builder) {
+    private GoalOptions(AccessLevel builderAccess, AccessLevel toBuilderAccess, boolean toBuilder, boolean builder) {
       this.builderAccess = builderAccess;
       this.toBuilderAccess = toBuilderAccess;
       this.toBuilder = toBuilder;
       this.builder = builder;
     }
+
+    public static Builder builder() {
+      return new Builder();
+    }
+
+    public static final class Builder {
+      private AccessLevel builderAccess = UNSPECIFIED;
+      private AccessLevel toBuilderAccess = UNSPECIFIED;
+      private boolean toBuilder = false;
+      private boolean builder = true;
+      private Builder() {
+      }
+      public Builder builderAccess(AccessLevel builderAccess) {
+        this.builderAccess = builderAccess;
+        return this;
+      }
+      public Builder toBuilderAccess(AccessLevel toBuilderAccess) {
+        this.toBuilderAccess = toBuilderAccess;
+        return this;
+      }
+      public Builder toBuilder(boolean toBuilder) {
+        this.toBuilder = toBuilder;
+        return this;
+      }
+      public Builder builder(boolean builder) {
+        this.builder = builder;
+        return this;
+      }
+      public GoalOptions build() {
+        return new GoalOptions(builderAccess, toBuilderAccess, toBuilder, builder);
+      }
+    }
   }
 
   public static abstract class AbstractGoalDetails {
     public final String name;
-    public final GoalOptions goalOptions;
+    final GoalOptions goalOptions;
     AbstractGoalDetails(String name, GoalOptions goalOptions) {
       this.name = name;
       this.goalOptions = goalOptions;
@@ -35,12 +68,12 @@ public final class DtoGoal {
     public abstract <R> R acceptAbstract(AbstractGoalCases<R> cases);
   }
 
-  public interface AbstractGoalCases<R> {
+  interface AbstractGoalCases<R> {
     R regular(RegularGoalDetails goal);
     R bean(BeanGoalDetails goal);
   }
 
-  public interface RegularGoalCases<R> {
+  interface RegularGoalCases<R> {
     R method(MethodGoalDetails goal);
     R constructor(ConstructorGoalDetails goal);
   }
@@ -110,12 +143,12 @@ public final class DtoGoal {
   }
 
   public static final class MethodGoalDetails extends RegularGoalDetails {
-    public final String methodName;
+    final String methodName;
 
     /**
      * {@code false} iff the method is {@code static}
      */
-    public final boolean instance;
+    final boolean instance;
 
     private MethodGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames, String methodName,
                               boolean instance, GoalOptions goalOptions) {

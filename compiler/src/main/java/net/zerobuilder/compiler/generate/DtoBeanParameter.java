@@ -87,7 +87,7 @@ public final class DtoBeanParameter {
 
     public static LoneGetter create(TypeName type, String getter, boolean nonNull) {
       ClassName collectionType = collectionType(type);
-      String name = downcase(collectionType.simpleName().toString());
+      String name = downcase(collectionType.simpleName());
       ParameterSpec iterationVar = parameterSpec(collectionType, name);
       return new LoneGetter(type, getter, nonNull, iterationVar);
     }

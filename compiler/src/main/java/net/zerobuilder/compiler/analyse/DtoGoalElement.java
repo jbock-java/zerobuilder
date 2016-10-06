@@ -30,7 +30,7 @@ final class DtoGoalElement {
     R beanGoal(BeanGoalElement goal);
   }
 
-  static <R> Function<AbstractGoalElement, R> asFunction(final GoalElementCases<R> cases) {
+  private static <R> Function<AbstractGoalElement, R> asFunction(final GoalElementCases<R> cases) {
     return new Function<AbstractGoalElement, R>() {
       @Override
       public R apply(AbstractGoalElement goal) {
@@ -162,9 +162,12 @@ final class DtoGoalElement {
   private static GoalOptions goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
     boolean toBuilder = goalAnnotation.toBuilder();
     boolean builder = goalAnnotation.builder();
-    return new GoalOptions(
-        accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess),
-        accessLevelOverride(goalAnnotation.toBuilderAccess(), defaultAccess), toBuilder, builder);
+    return GoalOptions.builder()
+        .builderAccess(accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess))
+        .toBuilderAccess(accessLevelOverride(goalAnnotation.toBuilderAccess(), defaultAccess))
+        .toBuilder(toBuilder)
+        .builder(builder)
+        .build();
   }
 
   private static TypeName goalType(ExecutableElement goal) {
