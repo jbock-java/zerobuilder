@@ -83,6 +83,7 @@ public final class DtoGeneratorOutput {
     /**
      * Defines the &quot;builders utility&quot;.
      *
+     * @param generatedAnnotations annotations to add to the generated type, if any
      * @return type definition
      */
     public TypeSpec typeSpec(List<AnnotationSpec> generatedAnnotations) {

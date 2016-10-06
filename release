@@ -1,0 +1,4 @@
+#!/bin/bash
+if [[ -z "$1" ]]; then echo arg: version; exit 1; fi
+(cd api; ./release $1)
+(cd compiler; ./release $1)

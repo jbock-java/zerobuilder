@@ -68,3 +68,7 @@
 
 * allow package-visible beans
 * add `builderAccess` and `toBuilderAccess` flags
+
+### 2016-10-06 zerobuilder 1.461 released
+
+* split off zerobuilder-api. api versions will be synchronous
