@@ -22,7 +22,7 @@ public final class DtoGoalDescription {
     R beanGoal(BeanGoalDescription goal);
   }
 
-  public static <R> Function<GoalDescription, R> asFunction(final GoalDescriptionCases<R> cases) {
+  static <R> Function<GoalDescription, R> asFunction(final GoalDescriptionCases<R> cases) {
     return new Function<GoalDescription, R>() {
       @Override
       public R apply(GoalDescription goal) {
@@ -82,7 +82,7 @@ public final class DtoGoalDescription {
     }
   }
 
-  static final Function<GoalDescription, AbstractGoalDetails> abstractGoal =
+  private static final Function<GoalDescription, AbstractGoalDetails> abstractGoal =
       asFunction(new GoalDescriptionCases<AbstractGoalDetails>() {
         @Override
         public AbstractGoalDetails regularGoal(RegularGoalDescription goal) {
@@ -94,11 +94,11 @@ public final class DtoGoalDescription {
         }
       });
 
-  public static String goalName(GoalDescription goal) {
+  static String goalName(GoalDescription goal) {
     return abstractGoal.apply(goal).name;
   }
 
-  public static TypeName goalType(GoalDescription goal) {
+  static TypeName goalType(GoalDescription goal) {
     return DtoGoal.goalType.apply(DtoGoalDescription.abstractGoal.apply(goal));
   }
 

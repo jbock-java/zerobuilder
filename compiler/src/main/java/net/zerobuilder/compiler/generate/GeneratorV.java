@@ -13,10 +13,10 @@ import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.Utilities.statement;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
@@ -87,7 +87,7 @@ final class GeneratorV {
 
   private static CodeBlock initializeUpdater(RegularGoalContext goal, ParameterSpec updater) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    DtoBuilders.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+    DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
     boolean recycle = buildersContext.recycle;
     if (recycle) {
       FieldSpec cache = buildersContext.cache;
@@ -117,7 +117,7 @@ final class GeneratorV {
       ParameterSpec builder = builderInstance(goal);
       method.addCode(initBuilder(goal, builder));
       if (isInstance.apply(goal)) {
-        DtoBuilders.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+        DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
         ParameterSpec parameter = parameterSpec(buildersContext.type,
             downcase(buildersContext.type.simpleName()));
         method.addParameter(parameter)
@@ -128,7 +128,7 @@ final class GeneratorV {
   };
 
   private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder) {
-    DtoBuilders.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+    DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
     return buildersContext.recycle
         ? statement("$T $N = $N.get().$N", builder.type, builder, buildersContext.cache, stepsField(goal))
         : statement("$T $N = new $T()", builder.type, builder, builder.type);

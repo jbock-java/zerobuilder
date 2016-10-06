@@ -11,7 +11,7 @@ import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterNa
 
 public final class DtoParameter {
 
-  public interface ParameterCases<R> {
+  interface ParameterCases<R> {
     R regularParameter(RegularParameter parameter);
     R beanParameter(AbstractBeanParameter parameter);
   }
@@ -25,21 +25,21 @@ public final class DtoParameter {
     };
   }
 
-  public abstract static class AbstractParameter {
+  abstract static class AbstractParameter {
 
     /**
      * <p>for beans, this is the type that's returned by the getter,
      * or equivalently the type of the setter parameter</p>
      * <p>for regular goals, it is the original parameter type</p>
      */
-    public final TypeName type;
+    final TypeName type;
 
     /**
      * true if null checks should be added
      */
-    public final boolean nonNull;
+    final boolean nonNull;
 
-    public AbstractParameter(TypeName type, boolean nonNull) {
+    AbstractParameter(TypeName type, boolean nonNull) {
       this.type = type;
       this.nonNull = nonNull;
     }
@@ -53,12 +53,12 @@ public final class DtoParameter {
      * <p>original parameter name</p>
      * <p>if {@link #getter} is absent, then there is also a field with this name</p>
      */
-    public final String name;
+    final String name;
 
     /**
      * projection method name; absent iff {@code toBuilder == false} or field access
      */
-    public final Optional<String> getter;
+    final Optional<String> getter;
 
     private RegularParameter(String name, TypeName type, Optional<String> getter, boolean nonNull) {
       super(type, nonNull);
@@ -78,7 +78,7 @@ public final class DtoParameter {
     }
   }
 
-  public static final Function<AbstractParameter, String> parameterName
+  static final Function<AbstractParameter, String> parameterName
       = asFunction(new ParameterCases<String>() {
     @Override
     public String regularParameter(RegularParameter parameter) {

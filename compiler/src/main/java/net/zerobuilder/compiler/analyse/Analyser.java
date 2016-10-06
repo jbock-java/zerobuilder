@@ -8,7 +8,7 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
-import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.GeneratorInput;
 
@@ -30,8 +30,8 @@ import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConfli
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.skip;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersClass;
-import static net.zerobuilder.compiler.generate.DtoBuilders.appendSuffix;
-import static net.zerobuilder.compiler.generate.DtoBuilders.createBuildersContext;
+import static net.zerobuilder.compiler.generate.DtoBuildersContext.appendSuffix;
+import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuildersContext;
 
 public final class Analyser {
 
@@ -91,5 +91,4 @@ public final class Analyser {
     }
     return goals;
   }
-
 }

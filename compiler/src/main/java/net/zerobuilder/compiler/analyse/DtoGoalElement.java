@@ -21,7 +21,7 @@ import javax.lang.model.util.Elements;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Utilities.downcase;
+import static net.zerobuilder.compiler.analyse.Utilities.downcase;
 
 final class DtoGoalElement {
 

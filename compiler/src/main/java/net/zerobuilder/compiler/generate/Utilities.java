@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
@@ -17,17 +18,18 @@ import java.util.Set;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isUpperCase;
 
-public final class Utilities {
+final class Utilities {
 
-  public static final class ClassNames {
+  static final class ClassNames {
 
-    public static final ClassName COLLECTION = ClassName.get(Collection.class);
-    public static final ClassName LIST = ClassName.get(List.class);
-    public static final ClassName SET = ClassName.get(Set.class);
-    public static final ClassName ITERABLE = ClassName.get(Iterable.class);
-    public static final ClassName THREAD_LOCAL = ClassName.get(ThreadLocal.class);
+    static final ClassName COLLECTION = ClassName.get(Collection.class);
+    static final ClassName LIST = ClassName.get(List.class);
+    static final ClassName SET = ClassName.get(Set.class);
+    static final ClassName ITERABLE = ClassName.get(Iterable.class);
+    static final ClassName THREAD_LOCAL = ClassName.get(ThreadLocal.class);
 
     private ClassNames() {
       throw new UnsupportedOperationException("no instances");
@@ -42,13 +44,13 @@ public final class Utilities {
       "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
       "float", "native", "super", "while");
 
-  public static final CodeBlock emptyCodeBlock = CodeBlock.of("");
+  static final CodeBlock emptyCodeBlock = CodeBlock.of("");
 
-  public static String upcase(String s) {
+  static String upcase(String s) {
     return LOWER_CAMEL.to(UPPER_CAMEL, s);
   }
 
-  public static String downcase(String s) {
+  static String downcase(String s) {
     if (s.length() >= 2 && isUpperCase(s.charAt(1))) {
       return s;
     }
@@ -59,41 +61,41 @@ public final class Utilities {
     return lowered;
   }
 
-  public static CodeBlock statement(String format, Object... args) {
+  static CodeBlock statement(String format, Object... args) {
     return CodeBlock.builder().addStatement(format, args).build();
   }
 
-  public static ParameterSpec parameterSpec(TypeName type, String name) {
+  static ParameterSpec parameterSpec(TypeName type, String name) {
     return ParameterSpec.builder(type, name).build();
   }
 
-  public static FieldSpec fieldSpec(TypeName type, String name, Modifier... modifiers) {
+  static FieldSpec fieldSpec(TypeName type, String name, Modifier... modifiers) {
     return FieldSpec.builder(type, name, modifiers).build();
   }
 
-  public static CodeBlock nullCheck(String varName, String message) {
+  static CodeBlock nullCheck(String varName, String message) {
     return CodeBlock.builder()
         .beginControlFlow("if ($N == null)", varName)
         .addStatement("throw new $T($S)", NullPointerException.class, message)
         .endControlFlow().build();
   }
 
-  public static CodeBlock nullCheck(ParameterSpec parameterSpec) {
+  static CodeBlock nullCheck(ParameterSpec parameterSpec) {
     return nullCheck(parameterSpec.name, parameterSpec.name);
   }
 
-  public static CodeBlock nullCheck(ParameterSpec parameterSpec, String message) {
+  static CodeBlock nullCheck(ParameterSpec parameterSpec, String message) {
     return nullCheck(parameterSpec.name, message);
   }
 
-  public static String distinctFrom(String string, String other) {
+  static String distinctFrom(String string, String other) {
     if (string.equals(other)) {
       return 'a' + upcase(string);
     }
     return string;
   }
 
-  public static Optional<ClassName> rawClassName(TypeName typeName) {
+  static Optional<ClassName> rawClassName(TypeName typeName) {
     if (typeName instanceof ClassName) {
       return Optional.of((ClassName) typeName);
     }
@@ -104,12 +106,16 @@ public final class Utilities {
     return Optional.absent();
   }
 
-  public static ImmutableList<TypeName> typeArguments(TypeName typeName) {
+  static ImmutableList<TypeName> typeArguments(TypeName typeName) {
     if (typeName instanceof ParameterizedTypeName) {
       ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
       return ImmutableList.copyOf(parameterized.typeArguments);
     }
     return ImmutableList.of();
+  }
+
+  static MethodSpec constructor(Modifier... modifiers) {
+    return constructorBuilder().addModifiers(modifiers).build();
   }
 
   private Utilities() {

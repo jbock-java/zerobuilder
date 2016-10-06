@@ -4,19 +4,19 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
-import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
+import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
-public final class DtoGoalContext {
+final class DtoGoalContext {
 
-  public interface IGoal {
+  interface IGoal {
 
     AbstractGoalContext withContext(BuildersContext context);
   }

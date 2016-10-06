@@ -17,8 +17,9 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Utilities.statement;
-import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.Utilities.constructor;
+import static net.zerobuilder.compiler.generate.Utilities.statement;
+import static net.zerobuilder.compiler.generate.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.BuilderContextV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
@@ -54,7 +55,7 @@ final class UpdaterContext {
         .addMethods(updateMethods.apply(goal))
         .addMethod(buildMethod(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
-        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
+        .addMethod(constructor(PRIVATE))
         .build();
   }
 

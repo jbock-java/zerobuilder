@@ -15,7 +15,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.abstractParameter;
 import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;

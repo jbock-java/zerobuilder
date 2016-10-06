@@ -5,16 +5,15 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.Utilities;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 
 import javax.lang.model.element.ExecutableElement;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.squareup.javapoet.ClassName.OBJECT;
-import static net.zerobuilder.compiler.Utilities.distinctFrom;
-import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.distinctFrom;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 
 public final class DtoBeanParameter {
 
@@ -115,7 +114,7 @@ public final class DtoBeanParameter {
     }
   }
 
-  public static final DtoBeanParameter.BeanParameterCases<String> beanParameterName
+  public static final BeanParameterCases<String> beanParameterName
       = new BeanParameterCases<String>() {
     @Override
     public String accessorPair(AccessorPair pair) {

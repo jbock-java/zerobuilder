@@ -24,9 +24,9 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
-import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpRegularParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
+import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 
 final class ProjectionValidatorV {
 

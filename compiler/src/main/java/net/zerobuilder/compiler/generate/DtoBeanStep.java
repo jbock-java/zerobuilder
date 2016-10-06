@@ -11,8 +11,8 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
 
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 final class DtoBeanStep {
@@ -53,7 +53,7 @@ final class DtoBeanStep {
       this.setter = setter;
     }
 
-    public static AccessorPairStep create(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
+    static AccessorPairStep create(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
                                           String setter) {
       return new AccessorPairStep(thisType, nextType, accessorPair, setter);
     }

@@ -12,11 +12,11 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Utilities.ClassNames.THREAD_LOCAL;
-import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.ClassNames.THREAD_LOCAL;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 
-public final class DtoBuilders {
+public final class DtoBuildersContext {
 
   public static final class BuildersContext {
 
@@ -59,12 +59,13 @@ public final class DtoBuilders {
   }
 
   /**
-   * Creates meta info that's needed for code generation.
+   * Create metadata for goal processing.
    *
-   * @param type          the type that contains the goals; for bean goals, this is just the bean type
-   * @param generatedType the type name to be generated
-   * @param recycle       true if builder instances should be cached
-   * @return a BuildersContext object
+   * @param type          type that contains the goal methods / constructors;
+   *                      for bean goals, this is just the bean type
+   * @param generatedType type name that should be generated
+   * @param recycle       if builder instances should be cached
+   * @return a BuildersContext
    */
   public static BuildersContext createBuildersContext(ClassName type, ClassName generatedType, boolean recycle) {
     FieldSpec field = fieldSpec(type, '_' + downcase(type.simpleName()), PRIVATE);
@@ -105,7 +106,7 @@ public final class DtoBuilders {
     return type.topLevelClassName().peerClass(simpleName);
   }
 
-  private DtoBuilders() {
+  private DtoBuildersContext() {
     throw new UnsupportedOperationException("no instances");
   }
 }

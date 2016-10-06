@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.FieldSpec;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
-import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
@@ -12,8 +12,8 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 import java.util.List;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 
 final class DtoBeanGoalContext {
 
@@ -33,8 +33,8 @@ final class DtoBeanGoalContext {
       this.field = field;
     }
 
-    public static BeanGoal create(BeanGoalDetails goal,
-                                  List<? extends AbstractBeanStep> steps) {
+    static BeanGoal create(BeanGoalDetails goal,
+                           List<? extends AbstractBeanStep> steps) {
       FieldSpec field = fieldSpec(goal.goalType,
           downcase(goal.goalType.simpleName()), PRIVATE);
       return new BeanGoal(goal, ImmutableList.copyOf(steps), field);
@@ -53,7 +53,7 @@ final class DtoBeanGoalContext {
     final BeanGoal goal;
 
     BeanGoalContext(BeanGoal goal,
-                           BuildersContext builders) {
+                    BuildersContext builders) {
       this.goal = goal;
       this.builders = builders;
     }

@@ -3,10 +3,10 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
@@ -35,7 +35,7 @@ public final class DtoRegularGoalContext {
     };
   }
 
-  public static final class ConstructorGoal implements IGoal {
+  static final class ConstructorGoal implements IGoal {
     final ConstructorGoalDetails details;
 
     /**
@@ -52,7 +52,7 @@ public final class DtoRegularGoalContext {
       this.details = details;
     }
 
-    public static ConstructorGoal create(ConstructorGoalDetails details,
+    static ConstructorGoal create(ConstructorGoalDetails details,
                                          List<RegularStep> steps,
                                          List<TypeName> thrownTypes) {
       return new ConstructorGoal(details,
@@ -89,7 +89,7 @@ public final class DtoRegularGoalContext {
     }
   }
 
-  public static final class MethodGoal implements IGoal {
+  static final class MethodGoal implements IGoal {
     final MethodGoalDetails details;
 
     /**
@@ -106,7 +106,7 @@ public final class DtoRegularGoalContext {
       this.details = details;
     }
 
-    public static MethodGoal create(MethodGoalDetails details,
+    static MethodGoal create(MethodGoalDetails details,
                                     List<RegularStep> steps,
                                     List<TypeName> thrownTypes) {
       return new MethodGoal(details,

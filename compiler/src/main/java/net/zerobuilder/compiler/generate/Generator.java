@@ -21,7 +21,6 @@ import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineContract;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
@@ -30,36 +29,27 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepareGoal;
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
 
 /**
  * Generates a class {@code FooBuilders} for each {@link net.zerobuilder.Builders} annotated class {@code Foo}.
  */
 public final class Generator {
 
-  private final ImmutableList<AnnotationSpec> generatedAnnotations;
-
-  private Generator(ImmutableList<AnnotationSpec> generatedAnnotations) {
-    this.generatedAnnotations = generatedAnnotations;
-  }
-
-  public static Generator create(List<AnnotationSpec> generatedAnnotations) {
-    return new Generator(ImmutableList.copyOf(generatedAnnotations));
-  }
-
-  public static Generator create() {
-    return new Generator(ImmutableList.<AnnotationSpec>of());
-  }
-
-  public TypeSpec generate(GeneratorInput goals) {
+  public static TypeSpec generate(GeneratorInput goals, ImmutableList<AnnotationSpec> generatedAnnotations) {
     Function<GoalDescription, IGoal> prepare = prepareGoal(goals.buildersContext.generatedType);
     ImmutableList.Builder<IGoal> builder = ImmutableList.builder();
     for (GoalDescription goalDescription : goals.validGoals) {
       builder.add(prepare.apply(goalDescription));
     }
-    return generate(new Goals(goals.buildersContext, builder.build()));
+    return generate(new Goals(goals.buildersContext, builder.build()), generatedAnnotations);
   }
 
-  private TypeSpec generate(Goals analysisResult) {
+  public static TypeSpec generate(GeneratorInput goals) {
+    return generate(goals, ImmutableList.<AnnotationSpec>of());
+  }
+
+  private static TypeSpec generate(Goals analysisResult, ImmutableList<AnnotationSpec> generatedAnnotations) {
     ImmutableList<AbstractGoalContext> goals = goals(analysisResult);
     return classBuilder(analysisResult.buildersContext.generatedType)
         .addFields(instanceFields(analysisResult, goals))
@@ -75,7 +65,7 @@ public final class Generator {
         .build();
   }
 
-  private ImmutableList<TypeSpec> nestedGoalTypes(ImmutableList<AbstractGoalContext> goals) {
+  private static ImmutableList<TypeSpec> nestedGoalTypes(ImmutableList<AbstractGoalContext> goals) {
     ImmutableList.Builder<TypeSpec> builder = ImmutableList.builder();
     for (AbstractGoalContext goal : goals) {
       AbstractGoalDetails abstractGoalDetails = DtoGoalContext.abstractGoal.apply(goal);
@@ -90,7 +80,7 @@ public final class Generator {
     return builder.build();
   }
 
-  private ImmutableList<MethodSpec> toBuilderMethods(ImmutableList<AbstractGoalContext> goals) {
+  private static ImmutableList<MethodSpec> toBuilderMethods(ImmutableList<AbstractGoalContext> goals) {
     return FluentIterable.from(goals)
         .filter(new Predicate<AbstractGoalContext>() {
           @Override
@@ -103,7 +93,7 @@ public final class Generator {
         .toList();
   }
 
-  private ImmutableList<MethodSpec> builderMethods(ImmutableList<AbstractGoalContext> goals) {
+  private static ImmutableList<MethodSpec> builderMethods(ImmutableList<AbstractGoalContext> goals) {
     return FluentIterable.from(goals)
         .filter(new Predicate<AbstractGoalContext>() {
           @Override
@@ -116,8 +106,8 @@ public final class Generator {
         .toList();
   }
 
-  private ImmutableList<FieldSpec> instanceFields(Goals analysisResult,
-                                                  ImmutableList<AbstractGoalContext> goals) {
+  private static ImmutableList<FieldSpec> instanceFields(Goals analysisResult,
+                                                         ImmutableList<AbstractGoalContext> goals) {
     if (!analysisResult.buildersContext.recycle) {
       return ImmutableList.of();
     }
@@ -146,7 +136,7 @@ public final class Generator {
   private static final Function<AbstractGoalContext, MethodSpec> goalToBuilder
       = goalCases(GeneratorV.goalToBuilder, GeneratorB.goalToBuilder);
 
-  private ImmutableList<AbstractGoalContext> goals(final Goals goals) {
+  private static ImmutableList<AbstractGoalContext> goals(final Goals goals) {
     return FluentIterable.from(goals.goals)
         .transform(new Function<IGoal, AbstractGoalContext>() {
           @Override
@@ -166,10 +156,10 @@ public final class Generator {
   }
 
   private static final class Goals {
-    private final DtoBuilders.BuildersContext buildersContext;
+    private final DtoBuildersContext.BuildersContext buildersContext;
     private final ImmutableList<? extends IGoal> goals;
 
-    private Goals(DtoBuilders.BuildersContext buildersContext,
+    private Goals(DtoBuildersContext.BuildersContext buildersContext,
                   List<? extends IGoal> goals) {
       this.buildersContext = buildersContext;
       this.goals = ImmutableList.copyOf(goals);

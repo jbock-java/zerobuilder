@@ -2,16 +2,18 @@ package net.zerobuilder.compiler;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.Analyser;
-import net.zerobuilder.compiler.generate.GeneratorInput;
 import net.zerobuilder.compiler.analyse.ValidationException;
 import net.zerobuilder.compiler.generate.Generator;
+import net.zerobuilder.compiler.generate.GeneratorInput;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
@@ -58,12 +60,12 @@ public final class ZeroProcessor extends AbstractProcessor {
     }
     Elements elements = processingEnv.getElementUtils();
     Analyser analyser = new Analyser(elements);
-    Generator generator = Generator.create(generatedAnnotations(elements));
+    ImmutableList<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builders.class));
     for (TypeElement annotatedType : types) {
       try {
         GeneratorInput goals = analyser.analyse(annotatedType);
-        TypeSpec typeSpec = generator.generate(goals);
+        TypeSpec typeSpec = Generator.generate(goals, generatedAnnotations);
         try {
           write(goals.buildersContext.generatedType, typeSpec);
         } catch (IOException e) {

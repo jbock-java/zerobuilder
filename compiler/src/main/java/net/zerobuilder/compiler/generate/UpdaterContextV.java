@@ -17,8 +17,8 @@ import static com.google.common.collect.ImmutableList.of;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Utilities.fieldSpec;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
@@ -30,7 +30,7 @@ final class UpdaterContextV {
       = new Function<RegularGoalContext, ImmutableList<FieldSpec>>() {
     @Override
     public ImmutableList<FieldSpec> apply(RegularGoalContext goal) {
-      DtoBuilders.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+      DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
       ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
       builder.addAll(isInstance.apply(goal)
           ? ImmutableList.of(buildersContext.field)

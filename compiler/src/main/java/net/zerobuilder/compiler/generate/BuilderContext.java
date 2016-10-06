@@ -21,6 +21,7 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.StepContext.asStepInterface;
+import static net.zerobuilder.compiler.generate.Utilities.constructor;
 
 final class BuilderContext {
 
@@ -41,7 +42,7 @@ final class BuilderContext {
     return classBuilder(builderImplType(goal))
         .addSuperinterfaces(stepInterfaceTypes(goal))
         .addFields(fields.apply(goal))
-        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
+        .addMethod(constructor(PRIVATE))
         .addMethods(steps.apply(goal))
         .addModifiers(STATIC, FINAL)
         .build();
@@ -51,12 +52,12 @@ final class BuilderContext {
     return classBuilder(contractName(goal))
         .addTypes(stepInterfaces(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
-        .addMethod(constructorBuilder().addModifiers(PRIVATE).build())
+        .addMethod(constructor(PRIVATE))
         .build();
   }
 
   private static ClassName contractName(AbstractGoalContext goal) {
-    DtoBuilders.BuildersContext buildersContext = DtoGoalContext.buildersContext.apply(goal);
+    DtoBuildersContext.BuildersContext buildersContext = DtoGoalContext.buildersContext.apply(goal);
     return DtoGoalContext.contractName(goalName.apply(goal), buildersContext.generatedType);
   }
 

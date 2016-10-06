@@ -14,27 +14,27 @@ import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.BeanGoalDescription;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.BeanGoalDescription;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 
-import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
-import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.asFunction;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalType;
+import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
+import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
-public final class GoalContextFactory {
+final class GoalContextFactory {
 
-  public static Function<GoalDescription, IGoal> prepareGoal(final ClassName generatedType) {
+  static Function<GoalDescription, IGoal> prepareGoal(final ClassName generatedType) {
     return DtoGoalDescription.asFunction(new GoalDescriptionCases<IGoal>() {
       @Override
       public IGoal regularGoal(RegularGoalDescription goal) {

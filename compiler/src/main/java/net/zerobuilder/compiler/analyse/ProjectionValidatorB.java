@@ -43,10 +43,10 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_PRIVATE_CLASS
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
-import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nonNull;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
+import static net.zerobuilder.compiler.analyse.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 final class ProjectionValidatorB {

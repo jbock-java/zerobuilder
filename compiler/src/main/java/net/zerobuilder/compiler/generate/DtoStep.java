@@ -8,24 +8,23 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.Utilities;
-import net.zerobuilder.compiler.Utilities.ClassNames;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
+import net.zerobuilder.compiler.generate.Utilities.ClassNames;
 
 import java.util.Collections;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
-import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.Utilities.ClassNames.SET;
-import static net.zerobuilder.compiler.Utilities.fieldSpec;
-import static net.zerobuilder.compiler.Utilities.rawClassName;
-import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
+import static net.zerobuilder.compiler.generate.Utilities.ClassNames.COLLECTION;
+import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.Utilities.ClassNames.SET;
+import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
+import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
-public final class DtoStep {
+final class DtoStep {
 
   private static final ImmutableSet<ClassName> LIST_HIERARCHY
       = ImmutableSet.of(ClassNames.LIST, COLLECTION, ITERABLE);
@@ -72,7 +71,7 @@ public final class DtoStep {
     }
   }
 
-  public static abstract class AbstractStep {
+  static abstract class AbstractStep {
     final ClassName thisType;
     final TypeName nextType;
     AbstractStep(ClassName thisType, TypeName nextType) {
@@ -110,7 +109,7 @@ public final class DtoStep {
     };
   }
 
-  public static final class RegularStep extends AbstractStep {
+  static final class RegularStep extends AbstractStep {
     final RegularParameter validParameter;
     final ImmutableList<TypeName> declaredExceptions;
 
@@ -121,8 +120,8 @@ public final class DtoStep {
       this.validParameter = validParameter;
     }
 
-    public static RegularStep create(ClassName thisType, TypeName nextType, RegularParameter parameter,
-                                     ImmutableList<TypeName> declaredExceptions) {
+    static RegularStep create(ClassName thisType, TypeName nextType, RegularParameter parameter,
+                              ImmutableList<TypeName> declaredExceptions) {
       return new RegularStep(thisType, nextType, parameter, declaredExceptions);
     }
 

@@ -14,10 +14,10 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Utilities.downcase;
-import static net.zerobuilder.compiler.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.Utilities.statement;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
