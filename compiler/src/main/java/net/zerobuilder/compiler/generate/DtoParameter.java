@@ -56,9 +56,10 @@ public final class DtoParameter {
     public final String name;
 
     /**
-     * method name; absent iff {@code toBuilder == false} or field access
+     * projection method name; absent iff {@code toBuilder == false} or field access
      */
     public final Optional<String> getter;
+
     private RegularParameter(String name, TypeName type, Optional<String> getter, boolean nonNull) {
       super(type, nonNull);
       this.getter = getter;

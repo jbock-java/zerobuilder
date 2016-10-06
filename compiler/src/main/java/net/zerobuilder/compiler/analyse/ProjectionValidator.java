@@ -11,7 +11,7 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -32,8 +32,8 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValu
 
 final class ProjectionValidator {
 
-  static final GoalElementCases<ValidGoal> validate = goalElementCases(validateValue, validateBean);
-  static final GoalElementCases<ValidGoal> skip = goalElementCases(validateValueSkipProjections, validateBean);
+  static final GoalElementCases<GoalDescription> validate = goalElementCases(validateValue, validateBean);
+  static final GoalElementCases<GoalDescription> skip = goalElementCases(validateValueSkipProjections, validateBean);
 
   static <E extends TmpValidParameter> ImmutableList<E> shuffledParameters(ImmutableList<E> parameters)
       throws ValidationException {

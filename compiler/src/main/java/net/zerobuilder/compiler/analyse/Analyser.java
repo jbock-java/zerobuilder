@@ -9,7 +9,7 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.GeneratorInput;
 
 import javax.lang.model.element.Element;
@@ -49,11 +49,11 @@ public final class Analyser {
     ImmutableList<AbstractGoalElement> goals = goals(buildersAnnotatedClass);
     checkNameConflict(goals);
     validateBuildersClass(buildersAnnotatedClass);
-    ImmutableList.Builder<ValidGoal> validGoals = ImmutableList.builder();
+    ImmutableList.Builder<GoalDescription> validGoals = ImmutableList.builder();
     for (AbstractGoalElement goal : goals) {
       boolean toBuilder = goal.goalAnnotation.toBuilder();
-      ValidGoal validGoal = goal.accept(toBuilder ? validate : skip);
-      validGoals.add(validGoal);
+      GoalDescription goalDescription = goal.accept(toBuilder ? validate : skip);
+      validGoals.add(goalDescription);
     }
     return GeneratorInput.create(context, validGoals.build());
   }

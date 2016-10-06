@@ -69,12 +69,12 @@ public final class DtoGoal {
      * <p>method goal: return type</p>
      * <p>constructor goal: type of enclosing class</p>
      */
-    public final TypeName goalType;
+    final TypeName goalType;
 
     /**
      * parameter names in original order
      */
-    public final ImmutableList<String> parameterNames;
+    final ImmutableList<String> parameterNames;
 
     RegularGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames,
                        GoalOptions goalOptions) {

@@ -15,8 +15,8 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidBeanGoal;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.BeanGoalDescription;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
 
 import javax.lang.model.element.ElementKind;
@@ -66,10 +66,10 @@ final class ProjectionValidatorB {
     }
   });
 
-  static final Function<BeanGoalElement, ValidGoal> validateBean
-      = new Function<BeanGoalElement, ValidGoal>() {
+  static final Function<BeanGoalElement, GoalDescription> validateBean
+      = new Function<BeanGoalElement, GoalDescription>() {
     @Override
-    public ValidGoal apply(BeanGoalElement goal) {
+    public GoalDescription apply(BeanGoalElement goal) {
       ImmutableMap<String, ExecutableElement> setters = setters(goal);
       ImmutableList.Builder<TmpAccessorPair> builder = ImmutableList.builder();
       for (ExecutableElement getter : getters(goal)) {
@@ -220,12 +220,12 @@ final class ProjectionValidatorB {
     return false;
   }
 
-  private static ValidGoal createResult(BeanGoalElement goal, ImmutableList<TmpAccessorPair> tmpAccessorPairs) {
+  private static GoalDescription createResult(BeanGoalElement goal, ImmutableList<TmpAccessorPair> tmpAccessorPairs) {
     ImmutableList<AbstractBeanParameter> validBeanParameters
         = FluentIterable.from(shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(tmpAccessorPairs)))
         .transform(toValidParameter)
         .toList();
-    return ValidBeanGoal.create(goal.details, validBeanParameters);
+    return BeanGoalDescription.create(goal.details, validBeanParameters);
   }
 
   static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {

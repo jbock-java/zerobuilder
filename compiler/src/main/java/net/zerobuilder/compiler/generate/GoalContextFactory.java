@@ -4,7 +4,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.Analyser;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
@@ -21,34 +20,34 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidBeanGoal;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoalCases;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidRegularGoal;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.BeanGoalDescription;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
-import static net.zerobuilder.compiler.generate.DtoValidGoal.asFunction;
-import static net.zerobuilder.compiler.generate.DtoValidGoal.goalName;
-import static net.zerobuilder.compiler.generate.DtoValidGoal.goalType;
+import static net.zerobuilder.compiler.generate.DtoGoalDescription.asFunction;
+import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalName;
+import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalType;
 
 public final class GoalContextFactory {
 
-  public static Function<ValidGoal, IGoal> prepareGoal(final ClassName generatedType) {
-    return DtoValidGoal.asFunction(new ValidGoalCases<IGoal>() {
+  public static Function<GoalDescription, IGoal> prepareGoal(final ClassName generatedType) {
+    return DtoGoalDescription.asFunction(new GoalDescriptionCases<IGoal>() {
       @Override
-      public IGoal regularGoal(ValidRegularGoal goal) {
+      public IGoal regularGoal(RegularGoalDescription goal) {
         return GoalContextFactory.regularGoal(generatedType, goal);
       }
       @Override
-      public IGoal beanGoal(ValidBeanGoal goal) {
+      public IGoal beanGoal(BeanGoalDescription goal) {
         return GoalContextFactory.beanGoal(goal, generatedType);
       }
     });
   }
 
-  private static IGoal beanGoal(ValidBeanGoal goal, ClassName generatedType) {
+  private static IGoal beanGoal(BeanGoalDescription goal, ClassName generatedType) {
     ImmutableList<? extends AbstractBeanStep> steps = steps(goal,
         generatedType,
         goal.parameters,
@@ -57,7 +56,7 @@ public final class GoalContextFactory {
   }
 
   private static IGoal regularGoal(ClassName generatedType,
-                                   final ValidRegularGoal validGoal) {
+                                   final RegularGoalDescription validGoal) {
     final ImmutableList<RegularStep> steps = steps(validGoal,
         generatedType,
         validGoal.parameters,
@@ -75,7 +74,7 @@ public final class GoalContextFactory {
   }
 
   private static <P extends AbstractParameter, S extends AbstractStep>
-  ImmutableList<S> steps(ValidGoal goal,
+  ImmutableList<S> steps(GoalDescription goal,
                          ClassName generatedType,
                          ImmutableList<P> parameters,
                          ParameterFactory<P, S> parameterFactory) {
@@ -122,14 +121,14 @@ public final class GoalContextFactory {
     }
   };
 
-  private static final Function<ValidGoal, ImmutableList<TypeName>> thrownTypes
-      = asFunction(new ValidGoalCases<ImmutableList<TypeName>>() {
+  private static final Function<GoalDescription, ImmutableList<TypeName>> thrownTypes
+      = asFunction(new GoalDescriptionCases<ImmutableList<TypeName>>() {
     @Override
-    public ImmutableList<TypeName> regularGoal(ValidRegularGoal goal) {
+    public ImmutableList<TypeName> regularGoal(RegularGoalDescription goal) {
       return goal.thrownTypes;
     }
     @Override
-    public ImmutableList<TypeName> beanGoal(ValidBeanGoal goal) {
+    public ImmutableList<TypeName> beanGoal(BeanGoalDescription goal) {
       return ImmutableList.of();
     }
   });

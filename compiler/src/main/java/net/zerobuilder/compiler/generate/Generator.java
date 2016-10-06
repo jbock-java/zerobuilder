@@ -12,7 +12,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 
 import java.util.List;
 
@@ -51,10 +51,10 @@ public final class Generator {
   }
 
   public TypeSpec generate(GeneratorInput goals) {
-    Function<ValidGoal, IGoal> prepare = prepareGoal(goals.buildersContext.generatedType);
+    Function<GoalDescription, IGoal> prepare = prepareGoal(goals.buildersContext.generatedType);
     ImmutableList.Builder<IGoal> builder = ImmutableList.builder();
-    for (ValidGoal validGoal : goals.validGoals) {
-      builder.add(prepare.apply(validGoal));
+    for (GoalDescription goalDescription : goals.validGoals) {
+      builder.add(prepare.apply(goalDescription));
     }
     return generate(new Goals(goals.buildersContext, builder.build()));
   }
