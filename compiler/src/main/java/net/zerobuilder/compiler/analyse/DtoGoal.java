@@ -33,18 +33,17 @@ public final class DtoGoal {
     public abstract <R> R acceptAbstract(AbstractGoalCases<R> cases);
   }
 
-  interface AbstractGoalCases<R> {
-    R regular(RegularGoal goal);
+  public interface AbstractGoalCases<R> {
+    R regular(AbstractRegularGoal goal);
     R bean(BeanGoalDetails goal);
   }
 
-
-  interface RegularGoalCases<R> {
+  public interface RegularGoalCases<R> {
     R method(MethodGoalDetails goal);
     R constructor(ConstructorGoalDetails goal);
   }
 
-  static <R> Function<AbstractGoal, R> asFunction(final AbstractGoalCases<R> cases) {
+  public static <R> Function<AbstractGoal, R> asFunction(final AbstractGoalCases<R> cases) {
     return new Function<AbstractGoal, R>() {
       @Override
       public R apply(AbstractGoal goal) {
@@ -53,7 +52,16 @@ public final class DtoGoal {
     };
   }
 
-  public static abstract class RegularGoal extends AbstractGoal {
+  public static <R> Function<AbstractRegularGoal, R> asFunction(final RegularGoalCases<R> cases) {
+    return new Function<AbstractRegularGoal, R>() {
+      @Override
+      public R apply(AbstractRegularGoal goal) {
+        return goal.accept(cases);
+      }
+    };
+  }
+
+  public static abstract class AbstractRegularGoal extends AbstractGoal {
 
     /**
      * <p>method goal: return type</p>
@@ -66,8 +74,8 @@ public final class DtoGoal {
      */
     public final ImmutableList<String> parameterNames;
 
-    RegularGoal(TypeName goalType, String name, ImmutableList<String> parameterNames,
-                GoalOptions goalOptions) {
+    AbstractRegularGoal(TypeName goalType, String name, ImmutableList<String> parameterNames,
+                        GoalOptions goalOptions) {
       super(name, goalOptions);
       this.goalType = goalType;
       this.parameterNames = parameterNames;
@@ -80,7 +88,7 @@ public final class DtoGoal {
     }
   }
 
-  public static final class ConstructorGoalDetails extends RegularGoal {
+  public static final class ConstructorGoalDetails extends AbstractRegularGoal {
 
     ConstructorGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames,
                            GoalOptions goalOptions) {
@@ -92,7 +100,7 @@ public final class DtoGoal {
     }
   }
 
-  public static final class MethodGoalDetails extends RegularGoal {
+  public static final class MethodGoalDetails extends AbstractRegularGoal {
     public final String methodName;
 
     /**
@@ -128,7 +136,7 @@ public final class DtoGoal {
   static final Function<AbstractGoal, TypeName> goalType
       = asFunction(new AbstractGoalCases<TypeName>() {
     @Override
-    public TypeName regular(RegularGoal goal) {
+    public TypeName regular(AbstractRegularGoal goal) {
       return goal.goalType;
     }
     @Override

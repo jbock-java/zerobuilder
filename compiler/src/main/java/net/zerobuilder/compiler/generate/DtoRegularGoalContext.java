@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoal;
+import net.zerobuilder.compiler.analyse.DtoGoal.AbstractRegularGoal;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
@@ -142,14 +142,14 @@ public final class DtoRegularGoalContext {
     }
   }
 
-  static final Function<RegularGoalContext, RegularGoal> regularGoal
-      = asFunction(new RegularGoalContextCases<RegularGoal>() {
+  static final Function<RegularGoalContext, AbstractRegularGoal> regularGoal
+      = asFunction(new RegularGoalContextCases<AbstractRegularGoal>() {
     @Override
-    public RegularGoal constructorGoal(ConstructorGoalContext goal) {
+    public AbstractRegularGoal constructorGoal(ConstructorGoalContext goal) {
       return goal.goal.details;
     }
     @Override
-    public RegularGoal methodGoal(MethodGoalContext goal) {
+    public AbstractRegularGoal methodGoal(MethodGoalContext goal) {
       return goal.goal.details;
     }
   });

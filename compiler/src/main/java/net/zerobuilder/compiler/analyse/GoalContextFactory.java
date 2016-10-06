@@ -9,6 +9,7 @@ import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoalDetails;
+import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.analyse.DtoGoal.RegularGoalCases;
 import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.analyse.DtoParameter.RegularParameter;
@@ -17,11 +18,14 @@ import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoalCases;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoal;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -36,37 +40,46 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
 
 public final class GoalContextFactory {
 
-  static IGoal context(final ValidGoal validGoal, final ClassName generatedType) throws ValidationException {
-    return validGoal.accept(new ValidGoalCases<IGoal>() {
+  public static Function<ValidGoal, IGoal> prepareGoal(final ClassName generatedType) {
+    return DtoValidGoal.asFunction(new ValidGoalCases<IGoal>() {
       @Override
       public IGoal regularGoal(ValidRegularGoal goal) {
-        final ImmutableList<TypeName> thrownTypes = thrownTypes(goal.goal.executableElement);
-        final ImmutableList<RegularStep> steps = steps(goal,
-            generatedType,
-            goal.parameters,
-            thrownTypes,
-            regularParameterFactory);
-        return goal.goal.goal.accept(new RegularGoalCases<IGoal>() {
-          @Override
-          public IGoal method(DtoGoal.MethodGoalDetails goal) {
-            return new DtoRegularGoalContext.MethodGoal(goal, steps, thrownTypes);
-          }
-          @Override
-          public IGoal constructor(ConstructorGoalDetails goal) {
-            return new DtoRegularGoalContext.ConstructorGoal(goal, steps, thrownTypes);
-          }
-        });
+        return GoalContextFactory.regularGoal(generatedType, goal);
       }
       @Override
       public IGoal beanGoal(ValidBeanGoal goal) {
-        ImmutableList<? extends AbstractBeanStep> steps = steps(goal,
-            generatedType,
-            goal.parameters,
-            ImmutableList.<TypeName>of(),
-            beansParameterFactory);
-        return DtoBeanGoalContext.BeanGoal.create(goal.goal.goal, steps);
+        return GoalContextFactory.beanGoal(goal, generatedType);
       }
     });
+  }
+
+  private static IGoal beanGoal(ValidBeanGoal goal, ClassName generatedType) {
+    ImmutableList<? extends AbstractBeanStep> steps = steps(goal,
+        generatedType,
+        goal.parameters,
+        ImmutableList.<TypeName>of(),
+        beansParameterFactory);
+    return DtoBeanGoalContext.BeanGoal.create(goal.goal.goal, steps);
+  }
+
+  private static IGoal regularGoal(ClassName generatedType,
+                                   ValidRegularGoal goal) {
+    final ImmutableList<TypeName> thrownTypes = thrownTypes(goal.goal.executableElement);
+    final ImmutableList<RegularStep> steps = steps(goal,
+        generatedType,
+        goal.parameters,
+        thrownTypes,
+        regularParameterFactory);
+    return DtoGoal.asFunction(new RegularGoalCases<IGoal>() {
+      @Override
+      public IGoal method(MethodGoalDetails goal) {
+        return MethodGoal.create(goal, steps, thrownTypes);
+      }
+      @Override
+      public IGoal constructor(ConstructorGoalDetails goal) {
+        return ConstructorGoal.create(goal, steps, thrownTypes);
+      }
+    }).apply(goal.goal.goal);
   }
 
   private static <P extends AbstractParameter, S extends AbstractStep>

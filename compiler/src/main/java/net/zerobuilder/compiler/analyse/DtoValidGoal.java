@@ -14,12 +14,12 @@ final class DtoValidGoal {
     abstract <R> R accept(ValidGoalCases<R> cases);
   }
 
-  interface ValidGoalCases<R> {
+  public interface ValidGoalCases<R> {
     R regularGoal(ValidRegularGoal goal);
     R beanGoal(ValidBeanGoal goal);
   }
 
-  private static <R> Function<ValidGoal, R> asFunction(final ValidGoalCases<R> cases) {
+  public static <R> Function<ValidGoal, R> asFunction(final ValidGoalCases<R> cases) {
     return new Function<ValidGoal, R>() {
       @Override
       public R apply(ValidGoal goal) {

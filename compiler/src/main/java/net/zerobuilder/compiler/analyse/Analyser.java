@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import net.zerobuilder.AccessLevel;
@@ -27,7 +28,7 @@ import static javax.tools.Diagnostic.Kind.WARNING;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.analyse.GoalContextFactory.context;
+import static net.zerobuilder.compiler.analyse.GoalContextFactory.prepareGoal;
 import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConflict;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.skip;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
@@ -50,11 +51,12 @@ public final class Analyser {
     ImmutableList.Builder<IGoal> builder = ImmutableList.builder();
     ImmutableList<AbstractGoalElement> goals = goals(buildersAnnotatedClass);
     checkNameConflict(goals);
+    validateBuildersClass(buildersAnnotatedClass);
+    Function<ValidGoal, IGoal> prepare = prepareGoal(context.generatedType);
     for (AbstractGoalElement goal : goals) {
-      validateBuildersClass(buildersAnnotatedClass);
       boolean toBuilder = goal.goalAnnotation.toBuilder();
       ValidGoal validGoal = goal.accept(toBuilder ? validate : skip);
-      builder.add(context(validGoal, context.generatedType));
+      builder.add(prepare.apply(validGoal));
     }
     return new Generator.Goals(context, builder.build());
   }

@@ -31,10 +31,10 @@ final class GeneratorV {
       new Function<RegularGoalContext, MethodSpec>() {
         @Override
         public MethodSpec apply(RegularGoalContext goal) {
-          DtoGoal.RegularGoal regularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
-          TypeName goalType = regularGoal.goalType;
+          DtoGoal.AbstractRegularGoal abstractRegularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
+          TypeName goalType = abstractRegularGoal.goalType;
           ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
-          String methodName = regularGoal.name + "ToBuilder";
+          String methodName = abstractRegularGoal.name + "ToBuilder";
           ParameterSpec updater = updaterInstance(goal);
           MethodSpec.Builder method = methodBuilder(methodName)
               .addParameter(parameter)
@@ -44,7 +44,7 @@ final class GeneratorV {
             method.addCode(copyField(parameter, updater, step));
           }
           method.addStatement("return $N", updater);
-          return method.addModifiers(regularGoal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
+          return method.addModifiers(abstractRegularGoal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
         }
       };
 
@@ -110,11 +110,11 @@ final class GeneratorV {
       = new Function<RegularGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(RegularGoalContext goal) {
-      DtoGoal.RegularGoal regularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
+      DtoGoal.AbstractRegularGoal abstractRegularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
       ImmutableList<RegularStep> steps = regularSteps.apply(goal);
       MethodSpec.Builder method = methodBuilder(DtoGoalContext.goalName.apply(goal) + "Builder")
           .returns(steps.get(0).thisType)
-          .addModifiers(regularGoal.goalOptions.builderAccess.modifiers(STATIC));
+          .addModifiers(abstractRegularGoal.goalOptions.builderAccess.modifiers(STATIC));
       ParameterSpec builder = builderInstance(goal);
       method.addCode(initBuilder(goal, builder));
       if (isInstance.apply(goal)) {
