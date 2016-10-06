@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.analyse;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
@@ -31,9 +32,12 @@ final class DtoValidGoal {
   static final class ValidRegularGoal extends ValidGoal {
     final RegularGoalElement goal;
     final ImmutableList<RegularParameter> parameters;
-    ValidRegularGoal(RegularGoalElement goal, ImmutableList<RegularParameter> parameters) {
+    private ValidRegularGoal(RegularGoalElement goal, ImmutableList<RegularParameter> parameters) {
       this.goal = goal;
       this.parameters = parameters;
+    }
+    static ValidRegularGoal create(RegularGoalElement goal, ImmutableList<RegularParameter> parameters) {
+      return new ValidRegularGoal(goal, parameters);
     }
     @Override
     final <R> R accept(ValidGoalCases<R> cases) {
@@ -43,10 +47,13 @@ final class DtoValidGoal {
 
   static final class ValidBeanGoal extends ValidGoal {
     final BeanGoalElement goal;
-    final ImmutableList<DtoBeanParameter.AbstractBeanParameter> parameters;
-    ValidBeanGoal(BeanGoalElement goal, ImmutableList<DtoBeanParameter.AbstractBeanParameter> parameters) {
+    final ImmutableList<AbstractBeanParameter> parameters;
+    private ValidBeanGoal(BeanGoalElement goal, ImmutableList<AbstractBeanParameter> parameters) {
       this.goal = goal;
       this.parameters = parameters;
+    }
+    static ValidBeanGoal create(BeanGoalElement goal, ImmutableList<AbstractBeanParameter> parameters) {
+      return new ValidBeanGoal(goal, parameters);
     }
     @Override
     <R> R accept(ValidGoalCases<R> cases) {

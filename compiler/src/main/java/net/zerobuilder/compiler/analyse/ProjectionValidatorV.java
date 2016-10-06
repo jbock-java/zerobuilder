@@ -108,7 +108,7 @@ final class ProjectionValidatorV {
 
   private static ValidGoal createResult(RegularGoalElement goal, ImmutableList<TmpRegularParameter> parameters) {
     ImmutableList<TmpRegularParameter> shuffled = shuffledParameters(parameters);
-    return new ValidRegularGoal(goal,
+    return ValidRegularGoal.create(goal,
         FluentIterable.from(shuffled).transform(TmpRegularParameter.toValidParameter).toList());
   }
 
