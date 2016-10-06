@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -11,7 +12,6 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
-import javax.lang.model.util.Elements;
 import java.util.List;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
@@ -19,7 +19,6 @@ import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.BuilderContext.defineContract;
@@ -34,10 +33,10 @@ import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
  */
 public final class Generator {
 
-  private final Elements elements;
+  private final ImmutableList<AnnotationSpec> generatedAnnotations;
 
-  public Generator(Elements elements) {
-    this.elements = elements;
+  public Generator(ImmutableList<AnnotationSpec> generatedAnnotations) {
+    this.generatedAnnotations = generatedAnnotations;
   }
 
   public TypeSpec generate(Goals analysisResult) {
@@ -50,7 +49,7 @@ public final class Generator {
             : ImmutableList.<FieldSpec>of())
         .addMethods(builderMethods(goals))
         .addMethods(toBuilderMethods(goals))
-        .addAnnotations(generatedAnnotations(elements))
+        .addAnnotations(generatedAnnotations)
         .addModifiers(PUBLIC, FINAL)
         .addTypes(nestedGoalTypes(goals))
         .build();

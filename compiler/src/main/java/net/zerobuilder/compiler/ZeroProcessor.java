@@ -19,6 +19,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
@@ -33,6 +34,7 @@ import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_NOT_IN_BUILD;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_WITHOUT_BUILDERS;
+import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 
 @AutoService(Processor.class)
 public final class ZeroProcessor extends AbstractProcessor {
@@ -53,8 +55,9 @@ public final class ZeroProcessor extends AbstractProcessor {
     if (goalNotInBuild.isPresent()) {
       return false;
     }
-    Analyser analyser = new Analyser(processingEnv.getElementUtils());
-    Generator generator = new Generator(processingEnv.getElementUtils());
+    Elements elements = processingEnv.getElementUtils();
+    Analyser analyser = new Analyser(elements);
+    Generator generator = new Generator(generatedAnnotations(elements));
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builders.class));
     for (TypeElement annotatedType : types) {
       try {
