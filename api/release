@@ -1,0 +1,6 @@
+#!/bin/bash
+if [[ -z "$1" ]]; then echo arg: version; exit 1; fi
+mvn versions:set -DnewVersion=$1 &>/dev/null
+mvn clean package -Psonatype-oss-release
+mv dependency-reduced-pom.xml target/zerobuilder-$1.pom
+mv pom.xml.versionsBackup pom.xml
