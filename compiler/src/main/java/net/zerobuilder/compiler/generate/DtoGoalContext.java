@@ -4,8 +4,8 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
-import net.zerobuilder.compiler.analyse.DtoGoal.AbstractRegularGoal;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
@@ -84,8 +84,8 @@ public final class DtoGoalContext {
       asFunction(new GoalCases<TypeName>() {
         @Override
         public TypeName regularGoal(RegularGoalContext goal) {
-          AbstractRegularGoal abstractRegularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
-          return abstractRegularGoal.goalType;
+          RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
+          return regularGoalDetails.goalType;
         }
         @Override
         public TypeName beanGoal(BeanGoalContext goal) {
@@ -97,8 +97,8 @@ public final class DtoGoalContext {
   static final Function<AbstractGoalContext, String> goalName = asFunction(new GoalCases<String>() {
     @Override
     public String regularGoal(RegularGoalContext goal) {
-      AbstractRegularGoal abstractRegularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
-      return abstractRegularGoal.name;
+      RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
+      return regularGoalDetails.name;
     }
     @Override
     public String beanGoal(BeanGoalContext goal) {
@@ -107,14 +107,14 @@ public final class DtoGoalContext {
   });
 
 
-  static final Function<AbstractGoalContext, AbstractGoal> abstractGoal
-      = asFunction(new GoalCases<AbstractGoal>() {
+  static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoal
+      = asFunction(new GoalCases<AbstractGoalDetails>() {
     @Override
-    public AbstractGoal regularGoal(RegularGoalContext goal) {
+    public AbstractGoalDetails regularGoal(RegularGoalContext goal) {
       return DtoRegularGoalContext.regularGoal.apply(goal);
     }
     @Override
-    public AbstractGoal beanGoal(BeanGoalContext goal) {
+    public AbstractGoalDetails beanGoal(BeanGoalContext goal) {
       return goal.goal.details;
     }
   });

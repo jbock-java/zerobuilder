@@ -8,13 +8,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
-import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
-import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidRegularGoal;
+import net.zerobuilder.compiler.generate.DtoParameter;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidRegularGoal;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpRegularParameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 import static com.google.auto.common.MoreTypes.asTypeElement;
@@ -23,6 +25,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
 import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpRegularParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 
 final class ProjectionValidatorV {
@@ -108,10 +111,25 @@ final class ProjectionValidatorV {
 
   private static ValidGoal createResult(RegularGoalElement goal, ImmutableList<TmpRegularParameter> parameters) {
     ImmutableList<TmpRegularParameter> shuffled = shuffledParameters(parameters);
-    return ValidRegularGoal.create(goal,
-        FluentIterable.from(shuffled).transform(TmpRegularParameter.toValidParameter).toList());
+    return create(goal, FluentIterable.from(shuffled).transform(toValidParameter).toList());
   }
 
+  private static ValidRegularGoal create(RegularGoalElement goal, ImmutableList<DtoParameter.RegularParameter> parameters) {
+    ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
+    return new ValidRegularGoal(goal.goal, thrownTypes, parameters);
+  }
+
+  private static ImmutableList<TypeName> thrownTypes(ExecutableElement executableElement) {
+    return FluentIterable
+        .from(executableElement.getThrownTypes())
+        .transform(new Function<TypeMirror, TypeName>() {
+          @Override
+          public TypeName apply(TypeMirror thrownType) {
+            return TypeName.get(thrownType);
+          }
+        })
+        .toList();
+  }
 
   private ProjectionValidatorV() {
     throw new UnsupportedOperationException("no instances");

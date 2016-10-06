@@ -11,11 +11,12 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
-import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidBeanGoal;
-import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidBeanGoal;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
 
 import javax.lang.model.element.ElementKind;
@@ -48,7 +49,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.Utilities.ClassNames.OBJECT;
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
+import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nonNull;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
@@ -224,7 +225,11 @@ final class ProjectionValidatorB {
         = FluentIterable.from(shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(tmpAccessorPairs)))
         .transform(toValidParameter)
         .toList();
-    return ValidBeanGoal.create(goal, validBeanParameters);
+    return create(goal, validBeanParameters);
+  }
+
+  private static ValidBeanGoal create(BeanGoalElement goal, ImmutableList<AbstractBeanParameter> parameters) {
+    return new ValidBeanGoal(goal.goal, parameters);
   }
 
   static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {

@@ -6,12 +6,12 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.analyse.DtoParameter.RegularParameter;
-import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;

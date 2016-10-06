@@ -3,9 +3,9 @@ package net.zerobuilder.compiler.generate;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoalDetails;
-import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.analyse.DtoGoal.AbstractRegularGoal;
+import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
@@ -142,14 +142,14 @@ public final class DtoRegularGoalContext {
     }
   }
 
-  static final Function<RegularGoalContext, AbstractRegularGoal> regularGoal
-      = asFunction(new RegularGoalContextCases<AbstractRegularGoal>() {
+  static final Function<RegularGoalContext, RegularGoalDetails> regularGoal
+      = asFunction(new RegularGoalContextCases<RegularGoalDetails>() {
     @Override
-    public AbstractRegularGoal constructorGoal(ConstructorGoalContext goal) {
+    public RegularGoalDetails constructorGoal(ConstructorGoalContext goal) {
       return goal.goal.details;
     }
     @Override
-    public AbstractRegularGoal methodGoal(MethodGoalContext goal) {
+    public RegularGoalDetails methodGoal(MethodGoalContext goal) {
       return goal.goal.details;
     }
   });

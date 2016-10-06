@@ -2,7 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.FieldSpec;
-import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;

@@ -5,15 +5,15 @@ import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.AccessorPair;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.LoneGetter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
 
 import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
+import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 public final class DtoBeanStep {
 

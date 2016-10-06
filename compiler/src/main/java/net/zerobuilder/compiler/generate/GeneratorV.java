@@ -8,7 +8,6 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -31,10 +30,10 @@ final class GeneratorV {
       new Function<RegularGoalContext, MethodSpec>() {
         @Override
         public MethodSpec apply(RegularGoalContext goal) {
-          DtoGoal.AbstractRegularGoal abstractRegularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
-          TypeName goalType = abstractRegularGoal.goalType;
+          DtoGoal.RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
+          TypeName goalType = regularGoalDetails.goalType;
           ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
-          String methodName = abstractRegularGoal.name + "ToBuilder";
+          String methodName = regularGoalDetails.name + "ToBuilder";
           ParameterSpec updater = updaterInstance(goal);
           MethodSpec.Builder method = methodBuilder(methodName)
               .addParameter(parameter)
@@ -44,7 +43,7 @@ final class GeneratorV {
             method.addCode(copyField(parameter, updater, step));
           }
           method.addStatement("return $N", updater);
-          return method.addModifiers(abstractRegularGoal.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
+          return method.addModifiers(regularGoalDetails.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
         }
       };
 
@@ -110,11 +109,11 @@ final class GeneratorV {
       = new Function<RegularGoalContext, MethodSpec>() {
     @Override
     public MethodSpec apply(RegularGoalContext goal) {
-      DtoGoal.AbstractRegularGoal abstractRegularGoal = DtoRegularGoalContext.regularGoal.apply(goal);
+      DtoGoal.RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
       ImmutableList<RegularStep> steps = regularSteps.apply(goal);
       MethodSpec.Builder method = methodBuilder(DtoGoalContext.goalName.apply(goal) + "Builder")
           .returns(steps.get(0).thisType)
-          .addModifiers(abstractRegularGoal.goalOptions.builderAccess.modifiers(STATIC));
+          .addModifiers(regularGoalDetails.goalOptions.builderAccess.modifiers(STATIC));
       ParameterSpec builder = builderInstance(goal);
       method.addCode(initBuilder(goal, builder));
       if (isInstance.apply(goal)) {

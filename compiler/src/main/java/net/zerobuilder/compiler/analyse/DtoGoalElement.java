@@ -6,11 +6,11 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.analyse.DtoGoal.BeanGoalDetails;
-import net.zerobuilder.compiler.analyse.DtoGoal.ConstructorGoalDetails;
-import net.zerobuilder.compiler.analyse.DtoGoal.GoalOptions;
-import net.zerobuilder.compiler.analyse.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.analyse.DtoGoal.AbstractRegularGoal;
+import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
+import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -76,10 +76,10 @@ final class DtoGoalElement {
   });
 
   static final class RegularGoalElement extends AbstractGoalElement {
-    final AbstractRegularGoal goal;
+    final RegularGoalDetails goal;
     final ExecutableElement executableElement;
 
-    private RegularGoalElement(ExecutableElement element, AbstractRegularGoal goal, Elements elements) {
+    private RegularGoalElement(ExecutableElement element, RegularGoalDetails goal, Elements elements) {
       super(element.getAnnotation(Goal.class), elements);
       this.goal = goal;
       this.executableElement = element;
@@ -93,7 +93,7 @@ final class DtoGoalElement {
       String methodName = element.getSimpleName().toString();
       boolean instance = !element.getModifiers().contains(STATIC);
       ImmutableList<String> parameterNames = parameterNames(element);
-      AbstractRegularGoal goal = element.getKind() == CONSTRUCTOR
+      RegularGoalDetails goal = element.getKind() == CONSTRUCTOR
           ? new ConstructorGoalDetails(goalType, name, parameterNames, goalOptions)
           : new MethodGoalDetails(goalType, name, parameterNames, methodName, instance, goalOptions);
       return new RegularGoalElement(element, goal, elements);

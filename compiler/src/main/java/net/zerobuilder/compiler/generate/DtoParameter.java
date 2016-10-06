@@ -1,23 +1,22 @@
-package net.zerobuilder.compiler.analyse;
+package net.zerobuilder.compiler.generate;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 
 import javax.lang.model.element.VariableElement;
 
-import static net.zerobuilder.compiler.analyse.DtoBeanParameter.beanParameterName;
+import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 public final class DtoParameter {
 
-
-  interface ParameterCases<R> {
+  public interface ParameterCases<R> {
     R regularParameter(RegularParameter parameter);
     R beanParameter(AbstractBeanParameter parameter);
   }
 
-  static <R> Function<AbstractParameter, R> asFunction(final ParameterCases<R> cases) {
+  public static <R> Function<AbstractParameter, R> asFunction(final ParameterCases<R> cases) {
     return new Function<AbstractParameter, R>() {
       @Override
       public R apply(AbstractParameter parameter) {
@@ -40,7 +39,7 @@ public final class DtoParameter {
      */
     public final boolean nonNull;
 
-    AbstractParameter(TypeName type, boolean nonNull) {
+    public AbstractParameter(TypeName type, boolean nonNull) {
       this.type = type;
       this.nonNull = nonNull;
     }
@@ -66,7 +65,7 @@ public final class DtoParameter {
       this.name = name;
     }
 
-    static RegularParameter create(VariableElement parameter, Optional<String> getter, boolean nonNull) {
+    public static RegularParameter create(VariableElement parameter, Optional<String> getter, boolean nonNull) {
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
       return new RegularParameter(name, type, getter, nonNull);

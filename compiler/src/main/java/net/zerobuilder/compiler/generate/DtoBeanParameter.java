@@ -1,9 +1,9 @@
-package net.zerobuilder.compiler.analyse;
+package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
+import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -35,7 +35,7 @@ public final class DtoBeanParameter {
     }
   }
 
-  interface BeanParameterCases<R> {
+  public interface BeanParameterCases<R> {
     R accessorPair(AccessorPair pair);
     R loneGetter(LoneGetter getter);
   }
@@ -45,7 +45,7 @@ public final class DtoBeanParameter {
     private AccessorPair(TypeName type, String getter, boolean nonNull) {
       super(type, getter, nonNull);
     }
-    static AccessorPair create(TypeName type, ExecutableElement getter, boolean nonNull) {
+    public static AccessorPair create(TypeName type, ExecutableElement getter, boolean nonNull) {
       return new AccessorPair(type, getter.getSimpleName().toString(), nonNull);
     }
     @Override
@@ -88,7 +88,7 @@ public final class DtoBeanParameter {
     }
   }
 
-  static final class LoneGetterBuilder {
+  public static final class LoneGetterBuilder {
     private final ParameterSpec iterationVar;
     LoneGetterBuilder(ParameterSpec iterationVar) {
       this.iterationVar = iterationVar;
@@ -98,14 +98,14 @@ public final class DtoBeanParameter {
     }
   }
 
-  static LoneGetterBuilder builder(TypeMirror type) {
+  public static LoneGetterBuilder builder(TypeMirror type) {
     TypeName typeName = TypeName.get(type);
     String name = downcase(ClassName.get(asTypeElement(type)).simpleName().toString());
     ParameterSpec iterationVar = parameterSpec(typeName, name);
     return new LoneGetterBuilder(iterationVar);
   }
 
-  static LoneGetterBuilder builder() {
+  public static LoneGetterBuilder builder() {
     return new LoneGetterBuilder(parameterSpec(OBJECT, "object"));
   }
 

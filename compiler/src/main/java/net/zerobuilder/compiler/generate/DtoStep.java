@@ -10,8 +10,8 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.Utilities.ClassNames;
-import net.zerobuilder.compiler.analyse.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.analyse.DtoParameter.RegularParameter;
+import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
+import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 
 import java.util.Collections;
