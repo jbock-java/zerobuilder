@@ -4,33 +4,34 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.analyse.Analyser;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
-import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidBeanGoal;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoalCases;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidRegularGoal;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
+import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
+import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidBeanGoal;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoalCases;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidRegularGoal;
 
 import static net.zerobuilder.compiler.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoValidGoal.asFunction;
 import static net.zerobuilder.compiler.generate.DtoValidGoal.goalName;
 import static net.zerobuilder.compiler.generate.DtoValidGoal.goalType;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
 
 public final class GoalContextFactory {
 

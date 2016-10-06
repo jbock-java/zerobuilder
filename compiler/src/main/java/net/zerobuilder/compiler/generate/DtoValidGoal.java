@@ -9,6 +9,8 @@ import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 
+import java.util.List;
+
 public final class DtoValidGoal {
 
   public interface ValidGoal {
@@ -30,15 +32,26 @@ public final class DtoValidGoal {
   }
 
   public static final class ValidRegularGoal implements ValidGoal {
-    public final RegularGoalDetails details;
-    public final ImmutableList<TypeName> thrownTypes;
-    public final ImmutableList<RegularParameter> parameters;
+    final RegularGoalDetails details;
+    final ImmutableList<TypeName> thrownTypes;
+    final ImmutableList<RegularParameter> parameters;
 
-    public ValidRegularGoal(RegularGoalDetails details, ImmutableList<TypeName> thrownTypes, ImmutableList<RegularParameter> parameters) {
+    private ValidRegularGoal(RegularGoalDetails details,
+                             ImmutableList<TypeName> thrownTypes,
+                             ImmutableList<RegularParameter> parameters) {
       this.details = details;
       this.thrownTypes = thrownTypes;
       this.parameters = parameters;
     }
+
+    public static ValidRegularGoal create(RegularGoalDetails details,
+                                          List<TypeName> thrownTypes,
+                                          List<RegularParameter> parameters) {
+      return new ValidRegularGoal(details,
+          ImmutableList.copyOf(thrownTypes),
+          ImmutableList.copyOf(parameters));
+    }
+
     @Override
     public <R> R accept(ValidGoalCases<R> cases) {
       return cases.regularGoal(this);
@@ -46,12 +59,16 @@ public final class DtoValidGoal {
   }
 
   public static final class ValidBeanGoal implements ValidGoal {
-    public final BeanGoalDetails details;
-    public final ImmutableList<AbstractBeanParameter> parameters;
+    final BeanGoalDetails details;
+    final ImmutableList<AbstractBeanParameter> parameters;
 
-    public ValidBeanGoal(BeanGoalDetails details, ImmutableList<AbstractBeanParameter> parameters) {
+    private ValidBeanGoal(BeanGoalDetails details, ImmutableList<AbstractBeanParameter> parameters) {
       this.details = details;
       this.parameters = parameters;
+    }
+
+    public static ValidBeanGoal create(BeanGoalDetails details, List<AbstractBeanParameter> parameters) {
+      return new ValidBeanGoal(details, ImmutableList.copyOf(parameters));
     }
     @Override
     public <R> R accept(ValidGoalCases<R> cases) {

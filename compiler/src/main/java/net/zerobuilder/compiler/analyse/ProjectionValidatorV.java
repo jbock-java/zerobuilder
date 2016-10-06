@@ -8,10 +8,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpRegularParameter;
 import net.zerobuilder.compiler.generate.DtoParameter;
 import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
 import net.zerobuilder.compiler.generate.DtoValidGoal.ValidRegularGoal;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpRegularParameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -65,35 +65,35 @@ final class ProjectionValidatorV {
   };
   private static ImmutableMap<String, VariableElement> fields(TypeElement type) {
     return FluentIterable.from(fieldsIn(type.getEnclosedElements()))
-    .filter(new Predicate<VariableElement>() {
-      @Override
-      public boolean apply(VariableElement field) {
-        return !field.getModifiers().contains(PRIVATE) && !field.getModifiers().contains(STATIC);
-      }
-    })
-    .uniqueIndex(new Function<VariableElement, String>() {
-      @Override
-      public String apply(VariableElement field) {
-        return field.getSimpleName().toString();
-      }
-    });
+        .filter(new Predicate<VariableElement>() {
+          @Override
+          public boolean apply(VariableElement field) {
+            return !field.getModifiers().contains(PRIVATE) && !field.getModifiers().contains(STATIC);
+          }
+        })
+        .uniqueIndex(new Function<VariableElement, String>() {
+          @Override
+          public String apply(VariableElement field) {
+            return field.getSimpleName().toString();
+          }
+        });
   }
   private static ImmutableMap<String, ExecutableElement> methods(RegularGoalElement goal, TypeElement type) {
     return FluentIterable.from(getLocalAndInheritedMethods(type, goal.elements))
-            .filter(new Predicate<ExecutableElement>() {
-              @Override
-              public boolean apply(ExecutableElement method) {
-                return method.getParameters().isEmpty()
-                    && !method.getModifiers().contains(PRIVATE)
-                    && !method.getModifiers().contains(STATIC);
-              }
-            })
-            .uniqueIndex(new Function<ExecutableElement, String>() {
-              @Override
-              public String apply(ExecutableElement method) {
-                return method.getSimpleName().toString();
-              }
-            });
+        .filter(new Predicate<ExecutableElement>() {
+          @Override
+          public boolean apply(ExecutableElement method) {
+            return method.getParameters().isEmpty()
+                && !method.getModifiers().contains(PRIVATE)
+                && !method.getModifiers().contains(STATIC);
+          }
+        })
+        .uniqueIndex(new Function<ExecutableElement, String>() {
+          @Override
+          public String apply(ExecutableElement method) {
+            return method.getSimpleName().toString();
+          }
+        });
   }
 
   static final Function<RegularGoalElement, ValidGoal> validateValueSkipProjections
@@ -116,7 +116,7 @@ final class ProjectionValidatorV {
 
   private static ValidRegularGoal create(RegularGoalElement goal, ImmutableList<DtoParameter.RegularParameter> parameters) {
     ImmutableList<TypeName> thrownTypes = thrownTypes(goal.executableElement);
-    return new ValidRegularGoal(goal.goal, thrownTypes, parameters);
+    return ValidRegularGoal.create(goal.details, thrownTypes, parameters);
   }
 
   private static ImmutableList<TypeName> thrownTypes(ExecutableElement executableElement) {

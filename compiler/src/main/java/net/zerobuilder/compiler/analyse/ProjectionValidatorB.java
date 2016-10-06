@@ -225,11 +225,7 @@ final class ProjectionValidatorB {
         = FluentIterable.from(shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(tmpAccessorPairs)))
         .transform(toValidParameter)
         .toList();
-    return create(goal, validBeanParameters);
-  }
-
-  private static ValidBeanGoal create(BeanGoalElement goal, ImmutableList<AbstractBeanParameter> parameters) {
-    return new ValidBeanGoal(goal.goal, parameters);
+    return ValidBeanGoal.create(goal.details, validBeanParameters);
   }
 
   static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {

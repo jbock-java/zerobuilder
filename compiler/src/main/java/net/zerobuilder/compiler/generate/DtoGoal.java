@@ -6,6 +6,8 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 
+import java.util.List;
+
 public final class DtoGoal {
 
   public static final class GoalOptions {
@@ -80,6 +82,7 @@ public final class DtoGoal {
       this.goalType = goalType;
       this.parameterNames = parameterNames;
     }
+
     abstract <R> R accept(RegularGoalCases<R> cases);
 
     @Override
@@ -90,10 +93,16 @@ public final class DtoGoal {
 
   public static final class ConstructorGoalDetails extends RegularGoalDetails {
 
-    public ConstructorGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames,
-                           GoalOptions goalOptions) {
+    private ConstructorGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames,
+                                   GoalOptions goalOptions) {
       super(goalType, name, parameterNames, goalOptions);
     }
+
+    public static ConstructorGoalDetails create(TypeName goalType, String name, List<String> parameterNames,
+                                                GoalOptions goalOptions) {
+      return new ConstructorGoalDetails(goalType, name, ImmutableList.copyOf(parameterNames), goalOptions);
+    }
+
     @Override
     <R> R accept(RegularGoalCases<R> cases) {
       return cases.constructor(this);
@@ -104,16 +113,22 @@ public final class DtoGoal {
     public final String methodName;
 
     /**
-     * false iff the method is static
+     * {@code false} iff the method is {@code static}
      */
     public final boolean instance;
 
-    public MethodGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames, String methodName,
-                      boolean instance, GoalOptions goalOptions) {
+    private MethodGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames, String methodName,
+                              boolean instance, GoalOptions goalOptions) {
       super(goalType, name, parameterNames, goalOptions);
       this.methodName = methodName;
       this.instance = instance;
     }
+
+    public static MethodGoalDetails create(TypeName goalType, String name, List<String> parameterNames, String methodName,
+                                           boolean instance, GoalOptions goalOptions) {
+      return new MethodGoalDetails(goalType, name, ImmutableList.copyOf(parameterNames), methodName, instance, goalOptions);
+    }
+
     @Override
     <R> R accept(RegularGoalCases<R> cases) {
       return cases.method(this);

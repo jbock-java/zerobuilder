@@ -67,21 +67,21 @@ final class DtoGoalElement {
   static final Function<AbstractGoalElement, String> goalName = asFunction(new GoalElementCases<String>() {
     @Override
     public String regularGoal(RegularGoalElement goal) {
-      return goal.goal.name;
+      return goal.details.name;
     }
     @Override
     public String beanGoal(BeanGoalElement goal) {
-      return goal.goal.name;
+      return goal.details.name;
     }
   });
 
   static final class RegularGoalElement extends AbstractGoalElement {
-    final RegularGoalDetails goal;
+    final RegularGoalDetails details;
     final ExecutableElement executableElement;
 
-    private RegularGoalElement(ExecutableElement element, RegularGoalDetails goal, Elements elements) {
+    private RegularGoalElement(ExecutableElement element, RegularGoalDetails details, Elements elements) {
       super(element.getAnnotation(Goal.class), elements);
-      this.goal = goal;
+      this.details = details;
       this.executableElement = element;
     }
 
@@ -94,8 +94,8 @@ final class DtoGoalElement {
       boolean instance = !element.getModifiers().contains(STATIC);
       ImmutableList<String> parameterNames = parameterNames(element);
       RegularGoalDetails goal = element.getKind() == CONSTRUCTOR
-          ? new ConstructorGoalDetails(goalType, name, parameterNames, goalOptions)
-          : new MethodGoalDetails(goalType, name, parameterNames, methodName, instance, goalOptions);
+          ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOptions)
+          : MethodGoalDetails.create(goalType, name, parameterNames, methodName, instance, goalOptions);
       return new RegularGoalElement(element, goal, elements);
     }
 
@@ -113,12 +113,12 @@ final class DtoGoalElement {
   }
 
   static final class BeanGoalElement extends AbstractGoalElement {
-    final BeanGoalDetails goal;
+    final BeanGoalDetails details;
     final TypeElement beanType;
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType, Elements elements,
                             Goal goalAnnotation, GoalOptions goalOptions) {
       super(goalAnnotation, elements);
-      this.goal = new BeanGoalDetails(goalType, name, goalOptions);
+      this.details = new BeanGoalDetails(goalType, name, goalOptions);
       this.beanType = beanType;
     }
     static BeanGoalElement create(TypeElement beanType, Elements elements, AccessLevel defaultAccess) {

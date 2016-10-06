@@ -9,8 +9,11 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.analyse.Analyser.ValidGoals;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
 
 import java.util.List;
 
@@ -25,6 +28,7 @@ import static net.zerobuilder.compiler.generate.BuilderContext.defineContract;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
+import static net.zerobuilder.compiler.generate.GoalContextFactory.prepareGoal;
 import static net.zerobuilder.compiler.generate.UpdaterContext.defineUpdater;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
@@ -39,7 +43,16 @@ public final class Generator {
     this.generatedAnnotations = generatedAnnotations;
   }
 
-  public TypeSpec generate(Goals analysisResult) {
+  public TypeSpec generate(ValidGoals goals) {
+    Function<ValidGoal, IGoal> prepare = prepareGoal(goals.buildersContext.generatedType);
+    ImmutableList.Builder<IGoal> builder = ImmutableList.builder();
+    for (ValidGoal validGoal : goals.validGoals) {
+      builder.add(prepare.apply(validGoal));
+    }
+    return generate(new Goals(goals.buildersContext, builder.build()));
+  }
+
+  private TypeSpec generate(Goals analysisResult) {
     ImmutableList<AbstractGoalContext> goals = goals(analysisResult);
     return classBuilder(analysisResult.buildersContext.generatedType)
         .addFields(instanceFields(analysisResult, goals))
@@ -126,11 +139,11 @@ public final class Generator {
   private static final Function<AbstractGoalContext, MethodSpec> goalToBuilder
       = goalCases(GeneratorV.goalToBuilder, GeneratorB.goalToBuilder);
 
-  private ImmutableList<DtoGoalContext.AbstractGoalContext> goals(final Goals goals) {
+  private ImmutableList<AbstractGoalContext> goals(final Goals goals) {
     return FluentIterable.from(goals.goals)
-        .transform(new Function<DtoGoalContext.IGoal, DtoGoalContext.AbstractGoalContext>() {
+        .transform(new Function<IGoal, AbstractGoalContext>() {
           @Override
-          public DtoGoalContext.AbstractGoalContext apply(DtoGoalContext.IGoal goal) {
+          public AbstractGoalContext apply(IGoal goal) {
             return goal.withContext(goals.buildersContext);
           }
         })
@@ -145,12 +158,12 @@ public final class Generator {
     return downcase(goalName.apply(goal) + "BuilderImpl");
   }
 
-  public static final class Goals {
-    public final DtoBuilders.BuildersContext buildersContext;
-    public final ImmutableList<? extends DtoGoalContext.IGoal> goals;
+  private static final class Goals {
+    private final DtoBuilders.BuildersContext buildersContext;
+    private final ImmutableList<? extends IGoal> goals;
 
-    public Goals(DtoBuilders.BuildersContext buildersContext,
-                 List<? extends DtoGoalContext.IGoal> goals) {
+    private Goals(DtoBuilders.BuildersContext buildersContext,
+                  List<? extends IGoal> goals) {
       this.buildersContext = buildersContext;
       this.goals = ImmutableList.copyOf(goals);
     }

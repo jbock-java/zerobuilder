@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import net.zerobuilder.AccessLevel;
@@ -9,16 +8,16 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
-import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
+import net.zerobuilder.compiler.generate.DtoBuilders;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
-import net.zerobuilder.compiler.generate.Generator;
+import net.zerobuilder.compiler.generate.DtoValidGoal.ValidGoal;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import java.util.List;
 
 import static com.google.auto.common.MoreElements.asExecutable;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
@@ -28,7 +27,6 @@ import static javax.tools.Diagnostic.Kind.WARNING;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.generate.GoalContextFactory.prepareGoal;
 import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConflict;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.skip;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
@@ -44,21 +42,21 @@ public final class Analyser {
     this.elements = elements;
   }
 
-  public Generator.Goals analyse(TypeElement buildersAnnotatedClass) throws ValidationException {
+  public ValidGoals analyse(TypeElement buildersAnnotatedClass) throws ValidationException {
     boolean recycle = buildersAnnotatedClass.getAnnotation(Builders.class).recycle();
     ClassName type = ClassName.get(buildersAnnotatedClass);
-    BuildersContext context = createBuildersContext(type, appendSuffix(type, "Builders"), recycle);
-    ImmutableList.Builder<IGoal> builder = ImmutableList.builder();
+    ClassName generatedType = appendSuffix(type, "Builders");
+    BuildersContext context = createBuildersContext(type, generatedType, recycle);
     ImmutableList<AbstractGoalElement> goals = goals(buildersAnnotatedClass);
     checkNameConflict(goals);
     validateBuildersClass(buildersAnnotatedClass);
-    Function<ValidGoal, IGoal> prepare = prepareGoal(context.generatedType);
+    ImmutableList.Builder<ValidGoal> validGoals = ImmutableList.builder();
     for (AbstractGoalElement goal : goals) {
       boolean toBuilder = goal.goalAnnotation.toBuilder();
       ValidGoal validGoal = goal.accept(toBuilder ? validate : skip);
-      builder.add(prepare.apply(validGoal));
+      validGoals.add(validGoal);
     }
-    return new Generator.Goals(context, builder.build());
+    return new ValidGoals(context, validGoals.build());
   }
 
   /**
@@ -95,4 +93,16 @@ public final class Analyser {
     return goals;
   }
 
+  public static final class ValidGoals {
+    public final ImmutableList<? extends ValidGoal> validGoals;
+    public final DtoBuilders.BuildersContext buildersContext;
+
+    private ValidGoals(BuildersContext buildersContext, ImmutableList<? extends ValidGoal> validGoals) {
+      this.validGoals = validGoals;
+      this.buildersContext = buildersContext;
+    }
+    public static ValidGoals create(BuildersContext buildersContext, List<? extends ValidGoal> validGoals) {
+      return new ValidGoals(buildersContext, ImmutableList.copyOf(validGoals));
+    }
+  }
 }
