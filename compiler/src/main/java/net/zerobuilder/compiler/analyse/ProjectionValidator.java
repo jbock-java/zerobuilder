@@ -6,12 +6,12 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Step;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
-import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
+import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -66,31 +66,10 @@ final class ProjectionValidator {
     return ImmutableList.copyOf(builder);
   }
 
-  abstract static class TmpValidParameter {
+  static abstract class TmpValidParameter {
 
     final Element element;
     final Optional<Step> annotation;
-
-    final static class TmpRegularParameter extends TmpValidParameter {
-      private final RegularParameter parameter;
-      private TmpRegularParameter(Element element, Optional<Step> annotation, RegularParameter parameter) {
-        super(element, annotation);
-        this.parameter = parameter;
-      }
-      static final Function<TmpRegularParameter, RegularParameter> toValidParameter = new Function<TmpRegularParameter, RegularParameter>() {
-        @Override
-        public RegularParameter apply(TmpRegularParameter parameter) {
-          return parameter.parameter;
-        }
-      };
-      static TmpRegularParameter create(VariableElement parameter, Optional<String> getter,
-                                        Goal goalAnnotation) {
-        Step stepAnnotation = parameter.getAnnotation(Step.class);
-        boolean nonNull = TmpValidParameter.nonNull(parameter.asType(), stepAnnotation, goalAnnotation);
-        RegularParameter regularParameter = RegularParameter.create(parameter, getter, nonNull);
-        return new TmpRegularParameter(parameter, fromNullable(stepAnnotation), regularParameter);
-      }
-    }
 
     static boolean nonNull(TypeMirror type, Step step, Goal goal) {
       if (TypeName.get(type).isPrimitive()) {
@@ -102,36 +81,58 @@ final class ProjectionValidator {
       return goal.nonNull();
     }
 
-    static final class TmpAccessorPair extends TmpValidParameter {
-      final AbstractBeanParameter validBeanParameter;
-      private TmpAccessorPair(Element element, Optional<Step> annotation, AbstractBeanParameter validBeanParameter) {
-        super(element, annotation);
-        this.validBeanParameter = validBeanParameter;
-      }
-      static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = new Function<TmpAccessorPair, AbstractBeanParameter>() {
-        @Override
-        public AbstractBeanParameter apply(TmpAccessorPair parameter) {
-          return parameter.validBeanParameter;
-        }
-      };
-      static TmpAccessorPair createAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
-        Step stepAnnotation = getter.getAnnotation(Step.class);
-        TypeName type = TypeName.get(getter.getReturnType());
-        boolean nonNull = TmpValidParameter.nonNull(getter.getReturnType(), stepAnnotation, goalAnnotation);
-        AccessorPair accessorPair = AccessorPair.create(type, getter, nonNull);
-        return new TmpAccessorPair(getter, fromNullable(stepAnnotation), accessorPair);
-      }
-      static TmpAccessorPair createLoneGetter(ExecutableElement getter, LoneGetter loneGetter) {
-        Step stepAnnotation = getter.getAnnotation(Step.class);
-        return new TmpAccessorPair(getter, fromNullable(stepAnnotation), loneGetter);
-      }
-    }
-
     private TmpValidParameter(Element element, Optional<Step> annotation) {
       this.element = element;
       this.annotation = annotation;
     }
+  }
 
+  static final class TmpRegularParameter extends TmpValidParameter {
+    private final RegularParameter parameter;
+    private TmpRegularParameter(Element element, Optional<Step> annotation, RegularParameter parameter) {
+      super(element, annotation);
+      this.parameter = parameter;
+    }
+    static final Function<TmpRegularParameter, RegularParameter> toValidParameter = new Function<TmpRegularParameter, RegularParameter>() {
+      @Override
+      public RegularParameter apply(TmpRegularParameter parameter) {
+        return parameter.parameter;
+      }
+    };
+    static TmpRegularParameter create(VariableElement parameter, Optional<String> getter,
+                                      Goal goalAnnotation) {
+      Step stepAnnotation = parameter.getAnnotation(Step.class);
+      boolean nonNull = TmpValidParameter.nonNull(parameter.asType(), stepAnnotation, goalAnnotation);
+      RegularParameter regularParameter = RegularParameter.create(parameter, getter, nonNull);
+      return new TmpRegularParameter(parameter, fromNullable(stepAnnotation), regularParameter);
+    }
+  }
+
+  static final class TmpAccessorPair extends TmpValidParameter {
+    final AbstractBeanParameter validBeanParameter;
+    private TmpAccessorPair(Element element, Optional<Step> annotation, AbstractBeanParameter validBeanParameter) {
+      super(element, annotation);
+      this.validBeanParameter = validBeanParameter;
+    }
+    static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = new Function<TmpAccessorPair, AbstractBeanParameter>() {
+      @Override
+      public AbstractBeanParameter apply(TmpAccessorPair parameter) {
+        return parameter.validBeanParameter;
+      }
+    };
+
+    static TmpAccessorPair createAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
+      Step stepAnnotation = getter.getAnnotation(Step.class);
+      TypeName type = TypeName.get(getter.getReturnType());
+      boolean nonNull = TmpValidParameter.nonNull(getter.getReturnType(), stepAnnotation, goalAnnotation);
+      AccessorPair accessorPair = AccessorPair.create(type, getter, nonNull);
+      return new TmpAccessorPair(getter, fromNullable(stepAnnotation), accessorPair);
+    }
+
+    static TmpAccessorPair createLoneGetter(ExecutableElement getter, LoneGetter loneGetter) {
+      Step stepAnnotation = getter.getAnnotation(Step.class);
+      return new TmpAccessorPair(getter, fromNullable(stepAnnotation), loneGetter);
+    }
   }
 
   private ProjectionValidator() {

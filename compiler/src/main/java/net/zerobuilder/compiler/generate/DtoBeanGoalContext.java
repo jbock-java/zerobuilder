@@ -15,9 +15,9 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.fieldSpec;
 
-public final class DtoBeanGoalContext {
+final class DtoBeanGoalContext {
 
-  public static final class BeanGoal implements IGoal {
+  static final class BeanGoal implements IGoal {
 
     /**
      * alphabetic order unless {@link net.zerobuilder.Step} was used

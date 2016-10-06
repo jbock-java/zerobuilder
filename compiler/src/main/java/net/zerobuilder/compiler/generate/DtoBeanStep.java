@@ -15,7 +15,7 @@ import static net.zerobuilder.compiler.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
-public final class DtoBeanStep {
+final class DtoBeanStep {
 
   interface BeanStepCases<R> {
     R accessorPair(AccessorPairStep step);
@@ -31,7 +31,7 @@ public final class DtoBeanStep {
     };
   }
 
-  public static abstract class AbstractBeanStep extends AbstractStep {
+  static abstract class AbstractBeanStep extends AbstractStep {
     AbstractBeanStep(ClassName thisType, TypeName nextType) {
       super(thisType, nextType);
     }
@@ -42,7 +42,7 @@ public final class DtoBeanStep {
     abstract <R> R acceptBean(BeanStepCases<R> cases);
   }
 
-  public static final class AccessorPairStep extends AbstractBeanStep {
+  static final class AccessorPairStep extends AbstractBeanStep {
     final AccessorPair accessorPair;
     final String setter;
 
@@ -73,7 +73,7 @@ public final class DtoBeanStep {
     }
   }
 
-  public static final class LoneGetterStep extends AbstractBeanStep {
+  static final class LoneGetterStep extends AbstractBeanStep {
     final LoneGetter loneGetter;
     final String emptyMethod;
 
@@ -82,7 +82,7 @@ public final class DtoBeanStep {
       this.loneGetter = loneGetter;
       this.emptyMethod = emptyMethod;
     }
-    public static LoneGetterStep create(ClassName thisType, TypeName nextType, LoneGetter loneGetter) {
+    static LoneGetterStep create(ClassName thisType, TypeName nextType, LoneGetter loneGetter) {
       String emptyMethod = "empty" + upcase(loneGetter.accept(beanParameterName));
       return new LoneGetterStep(thisType, nextType, loneGetter, emptyMethod);
     }

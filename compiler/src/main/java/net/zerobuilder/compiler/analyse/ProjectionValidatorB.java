@@ -11,13 +11,12 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.generate.DtoBeanParameter;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -25,18 +24,15 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.Comparator;
-import java.util.List;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
-import static com.google.auto.common.MoreTypes.asDeclared;
 import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.base.Ascii.isUpperCase;
-import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.squareup.javapoet.ClassName.OBJECT;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_BAD_GENERICS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIND_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_SETTER_TYPE_MISMATCH;
@@ -48,11 +44,10 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SETTER_EXCEPT
 import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
-import static net.zerobuilder.compiler.Utilities.ClassNames.OBJECT;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
-import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.TmpAccessorPair.toValidParameter;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nonNull;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
+import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 final class ProjectionValidatorB {
 
@@ -75,7 +70,7 @@ final class ProjectionValidatorB {
       for (ExecutableElement getter : getters(goal)) {
         ExecutableElement setter = setters.get(setterName(getter));
         builder.add(setter == null
-            ? setterlessAccessorPair(getter, goal.goalAnnotation)
+            ? loneGetter(getter, goal.goalAnnotation)
             : regularAccessorPair(getter, setter, goal.goalAnnotation));
       }
       ImmutableList<TmpAccessorPair> tmpAccessorPairs = builder.build();
@@ -86,7 +81,7 @@ final class ProjectionValidatorB {
     }
   };
 
-  private static TmpAccessorPair setterlessAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
+  private static TmpAccessorPair loneGetter(ExecutableElement getter, Goal goalAnnotation) {
     TypeMirror type = getter.getReturnType();
     String name = getter.getSimpleName().toString();
     if (!isImplementationOf(type, COLLECTION)) {
@@ -94,24 +89,10 @@ final class ProjectionValidatorB {
     }
     // no setter but we have a getter that returns something like List<E>
     // in this case we need to find what E is ("collectionType")
-    List<? extends TypeMirror> typeArguments = asDeclared(type).getTypeArguments();
+    TypeName typeName = TypeName.get(type);
     boolean nonNull = nonNull(type, getter.getAnnotation(Step.class), goalAnnotation);
-    if (typeArguments.isEmpty()) {
-      // raw collection
-      LoneGetter loneGetter = DtoBeanParameter.builder()
-          .build(TypeName.get(type), name, nonNull);
-      return TmpAccessorPair.createLoneGetter(getter, loneGetter);
-    } else if (typeArguments.size() == 1) {
-      // one type parameter
-      TypeMirror collectionType = getOnlyElement(typeArguments);
-      DtoBeanParameter.LoneGetter loneGetter = DtoBeanParameter
-          .builder(collectionType)
-          .build(TypeName.get(type), name, nonNull);
-      return TmpAccessorPair.createLoneGetter(getter, loneGetter);
-    } else {
-      // unlikely: subclass of Collection should not have more than one type parameter
-      throw new ValidationException(BEAN_BAD_GENERICS, getter);
-    }
+    LoneGetter loneGetter = LoneGetter.create(typeName, name, nonNull);
+    return TmpAccessorPair.createLoneGetter(getter, loneGetter);
   }
 
   private static TmpAccessorPair regularAccessorPair(ExecutableElement getter, ExecutableElement setter, Goal goalAnnotation) {
@@ -228,7 +209,7 @@ final class ProjectionValidatorB {
     return BeanGoalDescription.create(goal.details, validBeanParameters);
   }
 
-  static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {
+  private static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {
     if (typeMirror.getKind() != DECLARED) {
       return false;
     }

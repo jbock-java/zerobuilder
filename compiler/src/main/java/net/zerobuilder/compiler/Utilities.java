@@ -1,10 +1,13 @@
 package net.zerobuilder.compiler;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 
 import javax.lang.model.element.Modifier;
@@ -20,7 +23,6 @@ public final class Utilities {
 
   public static final class ClassNames {
 
-    public static final ClassName OBJECT = ClassName.get(Object.class);
     public static final ClassName COLLECTION = ClassName.get(Collection.class);
     public static final ClassName LIST = ClassName.get(List.class);
     public static final ClassName SET = ClassName.get(Set.class);
@@ -89,6 +91,25 @@ public final class Utilities {
       return 'a' + upcase(string);
     }
     return string;
+  }
+
+  public static Optional<ClassName> rawClassName(TypeName typeName) {
+    if (typeName instanceof ClassName) {
+      return Optional.of((ClassName) typeName);
+    }
+    if (typeName instanceof ParameterizedTypeName) {
+      ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
+      return Optional.of(parameterized.rawType);
+    }
+    return Optional.absent();
+  }
+
+  public static ImmutableList<TypeName> typeArguments(TypeName typeName) {
+    if (typeName instanceof ParameterizedTypeName) {
+      ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
+      return ImmutableList.copyOf(parameterized.typeArguments);
+    }
+    return ImmutableList.of();
   }
 
   private Utilities() {

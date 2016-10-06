@@ -7,12 +7,12 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.Utilities;
 import net.zerobuilder.compiler.Utilities.ClassNames;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
-import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 
 import java.util.Collections;
 
@@ -21,6 +21,7 @@ import static net.zerobuilder.compiler.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.Utilities.ClassNames.SET;
 import static net.zerobuilder.compiler.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.Utilities.rawClassName;
 import static net.zerobuilder.compiler.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
 
@@ -48,18 +49,17 @@ public final class DtoStep {
     }
 
     static Optional<EmptyOption> create(TypeName type, String name) {
-      if (type instanceof ParameterizedTypeName) {
-        type = ((ParameterizedTypeName) type).rawType;
-      }
-      if (!(type instanceof ClassName)) {
+      Optional<ClassName> maybeClassName = rawClassName(type);
+      if (!maybeClassName.isPresent()) {
         return Optional.absent();
       }
-      if (LIST_HIERARCHY.contains(type)) {
+      ClassName className = maybeClassName.get();
+      if (LIST_HIERARCHY.contains(className)) {
         return Optional.of(new EmptyOption(
             CodeBlock.of("$T.emptyList()", Collections.class),
             emptyOptionName(name)));
       }
-      if (SET.equals(type)) {
+      if (SET.equals(className)) {
         return Optional.of(new EmptyOption(
             CodeBlock.of("$T.emptySet()", Collections.class),
             emptyOptionName(name)));
