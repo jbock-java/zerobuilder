@@ -8,11 +8,11 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.analyse.Analyser.Goals;
 import net.zerobuilder.compiler.analyse.DtoGoal.AbstractGoal;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
 import javax.lang.model.util.Elements;
+import java.util.List;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
@@ -144,5 +144,16 @@ public final class Generator {
 
   static String stepsField(AbstractGoalContext goal) {
     return downcase(goalName.apply(goal) + "BuilderImpl");
+  }
+
+  public static final class Goals {
+    public final DtoBuilders.BuildersContext buildersContext;
+    public final ImmutableList<? extends DtoGoalContext.IGoal> goals;
+
+    public Goals(DtoBuilders.BuildersContext buildersContext,
+                 List<? extends DtoGoalContext.IGoal> goals) {
+      this.buildersContext = buildersContext;
+      this.goals = ImmutableList.copyOf(goals);
+    }
   }
 }

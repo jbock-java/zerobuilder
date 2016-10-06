@@ -51,6 +51,9 @@ public final class DtoStep {
       if (type instanceof ParameterizedTypeName) {
         type = ((ParameterizedTypeName) type).rawType;
       }
+      if (!(type instanceof ClassName)) {
+        return Optional.absent();
+      }
       if (LIST_HIERARCHY.contains(type)) {
         return Optional.of(new EmptyOption(
             CodeBlock.of("$T.emptyList()", Collections.class),

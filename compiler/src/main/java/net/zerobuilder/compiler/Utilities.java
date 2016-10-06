@@ -25,6 +25,7 @@ public final class Utilities {
     public static final ClassName LIST = ClassName.get(List.class);
     public static final ClassName SET = ClassName.get(Set.class);
     public static final ClassName ITERABLE = ClassName.get(Iterable.class);
+    public static final ClassName THREAD_LOCAL = ClassName.get(ThreadLocal.class);
 
     private ClassNames() {
       throw new UnsupportedOperationException("no instances");

@@ -28,7 +28,7 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.thrownTypes;
 
 final class UpdaterContext {
 
-  static final ClassName updaterType(AbstractGoalContext goal) {
+  static ClassName updaterType(AbstractGoalContext goal) {
     return buildersContext.apply(goal).generatedType.nestedClass(
         upcase(goalName.apply(goal) + "Updater"));
   }

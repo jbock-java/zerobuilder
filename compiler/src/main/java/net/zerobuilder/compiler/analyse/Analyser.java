@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.google.common.collect.ImmutableList;
+import com.squareup.javapoet.ClassName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
@@ -10,6 +11,7 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoValidGoal.ValidGoal;
 import net.zerobuilder.compiler.generate.DtoBuilders.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
+import net.zerobuilder.compiler.generate.Generator;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -29,7 +31,8 @@ import static net.zerobuilder.compiler.analyse.GoalContextFactory.context;
 import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConflict;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.skip;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
-import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersType;
+import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersClass;
+import static net.zerobuilder.compiler.generate.DtoBuilders.appendSuffix;
 import static net.zerobuilder.compiler.generate.DtoBuilders.createBuildersContext;
 
 public final class Analyser {
@@ -40,18 +43,20 @@ public final class Analyser {
     this.elements = elements;
   }
 
-  public Goals analyse(TypeElement buildElement) throws ValidationException {
-    BuildersContext context = createBuildersContext(buildElement);
+  public Generator.Goals analyse(TypeElement buildersAnnotatedClass) throws ValidationException {
+    boolean recycle = buildersAnnotatedClass.getAnnotation(Builders.class).recycle();
+    ClassName type = ClassName.get(buildersAnnotatedClass);
+    BuildersContext context = createBuildersContext(type, appendSuffix(type, "Builders"), recycle);
     ImmutableList.Builder<IGoal> builder = ImmutableList.builder();
-    ImmutableList<AbstractGoalElement> goals = goals(buildElement);
+    ImmutableList<AbstractGoalElement> goals = goals(buildersAnnotatedClass);
     checkNameConflict(goals);
     for (AbstractGoalElement goal : goals) {
-      validateBuildersType(buildElement);
+      validateBuildersClass(buildersAnnotatedClass);
       boolean toBuilder = goal.goalAnnotation.toBuilder();
       ValidGoal validGoal = goal.accept(toBuilder ? validate : skip);
       builder.add(context(validGoal, context.generatedType));
     }
-    return new Goals(context, builder.build());
+    return new Generator.Goals(context, builder.build());
   }
 
   /**
@@ -88,13 +93,4 @@ public final class Analyser {
     return goals;
   }
 
-  public static final class Goals {
-    public final BuildersContext buildersContext;
-    public final ImmutableList<IGoal> goals;
-
-    Goals(BuildersContext buildersContext, ImmutableList<IGoal> goals) {
-      this.buildersContext = buildersContext;
-      this.goals = goals;
-    }
-  }
 }

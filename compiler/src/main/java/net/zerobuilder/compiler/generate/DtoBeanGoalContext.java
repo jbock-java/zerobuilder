@@ -9,6 +9,8 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 
+import java.util.List;
+
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.Utilities.downcase;
 import static net.zerobuilder.compiler.Utilities.fieldSpec;
@@ -16,6 +18,7 @@ import static net.zerobuilder.compiler.Utilities.fieldSpec;
 public final class DtoBeanGoalContext {
 
   public static final class BeanGoal implements IGoal {
+
     /**
      * alphabetic order unless {@link net.zerobuilder.Step} was used
      */
@@ -31,10 +34,10 @@ public final class DtoBeanGoalContext {
     }
 
     public static BeanGoal create(BeanGoalDetails goal,
-                                  ImmutableList<? extends AbstractBeanStep> steps) {
+                                  List<? extends AbstractBeanStep> steps) {
       FieldSpec field = fieldSpec(goal.goalType,
           downcase(goal.goalType.simpleName()), PRIVATE);
-      return new BeanGoal(goal, steps, field);
+      return new BeanGoal(goal, ImmutableList.copyOf(steps), field);
 
     }
 
@@ -44,13 +47,13 @@ public final class DtoBeanGoalContext {
     }
   }
 
-  public static final class BeanGoalContext implements AbstractGoalContext {
+  static final class BeanGoalContext implements AbstractGoalContext {
 
     final BuildersContext builders;
     final BeanGoal goal;
 
-    public BeanGoalContext(BeanGoal goal,
-                            BuildersContext builders) {
+    BeanGoalContext(BeanGoal goal,
+                           BuildersContext builders) {
       this.goal = goal;
       this.builders = builders;
     }

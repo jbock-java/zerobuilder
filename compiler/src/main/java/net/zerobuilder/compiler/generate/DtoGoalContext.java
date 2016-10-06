@@ -21,7 +21,7 @@ public final class DtoGoalContext {
     AbstractGoalContext withContext(BuildersContext context);
   }
 
-  public interface AbstractGoalContext {
+  interface AbstractGoalContext {
 
     <R> R accept(GoalCases<R> cases);
   }

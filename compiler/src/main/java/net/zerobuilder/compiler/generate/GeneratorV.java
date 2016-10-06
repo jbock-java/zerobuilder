@@ -53,7 +53,7 @@ final class GeneratorV {
     String field = step.validParameter.name;
     if (step.validParameter.getter.isPresent()) {
       String getter = step.validParameter.getter.get();
-      builder.add(nullCheckGetter(parameter, step))
+      builder.add(nullCheckGetter(parameter, step, getter))
           .addStatement("$N.$N = $N.$N()",
               updater, field, parameter, getter);
     } else {
@@ -75,12 +75,11 @@ final class GeneratorV {
         .endControlFlow().build();
   }
 
-  private static CodeBlock nullCheckGetter(ParameterSpec parameter, RegularStep step) {
+  private static CodeBlock nullCheckGetter(ParameterSpec parameter, RegularStep step, String getter) {
     if (!step.validParameter.nonNull) {
       return emptyCodeBlock;
     }
     String name = step.validParameter.name;
-    String getter = step.validParameter.getter.get();
     return CodeBlock.builder()
         .beginControlFlow("if ($N.$N() == null)", parameter, getter)
         .addStatement("throw new $T($S)", NullPointerException.class, name)

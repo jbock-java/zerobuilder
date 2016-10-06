@@ -12,6 +12,8 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
+import java.util.List;
+
 public final class DtoRegularGoalContext {
 
   interface RegularGoalContext extends AbstractGoalContext {
@@ -42,12 +44,20 @@ public final class DtoRegularGoalContext {
     final ImmutableList<RegularStep> steps;
     final ImmutableList<TypeName> thrownTypes;
 
-    public ConstructorGoal(ConstructorGoalDetails details,
-                           ImmutableList<RegularStep> steps,
-                           ImmutableList<TypeName> thrownTypes) {
+    private ConstructorGoal(ConstructorGoalDetails details,
+                            ImmutableList<RegularStep> steps,
+                            ImmutableList<TypeName> thrownTypes) {
       this.steps = steps;
       this.thrownTypes = thrownTypes;
       this.details = details;
+    }
+
+    public static ConstructorGoal create(ConstructorGoalDetails details,
+                                         List<RegularStep> steps,
+                                         List<TypeName> thrownTypes) {
+      return new ConstructorGoal(details,
+          ImmutableList.copyOf(steps),
+          ImmutableList.copyOf(thrownTypes));
     }
 
     @Override
@@ -56,14 +66,14 @@ public final class DtoRegularGoalContext {
     }
   }
 
-  public static final class ConstructorGoalContext
+  static final class ConstructorGoalContext
       implements RegularGoalContext {
 
     final ConstructorGoal goal;
     final BuildersContext builders;
 
-    public ConstructorGoalContext(ConstructorGoal goal,
-                                  BuildersContext builders) {
+    ConstructorGoalContext(ConstructorGoal goal,
+                           BuildersContext builders) {
       this.goal = goal;
       this.builders = builders;
     }
@@ -88,12 +98,20 @@ public final class DtoRegularGoalContext {
     final ImmutableList<RegularStep> steps;
     final ImmutableList<TypeName> thrownTypes;
 
-    public MethodGoal(MethodGoalDetails details,
-                      ImmutableList<RegularStep> steps,
-                      ImmutableList<TypeName> thrownTypes) {
+    private MethodGoal(MethodGoalDetails details,
+                       ImmutableList<RegularStep> steps,
+                       ImmutableList<TypeName> thrownTypes) {
       this.steps = steps;
       this.thrownTypes = thrownTypes;
       this.details = details;
+    }
+
+    public static MethodGoal create(MethodGoalDetails details,
+                                    List<RegularStep> steps,
+                                    List<TypeName> thrownTypes) {
+      return new MethodGoal(details,
+          ImmutableList.copyOf(steps),
+          ImmutableList.copyOf(thrownTypes));
     }
 
     @Override
@@ -102,13 +120,13 @@ public final class DtoRegularGoalContext {
     }
   }
 
-  public static final class MethodGoalContext
+  static final class MethodGoalContext
       implements RegularGoalContext {
     final BuildersContext builders;
     final MethodGoal goal;
 
-    public MethodGoalContext(MethodGoal goal,
-                             BuildersContext builders) {
+    MethodGoalContext(MethodGoal goal,
+                      BuildersContext builders) {
       this.goal = goal;
       this.builders = builders;
     }
