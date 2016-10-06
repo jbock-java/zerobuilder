@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -12,10 +13,13 @@ import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.Analyser;
 import net.zerobuilder.compiler.analyse.ValidationException;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
@@ -60,14 +64,19 @@ public final class ZeroProcessor extends AbstractProcessor {
     }
     Elements elements = processingEnv.getElementUtils();
     Analyser analyser = new Analyser(elements);
-    ImmutableList<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builders.class));
+    Function<GeneratorOutput, Optional<TypeSpec>> typeSpecFunction
+        = typeSpecFunction(elements, processingEnv.getMessager());
     for (TypeElement annotatedType : types) {
       try {
         GeneratorInput goals = analyser.analyse(annotatedType);
-        TypeSpec typeSpec = Generator.generate(goals, generatedAnnotations);
+        GeneratorOutput generatorOutput = Generator.generate(goals);
+        Optional<TypeSpec> typeSpec = typeSpecFunction.apply(generatorOutput);
+        if (!typeSpec.isPresent()) {
+          return false;
+        }
         try {
-          write(goals.buildersContext.generatedType, typeSpec);
+          write(goals.buildersContext.generatedType, typeSpec.get());
         } catch (IOException e) {
           String message = "Error processing "
               + ClassName.get(annotatedType) + ": " + getStackTraceAsString(e);
@@ -84,6 +93,22 @@ public final class ZeroProcessor extends AbstractProcessor {
       }
     }
     return false;
+  }
+
+  private static Function<GeneratorOutput, Optional<TypeSpec>> typeSpecFunction(Elements elements,
+                                                                                final Messager messager) {
+    final ImmutableList<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
+    return DtoGeneratorOutput.asFunction(new DtoGeneratorOutput.GeneratorOutputCases<Optional<TypeSpec>>() {
+      @Override
+      public Optional<TypeSpec> success(DtoGeneratorOutput.GeneratorSuccess output) {
+        return Optional.of(output.typeSpec(generatedAnnotations));
+      }
+      @Override
+      public Optional<TypeSpec> failure(DtoGeneratorOutput.GeneratorFailure failure) {
+        messager.printMessage(ERROR, failure.message());
+        return Optional.absent();
+      }
+    });
   }
 
   private Optional<? extends Element> goalNotInBuild(RoundEnvironment env) {

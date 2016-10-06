@@ -11,6 +11,7 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -27,12 +28,13 @@ import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 
 final class GeneratorB {
 
-  static final Function<BeanGoalContext, MethodSpec> goalToToBuilder
-      = new Function<BeanGoalContext, MethodSpec>() {
+  static final Function<BeanGoalContext, BuilderMethod> goalToToBuilder
+      = new Function<BeanGoalContext, BuilderMethod>() {
     @Override
-    public MethodSpec apply(BeanGoalContext goal) {
+    public BuilderMethod apply(BeanGoalContext goal) {
       ParameterSpec parameter = parameterSpec(goal.goal.details.goalType, goal.goal.field.name);
-      MethodSpec.Builder method = methodBuilder(downcase(goal.goal.details.name + "ToBuilder"))
+      String name = goal.goal.details.name;
+      MethodSpec.Builder method = methodBuilder(downcase(name + "ToBuilder"))
           .addParameter(parameter);
       ParameterSpec updater = updaterInstance(goal);
       method.addCode(initializeUpdater(goal, updater));
@@ -41,9 +43,10 @@ final class GeneratorB {
         method.addCode(copy.apply(step));
       }
       method.addStatement("return $N", updater);
-      return method
+      MethodSpec methodSpec = method
           .returns(updaterType(goal))
           .addModifiers(goal.goal.details.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
+      return new BuilderMethod(name, methodSpec);
     }
   };
 
@@ -121,22 +124,24 @@ final class GeneratorB {
     return parameterSpec(updaterType, "updater");
   }
 
-  static final Function<BeanGoalContext, MethodSpec> goalToBuilder
-      = new Function<BeanGoalContext, MethodSpec>() {
+  static final Function<BeanGoalContext, BuilderMethod> goalToBuilder
+      = new Function<BeanGoalContext, BuilderMethod>() {
     @Override
-    public MethodSpec apply(BeanGoalContext goal) {
+    public BuilderMethod apply(BeanGoalContext goal) {
       ClassName stepsType = builderImplType(goal);
-      MethodSpec.Builder method = methodBuilder(goal.goal.details.name + "Builder")
+      String name = goal.goal.details.name;
+      MethodSpec.Builder method = methodBuilder(name + "Builder")
           .returns(goal.goal.steps.get(0).thisType)
           .addModifiers(goal.goal.details.goalOptions.builderAccess.modifiers(STATIC));
       String steps = downcase(stepsType.simpleName());
       method.addCode(goal.builders.recycle
           ? statement("$T $N = $N.get().$N", stepsType, steps, goal.builders.cache, stepsField(goal))
           : statement("$T $N = new $T()", stepsType, steps, stepsType));
-      return method.addStatement("$N.$N = new $T()", steps,
+      MethodSpec methodSpec = method.addStatement("$N.$N = new $T()", steps,
           downcase(goal.goal.details.goalType.simpleName()), goal.goal.details.goalType)
           .addStatement("return $N", steps)
           .build();
+      return new BuilderMethod(name, methodSpec);
     }
   };
 

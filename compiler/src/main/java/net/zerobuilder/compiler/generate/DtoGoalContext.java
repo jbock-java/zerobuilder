@@ -107,7 +107,7 @@ final class DtoGoalContext {
   });
 
 
-  static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoal
+  static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails
       = asFunction(new GoalCases<AbstractGoalDetails>() {
     @Override
     public AbstractGoalDetails regularGoal(RegularGoalContext goal) {

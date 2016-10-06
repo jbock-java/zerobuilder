@@ -11,7 +11,6 @@ import com.squareup.javapoet.TypeSpec;
 import java.util.List;
 
 import static com.google.common.collect.Iterables.transform;
-import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -28,6 +27,15 @@ public final class DtoGeneratorOutput {
 
   public interface GeneratorOutput {
     <R> R accept(GeneratorOutputCases<R> cases);
+  }
+
+  public static <R> Function<GeneratorOutput, R> asFunction(final GeneratorOutputCases<R> cases) {
+    return new Function<GeneratorOutput, R>() {
+      @Override
+      public R apply(GeneratorOutput generatorOutput) {
+        return generatorOutput.accept(cases);
+      }
+    };
   }
 
   /**
@@ -73,9 +81,9 @@ public final class DtoGeneratorOutput {
     private final ClassName generatedType;
 
     /**
-     * Definition of the generated type.
+     * Defines the &quot;builders utility&quot;.
      *
-     * @return a TypeSpec
+     * @return type definition
      */
     public TypeSpec typeSpec(List<AnnotationSpec> generatedAnnotations) {
       return classBuilder(generatedType)
@@ -96,6 +104,45 @@ public final class DtoGeneratorOutput {
       this.nestedTypes = nestedTypes;
       this.fields = fields;
       this.generatedType = generatedType;
+    }
+
+    /**
+     * All methods in the type returned by {@link #typeSpec(List)}.
+     * Includes static methods. Excludes constructors.
+     *
+     * @return list of methods
+     */
+    public List<BuilderMethod> methods() {
+      return methods;
+    }
+
+    /**
+     * All types that are nested directly inside the type returned by {@link #typeSpec(List)}.
+     * Excludes non-static inner classes, local classes and anonymous classes.
+     *
+     * @return list of types
+     */
+    public List<TypeSpec> nestedTypes() {
+      return nestedTypes;
+    }
+
+    /**
+     * All fields of the type returned by {@link #typeSpec(List)}.
+     * Includes static fields, if any.
+     *
+     * @return list of fields
+     */
+    public List<FieldSpec> fields() {
+      return fields;
+    }
+
+    /**
+     * Class name of the type returned by {@link #typeSpec(List)}.
+     *
+     * @return class name
+     */
+    public ClassName generatedType() {
+      return generatedType;
     }
 
     @Override
