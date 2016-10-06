@@ -67,11 +67,11 @@ final class DtoGoalElement {
   static final Function<AbstractGoalElement, String> goalName = asFunction(new GoalElementCases<String>() {
     @Override
     public String regularGoal(RegularGoalElement goal) {
-      return goal.details.name;
+      return goal.details.name();
     }
     @Override
     public String beanGoal(BeanGoalElement goal) {
-      return goal.details.name;
+      return goal.details.name();
     }
   });
 

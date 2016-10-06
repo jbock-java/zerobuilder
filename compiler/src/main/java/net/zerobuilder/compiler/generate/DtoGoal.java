@@ -58,9 +58,18 @@ public final class DtoGoal {
     }
   }
 
-  public static abstract class AbstractGoalDetails {
-    public final String name;
+  static abstract class AbstractGoalDetails {
+    final String name;
     final GoalOptions goalOptions;
+
+    /**
+     * Returns the goal name.
+     * @return goal name
+     */
+    public final String name() {
+      return name;
+    }
+
     AbstractGoalDetails(String name, GoalOptions goalOptions) {
       this.name = name;
       this.goalOptions = goalOptions;
