@@ -3,6 +3,7 @@ package net.zerobuilder.api.test;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoBuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
+import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuildersContext;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -64,6 +66,7 @@ public class GeneratorTest {
     assertThat(generatorSuccess.methods().get(0).method().name, is("myGoalBuilder"));
     assertThat(generatorSuccess.methods().get(0).method().parameters.size(), is(0));
     assertThat(generatorSuccess.methods().get(0).method().modifiers.contains(Modifier.STATIC), is(true));
+    assertThat(generatorSuccess.methods().get(0).method().modifiers.contains(Modifier.PRIVATE), is(true));
     assertThat(typeSpec.name, is("MyTypeBuilders"));
     assertThat(typeSpec.methodSpecs.size(), is(2)); // goalBuilder, constructor
   }
@@ -86,6 +89,9 @@ public class GeneratorTest {
   }
 
   private static GoalOptions goalOptions() {
-    return GoalOptions.builder().build();
+    return GoalOptions.builder()
+        .builder(true)
+        .builderAccess(PRIVATE)
+        .build();
   }
 }

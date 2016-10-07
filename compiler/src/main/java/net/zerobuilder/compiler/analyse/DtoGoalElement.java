@@ -6,6 +6,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
@@ -21,6 +22,7 @@ import javax.lang.model.util.Elements;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.AccessLevel.UNSPECIFIED;
 import static net.zerobuilder.compiler.analyse.Utilities.downcase;
 
 final class DtoGoalElement {
@@ -31,12 +33,7 @@ final class DtoGoalElement {
   }
 
   private static <R> Function<AbstractGoalElement, R> asFunction(final GoalElementCases<R> cases) {
-    return new Function<AbstractGoalElement, R>() {
-      @Override
-      public R apply(AbstractGoalElement goal) {
-        return goal.accept(cases);
-      }
-    };
+    return goal -> goal.accept(cases);
   }
 
   static abstract class AbstractGoalElement {
@@ -150,13 +147,13 @@ final class DtoGoalElement {
         : goalAnnotation.name();
   }
 
-  private static AccessLevel accessLevelOverride(AccessLevel override, AccessLevel defaultAccess) {
-    defaultAccess = defaultAccess == AccessLevel.UNSPECIFIED
+  private static Access accessLevelOverride(AccessLevel override, AccessLevel defaultAccess) {
+    defaultAccess = defaultAccess == UNSPECIFIED
         ? AccessLevel.PUBLIC
         : defaultAccess;
-    return override == AccessLevel.UNSPECIFIED
-        ? defaultAccess
-        : override;
+    return override == UNSPECIFIED
+        ? defaultAccess.access()
+        : override.access();
   }
 
   private static GoalOptions goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {

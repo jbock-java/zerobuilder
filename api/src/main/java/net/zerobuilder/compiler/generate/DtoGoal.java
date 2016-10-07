@@ -2,22 +2,21 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.AccessLevel;
 
 import java.util.List;
 import java.util.function.Function;
 
-import static net.zerobuilder.AccessLevel.PUBLIC;
+import static net.zerobuilder.compiler.generate.Access.PUBLIC;
 
 public final class DtoGoal {
 
   public static final class GoalOptions {
-    final AccessLevel builderAccess;
-    final AccessLevel toBuilderAccess;
+    final Access builderAccess;
+    final Access toBuilderAccess;
     final boolean toBuilder;
     final boolean builder;
 
-    private GoalOptions(AccessLevel builderAccess, AccessLevel toBuilderAccess, boolean toBuilder, boolean builder) {
+    private GoalOptions(Access builderAccess, Access toBuilderAccess, boolean toBuilder, boolean builder) {
       this.builderAccess = builderAccess;
       this.toBuilderAccess = toBuilderAccess;
       this.toBuilder = toBuilder;
@@ -29,17 +28,17 @@ public final class DtoGoal {
     }
 
     public static final class Builder {
-      private AccessLevel builderAccess = PUBLIC;
-      private AccessLevel toBuilderAccess = PUBLIC;
-      private boolean toBuilder = false;
-      private boolean builder = true;
+      private Access builderAccess = PUBLIC;
+      private Access toBuilderAccess = PUBLIC;
+      private boolean toBuilder;
+      private boolean builder;
       private Builder() {
       }
-      public Builder builderAccess(AccessLevel builderAccess) {
+      public Builder builderAccess(Access builderAccess) {
         this.builderAccess = builderAccess;
         return this;
       }
-      public Builder toBuilderAccess(AccessLevel toBuilderAccess) {
+      public Builder toBuilderAccess(Access toBuilderAccess) {
         this.toBuilderAccess = toBuilderAccess;
         return this;
       }
