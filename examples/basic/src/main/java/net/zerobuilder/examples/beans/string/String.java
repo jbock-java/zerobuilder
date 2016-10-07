@@ -6,9 +6,11 @@ import net.zerobuilder.Goal;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.zerobuilder.NullPolicy.REJECT;
+
 // danger of variable name conflict
 @Builders
-@Goal(toBuilder = true, nonNull = true)
+@Goal(toBuilder = true, nullPolicy = REJECT)
 public class String {
 
   private List<String> string;

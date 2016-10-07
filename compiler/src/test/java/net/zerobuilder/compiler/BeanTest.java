@@ -27,7 +27,7 @@ public class BeanTest {
         "  private List<String> notes;",
         "  public String getName() { return name; }",
         "  public void setName(String name) { this.name = name; }",
-        "  @Step(nonNull = true) public List<String> getNotes() {",
+        "  @Step(nullPolicy = NullPolicy.REJECT) public List<String> getNotes() {",
         "    if (notes == null) notes = new ArrayList<>();",
         "    return notes;",
         "  }",

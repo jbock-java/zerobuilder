@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.analyse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,82 +30,56 @@ import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 final class ProjectionValidatorV {
 
   static final Function<RegularGoalElement, GoalDescription> validateValue
-      = new Function<RegularGoalElement, GoalDescription>() {
-    @Override
-    public GoalDescription apply(RegularGoalElement goal) {
-      TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
-      ImmutableMap<String, ExecutableElement> methods = methods(goal, type);
-      ImmutableMap<String, VariableElement> fields = fields(type);
-      ImmutableList.Builder<TmpRegularParameter> builder = ImmutableList.builder();
-      for (VariableElement parameter : goal.executableElement.getParameters()) {
-        VariableElement field = fields.get(parameter.getSimpleName().toString());
-        if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
-          builder.add(TmpRegularParameter.create(parameter, Optional.<String>absent(), goal.goalAnnotation));
-        } else {
-          String methodName = "get" + upcase(parameter.getSimpleName().toString());
-          ExecutableElement method = methods.get(methodName);
-          if (method == null
-              && TypeName.get(parameter.asType()) == TypeName.BOOLEAN) {
-            methodName = "is" + upcase(parameter.getSimpleName().toString());
-            method = methods.get(methodName);
-          }
-          if (method == null) {
-            methodName = parameter.getSimpleName().toString();
-            method = methods.get(methodName);
-          }
-          if (method == null) {
-            throw new ValidationException(NO_PROJECTION, parameter);
-          }
-          builder.add(TmpRegularParameter.create(parameter, Optional.of(methodName), goal.goalAnnotation));
+      = goal -> {
+    TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
+    ImmutableMap<String, ExecutableElement> methods = methods(goal, type);
+    ImmutableMap<String, VariableElement> fields = fields(type);
+    ImmutableList.Builder<TmpRegularParameter> builder = ImmutableList.builder();
+    for (VariableElement parameter : goal.executableElement.getParameters()) {
+      VariableElement field = fields.get(parameter.getSimpleName().toString());
+      if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
+        builder.add(TmpRegularParameter.create(parameter, Optional.absent(), goal.goalAnnotation));
+      } else {
+        String methodName = "get" + upcase(parameter.getSimpleName().toString());
+        ExecutableElement method = methods.get(methodName);
+        if (method == null
+            && TypeName.get(parameter.asType()) == TypeName.BOOLEAN) {
+          methodName = "is" + upcase(parameter.getSimpleName().toString());
+          method = methods.get(methodName);
         }
+        if (method == null) {
+          methodName = parameter.getSimpleName().toString();
+          method = methods.get(methodName);
+        }
+        if (method == null) {
+          throw new ValidationException(NO_PROJECTION, parameter);
+        }
+        builder.add(TmpRegularParameter.create(parameter, Optional.of(methodName), goal.goalAnnotation));
       }
-      return createResult(goal, builder.build());
     }
+    return createResult(goal, builder.build());
   };
   private static ImmutableMap<String, VariableElement> fields(TypeElement type) {
     return FluentIterable.from(fieldsIn(type.getEnclosedElements()))
-        .filter(new Predicate<VariableElement>() {
-          @Override
-          public boolean apply(VariableElement field) {
-            return !field.getModifiers().contains(PRIVATE) && !field.getModifiers().contains(STATIC);
-          }
-        })
-        .uniqueIndex(new Function<VariableElement, String>() {
-          @Override
-          public String apply(VariableElement field) {
-            return field.getSimpleName().toString();
-          }
-        });
+        .filter(field -> !field.getModifiers().contains(PRIVATE)
+            && !field.getModifiers().contains(STATIC))
+        .uniqueIndex(field -> field.getSimpleName().toString());
   }
   private static ImmutableMap<String, ExecutableElement> methods(RegularGoalElement goal, TypeElement type) {
     return FluentIterable.from(getLocalAndInheritedMethods(type, goal.elements))
-        .filter(new Predicate<ExecutableElement>() {
-          @Override
-          public boolean apply(ExecutableElement method) {
-            return method.getParameters().isEmpty()
-                && !method.getModifiers().contains(PRIVATE)
-                && !method.getModifiers().contains(STATIC);
-          }
-        })
-        .uniqueIndex(new Function<ExecutableElement, String>() {
-          @Override
-          public String apply(ExecutableElement method) {
-            return method.getSimpleName().toString();
-          }
-        });
+        .filter(method -> method.getParameters().isEmpty()
+            && !method.getModifiers().contains(PRIVATE)
+            && !method.getModifiers().contains(STATIC))
+        .uniqueIndex(method -> method.getSimpleName().toString());
   }
 
   static final Function<RegularGoalElement, GoalDescription> validateValueSkipProjections
-      = new Function<RegularGoalElement, GoalDescription>() {
-    @Override
-    public GoalDescription apply(RegularGoalElement goal) {
-      ImmutableList.Builder<TmpRegularParameter> builder = ImmutableList.builder();
-      for (VariableElement parameter : goal.executableElement.getParameters()) {
-        builder.add(TmpRegularParameter.create(parameter, Optional.<String>absent(), goal.goalAnnotation));
-      }
-      return createResult(goal, builder.build());
-
+      = goal -> {
+    ImmutableList.Builder<TmpRegularParameter> builder = ImmutableList.builder();
+    for (VariableElement parameter : goal.executableElement.getParameters()) {
+      builder.add(TmpRegularParameter.create(parameter, Optional.absent(), goal.goalAnnotation));
     }
+    return createResult(goal, builder.build());
   };
 
   private static GoalDescription createResult(RegularGoalElement goal, ImmutableList<TmpRegularParameter> parameters) {
@@ -122,12 +95,7 @@ final class ProjectionValidatorV {
   private static ImmutableList<TypeName> thrownTypes(ExecutableElement executableElement) {
     return FluentIterable
         .from(executableElement.getThrownTypes())
-        .transform(new Function<TypeMirror, TypeName>() {
-          @Override
-          public TypeName apply(TypeMirror thrownType) {
-            return TypeName.get(thrownType);
-          }
-        })
+        .transform((Function<TypeMirror, TypeName>) thrownType -> TypeName.get(thrownType))
         .toList();
   }
 

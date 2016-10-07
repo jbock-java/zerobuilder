@@ -7,6 +7,9 @@ import net.zerobuilder.Step;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.zerobuilder.NullPolicy.ALLOW;
+import static net.zerobuilder.NullPolicy.REJECT;
+
 // demonstration of different null checking behaviour, depending on whether a collection has a setter
 // see NullChecksTest
 public class NullChecks {
@@ -14,10 +17,10 @@ public class NullChecks {
   // setter is missing -> elements are checked
   @Builders
   @Goal
-  public static class CheckedCollection {
+  static class CheckedCollection {
     private List<String> strings;
-    @Step(nonNull = true)
-    public List<String> getStrings() {
+    @Step(nullPolicy = REJECT)
+    List<String> getStrings() {
       if (strings == null) {
         strings = new ArrayList<>();
       }
@@ -45,7 +48,7 @@ public class NullChecks {
   @Goal
   public static class UncheckedCollection {
     private List<String> strings;
-    @Step(nonNull = true)
+    @Step(nullPolicy = REJECT)
     public List<String> getStrings() {
       return strings;
     }
@@ -59,7 +62,7 @@ public class NullChecks {
   @Goal
   public static class CheckedString {
     private String string;
-    @Step(nonNull = true)
+    @Step(nullPolicy = REJECT)
     public String getString() {
       return string;
     }
@@ -70,11 +73,11 @@ public class NullChecks {
 
   // goal-level nonNull
   @Builders
-  @Goal(nonNull = true)
+  @Goal(nullPolicy = REJECT)
   public static class Default {
     private String foo;
     private String bar;
-    @Step(nonNull = false)
+    @Step(nullPolicy = ALLOW)
     public String getFoo() {
       return foo;
     }

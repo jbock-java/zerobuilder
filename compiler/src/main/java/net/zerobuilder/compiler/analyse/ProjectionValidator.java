@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
+import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
@@ -75,10 +76,15 @@ final class ProjectionValidator {
       if (TypeName.get(type).isPrimitive()) {
         return false;
       }
+      NullPolicy defaultPolicy = goal.nullPolicy() == NullPolicy.DEFAULT
+          ? NullPolicy.ALLOW
+          : goal.nullPolicy();
       if (step != null) {
-        return step.nonNull();
+        return step.nullPolicy() == NullPolicy.DEFAULT
+            ? defaultPolicy.check()
+            : step.nullPolicy().check();
       }
-      return goal.nonNull();
+      return defaultPolicy.check();
     }
 
     private TmpValidParameter(Element element, Optional<Step> annotation) {

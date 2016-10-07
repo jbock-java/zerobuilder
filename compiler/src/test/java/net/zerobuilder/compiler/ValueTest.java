@@ -25,7 +25,7 @@ public class ValueTest {
         "  abstract List<String> length();",
         "  abstract String width();",
         "  @Goal(name = \"cuboid\", toBuilder = true, toBuilderAccess = AccessLevel.PACKAGE)",
-        "  static Cube create(double height, List<String> length, @Step(nonNull = true) String width) {",
+        "  static Cube create(double height, List<String> length, @Step(nullPolicy = NullPolicy.REJECT) String width) {",
         "    return null;",
         "  }",
         "}");

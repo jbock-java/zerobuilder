@@ -8,6 +8,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
+import static net.zerobuilder.NullPolicy.ALLOW;
+import static net.zerobuilder.NullPolicy.DEFAULT;
 
 /**
  * <p>
@@ -70,9 +72,9 @@ public @interface Goal {
    * Can be overridden in {@link Step}.
    * </p>
    *
-   * @return default value for {@code @Step(nonNull)}
+   * @return null policy setting
    */
-  boolean nonNull() default false;
+  NullPolicy nullPolicy() default ALLOW;
 
   /**
    * <p>A handle to override the default access level of the generated static builder method.</p>
