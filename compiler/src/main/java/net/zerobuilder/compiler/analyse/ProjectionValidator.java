@@ -103,7 +103,9 @@ final class ProjectionValidator {
                                       Goal goalAnnotation) {
       Step stepAnnotation = parameter.getAnnotation(Step.class);
       boolean nonNull = TmpValidParameter.nonNull(parameter.asType(), stepAnnotation, goalAnnotation);
-      RegularParameter regularParameter = RegularParameter.create(parameter, getter, nonNull);
+      String name = parameter.getSimpleName().toString();
+      TypeName type = TypeName.get(parameter.asType());
+      RegularParameter regularParameter = RegularParameter.create(name, type, getter, nonNull);
       return new TmpRegularParameter(parameter, fromNullable(stepAnnotation), regularParameter);
     }
   }

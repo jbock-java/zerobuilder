@@ -72,3 +72,7 @@
 ### 2016-10-06 zerobuilder 1.461 released
 
 * split off zerobuilder-api. api versions will be synchronous
+
+### 2016-10-07 zerobuilder 1.462 released
+
+* fix API inconsistency in RegularParameter.create

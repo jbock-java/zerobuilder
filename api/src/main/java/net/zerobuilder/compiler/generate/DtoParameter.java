@@ -5,8 +5,6 @@ import com.google.common.base.Optional;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 
-import javax.lang.model.element.VariableElement;
-
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 public final class DtoParameter {
@@ -66,9 +64,7 @@ public final class DtoParameter {
       this.name = name;
     }
 
-    public static RegularParameter create(VariableElement parameter, Optional<String> getter, boolean nonNull) {
-      String name = parameter.getSimpleName().toString();
-      TypeName type = TypeName.get(parameter.asType());
+    public static RegularParameter create(String name, TypeName type, Optional<String> getter, boolean nonNull) {
       return new RegularParameter(name, type, getter, nonNull);
     }
 
