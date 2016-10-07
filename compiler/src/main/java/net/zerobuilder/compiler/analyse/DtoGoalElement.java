@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
@@ -18,6 +16,10 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
@@ -89,7 +91,7 @@ final class DtoGoalElement {
       GoalOptions goalOptions = goalOptions(goalAnnotation, defaultAccess);
       String methodName = element.getSimpleName().toString();
       boolean instance = !element.getModifiers().contains(STATIC);
-      ImmutableList<String> parameterNames = parameterNames(element);
+      List<String> parameterNames = parameterNames(element);
       RegularGoalDetails goal = element.getKind() == CONSTRUCTOR
           ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOptions)
           : MethodGoalDetails.create(goalType, name, parameterNames, methodName, instance, goalOptions);
@@ -101,12 +103,12 @@ final class DtoGoalElement {
     }
   }
 
-  private static ImmutableList<String> parameterNames(ExecutableElement element) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
+  private static List<String> parameterNames(ExecutableElement element) {
+    List<String> builder = new ArrayList<>();
     for (VariableElement parameter : element.getParameters()) {
       builder.add(parameter.getSimpleName().toString());
     }
-    return builder.build();
+    return builder;
   }
 
   static final class BeanGoalElement extends AbstractGoalElement {

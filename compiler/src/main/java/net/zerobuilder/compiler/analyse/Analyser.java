@@ -18,6 +18,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
+import java.util.List;
+
 import static com.google.auto.common.MoreElements.asExecutable;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
@@ -46,7 +48,7 @@ public final class Analyser {
     ClassName type = ClassName.get(buildersAnnotatedClass);
     ClassName generatedType = appendSuffix(type, "Builders");
     BuildersContext context = createBuildersContext(type, generatedType, recycle);
-    ImmutableList<AbstractGoalElement> goals = goals(buildersAnnotatedClass);
+    List<AbstractGoalElement> goals = goals(buildersAnnotatedClass);
     checkNameConflict(goals);
     validateBuildersClass(buildersAnnotatedClass);
     ImmutableList.Builder<GoalDescription> validGoals = ImmutableList.builder();
@@ -63,7 +65,7 @@ public final class Analyser {
    * @return the goals that this class defines: one per {@link Goal} annotation
    * @throws ValidationException if validation fails
    */
-  private ImmutableList<AbstractGoalElement> goals(TypeElement buildElement) throws ValidationException {
+  private List<AbstractGoalElement> goals(TypeElement buildElement) throws ValidationException {
     Builders buildersAnnotation = buildElement.getAnnotation(Builders.class);
     ImmutableList.Builder<AbstractGoalElement> builder = ImmutableList.builder();
     AccessLevel defaultAccess = buildersAnnotation.access();
@@ -85,7 +87,7 @@ public final class Analyser {
         }
       }
     }
-    ImmutableList<AbstractGoalElement> goals = builder.build();
+    List<AbstractGoalElement> goals = builder.build();
     if (goals.isEmpty()) {
       throw new ValidationException(WARNING, NO_GOALS, buildElement);
     }

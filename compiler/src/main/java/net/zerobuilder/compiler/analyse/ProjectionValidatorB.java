@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -23,7 +21,10 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 import static com.google.auto.common.MoreTypes.asTypeElement;
@@ -47,38 +48,36 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPa
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nonNull;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.ClassNames.COLLECTION;
+import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 final class ProjectionValidatorB {
 
   private static final Ordering<TmpAccessorPair> ACCESSOR_PAIR_ORDERING
-      = Ordering.from(new Comparator<TmpAccessorPair>() {
-    @Override
-    public int compare(TmpAccessorPair pair0, TmpAccessorPair pair1) {
-      String name0 = pair0.validBeanParameter.accept(beanParameterName);
-      String name1 = pair1.validBeanParameter.accept(beanParameterName);
-      return name0.compareTo(name1);
-    }
+      = Ordering.from((pair0, pair1) -> {
+    String name0 = pair0.validBeanParameter.accept(beanParameterName);
+    String name1 = pair1.validBeanParameter.accept(beanParameterName);
+    return name0.compareTo(name1);
   });
 
   static final Function<BeanGoalElement, GoalDescription> validateBean
-      = new Function<BeanGoalElement, GoalDescription>() {
-    @Override
-    public GoalDescription apply(BeanGoalElement goal) {
-      ImmutableMap<String, ExecutableElement> setters = setters(goal);
-      ImmutableList.Builder<TmpAccessorPair> builder = ImmutableList.builder();
-      for (ExecutableElement getter : getters(goal)) {
-        ExecutableElement setter = setters.get(setterName(getter));
-        builder.add(setter == null
-            ? loneGetter(getter, goal.goalAnnotation)
-            : regularAccessorPair(getter, setter, goal.goalAnnotation));
+      = goal -> {
+    Map<String, List<ExecutableElement>> settersByName = setters(goal);
+    ImmutableList.Builder<TmpAccessorPair> builder = ImmutableList.builder();
+    for (ExecutableElement getter : getters(goal)) {
+      List<ExecutableElement> setters = settersByName.get(setterName(getter));
+      if (setters != null && setters.size() != 1) {
+        throw new IllegalStateException("setter name should be unique");
       }
-      ImmutableList<TmpAccessorPair> tmpAccessorPairs = builder.build();
-      if (tmpAccessorPairs.isEmpty()) {
-        throw new ValidationException(BEAN_NO_ACCESSOR_PAIRS, goal.beanType);
-      }
-      return createResult(goal, tmpAccessorPairs);
+      builder.add(setters == null
+          ? loneGetter(getter, goal.goalAnnotation)
+          : regularAccessorPair(getter, setters.get(0), goal.goalAnnotation));
     }
+    List<TmpAccessorPair> tmpAccessorPairs = builder.build();
+    if (tmpAccessorPairs.isEmpty()) {
+      throw new ValidationException(BEAN_NO_ACCESSOR_PAIRS, goal.beanType);
+    }
+    return createResult(goal, tmpAccessorPairs);
   };
 
   private static TmpAccessorPair loneGetter(ExecutableElement getter, Goal goalAnnotation) {
@@ -107,35 +106,29 @@ final class ProjectionValidatorB {
     return TmpAccessorPair.createAccessorPair(getter, goalAnnotation);
   }
 
-  private static ImmutableList<ExecutableElement> getters(BeanGoalElement goal) {
-    return FluentIterable.from(getLocalAndInheritedMethods(goal.beanType, goal.elements))
-        .filter(new Predicate<ExecutableElement>() {
-          @Override
-          public boolean apply(ExecutableElement method) {
-            String name = method.getSimpleName().toString();
-            return method.getParameters().isEmpty()
-                && !method.getModifiers().contains(PRIVATE)
-                && !method.getModifiers().contains(STATIC)
-                && !method.getReturnType().getKind().equals(TypeKind.VOID)
-                && !method.getReturnType().getKind().equals(TypeKind.NONE)
-                && (name.startsWith("get") || name.startsWith("is"))
-                && !"getClass".equals(name);
-          }
+  private static List<ExecutableElement> getters(BeanGoalElement goal) {
+    return getLocalAndInheritedMethods(goal.beanType, goal.elements).stream()
+        .filter(method -> {
+          String name = method.getSimpleName().toString();
+          return method.getParameters().isEmpty()
+              && !method.getModifiers().contains(PRIVATE)
+              && !method.getModifiers().contains(STATIC)
+              && !method.getReturnType().getKind().equals(TypeKind.VOID)
+              && !method.getReturnType().getKind().equals(TypeKind.NONE)
+              && (name.startsWith("get") || name.startsWith("is"))
+              && !"getClass".equals(name);
         })
-        .filter(new Predicate<ExecutableElement>() {
-          @Override
-          public boolean apply(ExecutableElement getter) {
-            Ignore ignoreAnnotation = getter.getAnnotation(Ignore.class);
-            if (ignoreAnnotation != null && getter.getAnnotation(Step.class) != null) {
-              throw new ValidationException(BEAN_IGNORE_AND_STEP, getter);
-            }
-            return ignoreAnnotation == null;
+        .filter(getter -> {
+          Ignore ignoreAnnotation = getter.getAnnotation(Ignore.class);
+          if (ignoreAnnotation != null && getter.getAnnotation(Step.class) != null) {
+            throw new ValidationException(BEAN_IGNORE_AND_STEP, getter);
           }
+          return ignoreAnnotation == null;
         })
-        .toList();
+        .collect(Collectors.toList());
   }
 
-  private static ImmutableMap<String, ExecutableElement> setters(BeanGoalElement goal) throws ValidationException {
+  private static Map<String, List<ExecutableElement>> setters(BeanGoalElement goal) throws ValidationException {
     TypeElement beanType = goal.beanType;
     if (!hasParameterlessConstructor(beanType)) {
       throw new ValidationException(BEAN_NO_DEFAULT_CONSTRUCTOR, beanType);
@@ -143,47 +136,31 @@ final class ProjectionValidatorB {
     if (beanType.getModifiers().contains(PRIVATE)) {
       throw new ValidationException(BEAN_PRIVATE_CLASS, beanType);
     }
-    return FluentIterable.from(getLocalAndInheritedMethods(beanType, goal.elements))
-        .filter(new Predicate<ExecutableElement>() {
-          @Override
-          public boolean apply(ExecutableElement method) {
-            return method.getKind() == ElementKind.METHOD
-                && !method.getModifiers().contains(PRIVATE)
-                && method.getSimpleName().length() >= 4
-                && isUpperCase(method.getSimpleName().charAt(3))
-                && method.getSimpleName().toString().startsWith("set")
-                && method.getParameters().size() == 1
-                && method.getReturnType().getKind() == TypeKind.VOID;
-          }
-        })
-        .filter(new Predicate<ExecutableElement>() {
-          @Override
-          public boolean apply(ExecutableElement setter) {
-            if (setter.getThrownTypes().isEmpty()) {
-              return true;
-            } else {
-              throw new ValidationException(BEAN_SETTER_EXCEPTION, setter);
-            }
-          }
-        })
-        .filter(new Predicate<ExecutableElement>() {
-          @Override
-          public boolean apply(ExecutableElement setter) {
-            if (setter.getAnnotation(Step.class) != null) {
-              throw new ValidationException(STEP_ON_SETTER, setter);
-            }
-            if (setter.getAnnotation(Ignore.class) != null) {
-              throw new ValidationException(IGNORE_ON_SETTER, setter);
-            }
+    return getLocalAndInheritedMethods(beanType, goal.elements).stream()
+        .filter(method -> method.getKind() == ElementKind.METHOD
+            && !method.getModifiers().contains(PRIVATE)
+            && method.getSimpleName().length() >= 4
+            && isUpperCase(method.getSimpleName().charAt(3))
+            && method.getSimpleName().toString().startsWith("set")
+            && method.getParameters().size() == 1
+            && method.getReturnType().getKind() == TypeKind.VOID)
+        .filter(setter -> {
+          if (setter.getThrownTypes().isEmpty()) {
             return true;
+          } else {
+            throw new ValidationException(BEAN_SETTER_EXCEPTION, setter);
           }
         })
-        .uniqueIndex(new Function<ExecutableElement, String>() {
-          @Override
-          public String apply(ExecutableElement setter) {
-            return setter.getSimpleName().toString().substring(3);
+        .filter(setter -> {
+          if (setter.getAnnotation(Step.class) != null) {
+            throw new ValidationException(STEP_ON_SETTER, setter);
           }
-        });
+          if (setter.getAnnotation(Ignore.class) != null) {
+            throw new ValidationException(IGNORE_ON_SETTER, setter);
+          }
+          return true;
+        })
+        .collect(Collectors.groupingBy(setter1 -> setter1.getSimpleName().toString().substring(3)));
   }
 
   private static String setterName(ExecutableElement getter) {
@@ -201,11 +178,9 @@ final class ProjectionValidatorB {
     return false;
   }
 
-  private static GoalDescription createResult(BeanGoalElement goal, ImmutableList<TmpAccessorPair> tmpAccessorPairs) {
-    ImmutableList<AbstractBeanParameter> validBeanParameters
-        = FluentIterable.from(shuffledParameters(ACCESSOR_PAIR_ORDERING.immutableSortedCopy(tmpAccessorPairs)))
-        .transform(toValidParameter)
-        .toList();
+  private static GoalDescription createResult(BeanGoalElement goal, List<TmpAccessorPair> tmpAccessorPairs) {
+    List<AbstractBeanParameter> validBeanParameters
+        = transform(shuffledParameters(ACCESSOR_PAIR_ORDERING.sortedCopy(tmpAccessorPairs)), toValidParameter);
     return BeanGoalDescription.create(goal.details, validBeanParameters);
   }
 

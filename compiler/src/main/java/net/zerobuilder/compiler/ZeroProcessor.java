@@ -1,8 +1,6 @@
 package net.zerobuilder.compiler;
 
 import com.google.auto.service.AutoService;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
@@ -31,6 +29,8 @@ import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -67,7 +67,7 @@ public final class ZeroProcessor extends AbstractProcessor {
     }
     Elements elements = processingEnv.getElementUtils();
     Analyser analyser = new Analyser(elements);
-    ImmutableList<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
+    List<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builders.class));
     Function<GeneratorOutput, Optional<GeneratorSuccess>> typeSpecFunction
         = typeSpecFunction(processingEnv.getMessager());
@@ -111,7 +111,7 @@ public final class ZeroProcessor extends AbstractProcessor {
       @Override
       public Optional<GeneratorSuccess> failure(GeneratorFailure failure) {
         messager.printMessage(ERROR, failure.message());
-        return Optional.absent();
+        return Optional.empty();
       }
     });
   }
@@ -132,7 +132,7 @@ public final class ZeroProcessor extends AbstractProcessor {
         return Optional.of(typeElement);
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private void write(ClassName generatedType, TypeSpec typeSpec) throws IOException {

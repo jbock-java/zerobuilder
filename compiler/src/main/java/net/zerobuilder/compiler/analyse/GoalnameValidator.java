@@ -10,6 +10,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.propagate;
@@ -54,7 +55,7 @@ final class GoalnameValidator {
   });
 
 
-  static void checkNameConflict(ImmutableList<AbstractGoalElement> goals) throws ValidationException {
+  static void checkNameConflict(List<AbstractGoalElement> goals) throws ValidationException {
     goals = GOAL_ORDER_FOR_DUPLICATE_NAME_CHECK.immutableSortedCopy(goals);
     HashMap<String, AbstractGoalElement> byName = new HashMap<>();
     for (AbstractGoalElement goal : goals) {

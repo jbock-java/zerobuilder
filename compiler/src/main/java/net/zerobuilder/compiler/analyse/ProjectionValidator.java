@@ -1,8 +1,5 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.NullPolicy;
@@ -20,9 +17,11 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
-import static com.google.common.base.Optional.fromNullable;
 import static java.util.Collections.nCopies;
+import static java.util.Optional.ofNullable;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
@@ -36,10 +35,10 @@ final class ProjectionValidator {
   static final GoalElementCases<GoalDescription> validate = goalElementCases(validateValue, validateBean);
   static final GoalElementCases<GoalDescription> skip = goalElementCases(validateValueSkipProjections, validateBean);
 
-  static <E extends TmpValidParameter> ImmutableList<E> shuffledParameters(ImmutableList<E> parameters)
+  static <E extends TmpValidParameter> List<E> shuffledParameters(List<E> parameters)
       throws ValidationException {
     List<E> builder = new ArrayList<>(nCopies(parameters.size(), (E) null));
-    ImmutableList.Builder<E> noAnnotation = ImmutableList.builder();
+    List<E> noAnnotation = new ArrayList<>();
     for (E parameter : parameters) {
       Optional<Step> step = parameter.annotation;
       if (step.isPresent() && step.get().value() >= 0) {
@@ -58,13 +57,13 @@ final class ProjectionValidator {
       }
     }
     int pos = 0;
-    for (E parameter : noAnnotation.build()) {
+    for (E parameter : noAnnotation) {
       while (builder.get(pos) != null) {
         pos++;
       }
       builder.set(pos++, parameter);
     }
-    return ImmutableList.copyOf(builder);
+    return builder;
   }
 
   static abstract class TmpValidParameter {
@@ -112,7 +111,7 @@ final class ProjectionValidator {
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
       RegularParameter regularParameter = createRegularParameter(getter, nonNull, name, type);
-      return new TmpRegularParameter(parameter, fromNullable(stepAnnotation), regularParameter);
+      return new TmpRegularParameter(parameter, ofNullable(stepAnnotation), regularParameter);
     }
 
     private static RegularParameter createRegularParameter(Optional<String> getter, boolean nonNull, String name, TypeName type) {
@@ -130,24 +129,20 @@ final class ProjectionValidator {
       super(element, annotation);
       this.validBeanParameter = validBeanParameter;
     }
-    static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = new Function<TmpAccessorPair, AbstractBeanParameter>() {
-      @Override
-      public AbstractBeanParameter apply(TmpAccessorPair parameter) {
-        return parameter.validBeanParameter;
-      }
-    };
+
+    static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = parameter -> parameter.validBeanParameter;
 
     static TmpAccessorPair createAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
       Step stepAnnotation = getter.getAnnotation(Step.class);
       TypeName type = TypeName.get(getter.getReturnType());
       boolean nonNull = TmpValidParameter.nonNull(getter.getReturnType(), stepAnnotation, goalAnnotation);
       AccessorPair accessorPair = AccessorPair.create(type, getter, nonNull);
-      return new TmpAccessorPair(getter, fromNullable(stepAnnotation), accessorPair);
+      return new TmpAccessorPair(getter, ofNullable(stepAnnotation), accessorPair);
     }
 
     static TmpAccessorPair createLoneGetter(ExecutableElement getter, LoneGetter loneGetter) {
       Step stepAnnotation = getter.getAnnotation(Step.class);
-      return new TmpAccessorPair(getter, fromNullable(stepAnnotation), loneGetter);
+      return new TmpAccessorPair(getter, ofNullable(stepAnnotation), loneGetter);
     }
   }
 

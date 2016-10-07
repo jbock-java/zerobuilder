@@ -1,10 +1,12 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.AnnotationSpec;
 
 import javax.annotation.Generated;
 import javax.lang.model.util.Elements;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public final class Messages {
 
@@ -116,14 +118,14 @@ public final class Messages {
 
     public static final String GENERATED_COMMENTS = "https://github.com/h908714124/zerobuilder";
 
-    public static ImmutableList<AnnotationSpec> generatedAnnotations(Elements elements) {
+    public static List<AnnotationSpec> generatedAnnotations(Elements elements) {
       if (elements.getTypeElement("javax.annotation.Generated") != null) {
-        return ImmutableList.of(AnnotationSpec.builder(Generated.class)
+        return Arrays.asList(AnnotationSpec.builder(Generated.class)
             .addMember("value", "$S", ZeroProcessor.class.getName())
             .addMember("comments", "$S", GENERATED_COMMENTS)
             .build());
       }
-      return ImmutableList.of();
+      return Collections.emptyList();
 
     }
 
