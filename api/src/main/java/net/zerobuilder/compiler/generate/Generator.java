@@ -5,6 +5,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorSuccess;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
@@ -41,10 +42,14 @@ public final class Generator {
   public static GeneratorOutput generate(GeneratorInput goals) {
     Function<GoalDescription, IGoal> prepare = prepareGoal(goals.buildersContext.generatedType);
     List<IGoal> builder = transform(goals.validGoals, prepare);
-    return generate(new Goals(goals.buildersContext, builder));
+    try {
+      return generate(new Goals(goals.buildersContext, builder));
+    } catch (GenerateException e) {
+      return e.asFailure();
+    }
   }
 
-  private static DtoGeneratorOutput.GeneratorSuccess generate(Goals analysisResult) {
+  private static GeneratorSuccess generate(Goals analysisResult) {
     List<AbstractGoalContext> goals = goals(analysisResult);
     List<BuilderMethod> methods = new ArrayList<>();
     methods.addAll(builderMethods(goals));
@@ -54,7 +59,7 @@ public final class Generator {
       fields.add(analysisResult.buildersContext.cache);
     }
     fields.addAll(instanceFields(analysisResult, goals));
-    return new DtoGeneratorOutput.GeneratorSuccess(methods,
+    return new GeneratorSuccess(methods,
         nestedGoalTypes(goals), fields, analysisResult.buildersContext.generatedType);
   }
 

@@ -41,10 +41,37 @@ public final class DtoGoalDescription {
       this.parameters = parameters;
     }
 
+    /**
+     * @param details     goal details
+     * @param thrownTypes exceptions thrown by the goal method, if any
+     * @param parameters  parameter names, possibly in a different order;
+     *                    must contain each parameter name in {@link RegularGoalDetails#parameterNames}
+     *                    exactly once
+     * @return goal description
+     * @throws IllegalArgumentException if {@code parameters} don't match the parameter names in {@code details}
+     */
     public static RegularGoalDescription create(RegularGoalDetails details,
                                                 List<TypeName> thrownTypes,
                                                 List<RegularParameter> parameters) {
+      checkParameterNames(details.parameterNames, parameters);
       return new RegularGoalDescription(details, thrownTypes, parameters);
+    }
+
+    private static void checkParameterNames(List<String> parameterNames, List<RegularParameter> parameters) {
+      if (parameters.isEmpty()) {
+        throw new IllegalStateException("need at least one parameter");
+      }
+      if (parameterNames.size() != parameters.size()) {
+        throw new IllegalStateException("parameter names mismatch");
+      }
+      boolean[] positions = new boolean[parameterNames.size()];
+      for (RegularParameter parameter : parameters) {
+        int pos = parameterNames.indexOf(parameter.name);
+        if (positions[pos]) {
+          throw new IllegalStateException("parameter names mismatch");
+        }
+        positions[pos] = true;
+      }
     }
 
     @Override

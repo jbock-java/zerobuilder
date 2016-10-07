@@ -107,6 +107,12 @@ public final class DtoGoal {
      */
     final List<String> parameterNames;
 
+    /**
+     * @param goalType       goal type
+     * @param name           goal name
+     * @param parameterNames parameter names in original order
+     * @param goalOptions    goal options
+     */
     RegularGoalDetails(TypeName goalType, String name, List<String> parameterNames,
                        GoalOptions goalOptions) {
       super(name, goalOptions);
