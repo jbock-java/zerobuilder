@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler.generate;
+package net.zerobuilder.api.test;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -7,16 +7,21 @@ import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.AccessLevel;
+import net.zerobuilder.compiler.generate.DtoBuildersContext;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorSuccess;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
+import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
+import net.zerobuilder.compiler.generate.Generator;
+import net.zerobuilder.compiler.generate.GeneratorInput;
 import org.junit.Test;
 
 import javax.lang.model.element.Modifier;
 
-import static net.zerobuilder.AccessLevel.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuildersContext;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -24,6 +29,11 @@ import static org.junit.Assert.fail;
 
 public class GeneratorTest {
 
+  private static final ClassName STRING = ClassName.get(String.class);
+  public static final ClassName GENERATED_TYPE = ClassName.get(MyType.class).peerClass("MyTypeBuilders");
+  public static final ClassName TYPE = ClassName.get(MyType.class);
+
+  // a model of what we want to build, for testing convenience
   static final class MyType {
     static MyType goal(String parameter) {
       return null;
@@ -32,17 +42,15 @@ public class GeneratorTest {
 
   @Test
   public void generate() throws Exception {
+
     // Arrange
-    DtoBuildersContext.BuildersContext buildersContext = createBuildersContext(ClassName.get(MyType.class),
-        ClassName.get(MyType.class).peerClass("MyTypeBuilders"), false);
-    DtoGoal.MethodGoalDetails details = DtoGoal.MethodGoalDetails.create(
-        ClassName.get(MyType.class), "goal", ImmutableList.of("parameter"), "goal", false, DtoGoal.GoalOptions.builder()
-            .toBuilderAccess(PUBLIC).builderAccess(PUBLIC).build());
-    ImmutableList<DtoParameter.RegularParameter> parameters = ImmutableList.of(
-        DtoParameter.RegularParameter.create("parameter", ClassName.get(String.class), Optional.<String>absent(), false));
-    ImmutableList<TypeName> thrownTypes = ImmutableList.of();
+    DtoBuildersContext.BuildersContext buildersContext = createBuildersContext(TYPE, GENERATED_TYPE, false);
+    String goalName = "myGoal"; // free choice
+    MethodGoalDetails details = MethodGoalDetails.create(
+        TYPE, goalName, ImmutableList.of("parameter"), "goal", false, goalOptions());
+    RegularParameter regularParameter = RegularParameter.create("parameter", STRING, getter(), false);
     RegularGoalDescription goalDescription = RegularGoalDescription.create(details,
-        thrownTypes, parameters);
+        thrownTypes(), ImmutableList.of(regularParameter));
     ImmutableList<? extends GoalDescription> goals = ImmutableList.of(goalDescription);
 
     // Act
@@ -52,8 +60,8 @@ public class GeneratorTest {
 
     // Assert
     assertThat(generatorSuccess.methods().size(), is(1));
-    assertThat(generatorSuccess.methods().get(0).name(), is("goal"));
-    assertThat(generatorSuccess.methods().get(0).method().name, is("goalBuilder"));
+    assertThat(generatorSuccess.methods().get(0).name(), is(goalName));
+    assertThat(generatorSuccess.methods().get(0).method().name, is("myGoalBuilder"));
     assertThat(generatorSuccess.methods().get(0).method().parameters.size(), is(0));
     assertThat(generatorSuccess.methods().get(0).method().modifiers.contains(Modifier.STATIC), is(true));
     assertThat(typeSpec.name, is("MyTypeBuilders"));
@@ -73,4 +81,15 @@ public class GeneratorTest {
     }
   });
 
+  private static ImmutableList<TypeName> thrownTypes() {
+    return ImmutableList.of();
+  }
+
+  private static GoalOptions goalOptions() {
+    return GoalOptions.builder().build();
+  }
+
+  private static Optional<String> getter() {
+    return Optional.absent();
+  }
 }

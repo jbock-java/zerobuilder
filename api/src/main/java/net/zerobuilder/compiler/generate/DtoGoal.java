@@ -8,6 +8,7 @@ import net.zerobuilder.AccessLevel;
 
 import java.util.List;
 
+import static net.zerobuilder.AccessLevel.PUBLIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
 
 public final class DtoGoal {
@@ -30,8 +31,8 @@ public final class DtoGoal {
     }
 
     public static final class Builder {
-      private AccessLevel builderAccess = UNSPECIFIED;
-      private AccessLevel toBuilderAccess = UNSPECIFIED;
+      private AccessLevel builderAccess = PUBLIC;
+      private AccessLevel toBuilderAccess = PUBLIC;
       private boolean toBuilder = false;
       private boolean builder = true;
       private Builder() {
