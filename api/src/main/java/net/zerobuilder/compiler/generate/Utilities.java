@@ -139,12 +139,6 @@ final class Utilities {
     return reversed;
   }
 
-  static <E> List<E> generalize(List<? extends E> specialized) {
-    ArrayList<E> result = new ArrayList<>();
-    result.addAll(specialized);
-    return result;
-  }
-
   static MethodSpec constructor(Modifier... modifiers) {
     return constructorBuilder().addModifiers(modifiers).build();
   }

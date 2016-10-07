@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
-import static net.zerobuilder.compiler.generate.Utilities.generalize;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class DtoGoalContext {
@@ -122,11 +122,11 @@ final class DtoGoalContext {
       = asFunction(new GoalCases<List<AbstractStep>>() {
     @Override
     public List<AbstractStep> regularGoal(RegularGoalContext goal) {
-      return generalize(regularSteps.apply(goal));
+      return unmodifiableList(regularSteps.apply(goal));
     }
     @Override
     public List<AbstractStep> beanGoal(BeanGoalContext goal) {
-      return generalize(goal.goal.steps);
+      return unmodifiableList(goal.goal.steps);
     }
   });
 

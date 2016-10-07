@@ -51,12 +51,12 @@ public class ExperimentsTest {
   @Test
   public void biologicalTest() {
     BioExperiment experiment1 = bioExperimentBuilder()
-        .candidates(singletonList(asList("Goku", "Friesa")));
+        .candidates(singletonList(asList("Goku", "Frieza")));
     BioExperiment experiment2 = bioExperimentToBuilder(experiment1)
-        .candidates(singletonList(asList("Rohan")))
+        .candidates(singletonList(asList("Gohan")))
         .build();
-    assertThat(experiment1.getCandidates(), is(singletonList(asList("Goku", "Friesa"))));
-    assertThat(experiment2.getCandidates(), is(singletonList(asList("Rohan"))));
+    assertThat(experiment1.getCandidates(), is(singletonList(asList("Goku", "Frieza"))));
+    assertThat(experiment2.getCandidates(), is(singletonList(asList("Gohan"))));
   }
 
   @Test

@@ -4,7 +4,7 @@ import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 
 import java.util.List;
 
-import static net.zerobuilder.compiler.generate.Utilities.generalize;
+import static java.util.Collections.unmodifiableList;
 
 public final class GeneratorInput {
 
@@ -17,6 +17,6 @@ public final class GeneratorInput {
   }
 
   public static GeneratorInput create(DtoBuildersContext.BuildersContext buildersContext, List<? extends GoalDescription> goalDescriptions) {
-    return new GeneratorInput(buildersContext, generalize(goalDescriptions));
+    return new GeneratorInput(buildersContext, unmodifiableList(goalDescriptions));
   }
 }
