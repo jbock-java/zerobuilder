@@ -1,8 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -12,14 +9,20 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 
 import javax.lang.model.element.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isUpperCase;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 
 final class Utilities {
 
@@ -36,25 +39,28 @@ final class Utilities {
     }
   }
 
-  private static final ImmutableSet<String> reservedWords = ImmutableSet.of(
+  private static final Set<String> reservedWords = new HashSet<>(Arrays.asList(
       "abstract", "continue", "for", "new", "switch", "assert", "default", "if", "package",
       "synchronized", "boolean", "do", "goto", "private", "this", "break", "double", "implements",
       "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
       "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char", "final",
       "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
-      "float", "native", "super", "while");
+      "float", "native", "super", "while"));
 
   static final CodeBlock emptyCodeBlock = CodeBlock.of("");
 
   static String upcase(String s) {
-    return LOWER_CAMEL.to(UPPER_CAMEL, s);
+    if (s.isEmpty() || Character.isUpperCase(s.charAt(0))) {
+      return s;
+    }
+    return Character.toUpperCase(s.charAt(0)) + s.substring(1);
   }
 
   static String downcase(String s) {
     if (s.length() >= 2 && isUpperCase(s.charAt(1))) {
       return s;
     }
-    String lowered = UPPER_CAMEL.to(LOWER_CAMEL, s);
+    String lowered = Character.toLowerCase(s.charAt(0)) + s.substring(1);
     if (reservedWords.contains(lowered)) {
       return s;
     }
@@ -103,15 +109,40 @@ final class Utilities {
       ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
       return Optional.of(parameterized.rawType);
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
-  static ImmutableList<TypeName> typeArguments(TypeName typeName) {
+  static List<TypeName> typeArguments(TypeName typeName) {
     if (typeName instanceof ParameterizedTypeName) {
       ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
-      return ImmutableList.copyOf(parameterized.typeArguments);
+      return parameterized.typeArguments;
     }
-    return ImmutableList.of();
+    return emptyList();
+  }
+
+  static <X, E> List<E> transform(Collection<X> input, Function<X, E> function) {
+    return input.stream().map(function).collect(toList());
+  }
+
+  static <P> List<P> presentInstances(Optional<P> optional) {
+    if (optional.isPresent()) {
+      return singletonList(optional.get());
+    }
+    return emptyList();
+  }
+
+  static <P> List<P> reverse(List<P> list) {
+    ArrayList<P> reversed = new ArrayList<>(list.size());
+    for (int i = list.size() - 1; i >= 0; i--) {
+      reversed.add(list.get(i));
+    }
+    return reversed;
+  }
+
+  static <E> List<E> generalize(List<? extends E> specialized) {
+    ArrayList<E> result = new ArrayList<>();
+    result.addAll(specialized);
+    return result;
   }
 
   static MethodSpec constructor(Modifier... modifiers) {

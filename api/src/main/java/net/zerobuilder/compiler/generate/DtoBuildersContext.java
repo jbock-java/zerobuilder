@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Joiner;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -28,19 +27,19 @@ public final class DtoBuildersContext {
     /**
      * The type that should be generated.
      */
-    public final ClassName generatedType;
+    final ClassName generatedType;
 
     /**
      * The class that contains the goal method(s) or constructor(s).
      * Only used in regular goals.
      */
-    public final ClassName type;
+    final ClassName type;
 
     /**
      * An instance of {@link #type}.
      * Only used in method goals, where {@link DtoGoal.MethodGoalDetails#instance} is true.
      */
-    public final FieldSpec field;
+    final FieldSpec field;
 
     /**
      * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.
@@ -90,23 +89,8 @@ public final class DtoBuildersContext {
         .build();
   }
 
-  /**
-   * <p>If {@code type} is a top level class, this returns a class in the same package,
-   * with class name {@code type + suffix}.
-   * </p><p>
-   * If {@code type} is nested, a top level class
-   * name derived from its name and nested parents is used instead.</p>
-   *
-   * @param type   A type name
-   * @param suffix A string that usually starts with an uppercase character
-   * @return A top level type in the same package.
-   */
-  public static ClassName appendSuffix(ClassName type, String suffix) {
-    String simpleName = Joiner.on('_').join(type.simpleNames()) + suffix;
-    return type.topLevelClassName().peerClass(simpleName);
-  }
-
   private DtoBuildersContext() {
     throw new UnsupportedOperationException("no instances");
   }
 }
+

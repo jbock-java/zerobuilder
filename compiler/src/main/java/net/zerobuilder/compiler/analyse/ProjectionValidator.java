@@ -105,8 +105,16 @@ final class ProjectionValidator {
       boolean nonNull = TmpValidParameter.nonNull(parameter.asType(), stepAnnotation, goalAnnotation);
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
-      RegularParameter regularParameter = RegularParameter.create(name, type, getter, nonNull);
+      RegularParameter regularParameter = createRegularParameter(getter, nonNull, name, type);
       return new TmpRegularParameter(parameter, fromNullable(stepAnnotation), regularParameter);
+    }
+
+    private static RegularParameter createRegularParameter(Optional<String> getter, boolean nonNull, String name, TypeName type) {
+      if (getter.isPresent()) {
+        return RegularParameter.create(name, type, nonNull, getter.get());
+      } else {
+        return RegularParameter.create(name, type, nonNull);
+      }
     }
   }
 

@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -10,22 +8,24 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
-import static com.squareup.javapoet.MethodSpec.constructorBuilder;
+import java.util.List;
+import java.util.function.Function;
+
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.Utilities.constructor;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
-import static net.zerobuilder.compiler.generate.Utilities.upcase;
 import static net.zerobuilder.compiler.generate.BuilderContextV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.thrownTypes;
+import static net.zerobuilder.compiler.generate.Utilities.constructor;
+import static net.zerobuilder.compiler.generate.Utilities.statement;
+import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class UpdaterContext {
 
@@ -34,10 +34,10 @@ final class UpdaterContext {
         upcase(goalName.apply(goal) + "Updater"));
   }
 
-  private static final Function<AbstractGoalContext, ImmutableList<FieldSpec>> fields
+  private static final Function<AbstractGoalContext, List<FieldSpec>> fields
       = goalCases(UpdaterContextV.fields, UpdaterContextB.fields);
 
-  private static final Function<AbstractGoalContext, ImmutableList<MethodSpec>> updateMethods
+  private static final Function<AbstractGoalContext, List<MethodSpec>> updateMethods
       = goalCases(UpdaterContextV.updateMethods, UpdaterContextB.updateMethods);
 
   private static MethodSpec buildMethod(AbstractGoalContext goal) {
@@ -60,12 +60,7 @@ final class UpdaterContext {
   }
 
   private static final Function<BeanGoalContext, CodeBlock> returnBean
-      = new Function<BeanGoalContext, CodeBlock>() {
-    @Override
-    public CodeBlock apply(BeanGoalContext goal) {
-      return statement("return this.$N", goal.goal.field);
-    }
-  };
+      = goal -> statement("return this.$N", goal.goal.field);
 
   private static final Function<AbstractGoalContext, CodeBlock> invoke
       = goalCases(regularInvoke, returnBean);

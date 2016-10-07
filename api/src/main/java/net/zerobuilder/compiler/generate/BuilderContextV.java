@@ -1,9 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -16,65 +12,62 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContex
 import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
-import static com.google.common.base.Optional.absent;
-import static com.google.common.base.Optional.presentInstances;
-import static com.google.common.collect.ImmutableList.of;
-import static com.google.common.collect.Iterables.getLast;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.asFunction;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
+import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class BuilderContextV {
 
-  static final Function<RegularGoalContext, ImmutableList<FieldSpec>> fields
-      = new Function<RegularGoalContext, ImmutableList<FieldSpec>>() {
-    @Override
-    public ImmutableList<FieldSpec> apply(RegularGoalContext goal) {
-      ImmutableList.Builder<FieldSpec> builder = ImmutableList.builder();
-      DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
-      builder.addAll(isInstance.apply(goal)
-          ? ImmutableList.of(buildersContext.field)
-          : ImmutableList.<FieldSpec>of());
-      ImmutableList<RegularStep> steps = regularSteps.apply(goal);
-      for (RegularStep step : steps.subList(0, steps.size() - 1)) {
-        builder.add(step.field());
-      }
-      return builder.build();
+  static final Function<RegularGoalContext, List<FieldSpec>> fields
+      = goal -> {
+    List<FieldSpec> builder = new ArrayList<>();
+    DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+    builder.addAll(isInstance.apply(goal)
+        ? Collections.singletonList(buildersContext.field)
+        : Collections.emptyList());
+    List<RegularStep> steps1 = regularSteps.apply(goal);
+    for (RegularStep step : steps1.subList(0, steps1.size() - 1)) {
+      builder.add(step.field());
     }
+    return builder;
   };
 
-  static final Function<RegularGoalContext, ImmutableList<MethodSpec>> steps
-      = new Function<RegularGoalContext, ImmutableList<MethodSpec>>() {
-    @Override
-    public ImmutableList<MethodSpec> apply(RegularGoalContext goal) {
-      ImmutableList<RegularStep> steps = regularSteps.apply(goal);
-      ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      for (RegularStep step : steps.subList(0, steps.size() - 1)) {
-        builder.addAll(regularMethods(step, goal, false));
-      }
-      builder.addAll(regularMethods(getLast(steps), goal, true));
-      return builder.build();
-    }
-  };
+  static final Function<RegularGoalContext, List<MethodSpec>> steps
+      = goal -> {
+        List<RegularStep> steps1 = regularSteps.apply(goal);
+        List<MethodSpec> builder = new ArrayList<>();
+        for (RegularStep step : steps1.subList(0, steps1.size() - 1)) {
+          builder.addAll(regularMethods(step, goal, false));
+        }
+        builder.addAll(regularMethods(steps1.get(steps1.size() - 1), goal, true));
+        return builder;
+      };
 
-  private static ImmutableList<MethodSpec> regularMethods(RegularStep step, RegularGoalContext goal, boolean isLast) {
-    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+  private static List<MethodSpec> regularMethods(RegularStep step, RegularGoalContext goal, boolean isLast) {
+    List<MethodSpec> builder = new ArrayList<>();
     builder.add(regularStep(step, goal, isLast));
-    builder.addAll(presentInstances(of(regularEmptyCollection(step, goal, isLast))));
-    return builder.build();
+    builder.addAll(presentInstances(regularEmptyCollection(step, goal, isLast)));
+    return builder;
   }
 
   private static Optional<MethodSpec> regularEmptyCollection(RegularStep step, RegularGoalContext goal, boolean isLast) {
     Optional<EmptyOption> maybeEmptyOption = step.emptyOption();
     if (!maybeEmptyOption.isPresent()) {
-      return absent();
+      return Optional.empty();
     }
     EmptyOption emptyOption = maybeEmptyOption.get();
     return Optional.of(methodBuilder(emptyOption.name)
@@ -178,8 +171,8 @@ final class BuilderContextV {
     return builder.build();
   }
 
-  private static CodeBlock invocationParameters(ImmutableList<String> parameterNames) {
-    return CodeBlock.of(Joiner.on(", ").join(parameterNames));
+  private static CodeBlock invocationParameters(List<String> parameterNames) {
+    return CodeBlock.of(String.join(", ", parameterNames));
   }
 
   private BuilderContextV() {

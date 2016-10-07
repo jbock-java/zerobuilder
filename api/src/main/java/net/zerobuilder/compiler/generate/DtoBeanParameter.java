@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -9,11 +7,14 @@ import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 
 import javax.lang.model.element.ExecutableElement;
 
-import static com.google.common.collect.Iterables.getOnlyElement;
+import java.util.List;
+import java.util.Optional;
+
 import static com.squareup.javapoet.ClassName.OBJECT;
 import static net.zerobuilder.compiler.generate.Utilities.distinctFrom;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
 
 public final class DtoBeanParameter {
 
@@ -92,13 +93,13 @@ public final class DtoBeanParameter {
     }
 
     private static ClassName collectionType(TypeName typeName) {
-      ImmutableList<TypeName> typeArguments = Utilities.typeArguments(typeName);
+      List<TypeName> typeArguments = Utilities.typeArguments(typeName);
       if (typeArguments.isEmpty()) {
         // raw collection
         return OBJECT;
       } else if (typeArguments.size() == 1) {
         // one type parameter
-        Optional<ClassName> collectionType = Utilities.rawClassName(getOnlyElement(typeArguments));
+        Optional<ClassName> collectionType = rawClassName(typeArguments.get(0));
         if (!collectionType.isPresent())
           throw new IllegalStateException("collectionType absent");
         return collectionType.get();

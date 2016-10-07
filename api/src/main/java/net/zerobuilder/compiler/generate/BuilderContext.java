@@ -1,15 +1,14 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
-import static com.squareup.javapoet.MethodSpec.constructorBuilder;
+import java.util.List;
+import java.util.function.Function;
+
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -22,20 +21,18 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.StepContext.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.constructor;
+import static net.zerobuilder.compiler.generate.Utilities.transform;
 
 final class BuilderContext {
 
-  private static final Function<AbstractGoalContext, ImmutableList<FieldSpec>> fields
+  private static final Function<AbstractGoalContext, List<FieldSpec>> fields
       = goalCases(BuilderContextV.fields, BuilderContextB.fields);
 
-  private static ImmutableList<TypeSpec> stepInterfaces(AbstractGoalContext goal) {
-    return FluentIterable.from(abstractSteps.apply(goal))
-        .transform(asStepInterface)
-        .toList();
-
+  private static List<TypeSpec> stepInterfaces(AbstractGoalContext goal) {
+    return transform(abstractSteps.apply(goal), asStepInterface);
   }
 
-  private static final Function<AbstractGoalContext, ImmutableList<MethodSpec>> steps
+  private static final Function<AbstractGoalContext, List<MethodSpec>> steps
       = goalCases(BuilderContextV.steps, BuilderContextB.steps);
 
   static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {

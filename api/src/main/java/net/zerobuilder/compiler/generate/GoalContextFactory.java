@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
@@ -25,11 +23,17 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+
 import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.asFunction;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalType;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
+import static net.zerobuilder.compiler.generate.Utilities.reverse;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class GoalContextFactory {
@@ -48,7 +52,7 @@ final class GoalContextFactory {
   }
 
   private static IGoal beanGoal(BeanGoalDescription goal, ClassName generatedType) {
-    ImmutableList<? extends AbstractBeanStep> steps = steps(goal,
+    List<? extends AbstractBeanStep> steps = steps(goal,
         generatedType,
         goal.parameters,
         beansParameterFactory);
@@ -57,7 +61,7 @@ final class GoalContextFactory {
 
   private static IGoal regularGoal(ClassName generatedType,
                                    final RegularGoalDescription validGoal) {
-    final ImmutableList<RegularStep> steps = steps(validGoal,
+    final List<RegularStep> steps = steps(validGoal,
         generatedType,
         validGoal.parameters,
         regularParameterFactory);
@@ -74,31 +78,31 @@ final class GoalContextFactory {
   }
 
   private static <P extends AbstractParameter, S extends AbstractStep>
-  ImmutableList<S> steps(GoalDescription goal,
-                         ClassName generatedType,
-                         ImmutableList<P> parameters,
-                         ParameterFactory<P, S> parameterFactory) {
+  List<S> steps(GoalDescription goal,
+                ClassName generatedType,
+                List<P> parameters,
+                ParameterFactory<P, S> parameterFactory) {
     ClassName contractName = contractName(goalName(goal), generatedType);
     TypeName nextType = goalType(goal);
-    ImmutableList<TypeName> thrownTypes = GoalContextFactory.thrownTypes.apply(goal);
-    ImmutableList.Builder<S> builder = ImmutableList.builder();
-    for (P parameter : parameters.reverse()) {
+    List<TypeName> thrownTypes = GoalContextFactory.thrownTypes.apply(goal);
+    List<S> builder = new ArrayList<>();
+    for (P parameter : reverse(parameters)) {
       String thisName = upcase(parameterName.apply(parameter));
       ClassName thisType = contractName.nestedClass(thisName);
       builder.add(parameterFactory.create(thisType, nextType, parameter, thrownTypes));
       nextType = thisType;
     }
-    return builder.build().reverse();
+    return reverse(builder);
   }
 
   private static abstract class ParameterFactory<P extends AbstractParameter, R extends AbstractStep> {
-    abstract R create(ClassName typeThisStep, TypeName typeNextStep, P parameter, ImmutableList<TypeName> declaredExceptions);
+    abstract R create(ClassName typeThisStep, TypeName typeNextStep, P parameter, List<TypeName> declaredExceptions);
   }
 
   private static final ParameterFactory<AbstractBeanParameter, ? extends AbstractBeanStep> beansParameterFactory
       = new ParameterFactory<AbstractBeanParameter, AbstractBeanStep>() {
     @Override
-    AbstractBeanStep create(final ClassName thisType, final TypeName nextType, final AbstractBeanParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
+    AbstractBeanStep create(final ClassName thisType, final TypeName nextType, final AbstractBeanParameter validParameter, List<TypeName> declaredExceptions) {
       return validParameter.accept(new DtoBeanParameter.BeanParameterCases<AbstractBeanStep>() {
         @Override
         public AbstractBeanStep accessorPair(AccessorPair pair) {
@@ -116,20 +120,20 @@ final class GoalContextFactory {
   private static final ParameterFactory<RegularParameter, RegularStep> regularParameterFactory
       = new ParameterFactory<RegularParameter, RegularStep>() {
     @Override
-    RegularStep create(ClassName thisType, TypeName nextType, RegularParameter validParameter, ImmutableList<TypeName> declaredExceptions) {
+    RegularStep create(ClassName thisType, TypeName nextType, RegularParameter validParameter, List<TypeName> declaredExceptions) {
       return RegularStep.create(thisType, nextType, validParameter, declaredExceptions);
     }
   };
 
-  private static final Function<GoalDescription, ImmutableList<TypeName>> thrownTypes
-      = asFunction(new GoalDescriptionCases<ImmutableList<TypeName>>() {
+  private static final Function<GoalDescription, List<TypeName>> thrownTypes
+      = asFunction(new GoalDescriptionCases<List<TypeName>>() {
     @Override
-    public ImmutableList<TypeName> regularGoal(RegularGoalDescription goal) {
+    public List<TypeName> regularGoal(RegularGoalDescription goal) {
       return goal.thrownTypes;
     }
     @Override
-    public ImmutableList<TypeName> beanGoal(BeanGoalDescription goal) {
-      return ImmutableList.of();
+    public List<TypeName> beanGoal(BeanGoalDescription goal) {
+      return Collections.emptyList();
     }
   });
 

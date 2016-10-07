@@ -1,15 +1,13 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 
 import java.util.List;
+import java.util.function.Function;
 
 import static net.zerobuilder.AccessLevel.PUBLIC;
-import static net.zerobuilder.AccessLevel.UNSPECIFIED;
 
 public final class DtoGoal {
 
@@ -65,6 +63,7 @@ public final class DtoGoal {
 
     /**
      * Returns the goal name.
+     *
      * @return goal name
      */
     public final String name() {
@@ -89,21 +88,11 @@ public final class DtoGoal {
   }
 
   public static <R> Function<AbstractGoalDetails, R> asFunction(final AbstractGoalCases<R> cases) {
-    return new Function<AbstractGoalDetails, R>() {
-      @Override
-      public R apply(AbstractGoalDetails goal) {
-        return goal.acceptAbstract(cases);
-      }
-    };
+    return goal -> goal.acceptAbstract(cases);
   }
 
   public static <R> Function<RegularGoalDetails, R> asFunction(final RegularGoalCases<R> cases) {
-    return new Function<RegularGoalDetails, R>() {
-      @Override
-      public R apply(RegularGoalDetails goal) {
-        return goal.accept(cases);
-      }
-    };
+    return goal -> goal.accept(cases);
   }
 
   public static abstract class RegularGoalDetails extends AbstractGoalDetails {
@@ -117,9 +106,9 @@ public final class DtoGoal {
     /**
      * parameter names in original order
      */
-    final ImmutableList<String> parameterNames;
+    final List<String> parameterNames;
 
-    RegularGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames,
+    RegularGoalDetails(TypeName goalType, String name, List<String> parameterNames,
                        GoalOptions goalOptions) {
       super(name, goalOptions);
       this.goalType = goalType;
@@ -136,14 +125,14 @@ public final class DtoGoal {
 
   public static final class ConstructorGoalDetails extends RegularGoalDetails {
 
-    private ConstructorGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames,
+    private ConstructorGoalDetails(TypeName goalType, String name, List<String> parameterNames,
                                    GoalOptions goalOptions) {
       super(goalType, name, parameterNames, goalOptions);
     }
 
     public static ConstructorGoalDetails create(TypeName goalType, String name, List<String> parameterNames,
                                                 GoalOptions goalOptions) {
-      return new ConstructorGoalDetails(goalType, name, ImmutableList.copyOf(parameterNames), goalOptions);
+      return new ConstructorGoalDetails(goalType, name, parameterNames, goalOptions);
     }
 
     @Override
@@ -160,7 +149,7 @@ public final class DtoGoal {
      */
     final boolean instance;
 
-    private MethodGoalDetails(TypeName goalType, String name, ImmutableList<String> parameterNames, String methodName,
+    private MethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
                               boolean instance, GoalOptions goalOptions) {
       super(goalType, name, parameterNames, goalOptions);
       this.methodName = methodName;
@@ -169,7 +158,7 @@ public final class DtoGoal {
 
     public static MethodGoalDetails create(TypeName goalType, String name, List<String> parameterNames, String methodName,
                                            boolean instance, GoalOptions goalOptions) {
-      return new MethodGoalDetails(goalType, name, ImmutableList.copyOf(parameterNames), methodName, instance, goalOptions);
+      return new MethodGoalDetails(goalType, name, parameterNames, methodName, instance, goalOptions);
     }
 
     @Override

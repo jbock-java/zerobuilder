@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.FieldSpec;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
@@ -19,15 +18,12 @@ final class DtoBeanGoalContext {
 
   static final class BeanGoal implements IGoal {
 
-    /**
-     * alphabetic order unless {@link net.zerobuilder.Step} was used
-     */
-    final ImmutableList<? extends AbstractBeanStep> steps;
+    final List<? extends AbstractBeanStep> steps;
     final BeanGoalDetails details;
     final FieldSpec field;
 
     private BeanGoal(BeanGoalDetails details,
-                     ImmutableList<? extends AbstractBeanStep> steps, FieldSpec field) {
+                     List<? extends AbstractBeanStep> steps, FieldSpec field) {
       this.steps = steps;
       this.details = details;
       this.field = field;
@@ -37,7 +33,7 @@ final class DtoBeanGoalContext {
                            List<? extends AbstractBeanStep> steps) {
       FieldSpec field = fieldSpec(goal.goalType,
           downcase(goal.goalType.simpleName()), PRIVATE);
-      return new BeanGoal(goal, ImmutableList.copyOf(steps), field);
+      return new BeanGoal(goal, steps, field);
 
     }
 

@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
@@ -10,6 +8,7 @@ import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 
 import java.util.List;
+import java.util.function.Function;
 
 public final class DtoGoalDescription {
 
@@ -23,12 +22,7 @@ public final class DtoGoalDescription {
   }
 
   static <R> Function<GoalDescription, R> asFunction(final GoalDescriptionCases<R> cases) {
-    return new Function<GoalDescription, R>() {
-      @Override
-      public R apply(GoalDescription goal) {
-        return goal.accept(cases);
-      }
-    };
+    return goal -> goal.accept(cases);
   }
 
   /**
@@ -36,12 +30,12 @@ public final class DtoGoalDescription {
    */
   public static final class RegularGoalDescription implements GoalDescription {
     final RegularGoalDetails details;
-    final ImmutableList<TypeName> thrownTypes;
-    final ImmutableList<RegularParameter> parameters;
+    final List<TypeName> thrownTypes;
+    final List<RegularParameter> parameters;
 
     private RegularGoalDescription(RegularGoalDetails details,
-                                   ImmutableList<TypeName> thrownTypes,
-                                   ImmutableList<RegularParameter> parameters) {
+                                   List<TypeName> thrownTypes,
+                                   List<RegularParameter> parameters) {
       this.details = details;
       this.thrownTypes = thrownTypes;
       this.parameters = parameters;
@@ -50,9 +44,7 @@ public final class DtoGoalDescription {
     public static RegularGoalDescription create(RegularGoalDetails details,
                                                 List<TypeName> thrownTypes,
                                                 List<RegularParameter> parameters) {
-      return new RegularGoalDescription(details,
-          ImmutableList.copyOf(thrownTypes),
-          ImmutableList.copyOf(parameters));
+      return new RegularGoalDescription(details, thrownTypes, parameters);
     }
 
     @Override
@@ -66,15 +58,15 @@ public final class DtoGoalDescription {
    */
   public static final class BeanGoalDescription implements GoalDescription {
     final BeanGoalDetails details;
-    final ImmutableList<AbstractBeanParameter> parameters;
+    final List<AbstractBeanParameter> parameters;
 
-    private BeanGoalDescription(BeanGoalDetails details, ImmutableList<AbstractBeanParameter> parameters) {
+    private BeanGoalDescription(BeanGoalDetails details, List<AbstractBeanParameter> parameters) {
       this.details = details;
       this.parameters = parameters;
     }
 
     public static BeanGoalDescription create(BeanGoalDetails details, List<AbstractBeanParameter> parameters) {
-      return new BeanGoalDescription(details, ImmutableList.copyOf(parameters));
+      return new BeanGoalDescription(details, parameters);
     }
     @Override
     public <R> R accept(GoalDescriptionCases<R> cases) {

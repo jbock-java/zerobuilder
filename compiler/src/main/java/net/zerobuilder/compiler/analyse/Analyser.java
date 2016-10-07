@@ -30,7 +30,7 @@ import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConfli
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.skip;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersClass;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.appendSuffix;
+import static net.zerobuilder.compiler.analyse.Utilities.appendSuffix;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuildersContext;
 
 public final class Analyser {

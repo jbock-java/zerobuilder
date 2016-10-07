@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
@@ -11,7 +9,13 @@ import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+
+import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
+import static net.zerobuilder.compiler.generate.Utilities.generalize;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class DtoGoalContext {
@@ -32,12 +36,7 @@ final class DtoGoalContext {
   }
 
   static <R> Function<AbstractGoalContext, R> asFunction(final GoalCases<R> cases) {
-    return new Function<AbstractGoalContext, R>() {
-      @Override
-      public R apply(AbstractGoalContext goal) {
-        return goal.accept(cases);
-      }
-    };
+    return goal -> goal.accept(cases);
   }
 
   static <R> Function<AbstractGoalContext, R>
@@ -55,12 +54,12 @@ final class DtoGoalContext {
     });
   }
 
-  static ImmutableList<ClassName> stepInterfaceTypes(AbstractGoalContext goal) {
-    ImmutableList.Builder<ClassName> specs = ImmutableList.builder();
+  static List<ClassName> stepInterfaceTypes(AbstractGoalContext goal) {
+    List<ClassName> specs = new ArrayList<>();
     for (AbstractStep abstractStep : abstractSteps.apply(goal)) {
       specs.add(abstractStep.thisType);
     }
-    return specs.build();
+    return specs;
   }
 
   static final Function<AbstractGoalContext, BuildersContext> buildersContext
@@ -119,32 +118,32 @@ final class DtoGoalContext {
     }
   });
 
-  static final Function<AbstractGoalContext, ImmutableList<? extends AbstractStep>> abstractSteps
-      = asFunction(new GoalCases<ImmutableList<? extends AbstractStep>>() {
+  static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps
+      = asFunction(new GoalCases<List<AbstractStep>>() {
     @Override
-    public ImmutableList<? extends AbstractStep> regularGoal(RegularGoalContext goal) {
-      return regularSteps.apply(goal);
+    public List<AbstractStep> regularGoal(RegularGoalContext goal) {
+      return generalize(regularSteps.apply(goal));
     }
     @Override
-    public ImmutableList<? extends AbstractStep> beanGoal(BeanGoalContext goal) {
-      return goal.goal.steps;
+    public List<AbstractStep> beanGoal(BeanGoalContext goal) {
+      return generalize(goal.goal.steps);
     }
   });
 
-  static final Function<AbstractGoalContext, ImmutableList<TypeName>> thrownTypes
-      = asFunction(new GoalCases<ImmutableList<TypeName>>() {
+  static final Function<AbstractGoalContext, List<TypeName>> thrownTypes
+      = asFunction(new GoalCases<List<TypeName>>() {
     @Override
-    public ImmutableList<TypeName> regularGoal(RegularGoalContext goal) {
+    public List<TypeName> regularGoal(RegularGoalContext goal) {
       return DtoRegularGoalContext.thrownTypes.apply(goal);
     }
     @Override
-    public ImmutableList<TypeName> beanGoal(BeanGoalContext goal) {
-      return ImmutableList.of();
+    public List<TypeName> beanGoal(BeanGoalContext goal) {
+      return emptyList();
     }
   });
 
 
-  public static ClassName contractName(String goalName, ClassName generatedType) {
+  static ClassName contractName(String goalName, ClassName generatedType) {
     return generatedType.nestedClass(upcase(goalName + "Builder"));
   }
 

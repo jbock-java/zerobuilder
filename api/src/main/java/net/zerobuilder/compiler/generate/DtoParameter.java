@@ -1,9 +1,10 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+
+import java.util.Optional;
+import java.util.function.Function;
 
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
@@ -15,12 +16,7 @@ public final class DtoParameter {
   }
 
   public static <R> Function<AbstractParameter, R> asFunction(final ParameterCases<R> cases) {
-    return new Function<AbstractParameter, R>() {
-      @Override
-      public R apply(AbstractParameter parameter) {
-        return parameter.acceptParameter(cases);
-      }
-    };
+    return parameter -> parameter.acceptParameter(cases);
   }
 
   abstract static class AbstractParameter {
@@ -64,8 +60,12 @@ public final class DtoParameter {
       this.name = name;
     }
 
-    public static RegularParameter create(String name, TypeName type, Optional<String> getter, boolean nonNull) {
-      return new RegularParameter(name, type, getter, nonNull);
+    public static RegularParameter create(String name, TypeName type, boolean nonNull) {
+      return new RegularParameter(name, type, Optional.empty(), nonNull);
+    }
+
+    public static RegularParameter create(String name, TypeName type, boolean nonNull, String getter) {
+      return new RegularParameter(name, type, Optional.of(getter), nonNull);
     }
 
     @Override

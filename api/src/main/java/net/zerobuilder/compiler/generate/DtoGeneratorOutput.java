@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -9,14 +7,15 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
 import java.util.List;
+import java.util.function.Function;
 
-import static com.google.common.collect.Iterables.transform;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod.getMethod;
 import static net.zerobuilder.compiler.generate.Utilities.constructor;
+import static net.zerobuilder.compiler.generate.Utilities.transform;
 
 public final class DtoGeneratorOutput {
 
@@ -75,9 +74,9 @@ public final class DtoGeneratorOutput {
 
   public static final class GeneratorSuccess implements GeneratorOutput {
 
-    private final ImmutableList<BuilderMethod> methods;
-    private final ImmutableList<TypeSpec> nestedTypes;
-    private final ImmutableList<FieldSpec> fields;
+    private final List<BuilderMethod> methods;
+    private final List<TypeSpec> nestedTypes;
+    private final List<FieldSpec> fields;
     private final ClassName generatedType;
 
     /**
@@ -97,9 +96,9 @@ public final class DtoGeneratorOutput {
           .build();
     }
 
-    GeneratorSuccess(ImmutableList<BuilderMethod> methods,
-                     ImmutableList<TypeSpec> nestedTypes,
-                     ImmutableList<FieldSpec> fields,
+    GeneratorSuccess(List<BuilderMethod> methods,
+                     List<TypeSpec> nestedTypes,
+                     List<FieldSpec> fields,
                      ClassName generatedType) {
       this.methods = methods;
       this.nestedTypes = nestedTypes;

@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
@@ -10,6 +8,10 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
@@ -39,10 +41,11 @@ final class StepContextB {
     }
   });
 
-  private static ImmutableList<MethodSpec> collectionMethods(LoneGetterStep step) {
-    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-    builder.add(iterateCollection(step), emptyCollection(step));
-    return builder.build();
+  private static List<MethodSpec> collectionMethods(LoneGetterStep step) {
+    List<MethodSpec> builder = new ArrayList<>();
+    builder.add(iterateCollection(step));
+    builder.add(emptyCollection(step));
+    return builder;
   }
 
   private static MethodSpec emptyCollection(LoneGetterStep step) {

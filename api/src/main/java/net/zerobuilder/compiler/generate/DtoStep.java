@@ -1,9 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -13,7 +9,13 @@ import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.Utilities.ClassNames;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
@@ -26,8 +28,8 @@ import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class DtoStep {
 
-  private static final ImmutableSet<ClassName> LIST_HIERARCHY
-      = ImmutableSet.of(ClassNames.LIST, COLLECTION, ITERABLE);
+  private static final Set<ClassName> LIST_HIERARCHY
+      = new HashSet<>(Arrays.asList(ClassNames.LIST, COLLECTION, ITERABLE));
 
   static final class EmptyOption {
 
@@ -50,7 +52,7 @@ final class DtoStep {
     static Optional<EmptyOption> create(TypeName type, String name) {
       Optional<ClassName> maybeClassName = rawClassName(type);
       if (!maybeClassName.isPresent()) {
-        return Optional.absent();
+        return Optional.empty();
       }
       ClassName className = maybeClassName.get();
       if (LIST_HIERARCHY.contains(className)) {
@@ -63,7 +65,7 @@ final class DtoStep {
             CodeBlock.of("$T.emptySet()", Collections.class),
             emptyOptionName(name)));
       }
-      return Optional.absent();
+      return Optional.empty();
     }
 
     private static String emptyOptionName(String name) {
@@ -87,12 +89,7 @@ final class DtoStep {
   }
 
   static <R> Function<AbstractStep, R> asFunction(final StepCases<R> cases) {
-    return new Function<AbstractStep, R>() {
-      @Override
-      public R apply(AbstractStep abstractStep) {
-        return abstractStep.accept(cases);
-      }
-    };
+    return abstractStep -> abstractStep.accept(cases);
   }
 
   static <R> StepCases<R> stepCases(final Function<? super RegularStep, R> regularFunction,
@@ -111,17 +108,17 @@ final class DtoStep {
 
   static final class RegularStep extends AbstractStep {
     final RegularParameter validParameter;
-    final ImmutableList<TypeName> declaredExceptions;
+    final List<TypeName> declaredExceptions;
 
     private RegularStep(ClassName thisType, TypeName nextType, RegularParameter validParameter,
-                        ImmutableList<TypeName> declaredExceptions) {
+                        List<TypeName> declaredExceptions) {
       super(thisType, nextType);
       this.declaredExceptions = declaredExceptions;
       this.validParameter = validParameter;
     }
 
     static RegularStep create(ClassName thisType, TypeName nextType, RegularParameter parameter,
-                              ImmutableList<TypeName> declaredExceptions) {
+                              List<TypeName> declaredExceptions) {
       return new RegularStep(thisType, nextType, parameter, declaredExceptions);
     }
 
@@ -151,15 +148,15 @@ final class DtoStep {
     }
   });
 
-  static final Function<AbstractStep, ImmutableList<TypeName>> declaredExceptions
-      = asFunction(new StepCases<ImmutableList<TypeName>>() {
+  static final Function<AbstractStep, List<TypeName>> declaredExceptions
+      = asFunction(new StepCases<List<TypeName>>() {
     @Override
-    public ImmutableList<TypeName> regularStep(RegularStep step) {
+    public List<TypeName> regularStep(RegularStep step) {
       return step.declaredExceptions;
     }
     @Override
-    public ImmutableList<TypeName> beanStep(AbstractBeanStep step) {
-      return ImmutableList.of();
+    public List<TypeName> beanStep(AbstractBeanStep step) {
+      return Collections.emptyList();
     }
   });
 

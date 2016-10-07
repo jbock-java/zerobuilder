@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler;
 
 import com.google.auto.service.AutoService;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -13,8 +12,10 @@ import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.Analyser;
 import net.zerobuilder.compiler.analyse.ValidationException;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorFailure;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutputCases;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorSuccess;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
 
@@ -31,6 +32,7 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Set;
+import java.util.function.Function;
 
 import static com.google.common.base.Throwables.getStackTraceAsString;
 import static com.google.common.collect.Iterables.toArray;
@@ -42,6 +44,7 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_NOT_IN_BUILD;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_WITHOUT_BUILDERS;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
+import static net.zerobuilder.compiler.generate.DtoGeneratorOutput.asFunction;
 
 @AutoService(Processor.class)
 public final class ZeroProcessor extends AbstractProcessor {
@@ -64,19 +67,22 @@ public final class ZeroProcessor extends AbstractProcessor {
     }
     Elements elements = processingEnv.getElementUtils();
     Analyser analyser = new Analyser(elements);
+    ImmutableList<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builders.class));
-    Function<GeneratorOutput, Optional<TypeSpec>> typeSpecFunction
-        = typeSpecFunction(elements, processingEnv.getMessager());
+    Function<GeneratorOutput, Optional<GeneratorSuccess>> typeSpecFunction
+        = typeSpecFunction(processingEnv.getMessager());
     for (TypeElement annotatedType : types) {
       try {
         GeneratorInput goals = analyser.analyse(annotatedType);
         GeneratorOutput generatorOutput = Generator.generate(goals);
-        Optional<TypeSpec> typeSpec = typeSpecFunction.apply(generatorOutput);
-        if (!typeSpec.isPresent()) {
+        Optional<GeneratorSuccess> maybeSuccess = typeSpecFunction.apply(generatorOutput);
+        if (!maybeSuccess.isPresent()) {
           return false;
         }
+        GeneratorSuccess success = maybeSuccess.get();
+        TypeSpec typeSpec = success.typeSpec(generatedAnnotations);
         try {
-          write(goals.buildersContext.generatedType, typeSpec.get());
+          write(success.generatedType(), typeSpec);
         } catch (IOException e) {
           String message = "Error processing "
               + ClassName.get(annotatedType) + ": " + getStackTraceAsString(e);
@@ -95,16 +101,15 @@ public final class ZeroProcessor extends AbstractProcessor {
     return false;
   }
 
-  private static Function<GeneratorOutput, Optional<TypeSpec>> typeSpecFunction(Elements elements,
-                                                                                final Messager messager) {
-    final ImmutableList<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
-    return DtoGeneratorOutput.asFunction(new DtoGeneratorOutput.GeneratorOutputCases<Optional<TypeSpec>>() {
+  private static Function<GeneratorOutput, Optional<GeneratorSuccess>>
+  typeSpecFunction(final Messager messager) {
+    return asFunction(new GeneratorOutputCases<Optional<GeneratorSuccess>>() {
       @Override
-      public Optional<TypeSpec> success(DtoGeneratorOutput.GeneratorSuccess output) {
-        return Optional.of(output.typeSpec(generatedAnnotations));
+      public Optional<GeneratorSuccess> success(GeneratorSuccess output) {
+        return Optional.of(output);
       }
       @Override
-      public Optional<TypeSpec> failure(DtoGeneratorOutput.GeneratorFailure failure) {
+      public Optional<GeneratorSuccess> failure(GeneratorFailure failure) {
         messager.printMessage(ERROR, failure.message());
         return Optional.absent();
       }

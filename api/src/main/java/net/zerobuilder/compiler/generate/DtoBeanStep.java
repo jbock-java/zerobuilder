@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -10,6 +8,9 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
+
+import java.util.Optional;
+import java.util.function.Function;
 
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
@@ -23,12 +24,7 @@ final class DtoBeanStep {
   }
 
   static <R> Function<AbstractBeanStep, R> asFunction(final BeanStepCases<R> cases) {
-    return new Function<AbstractBeanStep, R>() {
-      @Override
-      public R apply(AbstractBeanStep abstractStep) {
-        return abstractStep.acceptBean(cases);
-      }
-    };
+    return abstractStep -> abstractStep.acceptBean(cases);
   }
 
   static abstract class AbstractBeanStep extends AbstractStep {
@@ -112,7 +108,7 @@ final class DtoBeanStep {
     }
     @Override
     public Optional<EmptyOption> loneGetter(LoneGetterStep step) {
-      return Optional.absent();
+      return Optional.empty();
     }
   };
 

@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
@@ -12,6 +11,8 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
+
+import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -29,26 +30,23 @@ import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 final class GeneratorB {
 
   static final Function<BeanGoalContext, BuilderMethod> goalToToBuilder
-      = new Function<BeanGoalContext, BuilderMethod>() {
-    @Override
-    public BuilderMethod apply(BeanGoalContext goal) {
-      ParameterSpec parameter = parameterSpec(goal.goal.details.goalType, goal.goal.field.name);
-      String name = goal.goal.details.name;
-      MethodSpec.Builder method = methodBuilder(downcase(name + "ToBuilder"))
-          .addParameter(parameter);
-      ParameterSpec updater = updaterInstance(goal);
-      method.addCode(initializeUpdater(goal, updater));
-      Function<AbstractBeanStep, CodeBlock> copy = copy(goal);
-      for (AbstractBeanStep step : goal.goal.steps) {
-        method.addCode(copy.apply(step));
-      }
-      method.addStatement("return $N", updater);
-      MethodSpec methodSpec = method
-          .returns(updaterType(goal))
-          .addModifiers(goal.goal.details.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
-      return new BuilderMethod(name, methodSpec);
-    }
-  };
+      = goal -> {
+        ParameterSpec parameter = parameterSpec(goal.goal.details.goalType, goal.goal.field.name);
+        String name = goal.goal.details.name;
+        MethodSpec.Builder method = methodBuilder(downcase(name + "ToBuilder"))
+            .addParameter(parameter);
+        ParameterSpec updater = updaterInstance(goal);
+        method.addCode(initializeUpdater(goal, updater));
+        Function<AbstractBeanStep, CodeBlock> copy = copy(goal);
+        for (AbstractBeanStep step : goal.goal.steps) {
+          method.addCode(copy.apply(step));
+        }
+        method.addStatement("return $N", updater);
+        MethodSpec methodSpec = method
+            .returns(updaterType(goal))
+            .addModifiers(goal.goal.details.goalOptions.toBuilderAccess.modifiers(STATIC)).build();
+        return new BuilderMethod(name, methodSpec);
+      };
 
   private static Function<AbstractBeanStep, CodeBlock> copy(final BeanGoalContext goal) {
     return asFunction(new BeanStepCases<CodeBlock>() {
@@ -125,25 +123,22 @@ final class GeneratorB {
   }
 
   static final Function<BeanGoalContext, BuilderMethod> goalToBuilder
-      = new Function<BeanGoalContext, BuilderMethod>() {
-    @Override
-    public BuilderMethod apply(BeanGoalContext goal) {
-      ClassName stepsType = builderImplType(goal);
-      String name = goal.goal.details.name;
-      MethodSpec.Builder method = methodBuilder(name + "Builder")
-          .returns(goal.goal.steps.get(0).thisType)
-          .addModifiers(goal.goal.details.goalOptions.builderAccess.modifiers(STATIC));
-      String steps = downcase(stepsType.simpleName());
-      method.addCode(goal.builders.recycle
-          ? statement("$T $N = $N.get().$N", stepsType, steps, goal.builders.cache, stepsField(goal))
-          : statement("$T $N = new $T()", stepsType, steps, stepsType));
-      MethodSpec methodSpec = method.addStatement("$N.$N = new $T()", steps,
-          downcase(goal.goal.details.goalType.simpleName()), goal.goal.details.goalType)
-          .addStatement("return $N", steps)
-          .build();
-      return new BuilderMethod(name, methodSpec);
-    }
-  };
+      = goal -> {
+        ClassName stepsType = builderImplType(goal);
+        String name = goal.goal.details.name;
+        MethodSpec.Builder method = methodBuilder(name + "Builder")
+            .returns(goal.goal.steps.get(0).thisType)
+            .addModifiers(goal.goal.details.goalOptions.builderAccess.modifiers(STATIC));
+        String steps = downcase(stepsType.simpleName());
+        method.addCode(goal.builders.recycle
+            ? statement("$T $N = $N.get().$N", stepsType, steps, goal.builders.cache, stepsField(goal))
+            : statement("$T $N = new $T()", stepsType, steps, stepsType));
+        MethodSpec methodSpec = method.addStatement("$N.$N = new $T()", steps,
+            downcase(goal.goal.details.goalType.simpleName()), goal.goal.details.goalType)
+            .addStatement("return $N", steps)
+            .build();
+        return new BuilderMethod(name, methodSpec);
+      };
 
   private GeneratorB() {
     throw new UnsupportedOperationException("no instances");

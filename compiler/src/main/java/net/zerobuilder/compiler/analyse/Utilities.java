@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
 
@@ -41,6 +42,22 @@ final class Utilities {
       return s;
     }
     return lowered;
+  }
+
+  /**
+   * <p>If {@code type} is a top level class, this returns a class in the same package,
+   * with class name {@code type + suffix}.
+   * </p><p>
+   * If {@code type} is nested, a top level class
+   * name derived from its name and nested parents is used instead.</p>
+   *
+   * @param type   A type name
+   * @param suffix A string that usually starts with an uppercase character
+   * @return A top level type in the same package.
+   */
+  static ClassName appendSuffix(ClassName type, String suffix) {
+    String name = Joiner.on('_').join(type.simpleNames()) + suffix;
+    return type.topLevelClassName().peerClass(name);
   }
 
   private Utilities() {

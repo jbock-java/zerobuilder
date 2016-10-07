@@ -1,8 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -15,70 +12,66 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 
-import static com.google.common.base.Optional.absent;
-import static com.google.common.base.Optional.presentInstances;
-import static com.google.common.collect.ImmutableList.of;
-import static com.google.common.collect.Iterables.getLast;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
+import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
+import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
+import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class BuilderContextB {
 
-  static final Function<BeanGoalContext, ImmutableList<FieldSpec>> fields
-      = new Function<BeanGoalContext, ImmutableList<FieldSpec>>() {
-    @Override
-    public ImmutableList<FieldSpec> apply(BeanGoalContext goal) {
-      return ImmutableList.of(goal.goal.field);
+  static final Function<BeanGoalContext, List<FieldSpec>> fields
+      = goal -> singletonList(goal.goal.field);
+
+  static final Function<BeanGoalContext, List<MethodSpec>> steps
+      = goal -> {
+    List<MethodSpec> builder = new ArrayList<>();
+    Function<AbstractBeanStep, List<MethodSpec>> stepToMethods = stepToMethods(goal, false);
+    for (AbstractBeanStep step : goal.goal.steps.subList(0, goal.goal.steps.size() - 1)) {
+      builder.addAll(stepToMethods.apply(step));
     }
+    builder.addAll(stepToMethods(goal, true).apply(goal.goal.steps.get(goal.goal.steps.size() - 1)));
+    return builder;
   };
 
-  static final Function<BeanGoalContext, ImmutableList<MethodSpec>> steps
-      = new Function<BeanGoalContext, ImmutableList<MethodSpec>>() {
-    @Override
-    public ImmutableList<MethodSpec> apply(BeanGoalContext goal) {
-      ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
-      Function<AbstractBeanStep, ImmutableList<MethodSpec>> stepToMethods = stepToMethods(goal, false);
-      for (AbstractBeanStep step : goal.goal.steps.subList(0, goal.goal.steps.size() - 1)) {
-        builder.addAll(stepToMethods.apply(step));
-      }
-      builder.addAll(stepToMethods(goal, true).apply(getLast(goal.goal.steps)));
-      return builder.build();
-    }
-  };
-
-  private static Function<AbstractBeanStep, ImmutableList<MethodSpec>>
+  private static Function<AbstractBeanStep, List<MethodSpec>>
   stepToMethods(final BeanGoalContext goal, final boolean isLast) {
-    return asFunction(new BeanStepCases<ImmutableList<MethodSpec>>() {
+    return asFunction(new BeanStepCases<List<MethodSpec>>() {
       @Override
-      public ImmutableList<MethodSpec> accessorPair(AccessorPairStep step) {
+      public List<MethodSpec> accessorPair(AccessorPairStep step) {
         return regularMethods(step, goal, isLast);
       }
       @Override
-      public ImmutableList<MethodSpec> loneGetter(LoneGetterStep step) {
+      public List<MethodSpec> loneGetter(LoneGetterStep step) {
         return collectionMethods(step, goal, isLast);
       }
     });
   }
 
-  private static ImmutableList<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
-    ImmutableList.Builder<MethodSpec> builder = ImmutableList.builder();
+  private static List<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
+    List<MethodSpec> builder = new ArrayList<>();
     builder.add(regularStep(step, goal, isLast));
-    builder.addAll(presentInstances(of(regularEmptyCollection(step, goal, isLast))));
-    return builder.build();
+    builder.addAll(presentInstances(regularEmptyCollection(step, goal, isLast)));
+    return builder;
   }
 
   private static Optional<MethodSpec> regularEmptyCollection(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
     Optional<DtoStep.EmptyOption> maybeEmptyOption = step.emptyOption();
     if (!maybeEmptyOption.isPresent()) {
-      return absent();
+      return Optional.empty();
     }
     DtoStep.EmptyOption emptyOption = maybeEmptyOption.get();
     TypeName type = step.accessorPair.type;
@@ -94,8 +87,8 @@ final class BuilderContextB {
         .build());
   }
 
-  private static ImmutableList<MethodSpec> collectionMethods(LoneGetterStep step, BeanGoalContext goal, boolean isLast) {
-    return ImmutableList.of(
+  private static List<MethodSpec> collectionMethods(LoneGetterStep step, BeanGoalContext goal, boolean isLast) {
+    return Arrays.asList(
         iterateCollection(step, goal, isLast),
         loneGetterEmptyCollection(step, goal, isLast));
   }
