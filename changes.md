@@ -85,3 +85,8 @@
 
 * remove guava dependency (api)
 * add Access.PRIVATE (api)
+
+### 2016-10-07 zerobuilder 1.471 released
+
+* change nonNull attribute to nullPolicy (breaking)
+* verify parameter match (api)
