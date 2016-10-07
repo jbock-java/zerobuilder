@@ -77,7 +77,11 @@
 
 * fix API inconsistency in RegularParameter.create
 
-### 2016-10-08 zerobuilder 1.462 released
+### 2016-10-07 zerobuilder 1.463 released
 
 * GoalOptions: access level is now PUBLIC by default (api)
 
+### 2016-10-07 zerobuilder 1.464 released
+
+* remove guava dependency (api)
+* add Access.PRIVATE (api)
