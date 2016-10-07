@@ -12,6 +12,7 @@ import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -133,9 +134,8 @@ final class Utilities {
 
   static <P> List<P> reverse(List<P> list) {
     ArrayList<P> reversed = new ArrayList<>(list.size());
-    for (int i = list.size() - 1; i >= 0; i--) {
-      reversed.add(list.get(i));
-    }
+    reversed.addAll(list);
+    Collections.reverse(reversed);
     return reversed;
   }
 
