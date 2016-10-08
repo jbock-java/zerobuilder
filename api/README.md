@@ -9,6 +9,6 @@ It is intended for use in other annotation processors.
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder-api</artifactId>
-    <version>1.471</version>
+    <version>1.472</version>
 </dependency>
 ````

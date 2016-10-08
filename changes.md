@@ -90,3 +90,10 @@
 
 * change nonNull attribute to nullPolicy (breaking)
 * verify parameter match (api)
+
+### 2016-10-08 zerobuilder 1.472 released
+
+* forbid declared exeptions in accessors and projections (bugfix)
+* forbid abstract bean (bean) (bugfix)
+* forbid constructor goal in abstract class (bugfix)
+* handle overloaded setters correctly (bean) (bugfix)
