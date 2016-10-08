@@ -1,6 +1,5 @@
 package net.zerobuilder.examples.beans.more;
 
-import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
@@ -26,6 +25,22 @@ public class Experiments {
     }
     public void setYield(int yield) {
       this.yield = yield;
+    }
+  }
+
+  // overloaded setter
+  @Builders(recycle = true)
+  @Goal(toBuilder = true)
+  public static class OverloadedExperiment {
+    private int yield;
+    public int getYield() {
+      return yield;
+    }
+    public void setYield(int yield) {
+      this.yield = yield;
+    }
+    public void setYield(String yield) {
+      this.yield = Integer.parseInt(yield);
     }
   }
 

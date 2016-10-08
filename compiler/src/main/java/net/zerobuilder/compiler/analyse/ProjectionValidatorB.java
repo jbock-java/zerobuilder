@@ -47,6 +47,7 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParam
 import static net.zerobuilder.compiler.analyse.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.analyse.Utilities.sortedCopy;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
+import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
@@ -81,9 +82,10 @@ final class ProjectionValidatorB {
 
   static final Function<BeanGoalElement, GoalDescription> validateBean
       = goal -> {
-    Map<String, List<ExecutableElement>> settersByName = setters(goal);
+    List<ExecutableElement> getters = getters(goal);
+    Map<String, List<ExecutableElement>> settersByName = setters(goal, getters);
     List<TmpAccessorPair> builder = new ArrayList<>();
-    for (ExecutableElement getter : getters(goal)) {
+    for (ExecutableElement getter : getters) {
       List<ExecutableElement> setters = settersByName.get(setterName(getter));
       if (setters != null && setters.size() != 1) {
         throw new IllegalStateException("setter name should be unique");
@@ -159,7 +161,8 @@ final class ProjectionValidatorB {
         .collect(Collectors.toList());
   }
 
-  private static Map<String, List<ExecutableElement>> setters(BeanGoalElement goal) throws ValidationException {
+  private static Map<String, List<ExecutableElement>> setters(BeanGoalElement goal,
+                                                              List<ExecutableElement> getters) {
     TypeElement beanType = goal.beanType;
     if (!hasParameterlessConstructor(beanType)) {
       throw new ValidationException(BEAN_NO_DEFAULT_CONSTRUCTOR, beanType);
@@ -168,10 +171,55 @@ final class ProjectionValidatorB {
       throw new ValidationException(BEAN_PRIVATE_CLASS, beanType);
     }
     Predicate<ExecutableElement> filter = LOOKS_LIKE_SETTER
+        .and(setterSieve(getters))
         .and(DECLARES_NO_EXCEPTIONS)
         .and(DOES_NOT_HAVE_STEP_OR_IGNORE_ANNOTATIONS);
     return getLocalAndInheritedMethods(beanType, filter).stream()
         .collect(Collectors.groupingBy(setter -> setter.getSimpleName().toString().substring(3)));
+  }
+
+  static final class SetterTest implements Predicate<ExecutableElement> {
+
+    private final String name;
+    private final TypeName type;
+
+    private SetterTest(String name, TypeName type) {
+      this.name = name;
+      this.type = type;
+    }
+
+    private static SetterTest fromGetter(ExecutableElement getter) {
+      String name = getter.getSimpleName().toString();
+      String setterName = "set" + upcase(name.substring(name.startsWith("get") ? 3 : 2));
+      return new SetterTest(setterName, TypeName.get(getter.getReturnType()));
+    }
+
+    @Override
+    public boolean test(ExecutableElement setter) {
+      return setter.getParameters().size() == 1
+          && name.equals(setter.getSimpleName().toString())
+          && type.equals(TypeName.get(setter.getParameters().get(0).asType()));
+    }
+  }
+
+  /**
+   * Deal with overloaded setters
+   *
+   * @param getters getters
+   * @return predicate
+   */
+  private static Predicate<ExecutableElement> setterSieve(List<ExecutableElement> getters) {
+    List<SetterTest> setterTests = getters.stream()
+        .map(SetterTest::fromGetter)
+        .collect(Collectors.toList());
+    return setter -> {
+      for (SetterTest test : setterTests) {
+        if (test.test(setter)) {
+          return true;
+        }
+      }
+      return false;
+    };
   }
 
   private static String setterName(ExecutableElement getter) {

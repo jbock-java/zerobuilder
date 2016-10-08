@@ -5,6 +5,7 @@ import net.zerobuilder.examples.beans.more.Experiments.AeroExperiment;
 import net.zerobuilder.examples.beans.more.Experiments.BioExperiment;
 import net.zerobuilder.examples.beans.more.Experiments.Ignorify;
 import net.zerobuilder.examples.beans.more.Experiments.IterableExperiment;
+import net.zerobuilder.examples.beans.more.Experiments.OverloadedExperiment;
 import net.zerobuilder.examples.beans.more.Experiments.RawExperiment;
 import org.junit.Test;
 
@@ -25,6 +26,8 @@ import static net.zerobuilder.examples.beans.more.Experiments_IgnorifyBuilders.i
 import static net.zerobuilder.examples.beans.more.Experiments_IgnorifyBuilders.ignorifyToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.Experiments_OverloadedExperimentBuilders.overloadedExperimentBuilder;
+import static net.zerobuilder.examples.beans.more.Experiments_OverloadedExperimentBuilders.overloadedExperimentToBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_RawExperimentBuilders.rawExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.Experiments_RawExperimentBuilders.rawExperimentToBuilder;
 import static org.hamcrest.core.Is.is;
@@ -46,6 +49,17 @@ public class ExperimentsTest {
     assertThat(experiment1.getYield(), is(20));
     assertThat(experiment2.getAltitude(), is(10));
     assertThat(experiment2.getYield(), is(100));
+  }
+
+  @Test
+  public void overloadedTest() {
+    OverloadedExperiment experiment1 = overloadedExperimentBuilder()
+        .yield(10);
+    OverloadedExperiment experiment2 = overloadedExperimentToBuilder(experiment1)
+        .yield(20)
+        .build();
+    assertThat(experiment1.getYield(), is(10));
+    assertThat(experiment2.getYield(), is(20));
   }
 
   @Test

@@ -34,7 +34,7 @@ import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 
 final class ProjectionValidatorV {
 
-  private static final java.util.function.Predicate<ExecutableElement> LOOKS_LIKE_PROJECTION = method -> method.getParameters().isEmpty()
+  private static final Predicate<ExecutableElement> LOOKS_LIKE_PROJECTION = method -> method.getParameters().isEmpty()
       && !method.getModifiers().contains(PRIVATE)
       && method.getReturnType().getKind() != TypeKind.VOID
       && !method.getModifiers().contains(STATIC)
