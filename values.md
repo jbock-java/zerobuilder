@@ -114,7 +114,7 @@ so `toBuilder = true` is possible.
 
 ### Null checking
 
-Run-time null checking can be enabled for all non-primitive properties at once,
+Run-time null checks can be added for all non-primitive properties,
 by using the goal level `nullPolicy` option:
 
 ````java
@@ -127,10 +127,11 @@ public MyConstructor(String required) {
 Additionaly, `nullPolicy` can be specified for each individual step:
 
 ````java
-@Goal(nullPolicy = NullPolicy.REJECT)
-public MyConstructor(@Step(nullPolicy = NullPolicy.ALLOW) String optional, String required) {
-  this.optional = optional;
+@Goal(nullPolicy = REJECT)
+public MyConstructor(String required,
+                     @Step(nullPolicy = ALLOW) String optional) {
   this.required = required;
+  this.optional = optional;
 }
 ````
 
