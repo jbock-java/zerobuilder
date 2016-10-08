@@ -20,11 +20,11 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.auto.common.MoreElements.asExecutable;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.tools.Diagnostic.Kind.WARNING;
+import static net.zerobuilder.compiler.common.LessElements.asExecutable;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;

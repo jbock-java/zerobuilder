@@ -24,14 +24,14 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
-import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.squareup.javapoet.ClassName.OBJECT;
 import static java.lang.Character.isUpperCase;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
+import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
+import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIND_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_EXCEPTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_SETTER_TYPE_MISMATCH;

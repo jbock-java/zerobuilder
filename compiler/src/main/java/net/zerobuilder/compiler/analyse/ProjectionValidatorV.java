@@ -18,11 +18,11 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
-import static com.google.auto.common.MoreTypes.asTypeElement;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
+import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
+import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpRegularParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
