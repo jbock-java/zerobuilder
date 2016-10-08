@@ -88,29 +88,15 @@ In order to make `notes` the second step, add `@Step(1)` to the corresponding ge
 
 ### Null checking
 
-Null checking is enabled by adding a `@Step` annotation to a getter:
+Zerobuilder can insert null checks at runtime for all non-primitive properties.
+This works via `@Goal(nullPolicy = NullPolicy.REJECT)` and `@Step(nullPolicy = NullPolicy.REJECT)`.
 
-````java
-@Step(nonNull = true)
-public String getName() {
-  return name;
-}
-````
+For details, see the [documentation for values](values.md).
 
-It is also possible to have all non-primitive properties checked,
-by using the goal level `nonNull` option:
+### Ignoring a method
 
-````java
-@Builders
-@Goal(nonNull = true)
-public class Employee { ... }
-````
-
-In this case, individual getters can be excluded with `@Step(nonNull = false)`.
-
-### Lone getter
-
-In handwritten beans, you may occasionally have a getter without a corresponding setter.
+Sometimes a bean may have a method that looks like a getter,
+but there is no corresponding setter.
 
 ````java
 public String getFoo() {
@@ -118,8 +104,8 @@ public String getFoo() {
 }
 ````
 
-Zerobuilder will refuse to process this class.
-To get around this, add the `@Ignore` annotation:
+Zerobuilder will complain, because this doesn't conform to the bean standard.
+The `@Ignore` annotation can be used to make zerobuilder ignore the method:
 
 ````java
 @Ignore
@@ -130,7 +116,8 @@ public String getFoo() {
 
 ### Lone getter that returns a collection
 
-Some tools (such as [wsdl2java](https://cxf.apache.org/docs/wsdl-to-java.html)) can generate beans with lone getters that look like this:
+Some tools (such as [wsdl2java](https://cxf.apache.org/docs/wsdl-to-java.html)) 
+can generate a getter with no corresponding setter, that looks like this:
 
 ````java
 public List<Employee> getEmployees() {
@@ -142,10 +129,5 @@ public List<Employee> getEmployees() {
 ````
 
 In this case (lone getter that returns a subclass of `Collection`),
-it is often not necessary to ignore the getter.
-Zerobuilder will assume that the collection is mutable and adapt the builder code accordingly.
-
-### Empty collections
-
-Zerobuilder generates convenience methods to define empty collections of type `java.util.Set`
-or `java.util.List`. The [documentation for values](values.md) explains this in more detail.
+it is not necessary to ignore the getter.
+Zerobuilder will assume that the collection is mutable and generate the correct builder code.

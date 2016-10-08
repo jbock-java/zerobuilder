@@ -114,46 +114,31 @@ so `toBuilder = true` is possible.
 
 ### Null checking
 
-Null checking is enabled by adding a `@Step` annotation	to a goal parameter:
+Run-time null checking can be enabled for all non-primitive properties at once,
+by using the goal level `nullPolicy` option:
 
 ````java
-@Goal
-public MyBean(@Step(nonNull = true) String name) {
-  this.name = name;
+@Goal(nullPolicy = NullPolicy.REJECT)
+public MyConstructor(String required) {
+  this.name = required;
 }
 ````
 
-It is also possible to enable null checking for all non-primitive properties at once,
-by using the goal level `nonNull` option:
+Alternatively, `nullPolicy` can be specified for each individual step:
 
 ````java
-@Goal(nonNull = true)
-public MyBean(String name) {
-  this.name = name;
+@Goal(nullPolicy = NullPolicy.REJECT)
+public MyConstructor(@Step(nullPolicy = NullPolicy.ALLOW) String optional, String required) {
+  this.optional = optional;
+  this.required = required;
 }
 ````
 
-### Empty collections
-
-In java, specifying an <em>empty</em> collection is more work than it should be:
-
-````java
-  myObject.callMethod(Collections.<String>emptyList());
-````
-
-Because of a restriction in the java type system,
-the explicit type argument `<String>` is needed.
-
-For parameters of type `java.util.List` and `java.util.Set`, 
-zerobuilder adds `emptyFoo()` convenience methods in all generated builders.
-The ugly generics are still there, but hidden in the generated code.
-
-Check out the example projects, or have a look at 
-[EmptyListConvenience.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/values/EmptyListConvenience.java) 
-and its companion unit test.
+A `nullPolicy` setting on the step level overrides the goal level setting, if any.
 
 ### Access level
 
 By default, the generated static methods `fooBuilder` and `fooToBuilder` are public.
 You can change this to default (package) visibility using `@Builders(access = AccessLevel.PACKAGE)`.
-The setting can also be overridden on the goal level with `@Goal(builderAccess)` and `@Goal(toBuilderAccess)`.
+
+Each goal can override this setting with `@Goal(builderAccess)` and `@Goal(toBuilderAccess)`.
