@@ -124,7 +124,7 @@ public MyConstructor(String required) {
 }
 ````
 
-Alternatively, `nullPolicy` can be specified for each individual step:
+Additionaly, `nullPolicy` can be specified for each individual step:
 
 ````java
 @Goal(nullPolicy = NullPolicy.REJECT)
@@ -135,6 +135,7 @@ public MyConstructor(@Step(nullPolicy = NullPolicy.ALLOW) String optional, Strin
 ````
 
 A `nullPolicy` setting on the step level overrides the goal level setting, if any.
+The default behaviour is `NullPolicy.ALLOW`.
 
 ### Access level
 
