@@ -8,20 +8,15 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleElementVisitor6;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 import static javax.lang.model.element.ElementKind.PACKAGE;
+import static javax.lang.model.util.ElementFilter.methodsIn;
+import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 
 /**
  * Guava-free versions of some helpers from auto-common.
@@ -54,65 +49,34 @@ public final class LessElements {
         }
       };
 
-  public static Set<ExecutableElement> getLocalAndInheritedMethods(
-      TypeElement type, Elements elementUtils) {
-    Map<String, Set<ExecutableElement>> methodMap = new LinkedHashMap<>();
-    getLocalAndInheritedMethods(getPackage(type), type, methodMap);
-    // Find methods that are overridden. We do this using `Elements.overrides`, which means
-    // that it is inherently a quadratic operation, since we have to compare every method against
-    // every other method. We reduce the performance impact by (a) grouping methods by name, since
-    // a method cannot override another method with a different name, and (b) making sure that
-    // methods in ancestor types precede those in descendant types, which means we only have to
-    // check a method against the ones that follow it in that order.
-    Set<ExecutableElement> overridden = new LinkedHashSet<ExecutableElement>();
-    for (String methodName : methodMap.keySet()) {
-      List<ExecutableElement> methodList = new ArrayList(methodMap.get(methodName));
-      for (int i = 0; i < methodList.size(); i++) {
-        ExecutableElement methodI = methodList.get(i);
-        for (int j = i + 1; j < methodList.size(); j++) {
-          ExecutableElement methodJ = methodList.get(j);
-          if (elementUtils.overrides(methodJ, methodI, type)) {
-            overridden.add(methodI);
-          }
-        }
-      }
-    }
-    Set<ExecutableElement> methods =
-        new LinkedHashSet<>(methodMap.values().stream()
-            .map(Set::stream)
-            .flatMap(Function.identity())
-            .collect(Collectors.toSet()));
-    methods.removeAll(overridden);
-    return methods;
+  public static Collection<ExecutableElement> getLocalAndInheritedMethods(
+      TypeElement type, Predicate<ExecutableElement> predicate) {
+    Map<String, ExecutableElement> methodMap = new LinkedHashMap<>();
+    getLocalAndInheritedMethods(getPackage(type), type, methodMap, predicate);
+    return methodMap.values();
   }
 
-  // Add to `methods` the instance methods from `type` that are visible to code in the
-  // package `pkg`. This means all the instance methods from `type` itself and all instance methods
-  // it inherits from its ancestors, except private methods and package-private methods in other
-  // packages. This method does not take overriding into account, so it will add both an ancestor
-  // method and a descendant method that overrides it.
-  // `methods` is a multimap from a method name to all of the methods with that name, including
-  // methods that override or overload one another. Within those methods, those in ancestor types
-  // always precede those in descendant types.
   private static void getLocalAndInheritedMethods(
-      PackageElement pkg, TypeElement type, Map<String, Set<ExecutableElement>> methods) {
+      PackageElement pkg, TypeElement type, Map<String, ExecutableElement> methods,
+      Predicate<ExecutableElement> predicate) {
     for (TypeMirror superInterface : type.getInterfaces()) {
-      getLocalAndInheritedMethods(pkg, LessTypes.asTypeElement(superInterface), methods);
+      getLocalAndInheritedMethods(pkg, asTypeElement(superInterface), methods,
+          predicate);
     }
     if (type.getSuperclass().getKind() != TypeKind.NONE) {
       // Visit the superclass after superinterfaces so we will always see the implementation of a
       // method after any interfaces that declared it.
-      getLocalAndInheritedMethods(pkg, LessTypes.asTypeElement(type.getSuperclass()), methods);
+      getLocalAndInheritedMethods(pkg, asTypeElement(type.getSuperclass()), methods,
+          predicate);
     }
-    for (ExecutableElement method : ElementFilter.methodsIn(type.getEnclosedElements())) {
+    methodsIn(type.getEnclosedElements())
+        .stream()
+        .filter(predicate).forEach(method -> {
       if (!method.getModifiers().contains(Modifier.STATIC)
           && methodVisibleFromPackage(method, pkg)) {
-        if (methods.get(method.getSimpleName().toString()) == null) {
-          methods.put(method.getSimpleName().toString(), new HashSet<>());
-        }
-        methods.get(method.getSimpleName().toString()).add(method);
+        methods.computeIfAbsent(method.getSimpleName().toString(), name -> method);
       }
-    }
+    });
   }
 
   private static boolean methodVisibleFromPackage(ExecutableElement method, PackageElement pkg) {

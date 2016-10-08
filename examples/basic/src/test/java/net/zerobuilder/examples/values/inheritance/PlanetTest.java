@@ -19,7 +19,7 @@ public class PlanetTest {
         .numberOfMoons(1)
         .habitable(true);
     planet = planetToBuilder(planet).mass(mass.multiply(TEN)).build();
-    assertThat(planet.numberOfMoons, is(1));
+    assertThat(planet.getNumberOfMoons(), is(1));
     assertThat(planet.getMass(), is(mass.multiply(TEN)));
   }
 

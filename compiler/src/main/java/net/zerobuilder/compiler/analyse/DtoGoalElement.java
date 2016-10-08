@@ -16,7 +16,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -39,10 +38,8 @@ final class DtoGoalElement {
 
   static abstract class AbstractGoalElement {
     final Goal goalAnnotation;
-    final Elements elements;
-    AbstractGoalElement(Goal goalAnnotation, Elements elements) {
+    AbstractGoalElement(Goal goalAnnotation) {
       this.goalAnnotation = goalAnnotation;
-      this.elements = elements;
     }
     abstract <R> R accept(GoalElementCases<R> goalElementCases);
   }
@@ -77,13 +74,13 @@ final class DtoGoalElement {
     final RegularGoalDetails details;
     final ExecutableElement executableElement;
 
-    private RegularGoalElement(ExecutableElement element, RegularGoalDetails details, Elements elements) {
-      super(element.getAnnotation(Goal.class), elements);
+    private RegularGoalElement(ExecutableElement element, RegularGoalDetails details) {
+      super(element.getAnnotation(Goal.class));
       this.details = details;
       this.executableElement = element;
     }
 
-    static RegularGoalElement create(ExecutableElement element, Elements elements, AccessLevel defaultAccess) {
+    static RegularGoalElement create(ExecutableElement element, AccessLevel defaultAccess) {
       TypeName goalType = goalType(element);
       Goal goalAnnotation = element.getAnnotation(Goal.class);
       String name = goalName(goalAnnotation, goalType);
@@ -94,7 +91,7 @@ final class DtoGoalElement {
       RegularGoalDetails goal = element.getKind() == CONSTRUCTOR
           ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOptions)
           : MethodGoalDetails.create(goalType, name, parameterNames, methodName, instance, goalOptions);
-      return new RegularGoalElement(element, goal, elements);
+      return new RegularGoalElement(element, goal);
     }
 
     <R> R accept(GoalElementCases<R> goalElementCases) {
@@ -113,18 +110,18 @@ final class DtoGoalElement {
   static final class BeanGoalElement extends AbstractGoalElement {
     final BeanGoalDetails details;
     final TypeElement beanType;
-    private BeanGoalElement(ClassName goalType, String name, TypeElement beanType, Elements elements,
+    private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
                             Goal goalAnnotation, GoalOptions goalOptions) {
-      super(goalAnnotation, elements);
+      super(goalAnnotation);
       this.details = new BeanGoalDetails(goalType, name, goalOptions);
       this.beanType = beanType;
     }
-    static BeanGoalElement create(TypeElement beanType, Elements elements, AccessLevel defaultAccess) {
+    static BeanGoalElement create(TypeElement beanType, AccessLevel defaultAccess) {
       ClassName goalType = ClassName.get(beanType);
       Goal goalAnnotation = beanType.getAnnotation(Goal.class);
       String name = goalName(goalAnnotation, goalType);
       GoalOptions goalOptions = goalOptions(goalAnnotation, defaultAccess);
-      return new BeanGoalElement(goalType, name, beanType, elements, goalAnnotation, goalOptions);
+      return new BeanGoalElement(goalType, name, beanType, goalAnnotation, goalOptions);
     }
     <R> R accept(GoalElementCases<R> goalElementCases) {
       return goalElementCases.beanGoal(this);

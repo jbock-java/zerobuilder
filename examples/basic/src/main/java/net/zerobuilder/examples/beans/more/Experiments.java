@@ -5,6 +5,7 @@ import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,13 +85,13 @@ public class Experiments {
     }
   }
 
-  // ignore annotation
+  // ignore an invalid getter
   @Builders
   @Goal(toBuilder = true)
   public static class Ignorify {
     private List<Iterable<String>> things;
     @Ignore
-    public String getSocks() {
+    public String getSocks() throws IOException {
       return "socks";
     }
     public List<Iterable<String>> getThings() {

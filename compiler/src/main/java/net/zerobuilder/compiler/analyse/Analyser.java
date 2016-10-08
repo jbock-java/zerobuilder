@@ -16,7 +16,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +23,6 @@ import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.tools.Diagnostic.Kind.WARNING;
-import static net.zerobuilder.compiler.common.LessElements.asExecutable;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
@@ -33,6 +31,7 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidator.skip;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersClass;
 import static net.zerobuilder.compiler.analyse.Utilities.appendSuffix;
+import static net.zerobuilder.compiler.common.LessElements.asExecutable;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuildersContext;
 
 public final class Analyser {
@@ -70,7 +69,7 @@ public final class Analyser {
     List<AbstractGoalElement> builder = new ArrayList<>();
     AccessLevel defaultAccess = buildersAnnotation.access();
     if (buildElement.getAnnotation(Goal.class) != null) {
-      builder.add(BeanGoalElement.create(buildElement, elements, defaultAccess));
+      builder.add(BeanGoalElement.create(buildElement, defaultAccess));
     }
     for (Element element : buildElement.getEnclosedElements()) {
       if (element.getAnnotation(Goal.class) != null) {
@@ -83,7 +82,7 @@ public final class Analyser {
           if (executableElement.getParameters().isEmpty()) {
             throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
           }
-          builder.add(RegularGoalElement.create(executableElement, elements, defaultAccess));
+          builder.add(RegularGoalElement.create(executableElement, defaultAccess));
         }
       }
     }

@@ -5,9 +5,10 @@ import net.zerobuilder.Goal;
 
 import java.math.BigInteger;
 
+// inheritance + overrides
 @Builders
 final class Planet extends CelestialBody {
-  final int numberOfMoons;
+  private final int numberOfMoons;
   private final boolean habitable;
 
   @Goal(toBuilder = true)
@@ -15,6 +16,15 @@ final class Planet extends CelestialBody {
     super(mass);
     this.numberOfMoons = numberOfMoons;
     this.habitable = habitable;
+  }
+
+  @Override
+  BigInteger getMass() {
+    return super.mass;
+  }
+
+  int getNumberOfMoons() {
+    return numberOfMoons;
   }
 
   boolean isHabitable() {
