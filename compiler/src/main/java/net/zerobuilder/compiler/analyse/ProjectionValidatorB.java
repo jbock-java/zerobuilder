@@ -73,6 +73,7 @@ final class ProjectionValidatorB {
           && method.getParameters().size() == 1
           && !method.getModifiers().contains(PRIVATE)
           && !method.getModifiers().contains(STATIC)
+          && !method.getModifiers().contains(ABSTRACT)
           && method.getReturnType().getKind() == TypeKind.VOID
           && IS_SETTER_NAME.test(method.getSimpleName().toString());
 
@@ -82,6 +83,7 @@ final class ProjectionValidatorB {
           && method.getParameters().isEmpty()
           && !method.getModifiers().contains(PRIVATE)
           && !method.getModifiers().contains(STATIC)
+          && !method.getModifiers().contains(ABSTRACT)
           && !method.getReturnType().getKind().equals(TypeKind.VOID)
           && IS_GETTER_NAME.test(method.getSimpleName().toString());
 
@@ -163,6 +165,7 @@ final class ProjectionValidatorB {
         .and(IS_NOT_IGNORED)
         .and(DECLARES_NO_EXCEPTIONS);
     return getLocalAndInheritedMethods(goal.beanType, filter)
+        .values()
         .stream()
         .collect(Collectors.toList());
   }
@@ -173,7 +176,9 @@ final class ProjectionValidatorB {
         .and(setterSieve(getters))
         .and(DECLARES_NO_EXCEPTIONS)
         .and(DOES_NOT_HAVE_STEP_OR_IGNORE_ANNOTATIONS);
-    return getLocalAndInheritedMethods(beanType, filter).stream()
+    return getLocalAndInheritedMethods(beanType, filter)
+        .values()
+        .stream()
         .collect(Collectors.groupingBy(setter -> setter.getSimpleName().toString().substring(3)));
   }
 

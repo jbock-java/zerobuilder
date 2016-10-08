@@ -7,7 +7,7 @@ import java.math.BigInteger;
 
 // inheritance + overrides
 @Builders
-final class Planet extends CelestialBody {
+final class Planet extends CelestialBody implements IMoons {
   private final int numberOfMoons;
   private final boolean habitable;
 
@@ -23,7 +23,8 @@ final class Planet extends CelestialBody {
     return super.mass;
   }
 
-  int getNumberOfMoons() {
+  @Override
+  public int getNumberOfMoons() {
     return numberOfMoons;
   }
 

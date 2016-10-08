@@ -49,26 +49,38 @@ public final class LessElements {
         }
       };
 
-  public static Collection<ExecutableElement> getLocalAndInheritedMethods(
+  public static Map<String, ExecutableElement> getLocalAndInheritedMethods(
       TypeElement type, Predicate<ExecutableElement> predicate) {
-    Map<String, ExecutableElement> methodMap = new LinkedHashMap<>();
-    getLocalAndInheritedMethods(getPackage(type), type, methodMap, predicate);
-    return methodMap.values();
+    Map<String, ExecutableElement> methods = new LinkedHashMap<>();
+    PackageElement packageElement = getPackage(type);
+    addFromSuperclass(packageElement, type, methods, predicate);
+    addFromInterfaces(packageElement, type, methods, predicate);
+    return methods;
   }
 
-  private static void getLocalAndInheritedMethods(
+  private static void addFromSuperclass(
       PackageElement pkg, TypeElement type, Map<String, ExecutableElement> methods,
       Predicate<ExecutableElement> predicate) {
+    addEnclosed(pkg, type, methods, predicate);
+    if (type.getSuperclass().getKind() == TypeKind.NONE) {
+      return;
+    }
+    addFromSuperclass(pkg, asTypeElement(type.getSuperclass()), methods,
+        predicate);
+  }
+
+  private static void addFromInterfaces(
+      PackageElement pkg, TypeElement type, Map<String, ExecutableElement> methods,
+      Predicate<ExecutableElement> predicate) {
+    addEnclosed(pkg, type, methods, predicate);
     for (TypeMirror superInterface : type.getInterfaces()) {
-      getLocalAndInheritedMethods(pkg, asTypeElement(superInterface), methods,
+      addFromInterfaces(pkg, asTypeElement(superInterface), methods,
           predicate);
     }
-    if (type.getSuperclass().getKind() != TypeKind.NONE) {
-      // Visit the superclass after superinterfaces so we will always see the implementation of a
-      // method after any interfaces that declared it.
-      getLocalAndInheritedMethods(pkg, asTypeElement(type.getSuperclass()), methods,
-          predicate);
-    }
+  }
+
+  private static void addEnclosed(PackageElement pkg, TypeElement type, Map<String, ExecutableElement> methods,
+                                  Predicate<ExecutableElement> predicate) {
     methodsIn(type.getEnclosedElements())
         .stream()
         .filter(predicate).forEach(method -> {

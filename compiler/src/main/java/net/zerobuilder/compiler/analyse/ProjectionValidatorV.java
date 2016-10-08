@@ -7,6 +7,7 @@ import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoParameter;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -20,9 +21,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.ABSTRACT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PROJECTION_EXCEPTIONS;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpRegularParameter.toValidParameter;
@@ -36,8 +39,8 @@ final class ProjectionValidatorV {
 
   private static final Predicate<ExecutableElement> LOOKS_LIKE_PROJECTION = method -> method.getParameters().isEmpty()
       && !method.getModifiers().contains(PRIVATE)
-      && method.getReturnType().getKind() != TypeKind.VOID
       && !method.getModifiers().contains(STATIC)
+      && method.getReturnType().getKind() != TypeKind.VOID
       && !"getClass".equals(method.getSimpleName().toString())
       && !"clone".equals(method.getSimpleName().toString());
 
@@ -52,6 +55,7 @@ final class ProjectionValidatorV {
   static final Function<RegularGoalElement, GoalDescription> validateValue
       = goal -> {
     TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
+    validateType(goal, type);
     Set<String> methodNames = methodNames(type);
     Map<String, List<VariableElement>> fieldsByName = fields(type);
     List<TmpRegularParameter> builder = new ArrayList<>();
@@ -80,6 +84,14 @@ final class ProjectionValidatorV {
     return createGoalDescription(goal, builder);
   };
 
+  private static void validateType(RegularGoalElement goal,
+                                   TypeElement type) {
+    if (goal.executableElement.getKind() == ElementKind.CONSTRUCTOR
+        && type.getModifiers().contains(ABSTRACT)) {
+      throw new ValidationException(ABSTRACT_CONSTRUCTOR, goal.executableElement);
+    }
+  }
+
   private static Map<String, List<VariableElement>> fields(TypeElement type) {
     List<VariableElement> variableElements = fieldsIn(type.getEnclosedElements());
     return variableElements.stream()
@@ -89,18 +101,20 @@ final class ProjectionValidatorV {
   }
 
   private static Set<String> methodNames(TypeElement type) {
-    Predicate<ExecutableElement> filter = LOOKS_LIKE_PROJECTION;
-    return getLocalAndInheritedMethods(type, filter).stream().filter(DECLARES_NO_EXCEPTIONS)
+    return getLocalAndInheritedMethods(type, LOOKS_LIKE_PROJECTION)
+        .values()
+        .stream()
+        .filter(DECLARES_NO_EXCEPTIONS)
         .map(method -> method.getSimpleName().toString())
         .collect(Collectors.toSet());
   }
 
   static final Function<RegularGoalElement, GoalDescription> validateValueIgnoreProjections
       = goal -> {
-    ArrayList<TmpRegularParameter> builder = new ArrayList<>();
-    for (VariableElement parameter : goal.executableElement.getParameters()) {
-      builder.add(TmpRegularParameter.create(parameter, Optional.empty(), goal.goalAnnotation));
-    }
+    List<TmpRegularParameter> builder = goal.executableElement.getParameters()
+        .stream()
+        .map(parameter -> TmpRegularParameter.create(parameter, Optional.empty(), goal.goalAnnotation))
+        .collect(Collectors.toList());
     return createGoalDescription(goal, builder);
   };
 

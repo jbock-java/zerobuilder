@@ -21,6 +21,10 @@ public final class Messages {
     public static final String PRIVATE_METHOD =
         "The goal may not be private.";
 
+    public static final String ABSTRACT_CONSTRUCTOR =
+        "An abstract class may not have constructor goals." +
+            " Try putting the @Goal annotation on a static \"factory\" method instead.";
+
     public static final String PRIVATE_TYPE =
         "The @Builders annotated class may not be private.";
 
@@ -87,9 +91,6 @@ public final class Messages {
 
     public static final String BEAN_GETTER_SETTER_TYPE_MISMATCH
         = "Getter/setter type mismatch." + POJO_HINT;
-
-    public static final String BEAN_BAD_GENERICS
-        = "Can't understand the generics of this accessor pair." + POJO_HINT;
 
     public static final String BEAN_COULD_NOT_FIND_SETTER
         = "Could not find setter." + POJO_HINT;
