@@ -27,11 +27,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.squareup.javapoet.ClassName.OBJECT;
-import static java.lang.Character.isUpperCase;
+import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_ABSTRACT_CLASS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_ACCESSOR_EXCEPTIONS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIND_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_EXCEPTION;
@@ -86,8 +87,9 @@ final class ProjectionValidatorB {
 
   static final Function<BeanGoalElement, GoalDescription> validateBean
       = goal -> {
+    validateBeanType(goal.beanType);
     List<ExecutableElement> getters = getters(goal);
-    Map<String, List<ExecutableElement>> settersByName = setters(goal, getters);
+    Map<String, List<ExecutableElement>> settersByName = setters(goal.beanType, getters);
     List<TmpAccessorPair> builder = new ArrayList<>();
     for (ExecutableElement getter : getters) {
       List<ExecutableElement> setters = settersByName.get(setterName(getter));
@@ -165,15 +167,8 @@ final class ProjectionValidatorB {
         .collect(Collectors.toList());
   }
 
-  private static Map<String, List<ExecutableElement>> setters(BeanGoalElement goal,
+  private static Map<String, List<ExecutableElement>> setters(TypeElement beanType,
                                                               List<ExecutableElement> getters) {
-    TypeElement beanType = goal.beanType;
-    if (!hasParameterlessConstructor(beanType)) {
-      throw new ValidationException(BEAN_NO_DEFAULT_CONSTRUCTOR, beanType);
-    }
-    if (beanType.getModifiers().contains(PRIVATE)) {
-      throw new ValidationException(BEAN_PRIVATE_CLASS, beanType);
-    }
     Predicate<ExecutableElement> filter = LOOKS_LIKE_SETTER
         .and(setterSieve(getters))
         .and(DECLARES_NO_EXCEPTIONS)
@@ -182,7 +177,20 @@ final class ProjectionValidatorB {
         .collect(Collectors.groupingBy(setter -> setter.getSimpleName().toString().substring(3)));
   }
 
-  static final class SetterTest implements Predicate<ExecutableElement> {
+  private static TypeElement validateBeanType(TypeElement beanType) {
+    if (!hasParameterlessConstructor(beanType)) {
+      throw new ValidationException(BEAN_NO_DEFAULT_CONSTRUCTOR, beanType);
+    }
+    if (beanType.getModifiers().contains(PRIVATE)) {
+      throw new ValidationException(BEAN_PRIVATE_CLASS, beanType);
+    }
+    if (beanType.getModifiers().contains(ABSTRACT)) {
+      throw new ValidationException(BEAN_ABSTRACT_CLASS, beanType);
+    }
+    return beanType;
+  }
+
+  private static final class SetterTest implements Predicate<ExecutableElement> {
 
     private final String name;
     private final TypeName type;

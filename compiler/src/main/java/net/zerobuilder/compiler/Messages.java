@@ -79,6 +79,9 @@ public final class Messages {
     public static final String BEAN_PRIVATE_CLASS
         = "The annotated class may not be private." + POJO_HINT;
 
+    public static final String BEAN_ABSTRACT_CLASS
+        = "The annotated class may not be abstract." + POJO_HINT;
+
     public static final String BEAN_GETTER_EXCEPTION
         = "POJO getters may not declare exceptions." + POJO_HINT;
 
