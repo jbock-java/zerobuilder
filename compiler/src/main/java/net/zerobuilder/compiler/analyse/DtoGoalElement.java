@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
@@ -144,7 +143,7 @@ final class DtoGoalElement {
   };
 
   private static String goalName(Goal goalAnnotation, TypeName goalType) {
-    return isNullOrEmpty(goalAnnotation.name())
+    return goalAnnotation.name().isEmpty()
         ? downcase(((ClassName) goalType.box()).simpleName())
         : goalAnnotation.name();
   }

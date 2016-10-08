@@ -23,18 +23,28 @@ import java.util.function.Function;
 import static java.util.Collections.nCopies;
 import static java.util.Optional.ofNullable;
 import static javax.tools.Diagnostic.Kind.ERROR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.DUPLICATE_STEP_POSITION;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_POSITION_TOO_LARGE;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_DUPLICATE;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_OUT_OF_BOUNDS;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalElementCases;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValue;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValueSkipProjections;
+import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValueIgnoreProjections;
 
 final class ProjectionValidator {
 
   static final GoalElementCases<GoalDescription> validate = goalElementCases(validateValue, validateBean);
-  static final GoalElementCases<GoalDescription> skip = goalElementCases(validateValueSkipProjections, validateBean);
+  static final GoalElementCases<GoalDescription> skip = goalElementCases(validateValueIgnoreProjections, validateBean);
 
+  /**
+   * Modifies the parameter order, depending on {@link Step} annotations.
+   * If none of the parameters has a {@link Step} annotation, the
+   * order of the input parameters is not changed.
+   *
+   * @param parameters parameters in original order
+   * @param <E>        parameter type
+   * @return parameters in a potentially different order
+   * @throws ValidationException if the input is inconsistent
+   */
   static <E extends TmpValidParameter> List<E> shuffledParameters(List<E> parameters)
       throws ValidationException {
     List<E> builder = new ArrayList<>(nCopies(parameters.size(), (E) null));
@@ -43,14 +53,9 @@ final class ProjectionValidator {
       Optional<Step> step = parameter.annotation;
       if (step.isPresent() && step.get().value() >= 0) {
         int value = step.get().value();
-        if (value >= parameters.size()) {
-          throw new ValidationException(ERROR,
-              STEP_POSITION_TOO_LARGE, parameter.element);
-        }
-        if (builder.get(value) != null) {
-          throw new ValidationException(ERROR,
-              DUPLICATE_STEP_POSITION, parameter.element);
-        }
+        parameter
+            .checkState(value < parameters.size(), STEP_OUT_OF_BOUNDS)
+            .checkState(builder.get(value) == null, STEP_DUPLICATE);
         builder.set(value, parameter);
       } else {
         noAnnotation.add(parameter);
@@ -90,6 +95,15 @@ final class ProjectionValidator {
       this.element = element;
       this.annotation = annotation;
     }
+
+    TmpValidParameter checkState(boolean condition, String message) {
+      if (!condition) {
+        throw new ValidationException(ERROR,
+            message, element);
+      }
+      return this;
+    }
+
   }
 
   static final class TmpRegularParameter extends TmpValidParameter {

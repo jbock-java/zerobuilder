@@ -39,10 +39,10 @@ public final class Messages {
     public static final String GOAL_WITHOUT_BUILDERS =
         "A class that carries the @Goal annotation must also carry the @Builders annotation." + POJO_HINT;
 
-    public static final String STEP_POSITION_TOO_LARGE =
+    public static final String STEP_OUT_OF_BOUNDS =
         "Step position must be less than the number of arguments.";
 
-    public static final String DUPLICATE_STEP_POSITION =
+    public static final String STEP_DUPLICATE =
         "Step position is specified twice.";
 
     /* empty, empty, constructor, constructor */

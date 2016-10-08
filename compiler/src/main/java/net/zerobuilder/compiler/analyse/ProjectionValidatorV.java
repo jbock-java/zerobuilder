@@ -59,7 +59,7 @@ final class ProjectionValidatorV {
         builder.add(TmpRegularParameter.create(parameter, Optional.of(methodName), goal.goalAnnotation));
       }
     }
-    return createResult(goal, builder);
+    return createGoalDescription(goal, builder);
   };
 
   private static Map<String, List<VariableElement>> fields(TypeElement type) {
@@ -79,16 +79,16 @@ final class ProjectionValidatorV {
         .collect(Collectors.toSet());
   }
 
-  static final Function<RegularGoalElement, GoalDescription> validateValueSkipProjections
+  static final Function<RegularGoalElement, GoalDescription> validateValueIgnoreProjections
       = goal -> {
     ArrayList<TmpRegularParameter> builder = new ArrayList<>();
     for (VariableElement parameter : goal.executableElement.getParameters()) {
       builder.add(TmpRegularParameter.create(parameter, Optional.empty(), goal.goalAnnotation));
     }
-    return createResult(goal, builder);
+    return createGoalDescription(goal, builder);
   };
 
-  private static GoalDescription createResult(RegularGoalElement goal, List<TmpRegularParameter> parameters) {
+  private static GoalDescription createGoalDescription(RegularGoalElement goal, List<TmpRegularParameter> parameters) {
     List<TmpRegularParameter> shuffled = shuffledParameters(parameters);
     return create(goal, transform(shuffled, toValidParameter));
   }

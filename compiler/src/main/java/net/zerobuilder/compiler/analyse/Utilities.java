@@ -2,8 +2,11 @@ package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.ClassName;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -67,6 +70,13 @@ final class Utilities {
 
   static <X, E> List<E> transform(Collection<X> input, Function<X, E> function) {
     return input.stream().map(function).collect(toList());
+  }
+
+  static <E> List<E> sortedCopy(List<E> input, Comparator<E> comparator) {
+    ArrayList<E> sorted = new ArrayList<>(input.size());
+    sorted.addAll(input);
+    Collections.sort(sorted, comparator);
+    return sorted;
   }
 
   private Utilities() {

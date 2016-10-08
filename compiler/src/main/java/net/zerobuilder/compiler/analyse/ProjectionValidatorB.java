@@ -1,9 +1,5 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
@@ -21,6 +17,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -28,8 +26,8 @@ import java.util.stream.Collectors;
 
 import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 import static com.google.auto.common.MoreTypes.asTypeElement;
-import static com.google.common.base.Ascii.isUpperCase;
 import static com.squareup.javapoet.ClassName.OBJECT;
+import static java.lang.Character.isUpperCase;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.DECLARED;
@@ -48,22 +46,23 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPa
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nonNull;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.ClassNames.COLLECTION;
+import static net.zerobuilder.compiler.analyse.Utilities.sortedCopy;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 final class ProjectionValidatorB {
 
-  private static final Ordering<TmpAccessorPair> ACCESSOR_PAIR_ORDERING
-      = Ordering.from((pair0, pair1) -> {
+  public static final Comparator<TmpAccessorPair> ALPHABETIC_SORT
+      = (pair0, pair1) -> {
     String name0 = pair0.validBeanParameter.accept(beanParameterName);
     String name1 = pair1.validBeanParameter.accept(beanParameterName);
     return name0.compareTo(name1);
-  });
+  };
 
   static final Function<BeanGoalElement, GoalDescription> validateBean
       = goal -> {
     Map<String, List<ExecutableElement>> settersByName = setters(goal);
-    ImmutableList.Builder<TmpAccessorPair> builder = ImmutableList.builder();
+    List<TmpAccessorPair> builder = new ArrayList<>();
     for (ExecutableElement getter : getters(goal)) {
       List<ExecutableElement> setters = settersByName.get(setterName(getter));
       if (setters != null && setters.size() != 1) {
@@ -73,11 +72,10 @@ final class ProjectionValidatorB {
           ? loneGetter(getter, goal.goalAnnotation)
           : regularAccessorPair(getter, setters.get(0), goal.goalAnnotation));
     }
-    List<TmpAccessorPair> tmpAccessorPairs = builder.build();
-    if (tmpAccessorPairs.isEmpty()) {
+    if (builder.isEmpty()) {
       throw new ValidationException(BEAN_NO_ACCESSOR_PAIRS, goal.beanType);
     }
-    return createResult(goal, tmpAccessorPairs);
+    return createResult(goal, builder);
   };
 
   private static TmpAccessorPair loneGetter(ExecutableElement getter, Goal goalAnnotation) {
@@ -179,8 +177,9 @@ final class ProjectionValidatorB {
   }
 
   private static GoalDescription createResult(BeanGoalElement goal, List<TmpAccessorPair> tmpAccessorPairs) {
+    List<TmpAccessorPair> sorted = sortedCopy(tmpAccessorPairs, ALPHABETIC_SORT);
     List<AbstractBeanParameter> validBeanParameters
-        = transform(shuffledParameters(ACCESSOR_PAIR_ORDERING.sortedCopy(tmpAccessorPairs)), toValidParameter);
+        = transform(shuffledParameters(sorted), toValidParameter);
     return BeanGoalDescription.create(goal.details, validBeanParameters);
   }
 

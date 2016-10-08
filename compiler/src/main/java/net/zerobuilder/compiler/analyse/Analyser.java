@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Builders;
@@ -18,6 +17,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.auto.common.MoreElements.asExecutable;
@@ -51,13 +51,13 @@ public final class Analyser {
     List<AbstractGoalElement> goals = goals(buildersAnnotatedClass);
     checkNameConflict(goals);
     validateBuildersClass(buildersAnnotatedClass);
-    ImmutableList.Builder<GoalDescription> validGoals = ImmutableList.builder();
+    List<GoalDescription> validGoals = new ArrayList<>();
     for (AbstractGoalElement goal : goals) {
       boolean toBuilder = goal.goalAnnotation.toBuilder();
       GoalDescription goalDescription = goal.accept(toBuilder ? validate : skip);
       validGoals.add(goalDescription);
     }
-    return GeneratorInput.create(context, validGoals.build());
+    return GeneratorInput.create(context, validGoals);
   }
 
   /**
@@ -67,7 +67,7 @@ public final class Analyser {
    */
   private List<AbstractGoalElement> goals(TypeElement buildElement) throws ValidationException {
     Builders buildersAnnotation = buildElement.getAnnotation(Builders.class);
-    ImmutableList.Builder<AbstractGoalElement> builder = ImmutableList.builder();
+    List<AbstractGoalElement> builder = new ArrayList<>();
     AccessLevel defaultAccess = buildersAnnotation.access();
     if (buildElement.getAnnotation(Goal.class) != null) {
       builder.add(BeanGoalElement.create(buildElement, elements, defaultAccess));
@@ -87,10 +87,9 @@ public final class Analyser {
         }
       }
     }
-    List<AbstractGoalElement> goals = builder.build();
-    if (goals.isEmpty()) {
+    if (builder.isEmpty()) {
       throw new ValidationException(WARNING, NO_GOALS, buildElement);
     }
-    return goals;
+    return builder;
   }
 }

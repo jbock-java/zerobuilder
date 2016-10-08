@@ -1,7 +1,5 @@
 package net.zerobuilder.compiler;
 
-import com.google.auto.service.AutoService;
-import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
@@ -19,7 +17,6 @@ import net.zerobuilder.compiler.generate.GeneratorInput;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
-import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -29,14 +26,15 @@ import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
-import static com.google.common.base.Throwables.getStackTraceAsString;
-import static com.google.common.collect.Iterables.toArray;
-import static com.google.common.collect.Sets.union;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
@@ -46,12 +44,13 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_WITHOUT_BUILD
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
 import static net.zerobuilder.compiler.generate.DtoGeneratorOutput.asFunction;
 
-@AutoService(Processor.class)
 public final class ZeroProcessor extends AbstractProcessor {
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
-    return ImmutableSet.of(Goal.class.getName(), Builders.class.getName());
+    return new HashSet<>(Arrays.asList(
+        Goal.class.getName(),
+        Builders.class.getName()));
   }
 
   @Override
@@ -85,7 +84,7 @@ public final class ZeroProcessor extends AbstractProcessor {
           write(success.generatedType(), typeSpec);
         } catch (IOException e) {
           String message = "Error processing "
-              + ClassName.get(annotatedType) + ": " + getStackTraceAsString(e);
+              + ClassName.get(annotatedType) + ": " + e.getMessage();
           processingEnv.getMessager().printMessage(ERROR, message, annotatedType);
           return false;
         }
@@ -93,7 +92,7 @@ public final class ZeroProcessor extends AbstractProcessor {
         processingEnv.getMessager().printMessage(e.kind, e.getMessage(), e.about);
       } catch (RuntimeException e) {
         String message = "Error processing "
-            + ClassName.get(annotatedType) + ": " + getStackTraceAsString(e);
+            + ClassName.get(annotatedType) + ": " + e.getMessage();
         processingEnv.getMessager().printMessage(ERROR, message, annotatedType);
         return false;
       }
@@ -118,7 +117,10 @@ public final class ZeroProcessor extends AbstractProcessor {
 
   private Optional<? extends Element> goalNotInBuild(RoundEnvironment env) {
     Set<? extends Element> elements = env.getElementsAnnotatedWith(Goal.class);
-    for (ExecutableElement executableElement : union(constructorsIn(elements), methodsIn(elements))) {
+    Stream<ExecutableElement> methods = methodsIn(elements).stream();
+    Stream<ExecutableElement> constructors = constructorsIn(elements).stream();
+    for (ExecutableElement executableElement :
+        Stream.concat(constructors, methods).collect(toList())) {
       if (executableElement.getEnclosingElement().getAnnotation(Builders.class) == null) {
         processingEnv.getMessager().printMessage(ERROR,
             GOAL_NOT_IN_BUILD, executableElement);
@@ -141,7 +143,7 @@ public final class ZeroProcessor extends AbstractProcessor {
         .build();
     JavaFileObject sourceFile = processingEnv.getFiler()
         .createSourceFile(generatedType.toString(),
-            toArray(javaFile.typeSpec.originatingElements, Element.class));
+            javaFile.typeSpec.originatingElements.toArray(new Element[0]));
     try (Writer writer = sourceFile.openWriter()) {
       writer.write(javaFile.toString());
     }

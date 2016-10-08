@@ -57,20 +57,20 @@ public final class DtoGoalDescription {
       return new RegularGoalDescription(details, thrownTypes, parameters);
     }
 
-    private static void checkParameterNames(List<String> parameterNames, List<RegularParameter> parameters) {
+    private static void checkParameterNames(List<String> parameterNames,
+                                            List<RegularParameter> parameters) {
       if (parameters.isEmpty()) {
         throw new IllegalStateException("need at least one parameter");
       }
       if (parameterNames.size() != parameters.size()) {
         throw new IllegalStateException("parameter names mismatch");
       }
-      boolean[] positions = new boolean[parameterNames.size()];
+      int[] positions = new int[parameterNames.size()];
       for (RegularParameter parameter : parameters) {
-        int pos = parameterNames.indexOf(parameter.name);
-        if (positions[pos]) {
+        int i = parameterNames.indexOf(parameter.name);
+        if (positions[i]++ != 0) {
           throw new IllegalStateException("parameter names mismatch");
         }
-        positions[pos] = true;
       }
     }
 

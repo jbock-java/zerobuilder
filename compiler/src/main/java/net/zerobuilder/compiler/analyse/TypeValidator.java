@@ -1,13 +1,12 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.google.common.collect.ImmutableSet;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
+import java.util.EnumSet;
 import java.util.Set;
 
-import static com.google.common.collect.Sets.immutableEnumSet;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.element.NestingKind.MEMBER;
@@ -17,8 +16,8 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_TYPE;
 
 final class TypeValidator {
 
-  private static final ImmutableSet<NestingKind> ALLOWED_NESTING_KINDS
-      = immutableEnumSet(ImmutableSet.of(TOP_LEVEL, MEMBER));
+  private static final Set<NestingKind> ALLOWED_NESTING_KINDS
+      = EnumSet.of(TOP_LEVEL, MEMBER);
 
   static void validateBuildersClass(TypeElement type) throws ValidationException {
     Set<Modifier> modifiers = type.getModifiers();
