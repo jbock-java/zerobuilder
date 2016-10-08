@@ -2,10 +2,15 @@
 
 This project has two different use cases:
 
-* Create and update immutable value objects with minimal effort. 
+* Create and update <em>instances of</em> immutable value objects with minimal effort. 
   See [values](values.md).
-* Create mutable JavaBeans and update them with "immutable semantics", i.e. by making shallow copies.
+* Create <em>instances of</em> mutable JavaBeans and update them with "immutable semantics", i.e. by making shallow copies.
   See [beans](beans.md).
+
+### Non goals
+
+* Generating data types. This is up to the user, or other tools (see examples).
+  Thanks for [mentioning us](https://github.com/jodastephen/compare-beangen) though!
 
 ### How to use
 
