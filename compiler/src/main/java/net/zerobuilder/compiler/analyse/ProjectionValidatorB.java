@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.squareup.javapoet.ClassName.OBJECT;
@@ -61,24 +62,27 @@ final class ProjectionValidatorB {
     return name0.compareTo(name1);
   };
 
-  private static final Predicate<ExecutableElement> LOOKS_LIKE_SETTER = method -> method.getKind() == ElementKind.METHOD
-      && !method.getModifiers().contains(PRIVATE)
-      && method.getSimpleName().length() >= 4
-      && isUpperCase(method.getSimpleName().charAt(3))
-      && method.getSimpleName().toString().startsWith("set")
-      && method.getParameters().size() == 1
-      && method.getReturnType().getKind() == TypeKind.VOID;
+  static final Predicate<String> IS_GETTER_NAME = Pattern.compile("^get[A-Z].*$|^is[A-Z].*$").asPredicate()
+      .and(name -> !"getClass".equals(name));
 
-  private static final Predicate<ExecutableElement> LOOKS_LIKE_GETTER = method -> {
-    String name = method.getSimpleName().toString();
-    return method.getParameters().isEmpty()
-        && !method.getModifiers().contains(PRIVATE)
-        && !method.getModifiers().contains(STATIC)
-        && !method.getReturnType().getKind().equals(TypeKind.VOID)
-        && !method.getReturnType().getKind().equals(TypeKind.NONE)
-        && (name.startsWith("get") || name.startsWith("is"))
-        && !"getClass".equals(name);
-  };
+  private static final Predicate<String> IS_SETTER_NAME = Pattern.compile("^set[A-Z].*$").asPredicate();
+
+  private static final Predicate<ExecutableElement> LOOKS_LIKE_SETTER = method ->
+      method.getKind() == ElementKind.METHOD
+          && method.getParameters().size() == 1
+          && !method.getModifiers().contains(PRIVATE)
+          && !method.getModifiers().contains(STATIC)
+          && method.getReturnType().getKind() == TypeKind.VOID
+          && IS_SETTER_NAME.test(method.getSimpleName().toString());
+
+
+  private static final Predicate<ExecutableElement> LOOKS_LIKE_GETTER = method ->
+      method.getKind() == ElementKind.METHOD
+          && method.getParameters().isEmpty()
+          && !method.getModifiers().contains(PRIVATE)
+          && !method.getModifiers().contains(STATIC)
+          && !method.getReturnType().getKind().equals(TypeKind.VOID)
+          && IS_GETTER_NAME.test(method.getSimpleName().toString());
 
   static final Function<BeanGoalElement, GoalDescription> validateBean
       = goal -> {
