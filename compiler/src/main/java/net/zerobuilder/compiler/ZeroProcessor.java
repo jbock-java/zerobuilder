@@ -65,15 +65,14 @@ public final class ZeroProcessor extends AbstractProcessor {
       return false;
     }
     Elements elements = processingEnv.getElementUtils();
-    Analyser analyser = new Analyser(elements);
     List<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builders.class));
     Function<GeneratorOutput, Optional<GeneratorSuccess>> typeSpecFunction
         = typeSpecFunction(processingEnv.getMessager());
     for (TypeElement annotatedType : types) {
       try {
-        GeneratorInput goals = analyser.analyse(annotatedType);
-        GeneratorOutput generatorOutput = Generator.generate(goals);
+        GeneratorInput generatorInput = Analyser.analyse(annotatedType);
+        GeneratorOutput generatorOutput = Generator.generate(generatorInput);
         Optional<GeneratorSuccess> maybeSuccess = typeSpecFunction.apply(generatorOutput);
         if (!maybeSuccess.isPresent()) {
           return false;

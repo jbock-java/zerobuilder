@@ -41,16 +41,24 @@ public final class DtoParameter {
     public abstract <R> R acceptParameter(ParameterCases<R> cases);
   }
 
+  /**
+   * Represents one of the parameters of a method or constructor.
+   */
   public static final class RegularParameter extends AbstractParameter {
 
     /**
      * <p>original parameter name</p>
-     * <p>if {@link #getter} is absent, then there is also a field with this name</p>
+     * <p>if {@link #getter} is absent,
+     * and
+     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalOptions#toBuilder == true}
+     * then there is also a field with this name</p>
      */
     final String name;
 
     /**
-     * projection method name; absent iff {@code toBuilder == false} or field access
+     * projection method name; absent iff
+     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalOptions#toBuilder == false}
+     * or field access
      */
     final Optional<String> getter;
 
@@ -60,10 +68,32 @@ public final class DtoParameter {
       this.name = name;
     }
 
+    /**
+     * This method must be used to create the parameter if either
+     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalOptions#toBuilder} is {@code false}
+     * or the generated {@code toBuilder} method should use direct field access.
+     *
+     * @param name    parameter name
+     * @param type    parameter type
+     * @param nonNull should the generated code reject a null value?
+     * @return a parameter
+     */
     public static RegularParameter create(String name, TypeName type, boolean nonNull) {
       return new RegularParameter(name, type, Optional.empty(), nonNull);
     }
 
+    /**
+     * This method must be used to create the parameter if
+     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalOptions#toBuilder} is {@code true}
+     * and the generated {@code toBuilder} method should use
+     * a projection method, such as a getter.
+     *
+     * @param name    parameter name
+     * @param type    parameter type
+     * @param nonNull should the generated code reject a null value?
+     * @param getter  name of the projection method, for example {@code getFoo}
+     * @return a parameter
+     */
     public static RegularParameter create(String name, TypeName type, boolean nonNull, String getter) {
       return new RegularParameter(name, type, Optional.of(getter), nonNull);
     }

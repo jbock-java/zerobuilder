@@ -7,6 +7,7 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
+import net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.GeneratorInput;
@@ -15,7 +16,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,17 +36,13 @@ import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuilder
 
 public final class Analyser {
 
-  private final Elements elements;
-
-  public Analyser(Elements elements) {
-    this.elements = elements;
-  }
-
-  public GeneratorInput analyse(TypeElement buildersAnnotatedClass) throws ValidationException {
-    boolean recycle = buildersAnnotatedClass.getAnnotation(Builders.class).recycle();
+  public static GeneratorInput analyse(TypeElement buildersAnnotatedClass) throws ValidationException {
+    BuilderLifecycle lifecycle = buildersAnnotatedClass.getAnnotation(Builders.class).recycle()
+        ? BuilderLifecycle.REUSE_INSTANCES
+        : BuilderLifecycle.NEW_INSTANCE;
     ClassName type = ClassName.get(buildersAnnotatedClass);
     ClassName generatedType = appendSuffix(type, "Builders");
-    BuildersContext context = createBuildersContext(type, generatedType, recycle);
+    BuildersContext context = createBuildersContext(type, generatedType, lifecycle);
     List<AbstractGoalElement> goals = goals(buildersAnnotatedClass);
     checkNameConflict(goals);
     validateBuildersClass(buildersAnnotatedClass);
@@ -64,7 +60,7 @@ public final class Analyser {
    * @return the goals that this class defines: one per {@link Goal} annotation
    * @throws ValidationException if validation fails
    */
-  private List<AbstractGoalElement> goals(TypeElement buildElement) throws ValidationException {
+  private static List<AbstractGoalElement> goals(TypeElement buildElement) throws ValidationException {
     Builders buildersAnnotation = buildElement.getAnnotation(Builders.class);
     List<AbstractGoalElement> builder = new ArrayList<>();
     AccessLevel defaultAccess = buildersAnnotation.access();
@@ -90,5 +86,9 @@ public final class Analyser {
       throw new ValidationException(WARNING, NO_GOALS, buildElement);
     }
     return builder;
+  }
+
+  private Analyser() {
+    throw new UnsupportedOperationException("no instances");
   }
 }

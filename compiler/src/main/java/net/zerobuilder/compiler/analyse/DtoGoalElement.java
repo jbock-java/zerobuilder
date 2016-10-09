@@ -7,6 +7,7 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
@@ -15,7 +16,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -86,11 +86,13 @@ final class DtoGoalElement {
       String name = goalName(goalAnnotation, goalType);
       GoalOptions goalOptions = goalOptions(goalAnnotation, defaultAccess);
       String methodName = element.getSimpleName().toString();
-      boolean instance = !element.getModifiers().contains(STATIC);
+      GoalMethodType goalMethodType = element.getModifiers().contains(STATIC)
+          ? GoalMethodType.STATIC_GOAL
+          : GoalMethodType.INSTANCE_GOAL;
       List<String> parameterNames = parameterNames(element);
       RegularGoalDetails goal = element.getKind() == CONSTRUCTOR
           ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOptions)
-          : MethodGoalDetails.create(goalType, name, parameterNames, methodName, instance, goalOptions);
+          : MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOptions);
       return new RegularGoalElement(element, goal);
     }
 

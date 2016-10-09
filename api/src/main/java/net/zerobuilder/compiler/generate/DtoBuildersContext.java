@@ -17,6 +17,21 @@ import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 
 public final class DtoBuildersContext {
 
+  public enum BuilderLifecycle {
+    REUSE_INSTANCES {
+      @Override
+      boolean recycle() {
+        return true;
+      }
+    }, NEW_INSTANCE {
+      @Override
+      boolean recycle() {
+        return false;
+      }
+    };
+    abstract boolean recycle();
+  }
+
   public static final class BuildersContext {
 
     /**
@@ -60,16 +75,18 @@ public final class DtoBuildersContext {
   /**
    * Create metadata for goal processing.
    *
-   * @param type          type that contains the goal methods / constructors;
-   *                      for bean goals, this is just the bean type
-   * @param generatedType type name that should be generated
-   * @param recycle       if builder instances should be cached
+   * @param type             type that contains the goal methods / constructors;
+   *                         for bean goals, this is just the bean type
+   * @param generatedType    type name that should be generated
+   * @param builderLifecycle lifecycle setting
    * @return a BuildersContext
    */
-  public static BuildersContext createBuildersContext(ClassName type, ClassName generatedType, boolean recycle) {
+  public static BuildersContext createBuildersContext(ClassName type,
+                                                      ClassName generatedType,
+                                                      BuilderLifecycle builderLifecycle) {
     FieldSpec field = fieldSpec(type, '_' + downcase(type.simpleName()), PRIVATE);
     FieldSpec cache = defineCache(generatedType);
-    return new BuildersContext(recycle, type, generatedType, field, cache);
+    return new BuildersContext(builderLifecycle.recycle(), type, generatedType, field, cache);
   }
 
   private static FieldSpec defineCache(ClassName generatedType) {

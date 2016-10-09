@@ -10,6 +10,21 @@ import static net.zerobuilder.compiler.generate.Access.PUBLIC;
 
 public final class DtoGoal {
 
+  public enum GoalMethodType {
+    STATIC_GOAL {
+      @Override
+      boolean isInstance() {
+        return false;
+      }
+    }, INSTANCE_GOAL {
+      @Override
+      boolean isInstance() {
+        return true;
+      }
+    };
+    abstract boolean isInstance();
+  }
+
   public static final class GoalOptions {
     final Access builderAccess;
     final Access toBuilderAccess;
@@ -161,9 +176,14 @@ public final class DtoGoal {
       this.instance = instance;
     }
 
-    public static MethodGoalDetails create(TypeName goalType, String name, List<String> parameterNames, String methodName,
-                                           boolean instance, GoalOptions goalOptions) {
-      return new MethodGoalDetails(goalType, name, parameterNames, methodName, instance, goalOptions);
+    public static MethodGoalDetails create(TypeName goalType,
+                                           String name,
+                                           List<String> parameterNames,
+                                           String methodName,
+                                           GoalMethodType goalMethodType,
+                                           GoalOptions goalOptions) {
+      return new MethodGoalDetails(goalType, name, parameterNames, methodName,
+          goalMethodType.isInstance(), goalOptions);
     }
 
     @Override
