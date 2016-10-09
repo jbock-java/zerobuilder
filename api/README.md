@@ -13,6 +13,6 @@ See [GeneratorTest](../../master/api/src/test/java/net/zerobuilder/api/test/Gene
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder-api</artifactId>
-    <version>1.472</version>
+    <version>1.481</version>
 </dependency>
 ````

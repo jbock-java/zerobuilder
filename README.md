@@ -42,7 +42,7 @@ In this case, the intermediate builder objects are stored in `ThreadLocal` insta
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
-    <version>1.472</version>
+    <version>1.481</version>
     <scope>provided</scope>
 </dependency>
 ````

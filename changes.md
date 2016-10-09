@@ -97,3 +97,7 @@
 * forbid abstract bean (bean) (bugfix)
 * forbid constructor goal in abstract class (bugfix)
 * handle overloaded setters correctly (bean) (bugfix)
+
+### 2016-10-09 zerobuilder 1.481 released
+
+* replace booleans with enums (breaking) (api)
