@@ -1,6 +1,7 @@
 # A flexible builder scheme
 
-This project has two different use cases:
+This project generates some variants of the builder pattern.
+It has two different use cases:
 
 * Create and update <em>instances of</em> immutable value objects with minimal effort. 
   See [values](values.md).
