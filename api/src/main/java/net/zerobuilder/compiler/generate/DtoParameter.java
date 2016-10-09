@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 
 import java.util.Optional;
@@ -31,11 +32,11 @@ public final class DtoParameter {
     /**
      * true if null checks should be added
      */
-    final boolean nonNull;
+    final NullPolicy nullPolicy;
 
-    AbstractParameter(TypeName type, boolean nonNull) {
+    AbstractParameter(TypeName type, NullPolicy nullPolicy) {
       this.type = type;
-      this.nonNull = nonNull;
+      this.nullPolicy = nullPolicy;
     }
 
     public abstract <R> R acceptParameter(ParameterCases<R> cases);
@@ -62,24 +63,24 @@ public final class DtoParameter {
      */
     final Optional<String> getter;
 
-    private RegularParameter(String name, TypeName type, Optional<String> getter, boolean nonNull) {
-      super(type, nonNull);
+    private RegularParameter(String name, TypeName type, Optional<String> getter, NullPolicy nullPolicy) {
+      super(type, nullPolicy);
       this.getter = getter;
       this.name = name;
     }
 
     /**
-     * This method must be used to create the parameter if either
+     * This method can be used to create the parameter if either
      * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalOptions#toBuilder} is {@code false}
      * or the generated {@code toBuilder} method should use direct field access.
      *
-     * @param name    parameter name
-     * @param type    parameter type
-     * @param nonNull should the generated code reject a null value?
+     * @param name       parameter name
+     * @param type       parameter type
+     * @param nullPolicy null policy
      * @return a parameter
      */
-    public static RegularParameter create(String name, TypeName type, boolean nonNull) {
-      return new RegularParameter(name, type, Optional.empty(), nonNull);
+    public static RegularParameter create(String name, TypeName type, NullPolicy nullPolicy) {
+      return new RegularParameter(name, type, Optional.empty(), nullPolicy);
     }
 
     /**
@@ -88,14 +89,14 @@ public final class DtoParameter {
      * and the generated {@code toBuilder} method should use
      * a projection method, such as a getter.
      *
-     * @param name    parameter name
-     * @param type    parameter type
-     * @param nonNull should the generated code reject a null value?
-     * @param getter  name of the projection method, for example {@code getFoo}
+     * @param name       parameter name
+     * @param type       parameter type
+     * @param nullPolicy null policy
+     * @param getter     name of the projection method, for example {@code getFoo}
      * @return a parameter
      */
-    public static RegularParameter create(String name, TypeName type, boolean nonNull, String getter) {
-      return new RegularParameter(name, type, Optional.of(getter), nonNull);
+    public static RegularParameter create(String name, TypeName type, NullPolicy nullPolicy, String getter) {
+      return new RegularParameter(name, type, Optional.of(getter), nullPolicy);
     }
 
     @Override

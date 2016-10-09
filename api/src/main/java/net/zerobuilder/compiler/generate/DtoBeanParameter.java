@@ -3,10 +3,10 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 
 import javax.lang.model.element.ExecutableElement;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -25,8 +25,8 @@ public final class DtoBeanParameter {
      */
     final String getter;
 
-    AbstractBeanParameter(TypeName type, String getter, boolean nonNull) {
-      super(type, nonNull);
+    AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy) {
+      super(type, nullPolicy);
       this.getter = getter;
     }
 
@@ -44,11 +44,11 @@ public final class DtoBeanParameter {
 
   public static final class AccessorPair extends AbstractBeanParameter {
 
-    private AccessorPair(TypeName type, String getter, boolean nonNull) {
-      super(type, getter, nonNull);
+    private AccessorPair(TypeName type, String getter, NullPolicy nullPolicy) {
+      super(type, getter, nullPolicy);
     }
-    public static AccessorPair create(TypeName type, ExecutableElement getter, boolean nonNull) {
-      return new AccessorPair(type, getter.getSimpleName().toString(), nonNull);
+    public static AccessorPair create(TypeName type, ExecutableElement getter, NullPolicy nullPolicy) {
+      return new AccessorPair(type, getter.getSimpleName().toString(), nullPolicy);
     }
     @Override
     public <R> R accept(BeanParameterCases<R> cases) {
@@ -80,16 +80,16 @@ public final class DtoBeanParameter {
       return parameterSpec(iterationVar.type, distinctFrom(iterationVar.name, avoid.name));
     }
 
-    private LoneGetter(TypeName type, String getter, boolean nonNull, ParameterSpec iterationVar) {
-      super(type, getter, nonNull);
+    private LoneGetter(TypeName type, String getter, NullPolicy nullPolicy, ParameterSpec iterationVar) {
+      super(type, getter, nullPolicy);
       this.iterationVar = iterationVar;
     }
 
-    public static LoneGetter create(TypeName type, String getter, boolean nonNull) {
+    public static LoneGetter create(TypeName type, String getter, NullPolicy nullPolicy) {
       ClassName collectionType = collectionType(type);
       String name = downcase(collectionType.simpleName());
       ParameterSpec iterationVar = parameterSpec(collectionType, name);
-      return new LoneGetter(type, getter, nonNull, iterationVar);
+      return new LoneGetter(type, getter, nullPolicy, iterationVar);
     }
 
     private static ClassName collectionType(TypeName typeName) {

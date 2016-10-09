@@ -2,6 +2,7 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
@@ -19,8 +20,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.function.Function;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuildersContext;
@@ -80,8 +81,8 @@ public class GeneratorTest {
             .build());
 
     // create parameter representations
-    RegularParameter fooParameter = RegularParameter.create("foo", STRING, false);
-    RegularParameter barParameter = RegularParameter.create("bar", INTEGER, false);
+    RegularParameter fooParameter = RegularParameter.create("foo", STRING, ALLOW);
+    RegularParameter barParameter = RegularParameter.create("bar", INTEGER, ALLOW);
     RegularGoalDescription goalDescription = RegularGoalDescription.create(
         details,
         Collections.emptyList(), // the goal method declares no exceptions
@@ -92,12 +93,10 @@ public class GeneratorTest {
     GeneratorInput generatorInput = GeneratorInput.create(
         buildersContext, singletonList(goalDescription));
 
-    // Act
+    // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);
-
-    // Assert
     GeneratorSuccess generatorSuccess = getSuccess.apply(generatorOutput);
-    TypeSpec typeSpec = generatorSuccess.typeSpec(emptyList());
+
     assertThat(generatorSuccess.methods().size(), is(1));
     assertThat(generatorSuccess.methods().get(0).name(), is(goalName));
     assertThat(generatorSuccess.methods().get(0).method().name, is("myGoalBuilder"));
@@ -107,6 +106,9 @@ public class GeneratorTest {
     assertThat(generatorSuccess.methods().get(0).method().returnType,
         is(GENERATED_TYPE.nestedClass("MyGoalBuilder")
             .nestedClass("Foo")));
+
+    // Get the definition of the generated type
+    TypeSpec typeSpec = generatorSuccess.typeSpec();
     assertThat(typeSpec.name, is("MyTypeBuilders"));
     assertThat(typeSpec.methodSpecs.size(), is(2)); // myGoalBuilder, constructor
   }

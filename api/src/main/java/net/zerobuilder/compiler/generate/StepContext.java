@@ -22,7 +22,7 @@ final class StepContext {
   static final Function<AbstractStep, CodeBlock> nullCheck
       = always(step -> {
         AbstractParameter parameter = abstractParameter.apply(step);
-        if (!parameter.nonNull || parameter.type.isPrimitive()) {
+        if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
           return emptyCodeBlock;
         }
         String name = parameterName.apply(parameter);

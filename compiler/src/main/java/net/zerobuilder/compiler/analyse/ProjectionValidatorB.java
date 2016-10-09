@@ -4,6 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
+import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
@@ -44,7 +45,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_PRIVATE_CLASS
 import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.toValidParameter;
-import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nonNull;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nullPolicy;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.analyse.Utilities.sortedCopy;
@@ -143,8 +144,8 @@ final class ProjectionValidatorB {
     // no setter but we have a getter that returns something like List<E>
     // in this case we need to find what E is ("collectionType")
     TypeName typeName = TypeName.get(type);
-    boolean nonNull = nonNull(type, getter.getAnnotation(Step.class), goalAnnotation);
-    LoneGetter loneGetter = LoneGetter.create(typeName, name, nonNull);
+    NullPolicy nullPolicy = nullPolicy(type, getter.getAnnotation(Step.class), goalAnnotation);
+    LoneGetter loneGetter = LoneGetter.create(typeName, name, nullPolicy);
     return TmpAccessorPair.createLoneGetter(getter, loneGetter);
   }
 

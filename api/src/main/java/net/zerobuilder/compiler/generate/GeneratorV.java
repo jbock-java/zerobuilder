@@ -66,7 +66,7 @@ final class GeneratorV {
   }
 
   private static CodeBlock nullCheckFieldAccess(ParameterSpec parameter, RegularStep step) {
-    if (!step.validParameter.nonNull) {
+    if (!step.validParameter.nullPolicy.check()) {
       return emptyCodeBlock;
     }
     String name = step.validParameter.name;
@@ -77,7 +77,7 @@ final class GeneratorV {
   }
 
   private static CodeBlock nullCheckGetter(ParameterSpec parameter, RegularStep step, String getter) {
-    if (!step.validParameter.nonNull) {
+    if (!step.validParameter.nullPolicy.check()) {
       return emptyCodeBlock;
     }
     String name = step.validParameter.name;

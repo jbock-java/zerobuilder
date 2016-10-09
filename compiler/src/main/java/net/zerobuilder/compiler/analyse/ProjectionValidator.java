@@ -76,19 +76,19 @@ final class ProjectionValidator {
     final Element element;
     final Optional<Step> annotation;
 
-    static boolean nonNull(TypeMirror type, Step step, Goal goal) {
+    static NullPolicy nullPolicy(TypeMirror type, Step step, Goal goal) {
       if (TypeName.get(type).isPrimitive()) {
-        return false;
+        return NullPolicy.ALLOW;
       }
       NullPolicy defaultPolicy = goal.nullPolicy() == NullPolicy.DEFAULT
           ? NullPolicy.ALLOW
           : goal.nullPolicy();
       if (step != null) {
         return step.nullPolicy() == NullPolicy.DEFAULT
-            ? defaultPolicy.check()
-            : step.nullPolicy().check();
+            ? defaultPolicy
+            : step.nullPolicy();
       }
-      return defaultPolicy.check();
+      return defaultPolicy;
     }
 
     private TmpValidParameter(Element element, Optional<Step> annotation) {
@@ -112,23 +112,20 @@ final class ProjectionValidator {
       super(element, annotation);
       this.parameter = parameter;
     }
-    static final Function<TmpRegularParameter, RegularParameter> toValidParameter = new Function<TmpRegularParameter, RegularParameter>() {
-      @Override
-      public RegularParameter apply(TmpRegularParameter parameter) {
-        return parameter.parameter;
-      }
-    };
+
+    static final Function<TmpRegularParameter, RegularParameter> toValidParameter = parameter -> parameter.parameter;
+
     static TmpRegularParameter create(VariableElement parameter, Optional<String> getter,
                                       Goal goalAnnotation) {
       Step stepAnnotation = parameter.getAnnotation(Step.class);
-      boolean nonNull = TmpValidParameter.nonNull(parameter.asType(), stepAnnotation, goalAnnotation);
+      NullPolicy nonNull = TmpValidParameter.nullPolicy(parameter.asType(), stepAnnotation, goalAnnotation);
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
       RegularParameter regularParameter = createRegularParameter(getter, nonNull, name, type);
       return new TmpRegularParameter(parameter, ofNullable(stepAnnotation), regularParameter);
     }
 
-    private static RegularParameter createRegularParameter(Optional<String> getter, boolean nonNull, String name, TypeName type) {
+    private static RegularParameter createRegularParameter(Optional<String> getter, NullPolicy nonNull, String name, TypeName type) {
       if (getter.isPresent()) {
         return RegularParameter.create(name, type, nonNull, getter.get());
       } else {
@@ -149,8 +146,8 @@ final class ProjectionValidator {
     static TmpAccessorPair createAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
       Step stepAnnotation = getter.getAnnotation(Step.class);
       TypeName type = TypeName.get(getter.getReturnType());
-      boolean nonNull = TmpValidParameter.nonNull(getter.getReturnType(), stepAnnotation, goalAnnotation);
-      AccessorPair accessorPair = AccessorPair.create(type, getter, nonNull);
+      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(getter.getReturnType(), stepAnnotation, goalAnnotation);
+      AccessorPair accessorPair = AccessorPair.create(type, getter, nullPolicy);
       return new TmpAccessorPair(getter, ofNullable(stepAnnotation), accessorPair);
     }
 

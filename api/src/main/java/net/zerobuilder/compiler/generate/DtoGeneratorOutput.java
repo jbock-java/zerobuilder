@@ -6,10 +6,12 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -80,7 +82,7 @@ public final class DtoGeneratorOutput {
     private final ClassName generatedType;
 
     /**
-     * Defines the &quot;builders utility&quot;.
+     * Create the definition of the generated class.
      *
      * @param generatedAnnotations annotations to add to the generated type, if any
      * @return type definition
@@ -94,6 +96,15 @@ public final class DtoGeneratorOutput {
           .addModifiers(PUBLIC, FINAL)
           .addTypes(nestedTypes)
           .build();
+    }
+
+    /**
+     * Create the definition of the generated class.
+     *
+     * @return type definition
+     */
+    public TypeSpec typeSpec() {
+      return typeSpec(emptyList());
     }
 
     GeneratorSuccess(List<BuilderMethod> methods,
