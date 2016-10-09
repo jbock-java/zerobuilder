@@ -90,7 +90,7 @@ final class GeneratorV {
   private static CodeBlock initializeUpdater(RegularGoalContext goal, ParameterSpec updater) {
     CodeBlock.Builder builder = CodeBlock.builder();
     DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
-    boolean recycle = buildersContext.recycle;
+    boolean recycle = buildersContext.lifecycle.recycle();
     if (recycle) {
       FieldSpec cache = buildersContext.cache;
       String updaterField = updaterField(goal);
@@ -130,7 +130,7 @@ final class GeneratorV {
 
   private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder) {
     DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
-    return buildersContext.recycle
+    return buildersContext.lifecycle.recycle()
         ? statement("$T $N = $N.get().$N", builder.type, builder, buildersContext.cache, stepsField(goal))
         : statement("$T $N = new $T()", builder.type, builder, builder.type);
   }

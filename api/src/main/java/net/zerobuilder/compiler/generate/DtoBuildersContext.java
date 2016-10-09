@@ -34,10 +34,7 @@ public final class DtoBuildersContext {
 
   public static final class BuildersContext {
 
-    /**
-     * Whether builder instances should be cached.
-     */
-    final boolean recycle;
+    final BuilderLifecycle lifecycle;
 
     /**
      * The type that should be generated.
@@ -58,13 +55,13 @@ public final class DtoBuildersContext {
 
     /**
      * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.
-     * Only used when {@link #recycle} is true.
+     * Only used when {@link #lifecycle} is true.
      */
     final FieldSpec cache;
 
-    private BuildersContext(boolean recycle, ClassName type, ClassName generatedType,
+    private BuildersContext(BuilderLifecycle lifecycle, ClassName type, ClassName generatedType,
                             FieldSpec field, FieldSpec cache) {
-      this.recycle = recycle;
+      this.lifecycle = lifecycle;
       this.type = type;
       this.generatedType = generatedType;
       this.field = field;
@@ -86,7 +83,7 @@ public final class DtoBuildersContext {
                                                       BuilderLifecycle builderLifecycle) {
     FieldSpec field = fieldSpec(type, '_' + downcase(type.simpleName()), PRIVATE);
     FieldSpec cache = defineCache(generatedType);
-    return new BuildersContext(builderLifecycle.recycle(), type, generatedType, field, cache);
+    return new BuildersContext(builderLifecycle, type, generatedType, field, cache);
   }
 
   private static FieldSpec defineCache(ClassName generatedType) {

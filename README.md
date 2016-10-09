@@ -9,7 +9,7 @@ This project has two different use cases:
 
 ### Non goals
 
-* Generating data types. This is up to the user, or other tools (see examples).
+* Generating data types. This is up to the user, or other tools (see [examples](examples)).
   Thanks for [mentioning us](https://github.com/jodastephen/compare-beangen) though!
 
 ### How to use

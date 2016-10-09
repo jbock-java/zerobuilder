@@ -55,7 +55,7 @@ public final class Generator {
     methods.addAll(builderMethods(goals));
     methods.addAll(toBuilderMethods(goals));
     List<FieldSpec> fields = new ArrayList<>();
-    if (analysisResult.buildersContext.recycle) {
+    if (analysisResult.buildersContext.lifecycle.recycle()) {
       fields.add(analysisResult.buildersContext.cache);
     }
     fields.addAll(instanceFields(analysisResult, goals));
@@ -100,7 +100,7 @@ public final class Generator {
 
   private static List<FieldSpec> instanceFields(Goals analysisResult,
                                                 List<AbstractGoalContext> goals) {
-    if (!analysisResult.buildersContext.recycle) {
+    if (!analysisResult.buildersContext.lifecycle.recycle()) {
       return emptyList();
     }
     List<FieldSpec> builder = new ArrayList<>();

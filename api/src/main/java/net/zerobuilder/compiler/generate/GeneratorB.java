@@ -107,7 +107,7 @@ final class GeneratorB {
 
   private static CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec updater) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.builders.recycle) {
+    if (goal.builders.lifecycle.recycle()) {
       builder.addStatement("$T $N = $N.get().$N", updater.type, updater,
           goal.builders.cache, updaterField(goal));
     } else {
@@ -130,7 +130,7 @@ final class GeneratorB {
             .returns(goal.goal.steps.get(0).thisType)
             .addModifiers(goal.goal.details.goalOptions.builderAccess.modifiers(STATIC));
         String steps = downcase(stepsType.simpleName());
-        method.addCode(goal.builders.recycle
+        method.addCode(goal.builders.lifecycle.recycle()
             ? statement("$T $N = $N.get().$N", stepsType, steps, goal.builders.cache, stepsField(goal))
             : statement("$T $N = new $T()", stepsType, steps, stepsType));
         MethodSpec methodSpec = method.addStatement("$N.$N = new $T()", steps,
