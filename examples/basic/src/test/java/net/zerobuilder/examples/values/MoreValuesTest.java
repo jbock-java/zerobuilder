@@ -1,10 +1,15 @@
 package net.zerobuilder.examples.values;
 
 import net.zerobuilder.examples.values.MoreValues.Interface;
+import net.zerobuilder.examples.values.MoreValues.NothingSpecial;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static net.zerobuilder.examples.values.MoreValues_InterfaceBuilders.interfaceBuilder;
 import static net.zerobuilder.examples.values.MoreValues_NothingBuilders.appendBuilder;
+import static net.zerobuilder.examples.values.MoreValues_NothingSpecialBuilders.nothingSpecialBuilder;
+import static net.zerobuilder.examples.values.MoreValues_NothingSpecialBuilders.nothingSpecialToBuilder;
 import static net.zerobuilder.examples.values.MoreValues_SumBuilders.sumBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -30,5 +35,16 @@ public class MoreValuesTest {
   public void testSum() {
     int sum = sumBuilder().a(5).b(8);
     assertThat(sum, is(13));
+  }
+
+  @Test
+  public void testNothingSpecial() throws IOException {
+    NothingSpecial foo = nothingSpecialBuilder()
+        .foo("foo");
+    NothingSpecial bar = nothingSpecialToBuilder(foo)
+        .foo("bar")
+        .build();
+    assertThat(foo.foo(), is("foo"));
+    assertThat(bar.foo(), is("bar"));
   }
 }

@@ -49,6 +49,20 @@ public final class LessElements {
         }
       };
 
+  /**
+   * Find all non-static, visible methods that match the predicate, and group by name.
+   * In case of name conflict, the first found wins.
+   * The iteration order is:
+   * <ul>
+   * <li>{@code type} first, {@code Object} last</li>
+   * <li>concrete types before interfaces</li>
+   * </ul>
+   * Ideally the {@code predicate} should prevent name conflicts.
+   *
+   * @param type      type to search
+   * @param predicate filter
+   * @return methods by name
+   */
   public static Map<String, ExecutableElement> getLocalAndInheritedMethods(
       TypeElement type, Predicate<ExecutableElement> predicate) {
     Map<String, ExecutableElement> methods = new LinkedHashMap<>();
@@ -83,12 +97,13 @@ public final class LessElements {
                                   Predicate<ExecutableElement> predicate) {
     methodsIn(type.getEnclosedElements())
         .stream()
-        .filter(predicate).forEach(method -> {
-      if (!method.getModifiers().contains(Modifier.STATIC)
-          && methodVisibleFromPackage(method, pkg)) {
-        methods.computeIfAbsent(method.getSimpleName().toString(), name -> method);
-      }
-    });
+        .filter(predicate)
+        .forEach(method -> {
+          if (!method.getModifiers().contains(Modifier.STATIC)
+              && methodVisibleFromPackage(method, pkg)) {
+            methods.computeIfAbsent(method.getSimpleName().toString(), name -> method);
+          }
+        });
   }
 
   private static boolean methodVisibleFromPackage(ExecutableElement method, PackageElement pkg) {

@@ -92,22 +92,22 @@ final class ProjectionValidatorB {
       = goal -> {
     validateBeanType(goal.beanType);
     List<ExecutableElement> getters = getters(goal);
-    Map<String, List<ExecutableElement>> settersByName = setters(goal.beanType, getters);
-    List<TmpAccessorPair> builder = new ArrayList<>();
-    for (ExecutableElement getter : getters) {
-      List<ExecutableElement> setters = settersByName.get(setterName(getter));
-      if (setters != null && setters.size() != 1) {
-        throw new IllegalStateException("setter name should be unique");
-      }
-      builder.add(setters == null
-          ? loneGetter(getter, goal.goalAnnotation)
-          : regularAccessorPair(getter, setters.get(0), goal.goalAnnotation));
-    }
+    Map<String, ExecutableElement> settersByName = setters(goal.beanType, getters);
+    List<TmpAccessorPair> builder = getters.stream()
+        .map(getter -> tmpAccessorPair(settersByName, goal, getter))
+        .collect(Collectors.toList());
     if (builder.isEmpty()) {
       throw new ValidationException(BEAN_NO_ACCESSOR_PAIRS, goal.beanType);
     }
     return createResult(goal, builder);
   };
+
+  private static TmpAccessorPair tmpAccessorPair(Map<String, ExecutableElement> settersByName, BeanGoalElement goal, ExecutableElement getter) {
+    ExecutableElement setter = settersByName.get(setterName(getter));
+    return setter == null
+        ? loneGetter(getter, goal.goalAnnotation)
+        : regularAccessorPair(getter, setter, goal.goalAnnotation);
+  }
 
   private static final Predicate<ExecutableElement> IS_NOT_IGNORED = getter -> {
     Ignore ignoreAnnotation = getter.getAnnotation(Ignore.class);
@@ -171,16 +171,13 @@ final class ProjectionValidatorB {
         .collect(Collectors.toList());
   }
 
-  private static Map<String, List<ExecutableElement>> setters(TypeElement beanType,
-                                                              List<ExecutableElement> getters) {
+  private static Map<String, ExecutableElement> setters(TypeElement beanType,
+                                                        List<ExecutableElement> getters) {
     Predicate<ExecutableElement> filter = LOOKS_LIKE_SETTER
         .and(setterSieve(getters))
         .and(DECLARES_NO_EXCEPTIONS)
         .and(DOES_NOT_HAVE_STEP_OR_IGNORE_ANNOTATIONS);
-    return getLocalAndInheritedMethods(beanType, filter)
-        .values()
-        .stream()
-        .collect(Collectors.groupingBy(setter -> setter.getSimpleName().toString().substring(3)));
+    return getLocalAndInheritedMethods(beanType, filter);
   }
 
   private static TypeElement validateBeanType(TypeElement beanType) {
@@ -242,7 +239,7 @@ final class ProjectionValidatorB {
 
   private static String setterName(ExecutableElement getter) {
     String name = getter.getSimpleName().toString();
-    return name.substring(name.startsWith("get") ? 3 : 2);
+    return "set" + name.substring(name.startsWith("get") ? 3 : 2);
   }
 
   private static boolean hasParameterlessConstructor(TypeElement type) {
