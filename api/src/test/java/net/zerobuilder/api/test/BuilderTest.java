@@ -102,7 +102,7 @@ public class BuilderTest {
         is(GENERATED_TYPE.nestedClass("MyGoalBuilder")
             .nestedClass("Foo")));
 
-    // Get the definition of the generated type
+    // Try printing typeSpec to System.out!
     TypeSpec typeSpec = generatorOutput.typeSpec();
     assertThat(typeSpec.name, is("MyTypeBuilders"));
     assertThat(typeSpec.methodSpecs.size(), is(2)); // myGoalBuilder, constructor

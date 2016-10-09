@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.common;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -99,7 +100,8 @@ public final class LessElements {
         .stream()
         .filter(predicate)
         .forEach(method -> {
-          if (!method.getModifiers().contains(Modifier.STATIC)
+          if (method.getKind() == ElementKind.METHOD
+              && !method.getModifiers().contains(Modifier.STATIC)
               && methodVisibleFromPackage(method, pkg)) {
             methods.computeIfAbsent(method.getSimpleName().toString(), name -> method);
           }
