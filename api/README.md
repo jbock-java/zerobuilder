@@ -5,7 +5,7 @@ It is intended for use in other annotation processors.
 
 ### Usage
 
-See [GeneratorTest](../../api/src/test/java/net/zerobuilder/api/test/GeneratorTest.java).
+See [GeneratorTest](../../master/api/src/test/java/net/zerobuilder/api/test/GeneratorTest.java).
 
 ### Maven
 
