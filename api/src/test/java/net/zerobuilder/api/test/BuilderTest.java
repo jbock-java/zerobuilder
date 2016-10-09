@@ -4,7 +4,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoal;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
@@ -27,17 +26,17 @@ import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.STATIC_ME
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-public class GeneratorTest {
+public class BuilderTest {
 
   private static final ClassName STRING = ClassName.get(String.class);
   private static final ClassName INTEGER = ClassName.get(Integer.class);
 
   // "goal type", see below
-  private static final ClassName TYPE = ClassName.get(GeneratorTest.class)
+  private static final ClassName TYPE = ClassName.get(BuilderTest.class)
       .peerClass("MyType");
 
   // the type we wish to generate; in this case, a nested type
-  private static final ClassName GENERATED_TYPE = ClassName.get(GeneratorTest.class)
+  private static final ClassName GENERATED_TYPE = ClassName.get(BuilderTest.class)
       .nestedClass("MyTypeBuilders");
 
   /**
