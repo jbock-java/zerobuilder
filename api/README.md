@@ -13,6 +13,6 @@ See tests.
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder-api</artifactId>
-    <version>1.482</version>
+    <version>1.483</version>
 </dependency>
 ````

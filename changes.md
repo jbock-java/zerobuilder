@@ -106,3 +106,7 @@
 
 * add DtoProjectionInfo (breaking) (api)
 * simplify the return type of Generator.generate (breaking) (api)
+
+### 2016-10-09 zerobuilder 1.483 released
+
+* allow projections to declare exceptions (value)
