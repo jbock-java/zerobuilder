@@ -27,6 +27,10 @@ now contains generated sources.
 <em>Tip for intellij users:</em> If you do a `mvn install` before opening one of the example projects,
 intellij will recognize `target/generated-sources/annotations` automatically.
 
+### Java API
+
+The core functionality is available as a separate library. See [api](api).
+
 ### Why zero?
 
 Because using the generated builders has zero impact on garbage collection, if the `recycle` option is used.
