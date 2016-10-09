@@ -87,8 +87,8 @@ final class DtoGoalElement {
       GoalOptions goalOptions = goalOptions(goalAnnotation, defaultAccess);
       String methodName = element.getSimpleName().toString();
       GoalMethodType goalMethodType = element.getModifiers().contains(STATIC)
-          ? GoalMethodType.STATIC_GOAL
-          : GoalMethodType.INSTANCE_GOAL;
+          ? GoalMethodType.STATIC_METHOD
+          : GoalMethodType.INSTANCE_METHOD;
       List<String> parameterNames = parameterNames(element);
       RegularGoalDetails goal = element.getKind() == CONSTRUCTOR
           ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOptions)

@@ -146,7 +146,7 @@ final class DtoRegularGoalContext {
     }
     @Override
     public Boolean methodGoal(MethodGoalContext goal) {
-      return goal.goal.details.instance;
+      return goal.goal.details.methodType.isInstance();
     }
   });
 

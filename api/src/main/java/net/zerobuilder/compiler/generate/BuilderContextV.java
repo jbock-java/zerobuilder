@@ -21,6 +21,7 @@ import java.util.function.Function;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.asFunction;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
@@ -48,14 +49,14 @@ final class BuilderContextV {
 
   static final Function<RegularGoalContext, List<MethodSpec>> steps
       = goal -> {
-        List<RegularStep> steps1 = regularSteps.apply(goal);
-        List<MethodSpec> builder = new ArrayList<>();
-        for (RegularStep step : steps1.subList(0, steps1.size() - 1)) {
-          builder.addAll(regularMethods(step, goal, false));
-        }
-        builder.addAll(regularMethods(steps1.get(steps1.size() - 1), goal, true));
-        return builder;
-      };
+    List<RegularStep> steps1 = regularSteps.apply(goal);
+    List<MethodSpec> builder = new ArrayList<>();
+    for (RegularStep step : steps1.subList(0, steps1.size() - 1)) {
+      builder.addAll(regularMethods(step, goal, false));
+    }
+    builder.addAll(regularMethods(steps1.get(steps1.size() - 1), goal, true));
+    return builder;
+  };
 
   private static List<MethodSpec> regularMethods(RegularStep step, RegularGoalContext goal, boolean isLast) {
     List<MethodSpec> builder = new ArrayList<>();
@@ -165,7 +166,7 @@ final class BuilderContextV {
     TypeName type = goal.goal.details.goalType;
     String method = goal.goal.details.methodName;
     builder.add(CodeBlock.of(VOID.equals(type) ? "" : "return "));
-    builder.add(goal.goal.details.instance
+    builder.add(goal.goal.details.methodType == INSTANCE_METHOD
         ? statement("$N.$N($L)", goal.builders.field, method, parameters)
         : statement("$T.$N($L)", goal.builders.type, method, parameters));
     return builder.build();

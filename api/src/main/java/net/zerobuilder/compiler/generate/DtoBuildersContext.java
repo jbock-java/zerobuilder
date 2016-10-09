@@ -49,13 +49,16 @@ public final class DtoBuildersContext {
 
     /**
      * An instance of {@link #type}.
-     * Only used in method goals, where {@link DtoGoal.MethodGoalDetails#instance} is true.
+     * Only used in method goals, where
+     * {@link DtoGoal.MethodGoalDetails#methodType} is
+     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType#INSTANCE_METHOD INSTANCE_METHOD}.
      */
     final FieldSpec field;
 
     /**
      * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.
-     * Only used when {@link #lifecycle} is true.
+     * Only used when {@link #lifecycle} is
+     * {@link BuilderLifecycle#REUSE_INSTANCES REUSE_INSTANCES}.
      */
     final FieldSpec cache;
 

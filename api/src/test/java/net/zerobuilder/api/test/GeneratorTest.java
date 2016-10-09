@@ -24,7 +24,7 @@ import static java.util.Collections.singletonList;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuildersContext;
-import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.STATIC_GOAL;
+import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.STATIC_METHOD;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -73,7 +73,7 @@ public class GeneratorTest {
         // parameter names in correct order
         Arrays.asList("foo", "bar"),
         "create", // correct goal method name
-        STATIC_GOAL, // goal method is static
+        STATIC_METHOD, // goal method is static
         GoalOptions.builder()
             .builder(true) // DO generate builder pattern
             .builderAccess(PRIVATE) // "myGoalBuilder" will be private
