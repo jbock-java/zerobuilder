@@ -6,7 +6,6 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -20,24 +19,6 @@ import static net.zerobuilder.compiler.generate.Utilities.constructor;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 
 public final class DtoGeneratorOutput {
-
-  public interface GeneratorOutputCases<R> {
-    R success(GeneratorSuccess output);
-    R failure(GeneratorFailure failure);
-  }
-
-  public interface GeneratorOutput {
-    <R> R accept(GeneratorOutputCases<R> cases);
-  }
-
-  public static <R> Function<GeneratorOutput, R> asFunction(final GeneratorOutputCases<R> cases) {
-    return new Function<GeneratorOutput, R>() {
-      @Override
-      public R apply(GeneratorOutput generatorOutput) {
-        return generatorOutput.accept(cases);
-      }
-    };
-  }
 
   /**
    * Can be either a {@code builder} or {@code toBuilder} method
@@ -66,15 +47,10 @@ public final class DtoGeneratorOutput {
     }
 
     static final Function<BuilderMethod, MethodSpec> getMethod
-        = new Function<BuilderMethod, MethodSpec>() {
-      @Override
-      public MethodSpec apply(BuilderMethod builderMethod) {
-        return builderMethod.method;
-      }
-    };
+        = builderMethod -> builderMethod.method;
   }
 
-  public static final class GeneratorSuccess implements GeneratorOutput {
+  public static final class GeneratorOutput {
 
     private final List<BuilderMethod> methods;
     private final List<TypeSpec> nestedTypes;
@@ -107,10 +83,10 @@ public final class DtoGeneratorOutput {
       return typeSpec(emptyList());
     }
 
-    GeneratorSuccess(List<BuilderMethod> methods,
-                     List<TypeSpec> nestedTypes,
-                     List<FieldSpec> fields,
-                     ClassName generatedType) {
+    GeneratorOutput(List<BuilderMethod> methods,
+                    List<TypeSpec> nestedTypes,
+                    List<FieldSpec> fields,
+                    ClassName generatedType) {
       this.methods = methods;
       this.nestedTypes = nestedTypes;
       this.fields = fields;
@@ -154,32 +130,6 @@ public final class DtoGeneratorOutput {
      */
     public ClassName generatedType() {
       return generatedType;
-    }
-
-    @Override
-    public <R> R accept(GeneratorOutputCases<R> cases) {
-      return cases.success(this);
-    }
-  }
-
-  public static final class GeneratorFailure implements GeneratorOutput {
-    private final String message;
-
-    /**
-     * Returns an error message.
-     *
-     * @return error message
-     */
-    public String message() {
-      return message;
-    }
-    GeneratorFailure(String message) {
-      this.message = message;
-    }
-
-    @Override
-    public <R> R accept(GeneratorOutputCases<R> cases) {
-      return cases.failure(this);
     }
   }
 

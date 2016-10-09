@@ -8,15 +8,11 @@ import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.Analyser;
 import net.zerobuilder.compiler.analyse.ValidationException;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorFailure;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutputCases;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorSuccess;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
 
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -31,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -42,7 +37,6 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_NOT_IN_BUILD;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOAL_WITHOUT_BUILDERS;
 import static net.zerobuilder.compiler.Messages.JavadocMessages.generatedAnnotations;
-import static net.zerobuilder.compiler.generate.DtoGeneratorOutput.asFunction;
 
 public final class ZeroProcessor extends AbstractProcessor {
 
@@ -67,20 +61,13 @@ public final class ZeroProcessor extends AbstractProcessor {
     Elements elements = processingEnv.getElementUtils();
     List<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
     Set<TypeElement> types = typesIn(env.getElementsAnnotatedWith(Builders.class));
-    Function<GeneratorOutput, Optional<GeneratorSuccess>> typeSpecFunction
-        = typeSpecFunction(processingEnv.getMessager());
     for (TypeElement annotatedType : types) {
       try {
         GeneratorInput generatorInput = Analyser.analyse(annotatedType);
         GeneratorOutput generatorOutput = Generator.generate(generatorInput);
-        Optional<GeneratorSuccess> maybeSuccess = typeSpecFunction.apply(generatorOutput);
-        if (!maybeSuccess.isPresent()) {
-          return false;
-        }
-        GeneratorSuccess success = maybeSuccess.get();
-        TypeSpec typeSpec = success.typeSpec(generatedAnnotations);
+        TypeSpec typeSpec = generatorOutput.typeSpec(generatedAnnotations);
         try {
-          write(success.generatedType(), typeSpec);
+          write(generatorOutput.generatedType(), typeSpec);
         } catch (IOException e) {
           String message = "Error processing "
               + ClassName.get(annotatedType) + ": " + e.getMessage();
@@ -97,21 +84,6 @@ public final class ZeroProcessor extends AbstractProcessor {
       }
     }
     return false;
-  }
-
-  private static Function<GeneratorOutput, Optional<GeneratorSuccess>>
-  typeSpecFunction(final Messager messager) {
-    return asFunction(new GeneratorOutputCases<Optional<GeneratorSuccess>>() {
-      @Override
-      public Optional<GeneratorSuccess> success(GeneratorSuccess output) {
-        return Optional.of(output);
-      }
-      @Override
-      public Optional<GeneratorSuccess> failure(GeneratorFailure failure) {
-        messager.printMessage(ERROR, failure.message());
-        return Optional.empty();
-      }
-    });
   }
 
   private Optional<? extends Element> goalNotInBuild(RoundEnvironment env) {

@@ -3,8 +3,8 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
@@ -48,31 +48,23 @@ public final class DtoParameter {
   public static final class RegularParameter extends AbstractParameter {
 
     /**
-     * <p>original parameter name</p>
-     * <p>if {@link #getter} is absent,
-     * and
-     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalOptions#toBuilder == true}
-     * then there is also a field with this name</p>
+     * original parameter name
      */
     final String name;
 
     /**
-     * projection method name; absent iff
-     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalOptions#toBuilder == false}
-     * or field access
+     * projection info
      */
-    final Optional<String> getter;
+    final ProjectionInfo projectionInfo;
 
-    private RegularParameter(String name, TypeName type, Optional<String> getter, NullPolicy nullPolicy) {
+    private RegularParameter(String name, TypeName type, ProjectionInfo projectionInfo, NullPolicy nullPolicy) {
       super(type, nullPolicy);
-      this.getter = getter;
+      this.projectionInfo = projectionInfo;
       this.name = name;
     }
 
     /**
-     * This method can be used to create the parameter if either
-     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalOptions#toBuilder} is {@code false}
-     * or the generated {@code toBuilder} method should use direct field access.
+     * Creates a parameter without projection info.
      *
      * @param name       parameter name
      * @param type       parameter type
@@ -80,23 +72,20 @@ public final class DtoParameter {
      * @return a parameter
      */
     public static RegularParameter create(String name, TypeName type, NullPolicy nullPolicy) {
-      return new RegularParameter(name, type, Optional.empty(), nullPolicy);
+      return new RegularParameter(name, type, DtoProjectionInfo.none(), nullPolicy);
     }
 
     /**
-     * This method must be used to create the parameter if
-     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalOptions#toBuilder} is {@code true}
-     * and the generated {@code toBuilder} method should use
-     * a projection method, such as a getter.
+     * Creates a parameter.
      *
-     * @param name       parameter name
-     * @param type       parameter type
-     * @param nullPolicy null policy
-     * @param getter     name of the projection method, for example {@code getFoo}
+     * @param name           parameter name
+     * @param type           parameter type
+     * @param nullPolicy     null policy
+     * @param projectionInfo projection info
      * @return a parameter
      */
-    public static RegularParameter create(String name, TypeName type, NullPolicy nullPolicy, String getter) {
-      return new RegularParameter(name, type, Optional.of(getter), nullPolicy);
+    public static RegularParameter create(String name, TypeName type, NullPolicy nullPolicy, ProjectionInfo projectionInfo) {
+      return new RegularParameter(name, type, projectionInfo, nullPolicy);
     }
 
     @Override

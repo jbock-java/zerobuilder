@@ -6,6 +6,8 @@ import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpRegularParameter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoParameter;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -15,7 +17,6 @@ import javax.lang.model.type.TypeKind;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -65,7 +66,8 @@ final class ProjectionValidatorV {
         throw new IllegalStateException("field name should be unique");
       }
       if (fields != null && TypeName.get(fields.get(0).asType()).equals(TypeName.get(parameter.asType()))) {
-        builder.add(TmpRegularParameter.create(parameter, Optional.empty(), goal.goalAnnotation));
+        ProjectionInfo projectionInfo = DtoProjectionInfo.fieldAccess(fields.get(0).getSimpleName().toString());
+        builder.add(TmpRegularParameter.create(parameter, projectionInfo, goal.goalAnnotation));
       } else {
         String methodName = "get" + upcase(parameter.getSimpleName().toString());
         if (!methodNames.contains(methodName)
@@ -78,7 +80,8 @@ final class ProjectionValidatorV {
         if (!methodNames.contains(methodName)) {
           throw new ValidationException(NO_PROJECTION, parameter);
         }
-        builder.add(TmpRegularParameter.create(parameter, Optional.of(methodName), goal.goalAnnotation));
+        ProjectionInfo projectionInfo = DtoProjectionInfo.method(methodName);
+        builder.add(TmpRegularParameter.create(parameter, projectionInfo, goal.goalAnnotation));
       }
     }
     return createGoalDescription(goal, builder);
@@ -113,7 +116,7 @@ final class ProjectionValidatorV {
       = goal -> {
     List<TmpRegularParameter> builder = goal.executableElement.getParameters()
         .stream()
-        .map(parameter -> TmpRegularParameter.create(parameter, Optional.empty(), goal.goalAnnotation))
+        .map(parameter -> TmpRegularParameter.create(parameter, DtoProjectionInfo.none(), goal.goalAnnotation))
         .collect(Collectors.toList());
     return createGoalDescription(goal, builder);
   };

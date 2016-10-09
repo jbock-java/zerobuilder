@@ -2,11 +2,8 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorSuccess;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
@@ -18,7 +15,6 @@ import org.junit.Test;
 import javax.lang.model.element.Modifier;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.function.Function;
 
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
@@ -28,7 +24,6 @@ import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuilder
 import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.STATIC_METHOD;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 public class GeneratorTest {
 
@@ -95,35 +90,20 @@ public class GeneratorTest {
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);
-    GeneratorSuccess generatorSuccess = getSuccess.apply(generatorOutput);
 
-    assertThat(generatorSuccess.methods().size(), is(1));
-    assertThat(generatorSuccess.methods().get(0).name(), is(goalName));
-    assertThat(generatorSuccess.methods().get(0).method().name, is("myGoalBuilder"));
-    assertThat(generatorSuccess.methods().get(0).method().parameters.size(), is(0));
-    assertThat(generatorSuccess.methods().get(0).method().modifiers.contains(Modifier.STATIC), is(true));
-    assertThat(generatorSuccess.methods().get(0).method().modifiers.contains(Modifier.PRIVATE), is(true));
-    assertThat(generatorSuccess.methods().get(0).method().returnType,
+    assertThat(generatorOutput.methods().size(), is(1));
+    assertThat(generatorOutput.methods().get(0).name(), is(goalName));
+    assertThat(generatorOutput.methods().get(0).method().name, is("myGoalBuilder"));
+    assertThat(generatorOutput.methods().get(0).method().parameters.size(), is(0));
+    assertThat(generatorOutput.methods().get(0).method().modifiers.contains(Modifier.STATIC), is(true));
+    assertThat(generatorOutput.methods().get(0).method().modifiers.contains(Modifier.PRIVATE), is(true));
+    assertThat(generatorOutput.methods().get(0).method().returnType,
         is(GENERATED_TYPE.nestedClass("MyGoalBuilder")
             .nestedClass("Foo")));
 
     // Get the definition of the generated type
-    TypeSpec typeSpec = generatorSuccess.typeSpec();
+    TypeSpec typeSpec = generatorOutput.typeSpec();
     assertThat(typeSpec.name, is("MyTypeBuilders"));
     assertThat(typeSpec.methodSpecs.size(), is(2)); // myGoalBuilder, constructor
   }
-
-  // coerce the output to success
-  private static final Function<GeneratorOutput, GeneratorSuccess> getSuccess
-      = DtoGeneratorOutput.asFunction(new DtoGeneratorOutput.GeneratorOutputCases<GeneratorSuccess>() {
-    @Override
-    public GeneratorSuccess success(GeneratorSuccess output) {
-      return output;
-    }
-    @Override
-    public GeneratorSuccess failure(DtoGeneratorOutput.GeneratorFailure failure) {
-      fail("failure: " + failure.message());
-      return null;
-    }
-  });
 }

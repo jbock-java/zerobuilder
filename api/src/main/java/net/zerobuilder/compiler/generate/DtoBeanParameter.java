@@ -101,11 +101,11 @@ public final class DtoBeanParameter {
         // one type parameter
         Optional<ClassName> collectionType = rawClassName(typeArguments.get(0));
         if (!collectionType.isPresent())
-          throw new IllegalStateException("collectionType absent");
+          throw new IllegalArgumentException("collectionType absent");
         return collectionType.get();
       } else {
         // unlikely: subclass of Collection should not have more than one type parameter
-        throw new IllegalStateException("unknown collection type");
+        throw new IllegalArgumentException("unknown collection type");
       }
     }
 

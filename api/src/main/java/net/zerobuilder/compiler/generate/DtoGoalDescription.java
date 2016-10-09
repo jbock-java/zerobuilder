@@ -54,22 +54,36 @@ public final class DtoGoalDescription {
                                                 List<TypeName> thrownTypes,
                                                 List<RegularParameter> parameters) {
       checkParameterNames(details.parameterNames, parameters);
+      validateProjectionInfo(details.goalOptions, parameters);
       return new RegularGoalDescription(details, thrownTypes, parameters);
+    }
+
+    private static void validateProjectionInfo(DtoGoal.GoalOptions options,
+                                               List<RegularParameter> parameters) {
+      if (!options.toBuilder) {
+        return;
+      }
+      if (parameters.stream()
+          .map(parameter -> parameter.projectionInfo)
+          .allMatch(DtoProjectionInfo.isPresent)) {
+        return;
+      }
+      throw new IllegalStateException("projection info required");
     }
 
     private static void checkParameterNames(List<String> parameterNames,
                                             List<RegularParameter> parameters) {
       if (parameters.isEmpty()) {
-        throw new IllegalStateException("need at least one parameter");
+        throw new IllegalArgumentException("need at least one parameter");
       }
       if (parameterNames.size() != parameters.size()) {
-        throw new IllegalStateException("parameter names mismatch");
+        throw new IllegalArgumentException("parameter names mismatch");
       }
       int[] positions = new int[parameterNames.size()];
       for (RegularParameter parameter : parameters) {
         int i = parameterNames.indexOf(parameter.name);
         if (positions[i]++ != 0) {
-          throw new IllegalStateException("parameter names mismatch");
+          throw new IllegalArgumentException("parameter names mismatch");
         }
       }
     }

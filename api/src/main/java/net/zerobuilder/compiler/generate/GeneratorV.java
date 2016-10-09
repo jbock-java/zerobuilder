@@ -7,6 +7,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoRequiredCases;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -41,7 +45,8 @@ final class GeneratorV {
             .returns(updater.type)
             .addCode(initializeUpdater(goal, updater));
         for (RegularStep step : regularSteps.apply(goal)) {
-          method.addCode(copyField(parameter, updater, step));
+          Function<ProjectionInfo, CodeBlock> copy = copyField(parameter, updater, step);
+          method.addCode(copy.apply(step.validParameter.projectionInfo));
         }
         method.addStatement("return $N", updater);
         MethodSpec methodSpec = method.addModifiers(regularGoalDetails.goalOptions.toBuilderAccess.modifiers(STATIC))
@@ -49,21 +54,44 @@ final class GeneratorV {
         return new BuilderMethod(name, methodSpec);
       };
 
-  private static CodeBlock copyField(ParameterSpec parameter, ParameterSpec updater, RegularStep step) {
-    CodeBlock.Builder builder = CodeBlock.builder();
-    String field = step.validParameter.name;
-    if (step.validParameter.getter.isPresent()) {
-      String getter = step.validParameter.getter.get();
-      builder.add(nullCheckGetter(parameter, step, getter))
-          .addStatement("$N.$N = $N.$N()",
-              updater, field, parameter, getter);
-    } else {
-      builder.add(nullCheckFieldAccess(parameter, step))
-          .addStatement("$N.$N = $N.$N",
-              updater, field, parameter, field);
-    }
-    return builder.build();
+  private static Function<ProjectionInfo, CodeBlock> copyField(ParameterSpec parameter, ParameterSpec updater, RegularStep step) {
+    return DtoProjectionInfo.asFunction(new ProjectionInfoRequiredCases<CodeBlock>() {
+      @Override
+      public CodeBlock projectionMethod(ProjectionMethod projection) {
+        CodeBlock.Builder builder = CodeBlock.builder();
+        String field = step.validParameter.name;
+        builder.add(nullCheckGetter(parameter, step, projection.methodName))
+            .addStatement("$N.$N = $N.$N()",
+                updater, field, parameter, projection.methodName);
+        return builder.build();
+      }
+      @Override
+      public CodeBlock fieldAccess(FieldAccess projection) {
+        CodeBlock.Builder builder = CodeBlock.builder();
+        String field = projection.fieldName;
+        builder.add(nullCheckFieldAccess(parameter, step))
+            .addStatement("$N.$N = $N.$N",
+                updater, field, parameter, field);
+        return builder.build();
+      }
+    });
   }
+
+//  private static CodeBlock copyField(ParameterSpec parameter, ParameterSpec updater, RegularStep step) {
+//    CodeBlock.Builder builder = CodeBlock.builder();
+//    String field = step.validParameter.name;
+//    if (step.validParameter.getter.isPresent()) {
+//      String getter = step.validParameter.getter.get();
+//      builder.add(nullCheckGetter(parameter, step, getter))
+//          .addStatement("$N.$N = $N.$N()",
+//              updater, field, parameter, getter);
+//    } else {
+//      builder.add(nullCheckFieldAccess(parameter, step))
+//          .addStatement("$N.$N = $N.$N",
+//              updater, field, parameter, field);
+//    }
+//    return builder.build();
+//  }
 
   private static CodeBlock nullCheckFieldAccess(ParameterSpec parameter, RegularStep step) {
     if (!step.validParameter.nullPolicy.check()) {
@@ -109,24 +137,24 @@ final class GeneratorV {
 
   static final Function<RegularGoalContext, BuilderMethod> goalToBuilder
       = goal -> {
-        DtoGoal.RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
-        List<RegularStep> steps = regularSteps.apply(goal);
-        String name = DtoGoalContext.goalName.apply(goal);
-        MethodSpec.Builder method = methodBuilder(name + "Builder")
-            .returns(steps.get(0).thisType)
-            .addModifiers(regularGoalDetails.goalOptions.builderAccess.modifiers(STATIC));
-        ParameterSpec builder = builderInstance(goal);
-        method.addCode(initBuilder(goal, builder));
-        if (isInstance.apply(goal)) {
-          DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
-          ParameterSpec parameter = parameterSpec(buildersContext.type,
-              downcase(buildersContext.type.simpleName()));
-          method.addParameter(parameter)
-              .addStatement("$N.$N = $N", builder, buildersContext.field, parameter);
-        }
-        MethodSpec methodSpec = method.addStatement("return $N", builder).build();
-        return new BuilderMethod(name, methodSpec);
-      };
+    DtoGoal.RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
+    List<RegularStep> steps = regularSteps.apply(goal);
+    String name = DtoGoalContext.goalName.apply(goal);
+    MethodSpec.Builder method = methodBuilder(name + "Builder")
+        .returns(steps.get(0).thisType)
+        .addModifiers(regularGoalDetails.goalOptions.builderAccess.modifiers(STATIC));
+    ParameterSpec builder = builderInstance(goal);
+    method.addCode(initBuilder(goal, builder));
+    if (isInstance.apply(goal)) {
+      DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+      ParameterSpec parameter = parameterSpec(buildersContext.type,
+          downcase(buildersContext.type.simpleName()));
+      method.addParameter(parameter)
+          .addStatement("$N.$N = $N", builder, buildersContext.field, parameter);
+    }
+    MethodSpec methodSpec = method.addStatement("return $N", builder).build();
+    return new BuilderMethod(name, methodSpec);
+  };
 
   private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder) {
     DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);

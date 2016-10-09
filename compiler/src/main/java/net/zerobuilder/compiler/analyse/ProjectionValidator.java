@@ -10,6 +10,7 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -115,22 +116,14 @@ final class ProjectionValidator {
 
     static final Function<TmpRegularParameter, RegularParameter> toValidParameter = parameter -> parameter.parameter;
 
-    static TmpRegularParameter create(VariableElement parameter, Optional<String> getter,
+    static TmpRegularParameter create(VariableElement parameter, ProjectionInfo projectionInfo,
                                       Goal goalAnnotation) {
       Step stepAnnotation = parameter.getAnnotation(Step.class);
-      NullPolicy nonNull = TmpValidParameter.nullPolicy(parameter.asType(), stepAnnotation, goalAnnotation);
+      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepAnnotation, goalAnnotation);
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
-      RegularParameter regularParameter = createRegularParameter(getter, nonNull, name, type);
+      RegularParameter regularParameter = RegularParameter.create(name, type, nullPolicy, projectionInfo);
       return new TmpRegularParameter(parameter, ofNullable(stepAnnotation), regularParameter);
-    }
-
-    private static RegularParameter createRegularParameter(Optional<String> getter, NullPolicy nonNull, String name, TypeName type) {
-      if (getter.isPresent()) {
-        return RegularParameter.create(name, type, nonNull, getter.get());
-      } else {
-        return RegularParameter.create(name, type, nonNull);
-      }
     }
   }
 
