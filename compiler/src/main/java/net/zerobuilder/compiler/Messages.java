@@ -98,9 +98,6 @@ public final class Messages {
     public static final String BEAN_ACCESSOR_EXCEPTIONS
         = "Setters may not declare exceptions." + POJO_HINT;
 
-    public static final String PROJECTION_EXCEPTIONS
-        = "Projections may currently not declare exceptions.";
-
     public static final String NO_PROJECTION
         = "Could not find a projection (getter or field).";
 

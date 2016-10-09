@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -77,6 +79,15 @@ final class Utilities {
     sorted.addAll(input);
     Collections.sort(sorted, comparator);
     return sorted;
+  }
+
+  static <K> Optional<K> findKey(Map<K, ?> map, List<K> keys) {
+    for (K key : keys) {
+      if (map.containsKey(key)) {
+        return Optional.of(key);
+      }
+    }
+    return Optional.empty();
   }
 
   private Utilities() {

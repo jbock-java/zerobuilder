@@ -42,12 +42,12 @@ final class StepContextV {
   }
 
   private static Optional<MethodSpec> emptyCollection(AbstractStep step) {
-    Optional<DtoStep.EmptyOption> maybeEmptyOption = emptyOption.apply(step);
+    Optional<DtoStep.CollectionInfo> maybeEmptyOption = emptyOption.apply(step);
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
     }
-    DtoStep.EmptyOption emptyOption = maybeEmptyOption.get();
-    return Optional.of(methodBuilder(emptyOption.name)
+    DtoStep.CollectionInfo collectionInfo = maybeEmptyOption.get();
+    return Optional.of(methodBuilder(collectionInfo.name)
         .returns(step.nextType)
         .addExceptions(declaredExceptions.apply(step))
         .addModifiers(PUBLIC, ABSTRACT)

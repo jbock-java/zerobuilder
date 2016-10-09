@@ -31,7 +31,7 @@ final class DtoStep {
   private static final Set<ClassName> LIST_HIERARCHY
       = new HashSet<>(Arrays.asList(ClassNames.LIST, COLLECTION, ITERABLE));
 
-  static final class EmptyOption {
+  static final class CollectionInfo {
 
     /**
      * Initializer for a variable of type {@link AbstractParameter#type}.
@@ -44,24 +44,24 @@ final class DtoStep {
      */
     final String name;
 
-    private EmptyOption(CodeBlock initializer, String name) {
+    private CollectionInfo(CodeBlock initializer, String name) {
       this.initializer = initializer;
       this.name = name;
     }
 
-    static Optional<EmptyOption> create(TypeName type, String name) {
+    static Optional<CollectionInfo> create(TypeName type, String name) {
       Optional<ClassName> maybeClassName = rawClassName(type);
       if (!maybeClassName.isPresent()) {
         return Optional.empty();
       }
       ClassName className = maybeClassName.get();
       if (LIST_HIERARCHY.contains(className)) {
-        return Optional.of(new EmptyOption(
+        return Optional.of(new CollectionInfo(
             CodeBlock.of("$T.emptyList()", Collections.class),
             emptyOptionName(name)));
       }
       if (SET.equals(className)) {
-        return Optional.of(new EmptyOption(
+        return Optional.of(new CollectionInfo(
             CodeBlock.of("$T.emptySet()", Collections.class),
             emptyOptionName(name)));
       }
@@ -122,8 +122,8 @@ final class DtoStep {
       return new RegularStep(thisType, nextType, parameter, declaredExceptions);
     }
 
-    Optional<EmptyOption> emptyOption() {
-      return EmptyOption.create(validParameter.type, validParameter.name);
+    Optional<CollectionInfo> emptyOption() {
+      return CollectionInfo.create(validParameter.type, validParameter.name);
     }
 
     FieldSpec field() {
@@ -173,14 +173,14 @@ final class DtoStep {
     });
   }
 
-  static final Function<AbstractStep, Optional<EmptyOption>> emptyOption
-      = asFunction(new StepCases<Optional<EmptyOption>>() {
+  static final Function<AbstractStep, Optional<CollectionInfo>> emptyOption
+      = asFunction(new StepCases<Optional<CollectionInfo>>() {
     @Override
-    public Optional<EmptyOption> regularStep(RegularStep step) {
+    public Optional<CollectionInfo> regularStep(RegularStep step) {
       return step.emptyOption();
     }
     @Override
-    public Optional<EmptyOption> beanStep(AbstractBeanStep step) {
+    public Optional<CollectionInfo> beanStep(AbstractBeanStep step) {
       return step.acceptBean(DtoBeanStep.emptyOption);
     }
   });

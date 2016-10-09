@@ -20,7 +20,7 @@ public final class DtoProjectionInfo {
     R none();
   }
 
-  public interface ProjectionInfoRequiredCases<R> {
+  interface ProjectionInfoRequiredCases<R> {
     R projectionMethod(ProjectionMethod projection);
     R fieldAccess(FieldAccess projection);
   }
@@ -51,13 +51,13 @@ public final class DtoProjectionInfo {
     });
   }
 
-  public static final class ProjectionMethod implements ProjectionInfo {
+  static final class ProjectionMethod implements ProjectionInfo {
     final String methodName;
-    final List<TypeName> thrownExceptions;
+    final List<TypeName> thrownTypes;
 
-    private ProjectionMethod(String methodName, List<TypeName> thrownExceptions) {
+    private ProjectionMethod(String methodName, List<TypeName> thrownTypes) {
       this.methodName = methodName;
-      this.thrownExceptions = thrownExceptions;
+      this.thrownTypes = thrownTypes;
     }
 
     @Override
@@ -66,7 +66,7 @@ public final class DtoProjectionInfo {
     }
   }
 
-  public static final class FieldAccess implements ProjectionInfo {
+  static final class FieldAccess implements ProjectionInfo {
     final String fieldName;
 
     private FieldAccess(String fieldName) {
@@ -79,7 +79,7 @@ public final class DtoProjectionInfo {
     }
   }
 
-  public static final class None implements ProjectionInfo {
+  static final class None implements ProjectionInfo {
     private None() {
     }
 
@@ -89,8 +89,8 @@ public final class DtoProjectionInfo {
     }
   }
 
-  public static ProjectionInfo method(String methodName, List<TypeName> thrownExceptions) {
-    return new ProjectionMethod(methodName, thrownExceptions);
+  public static ProjectionInfo method(String methodName, List<TypeName> thrownTypes) {
+    return new ProjectionMethod(methodName, thrownTypes);
   }
 
   public static ProjectionInfo method(String methodName) {
@@ -118,6 +118,22 @@ public final class DtoProjectionInfo {
     @Override
     public Boolean none() {
       return false;
+    }
+  });
+
+  static final Function<ProjectionInfo, List<TypeName>> thrownTypes
+      = asFunction(new ProjectionInfoCases<List<TypeName>>() {
+    @Override
+    public List<TypeName> projectionMethod(ProjectionMethod projection) {
+      return projection.thrownTypes;
+    }
+    @Override
+    public List<TypeName> fieldAccess(FieldAccess projection) {
+      return emptyList();
+    }
+    @Override
+    public List<TypeName> none() {
+      return emptyList();
     }
   });
 

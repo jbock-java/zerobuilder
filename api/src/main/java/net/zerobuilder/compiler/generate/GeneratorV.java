@@ -15,20 +15,24 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContex
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
+import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
+import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class GeneratorV {
 
@@ -41,6 +45,7 @@ final class GeneratorV {
         String methodName = name + "ToBuilder";
         ParameterSpec updater = updaterInstance(goal);
         MethodSpec.Builder method = methodBuilder(methodName)
+            .addExceptions(thrownByProjections(goal))
             .addParameter(parameter)
             .returns(updater.type)
             .addCode(initializeUpdater(goal, updater));
@@ -77,24 +82,8 @@ final class GeneratorV {
     });
   }
 
-//  private static CodeBlock copyField(ParameterSpec parameter, ParameterSpec updater, RegularStep step) {
-//    CodeBlock.Builder builder = CodeBlock.builder();
-//    String field = step.validParameter.name;
-//    if (step.validParameter.getter.isPresent()) {
-//      String getter = step.validParameter.getter.get();
-//      builder.add(nullCheckGetter(parameter, step, getter))
-//          .addStatement("$N.$N = $N.$N()",
-//              updater, field, parameter, getter);
-//    } else {
-//      builder.add(nullCheckFieldAccess(parameter, step))
-//          .addStatement("$N.$N = $N.$N",
-//              updater, field, parameter, field);
-//    }
-//    return builder.build();
-//  }
-
   private static CodeBlock nullCheckFieldAccess(ParameterSpec parameter, RegularStep step) {
-    if (!step.validParameter.nullPolicy.check()) {
+    if (step.validParameter.nullPolicy == ALLOW) {
       return emptyCodeBlock;
     }
     String name = step.validParameter.name;
@@ -105,7 +94,7 @@ final class GeneratorV {
   }
 
   private static CodeBlock nullCheckGetter(ParameterSpec parameter, RegularStep step, String getter) {
-    if (!step.validParameter.nullPolicy.check()) {
+    if (step.validParameter.nullPolicy == ALLOW) {
       return emptyCodeBlock;
     }
     String name = step.validParameter.name;
@@ -145,7 +134,7 @@ final class GeneratorV {
         .addModifiers(regularGoalDetails.goalOptions.builderAccess.modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
     method.addCode(initBuilder(goal, builder));
-    if (isInstance.apply(goal)) {
+    if (isInstance.test(goal)) {
       DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
       ParameterSpec parameter = parameterSpec(buildersContext.type,
           downcase(buildersContext.type.simpleName()));
@@ -166,6 +155,16 @@ final class GeneratorV {
   private static ParameterSpec builderInstance(RegularGoalContext goal) {
     ClassName stepsType = builderImplType(goal);
     return parameterSpec(stepsType, downcase(stepsType.simpleName()));
+  }
+
+  private static Set<TypeName> thrownByProjections(RegularGoalContext goal) {
+    return regularSteps.apply(goal).stream()
+        .map(step -> step.validParameter)
+        .map(parameter -> parameter.projectionInfo)
+        .map(thrownTypes)
+        .map(List::stream)
+        .flatMap(Function.identity())
+        .collect(Collectors.toSet());
   }
 
   private GeneratorV() {

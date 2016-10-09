@@ -7,7 +7,7 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
-import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
+import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -54,9 +54,9 @@ final class DtoBeanStep {
       return new AccessorPairStep(thisType, nextType, accessorPair, setter);
     }
 
-    Optional<EmptyOption> emptyOption() {
+    Optional<CollectionInfo> emptyOption() {
       String name = accessorPair.accept(beanParameterName);
-      return EmptyOption.create(accessorPair.type, name);
+      return CollectionInfo.create(accessorPair.type, name);
     }
 
     ParameterSpec parameter() {
@@ -100,14 +100,14 @@ final class DtoBeanStep {
     }
   };
 
-  static final BeanStepCases<Optional<EmptyOption>> emptyOption
-      = new BeanStepCases<Optional<EmptyOption>>() {
+  static final BeanStepCases<Optional<CollectionInfo>> emptyOption
+      = new BeanStepCases<Optional<CollectionInfo>>() {
     @Override
-    public Optional<EmptyOption> accessorPair(AccessorPairStep step) {
+    public Optional<CollectionInfo> accessorPair(AccessorPairStep step) {
       return step.emptyOption();
     }
     @Override
-    public Optional<EmptyOption> loneGetter(LoneGetterStep step) {
+    public Optional<CollectionInfo> loneGetter(LoneGetterStep step) {
       return Optional.empty();
     }
   };

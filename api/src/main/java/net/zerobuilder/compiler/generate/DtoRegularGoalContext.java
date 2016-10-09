@@ -11,7 +11,9 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 final class DtoRegularGoalContext {
 
@@ -26,6 +28,10 @@ final class DtoRegularGoalContext {
   }
 
   static <R> Function<RegularGoalContext, R> asFunction(final RegularGoalContextCases<R> cases) {
+    return goal -> goal.acceptRegular(cases);
+  }
+
+  static Predicate<RegularGoalContext> asPredicate(final RegularGoalContextCases<Boolean> cases) {
     return goal -> goal.acceptRegular(cases);
   }
 
@@ -138,8 +144,8 @@ final class DtoRegularGoalContext {
     }
   });
 
-  static final Function<RegularGoalContext, Boolean> isInstance
-      = asFunction(new RegularGoalContextCases<Boolean>() {
+  static final Predicate<RegularGoalContext> isInstance
+      = asPredicate(new RegularGoalContextCases<Boolean>() {
     @Override
     public Boolean constructorGoal(ConstructorGoalContext goal) {
       return false;

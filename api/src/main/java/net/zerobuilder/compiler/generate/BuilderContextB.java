@@ -69,18 +69,18 @@ final class BuilderContextB {
   }
 
   private static Optional<MethodSpec> regularEmptyCollection(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
-    Optional<DtoStep.EmptyOption> maybeEmptyOption = step.emptyOption();
+    Optional<DtoStep.CollectionInfo> maybeEmptyOption = step.emptyOption();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
     }
-    DtoStep.EmptyOption emptyOption = maybeEmptyOption.get();
+    DtoStep.CollectionInfo collectionInfo = maybeEmptyOption.get();
     TypeName type = step.accessorPair.type;
     String name = step.accessorPair.accept(beanParameterName);
     ParameterSpec emptyColl = parameterSpec(type, name);
-    return Optional.of(methodBuilder(emptyOption.name)
+    return Optional.of(methodBuilder(collectionInfo.name)
         .addAnnotation(Override.class)
         .returns(step.nextType)
-        .addStatement("$T $N = $L", emptyColl.type, emptyColl, emptyOption.initializer)
+        .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)", goal.goal.field, step.setter, emptyColl)
         .addCode(regularFinalBlock(goal, isLast))
         .addModifiers(PUBLIC)

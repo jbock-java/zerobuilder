@@ -3,6 +3,8 @@ package net.zerobuilder.examples.values;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
+import java.io.IOException;
+
 public class MoreValues {
 
   // goal name is a reserved word
@@ -30,6 +32,21 @@ public class MoreValues {
     @Goal(name = "sum")
     static int sum(int a, int b) {
       return a + b;
+    }
+  }
+
+  // projection method declares exception
+  @Builders(recycle = true)
+  static final class NothingSpecial {
+    private final String foo;
+
+    @Goal(toBuilder = true)
+    NothingSpecial(String foo) {
+      this.foo = foo;
+    }
+
+    String foo() throws IOException {
+      return foo;
     }
   }
 }

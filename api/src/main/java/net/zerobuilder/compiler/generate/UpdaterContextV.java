@@ -5,7 +5,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
+import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.ArrayList;
@@ -30,27 +30,27 @@ final class UpdaterContextV {
 
   static final Function<RegularGoalContext, List<FieldSpec>> fields
       = goal -> {
-        DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
-        List<FieldSpec> builder = new ArrayList<>();
-        builder.addAll(isInstance.apply(goal)
-            ? singletonList(buildersContext.field)
-            : Collections.emptyList());
-        for (RegularStep step : regularSteps.apply(goal)) {
-          String name = step.validParameter.name;
-          TypeName type = step.validParameter.type;
-          builder.add(fieldSpec(type, name, PRIVATE));
-        }
-        return builder;
-      };
+    DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+    List<FieldSpec> builder = new ArrayList<>();
+    builder.addAll(isInstance.test(goal)
+        ? singletonList(buildersContext.field)
+        : Collections.emptyList());
+    for (RegularStep step : regularSteps.apply(goal)) {
+      String name = step.validParameter.name;
+      TypeName type = step.validParameter.type;
+      builder.add(fieldSpec(type, name, PRIVATE));
+    }
+    return builder;
+  };
 
   static final Function<RegularGoalContext, List<MethodSpec>> updateMethods
       = goal -> {
-        List<MethodSpec> builder = new ArrayList<>();
-        for (RegularStep step : regularSteps.apply(goal)) {
-          builder.addAll(updateMethods(goal, step));
-        }
-        return builder;
-      };
+    List<MethodSpec> builder = new ArrayList<>();
+    for (RegularStep step : regularSteps.apply(goal)) {
+      builder.addAll(updateMethods(goal, step));
+    }
+    return builder;
+  };
 
   private static List<MethodSpec> updateMethods(RegularGoalContext goal, RegularStep step) {
     List<MethodSpec> builder = new ArrayList<>();
@@ -60,15 +60,15 @@ final class UpdaterContextV {
   }
 
   private static Optional<MethodSpec> regularEmptyCollection(RegularGoalContext goal, RegularStep step) {
-    Optional<EmptyOption> maybeEmptyOption = step.emptyOption();
+    Optional<CollectionInfo> maybeEmptyOption = step.emptyOption();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
     }
-    EmptyOption emptyOption = maybeEmptyOption.get();
-    return Optional.of(methodBuilder(emptyOption.name)
+    CollectionInfo collectionInfo = maybeEmptyOption.get();
+    return Optional.of(methodBuilder(collectionInfo.name)
         .returns(updaterType(goal))
         .addStatement("this.$N = $L",
-            step.field(), emptyOption.initializer)
+            step.field(), collectionInfo.initializer)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build());

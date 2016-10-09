@@ -163,10 +163,6 @@ public final class DtoGoal {
 
   public static final class MethodGoalDetails extends RegularGoalDetails {
     final String methodName;
-
-    /**
-     * {@code false} iff the method is {@code static}
-     */
     final GoalMethodType methodType;
 
     private MethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,

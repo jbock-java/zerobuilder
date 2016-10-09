@@ -11,7 +11,7 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
-import net.zerobuilder.compiler.generate.DtoStep.EmptyOption;
+import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,17 +67,17 @@ final class UpdaterContextB {
   }
 
   private static Optional<MethodSpec> regularEmptyCollection(BeanGoalContext goal, AccessorPairStep step) {
-    Optional<EmptyOption> maybeEmptyOption = step.emptyOption();
+    Optional<CollectionInfo> maybeEmptyOption = step.emptyOption();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
     }
-    EmptyOption emptyOption = maybeEmptyOption.get();
+    CollectionInfo collectionInfo = maybeEmptyOption.get();
     TypeName type = step.accessorPair.type;
     String name = step.accessorPair.accept(beanParameterName);
     ParameterSpec emptyColl = parameterSpec(type, name);
-    return Optional.of(methodBuilder(emptyOption.name)
+    return Optional.of(methodBuilder(collectionInfo.name)
         .returns(updaterType(goal))
-        .addStatement("$T $N = $L", emptyColl.type, emptyColl, emptyOption.initializer)
+        .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)",
             goal.goal.field, step.setter, emptyColl)
         .addStatement("return this")
