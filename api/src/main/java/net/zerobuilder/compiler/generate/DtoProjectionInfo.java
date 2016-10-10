@@ -11,44 +11,21 @@ import static java.util.Collections.emptyList;
 public final class DtoProjectionInfo {
 
   public interface ProjectionInfo {
-    <R> R accept(ProjectionInfoCases<R> cases);
+    <R, P> R accept(ProjectionInfoCases<R, P> cases, P p);
   }
 
-  public interface ProjectionInfoCases<R> {
-    R projectionMethod(ProjectionMethod projection);
-    R fieldAccess(FieldAccess projection);
+  public interface ProjectionInfoCases<R, P> {
+    R projectionMethod(ProjectionMethod projection, P p);
+    R fieldAccess(FieldAccess projection, P p);
     R none();
   }
 
-  interface ProjectionInfoRequiredCases<R> {
-    R projectionMethod(ProjectionMethod projection);
-    R fieldAccess(FieldAccess projection);
+  static <R> Function<ProjectionInfo, R> asFunction(ProjectionInfoCases<R, Void> cases) {
+    return projectionInfo -> projectionInfo.accept(cases, null);
   }
 
-  static <R> Function<ProjectionInfo, R> asFunction(ProjectionInfoCases<R> cases) {
-    return projectionInfo -> projectionInfo.accept(cases);
-  }
-
-  static Predicate<ProjectionInfo> asPredicate(ProjectionInfoCases<Boolean> cases) {
-    return projectionInfo -> projectionInfo.accept(cases);
-  }
-
-  static <R> Function<ProjectionInfo, R> asFunction(ProjectionInfoRequiredCases<R> cases) {
-    return asFunction(new ProjectionInfoCases<R>() {
-      @Override
-      public R projectionMethod(ProjectionMethod projectionMethod) {
-        return cases.projectionMethod(projectionMethod);
-      }
-      @Override
-      public R fieldAccess(FieldAccess fieldAccess) {
-        return cases.fieldAccess(fieldAccess);
-      }
-      @Override
-      public R none() {
-        // should never happen
-        throw new IllegalStateException("ProjectionInfo required");
-      }
-    });
+  static Predicate<ProjectionInfo> asPredicate(ProjectionInfoCases<Boolean, Void> cases) {
+    return projectionInfo -> projectionInfo.accept(cases, null);
   }
 
   static final class ProjectionMethod implements ProjectionInfo {
@@ -61,8 +38,8 @@ public final class DtoProjectionInfo {
     }
 
     @Override
-    public <R> R accept(ProjectionInfoCases<R> cases) {
-      return cases.projectionMethod(this);
+    public <R, P> R accept(ProjectionInfoCases<R, P> cases, P p) {
+      return cases.projectionMethod(this, p);
     }
   }
 
@@ -74,8 +51,8 @@ public final class DtoProjectionInfo {
     }
 
     @Override
-    public <R> R accept(ProjectionInfoCases<R> cases) {
-      return cases.fieldAccess(this);
+    public <R, P> R accept(ProjectionInfoCases<R, P> cases, P p) {
+      return cases.fieldAccess(this, p);
     }
   }
 
@@ -84,7 +61,7 @@ public final class DtoProjectionInfo {
     }
 
     @Override
-    public <R> R accept(ProjectionInfoCases<R> cases) {
+    public <R, P> R accept(ProjectionInfoCases<R, P> cases, P p) {
       return cases.none();
     }
   }
@@ -106,13 +83,13 @@ public final class DtoProjectionInfo {
   }
 
   static final Predicate<ProjectionInfo> isPresent
-      = asPredicate(new ProjectionInfoCases<Boolean>() {
+      = asPredicate(new ProjectionInfoCases<Boolean, Void>() {
     @Override
-    public Boolean projectionMethod(ProjectionMethod projection) {
+    public Boolean projectionMethod(ProjectionMethod projection, Void p) {
       return true;
     }
     @Override
-    public Boolean fieldAccess(FieldAccess projection) {
+    public Boolean fieldAccess(FieldAccess projection, Void p) {
       return true;
     }
     @Override
@@ -122,13 +99,13 @@ public final class DtoProjectionInfo {
   });
 
   static final Function<ProjectionInfo, List<TypeName>> thrownTypes
-      = asFunction(new ProjectionInfoCases<List<TypeName>>() {
+      = asFunction(new ProjectionInfoCases<List<TypeName>, Void>() {
     @Override
-    public List<TypeName> projectionMethod(ProjectionMethod projection) {
+    public List<TypeName> projectionMethod(ProjectionMethod projection, Void p) {
       return projection.thrownTypes;
     }
     @Override
-    public List<TypeName> fieldAccess(FieldAccess projection) {
+    public List<TypeName> fieldAccess(FieldAccess projection, Void p) {
       return emptyList();
     }
     @Override

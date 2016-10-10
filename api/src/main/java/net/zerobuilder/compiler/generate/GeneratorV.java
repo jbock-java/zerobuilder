@@ -7,9 +7,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
+import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoRequiredCases;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoCases;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
@@ -25,6 +26,7 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
@@ -38,32 +40,41 @@ final class GeneratorV {
 
   static final Function<RegularGoalContext, BuilderMethod> goalToToBuilder =
       goal -> {
-        DtoGoal.RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
+        RegularGoalDetails regularGoalDetails = goalDetails.apply(goal);
         TypeName goalType = regularGoalDetails.goalType;
         ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
-        String name = regularGoalDetails.name;
-        String methodName = name + "ToBuilder";
         ParameterSpec updater = updaterInstance(goal);
-        MethodSpec.Builder method = methodBuilder(methodName)
+        MethodSpec method = methodBuilder(regularGoalDetails.name + "ToBuilder")
             .addExceptions(thrownByProjections(goal))
             .addParameter(parameter)
             .returns(updater.type)
-            .addCode(initializeUpdater(goal, updater));
-        for (RegularStep step : regularSteps.apply(goal)) {
-          Function<ProjectionInfo, CodeBlock> copy = copyField(parameter, updater, step);
-          method.addCode(copy.apply(step.validParameter.projectionInfo));
-        }
-        method.addStatement("return $N", updater);
-        MethodSpec methodSpec = method.addModifiers(regularGoalDetails.goalOptions.toBuilderAccess.modifiers(STATIC))
+            .addCode(initializeUpdater(goal, updater))
+            .addCode(copyBlock(goal))
+            .addStatement("return $N", updater)
+            .addModifiers(regularGoalDetails.goalOptions.toBuilderAccess.modifiers(STATIC))
             .build();
-        return new BuilderMethod(name, methodSpec);
+        return new BuilderMethod(regularGoalDetails.name, method);
       };
 
-  private static Function<ProjectionInfo, CodeBlock> copyField(ParameterSpec parameter, ParameterSpec updater, RegularStep step) {
-    return DtoProjectionInfo.asFunction(new ProjectionInfoRequiredCases<CodeBlock>() {
+  private static CodeBlock copyBlock(RegularGoalContext goal) {
+    ProjectionInfoCases<CodeBlock, RegularStep> copy = copyField(goal);
+    CodeBlock.Builder builder = CodeBlock.builder();
+    for (RegularStep step : regularSteps.apply(goal)) {
+      ProjectionInfo projectionInfo = step.validParameter.projectionInfo;
+      builder.add(projectionInfo.accept(copy, step));
+    }
+    return builder.build();
+  }
+
+  private static ProjectionInfoCases<CodeBlock, RegularStep> copyField(RegularGoalContext goal) {
+    return new ProjectionInfoCases<CodeBlock, RegularStep>() {
       @Override
-      public CodeBlock projectionMethod(ProjectionMethod projection) {
+      public CodeBlock projectionMethod(ProjectionMethod projection, RegularStep step) {
         CodeBlock.Builder builder = CodeBlock.builder();
+        RegularGoalDetails details = goalDetails.apply(goal);
+        TypeName goalType = details.goalType;
+        ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
+        ParameterSpec updater = updaterInstance(goal);
         String field = step.validParameter.name;
         builder.add(nullCheckGetter(parameter, step, projection.methodName))
             .addStatement("$N.$N = $N.$N()",
@@ -71,15 +82,23 @@ final class GeneratorV {
         return builder.build();
       }
       @Override
-      public CodeBlock fieldAccess(FieldAccess projection) {
+      public CodeBlock fieldAccess(FieldAccess projection, RegularStep step) {
         CodeBlock.Builder builder = CodeBlock.builder();
         String field = projection.fieldName;
+        RegularGoalDetails details = goalDetails.apply(goal);
+        TypeName goalType = details.goalType;
+        ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
+        ParameterSpec updater = updaterInstance(goal);
         builder.add(nullCheckFieldAccess(parameter, step))
             .addStatement("$N.$N = $N.$N",
                 updater, field, parameter, field);
         return builder.build();
       }
-    });
+      @Override
+      public CodeBlock none() {
+        throw new IllegalStateException("should never happen");
+      }
+    };
   }
 
   private static CodeBlock nullCheckFieldAccess(ParameterSpec parameter, RegularStep step) {
@@ -126,7 +145,7 @@ final class GeneratorV {
 
   static final Function<RegularGoalContext, BuilderMethod> goalToBuilder
       = goal -> {
-    DtoGoal.RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
+    RegularGoalDetails regularGoalDetails = goalDetails.apply(goal);
     List<RegularStep> steps = regularSteps.apply(goal);
     String name = DtoGoalContext.goalName.apply(goal);
     MethodSpec.Builder method = methodBuilder(name + "Builder")

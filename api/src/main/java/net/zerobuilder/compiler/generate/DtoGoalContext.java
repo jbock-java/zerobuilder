@@ -83,7 +83,7 @@ final class DtoGoalContext {
       asFunction(new GoalCases<TypeName>() {
         @Override
         public TypeName regularGoal(RegularGoalContext goal) {
-          RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
+          RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.goalDetails.apply(goal);
           return regularGoalDetails.goalType;
         }
         @Override
@@ -96,7 +96,7 @@ final class DtoGoalContext {
   static final Function<AbstractGoalContext, String> goalName = asFunction(new GoalCases<String>() {
     @Override
     public String regularGoal(RegularGoalContext goal) {
-      RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.regularGoal.apply(goal);
+      RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.goalDetails.apply(goal);
       return regularGoalDetails.name;
     }
     @Override
@@ -110,7 +110,7 @@ final class DtoGoalContext {
       = asFunction(new GoalCases<AbstractGoalDetails>() {
     @Override
     public AbstractGoalDetails regularGoal(RegularGoalContext goal) {
-      return DtoRegularGoalContext.regularGoal.apply(goal);
+      return DtoRegularGoalContext.goalDetails.apply(goal);
     }
     @Override
     public AbstractGoalDetails beanGoal(BeanGoalContext goal) {

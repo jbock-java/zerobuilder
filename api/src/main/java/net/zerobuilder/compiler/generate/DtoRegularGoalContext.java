@@ -132,7 +132,7 @@ final class DtoRegularGoalContext {
     }
   }
 
-  static final Function<RegularGoalContext, RegularGoalDetails> regularGoal
+  static final Function<RegularGoalContext, RegularGoalDetails> goalDetails
       = asFunction(new RegularGoalContextCases<RegularGoalDetails>() {
     @Override
     public RegularGoalDetails constructorGoal(ConstructorGoalContext goal) {
