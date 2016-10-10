@@ -22,7 +22,6 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
@@ -75,7 +74,7 @@ final class BuilderContextB {
     }
     DtoStep.CollectionInfo collectionInfo = maybeEmptyOption.get();
     TypeName type = step.accessorPair.type;
-    String name = step.accessorPair.accept(beanParameterName);
+    String name = step.accessorPair.name();
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(collectionInfo.name)
         .addAnnotation(Override.class)
@@ -111,7 +110,7 @@ final class BuilderContextB {
   private static MethodSpec iterateCollection(LoneGetterStep step,
                                               BeanGoalContext goal,
                                               boolean isLast) {
-    String name = step.loneGetter.accept(beanParameterName);
+    String name = step.loneGetter.name();
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
     ParameterSpec parameter = parameterSpec(iterable, name);
@@ -133,7 +132,7 @@ final class BuilderContextB {
 
   private static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
     ParameterSpec parameter = step.parameter();
-    return methodBuilder(step.accessorPair.accept(beanParameterName))
+    return methodBuilder(step.accessorPair.name())
         .addAnnotation(Override.class)
         .addParameter(parameter)
         .addModifiers(PUBLIC)

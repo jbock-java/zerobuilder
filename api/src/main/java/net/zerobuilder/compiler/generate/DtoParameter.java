@@ -7,8 +7,6 @@ import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
 import java.util.function.Function;
 
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
-
 public final class DtoParameter {
 
   interface ParameterCases<R> {
@@ -102,7 +100,7 @@ public final class DtoParameter {
     }
     @Override
     public String beanParameter(AbstractBeanParameter parameter) {
-      return parameter.accept(beanParameterName);
+      return parameter.name();
     }
   });
 

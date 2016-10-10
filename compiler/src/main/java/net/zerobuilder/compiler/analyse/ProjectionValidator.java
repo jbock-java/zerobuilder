@@ -128,13 +128,13 @@ final class ProjectionValidator {
   }
 
   static final class TmpAccessorPair extends TmpValidParameter {
-    final AbstractBeanParameter validBeanParameter;
-    private TmpAccessorPair(Element element, Optional<Step> annotation, AbstractBeanParameter validBeanParameter) {
+    final AbstractBeanParameter parameter;
+    private TmpAccessorPair(Element element, Optional<Step> annotation, AbstractBeanParameter parameter) {
       super(element, annotation);
-      this.validBeanParameter = validBeanParameter;
+      this.parameter = parameter;
     }
 
-    static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = parameter -> parameter.validBeanParameter;
+    static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = parameter -> parameter.parameter;
 
     static TmpAccessorPair createAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
       Step stepAnnotation = getter.getAnnotation(Step.class);

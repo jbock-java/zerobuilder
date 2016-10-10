@@ -14,7 +14,6 @@ import java.util.function.Function;
 
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 final class DtoBeanStep {
 
@@ -55,12 +54,12 @@ final class DtoBeanStep {
     }
 
     Optional<CollectionInfo> emptyOption() {
-      String name = accessorPair.accept(beanParameterName);
+      String name = accessorPair.name();
       return CollectionInfo.create(accessorPair.type, name);
     }
 
     ParameterSpec parameter() {
-      return parameterSpec(accessorPair.type, accessorPair.accept(beanParameterName));
+      return parameterSpec(accessorPair.type, accessorPair.name());
     }
 
     @Override
@@ -79,7 +78,7 @@ final class DtoBeanStep {
       this.emptyMethod = emptyMethod;
     }
     static LoneGetterStep create(ClassName thisType, TypeName nextType, LoneGetter loneGetter) {
-      String emptyMethod = "empty" + upcase(loneGetter.accept(beanParameterName));
+      String emptyMethod = "empty" + upcase(loneGetter.name());
       return new LoneGetterStep(thisType, nextType, loneGetter, emptyMethod);
     }
     @Override

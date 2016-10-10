@@ -20,7 +20,6 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
 
@@ -56,7 +55,7 @@ final class StepContextB {
   }
 
   private static MethodSpec iterateCollection(LoneGetterStep step) {
-    String name = step.loneGetter.accept(beanParameterName);
+    String name = step.loneGetter.name();
     TypeName type = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
     return methodBuilder(name)

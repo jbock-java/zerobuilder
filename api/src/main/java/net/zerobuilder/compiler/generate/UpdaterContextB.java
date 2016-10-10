@@ -22,7 +22,6 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
@@ -73,7 +72,7 @@ final class UpdaterContextB {
     }
     CollectionInfo collectionInfo = maybeEmptyOption.get();
     TypeName type = step.accessorPair.type;
-    String name = step.accessorPair.accept(beanParameterName);
+    String name = step.accessorPair.name();
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(collectionInfo.name)
         .returns(updaterType(goal))
@@ -86,7 +85,7 @@ final class UpdaterContextB {
   }
 
   private static MethodSpec normalUpdate(BeanGoalContext goal, AccessorPairStep step) {
-    String name = step.accessorPair.accept(beanParameterName);
+    String name = step.accessorPair.name();
     ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
         .returns(updaterType(goal))
@@ -108,7 +107,7 @@ final class UpdaterContextB {
   private static MethodSpec iterateCollection(BeanGoalContext goal, LoneGetterStep step) {
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
-    String name = step.loneGetter.accept(beanParameterName);
+    String name = step.loneGetter.name();
     ParameterSpec parameter = parameterSpec(iterable, name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)

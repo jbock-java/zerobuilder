@@ -30,6 +30,10 @@ public final class DtoBeanParameter {
       this.getter = getter;
     }
 
+    public String name() {
+      return downcase(getter.substring(getter.startsWith("is") ? 2 : 3));
+    }
+
     public abstract <R> R accept(BeanParameterCases<R> cases);
     @Override
     public final <R> R acceptParameter(DtoParameter.ParameterCases<R> cases) {
@@ -113,22 +117,6 @@ public final class DtoBeanParameter {
     public <R> R accept(BeanParameterCases<R> cases) {
       return cases.loneGetter(this);
     }
-  }
-
-  public static final BeanParameterCases<String> beanParameterName
-      = new BeanParameterCases<String>() {
-    @Override
-    public String accessorPair(AccessorPair pair) {
-      return parameterName(pair);
-    }
-    @Override
-    public String loneGetter(LoneGetter getter) {
-      return parameterName(getter);
-    }
-  };
-
-  private static String parameterName(AbstractBeanParameter parameter) {
-    return downcase(parameter.getter.substring(parameter.getter.startsWith("is") ? 2 : 3));
   }
 
   private DtoBeanParameter() {

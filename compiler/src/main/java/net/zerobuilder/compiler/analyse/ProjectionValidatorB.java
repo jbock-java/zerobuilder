@@ -18,7 +18,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -53,16 +52,11 @@ import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 
 final class ProjectionValidatorB {
 
   private static final Comparator<TmpAccessorPair> ALPHABETIC_SORT
-      = (pair0, pair1) -> {
-    String name0 = pair0.validBeanParameter.accept(beanParameterName);
-    String name1 = pair1.validBeanParameter.accept(beanParameterName);
-    return name0.compareTo(name1);
-  };
+      = (a, b) -> a.parameter.name().compareTo(b.parameter.name());
 
   static final Predicate<String> IS_GETTER_NAME = Pattern.compile("^get[A-Z].*$|^is[A-Z].*$").asPredicate()
       .and(name -> !"getClass".equals(name));

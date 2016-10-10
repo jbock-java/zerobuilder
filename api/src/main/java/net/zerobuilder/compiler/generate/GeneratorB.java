@@ -22,7 +22,6 @@ import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterName;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
@@ -95,15 +94,15 @@ final class GeneratorB {
     return nullCheck(parameter, validParameter, validParameter.nullPolicy);
   }
 
-  private static CodeBlock nullCheck(ParameterSpec parameter, AbstractBeanParameter validParameter, NullPolicy nonNull) {
+  private static CodeBlock nullCheck(ParameterSpec parameter, AbstractBeanParameter beanParameter, NullPolicy nonNull) {
     if (!nonNull.check()) {
       return emptyCodeBlock;
     }
     return CodeBlock.builder()
         .beginControlFlow("if ($N.$N() == null)", parameter,
-            validParameter.getter)
+            beanParameter.getter)
         .addStatement("throw new $T($S)",
-            NullPointerException.class, validParameter.accept(beanParameterName))
+            NullPointerException.class, beanParameter.name())
         .endControlFlow().build();
   }
 
