@@ -18,6 +18,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -33,21 +34,20 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_ABSTRACT_CLASS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_ACCESSOR_EXCEPTIONS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIND_SETTER;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_EXCEPTION;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_GETTER_SETTER_TYPE_MISMATCH;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_IGNORE_AND_STEP;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_ACCESSOR_PAIRS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_DEFAULT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_PRIVATE_CLASS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.accessorPair;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nullPolicy;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.analyse.Utilities.sortedCopy;
+import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
@@ -85,7 +85,7 @@ final class ProjectionValidatorB {
   static final Function<BeanGoalElement, GoalDescription> validateBean
       = goal -> {
     validateBeanType(goal.beanType);
-    List<ExecutableElement> getters = getters(goal);
+    Collection<ExecutableElement> getters = getters(goal);
     Map<String, ExecutableElement> settersByName = setters(goal.beanType, getters);
     List<TmpAccessorPair> builder = getters.stream()
         .map(getter -> tmpAccessorPair(settersByName, goal, getter))
@@ -100,7 +100,7 @@ final class ProjectionValidatorB {
     ExecutableElement setter = settersByName.get(setterName(getter));
     return setter == null
         ? loneGetter(getter, goal.goalAnnotation)
-        : regularAccessorPair(getter, setter, goal.goalAnnotation);
+        : accessorPair(getter, setter, goal.goalAnnotation);
   }
 
   private static final Predicate<ExecutableElement> IS_NOT_IGNORED = getter -> {
@@ -109,14 +109,6 @@ final class ProjectionValidatorB {
       throw new ValidationException(BEAN_IGNORE_AND_STEP, getter);
     }
     return ignoreAnnotation == null;
-  };
-
-  private static final Predicate<ExecutableElement> DECLARES_NO_EXCEPTIONS = method -> {
-    if (method.getThrownTypes().isEmpty()) {
-      return true;
-    }
-    // accessors may currently not declare exceptions
-    throw new ValidationException(BEAN_ACCESSOR_EXCEPTIONS, method);
   };
 
   private static final Predicate<ExecutableElement> DOES_NOT_HAVE_STEP_OR_IGNORE_ANNOTATIONS = setter -> {
@@ -139,37 +131,20 @@ final class ProjectionValidatorB {
     // in this case we need to find what E is ("collectionType")
     TypeName typeName = TypeName.get(type);
     NullPolicy nullPolicy = nullPolicy(type, getter.getAnnotation(Step.class), goalAnnotation);
-    LoneGetter loneGetter = LoneGetter.create(typeName, name, nullPolicy);
+    LoneGetter loneGetter = LoneGetter.create(typeName, name, nullPolicy, thrownTypes(getter));
     return TmpAccessorPair.createLoneGetter(getter, loneGetter);
   }
 
-  private static TmpAccessorPair regularAccessorPair(ExecutableElement getter, ExecutableElement setter, Goal goalAnnotation) {
-    TypeName setterType = TypeName.get(setter.getParameters().get(0).asType());
-    TypeName getterType = TypeName.get(getter.getReturnType());
-    if (!setterType.equals(getterType)) {
-      throw new ValidationException(BEAN_GETTER_SETTER_TYPE_MISMATCH, setter);
-    }
-    if (!getter.getThrownTypes().isEmpty()) {
-      throw new ValidationException(BEAN_GETTER_EXCEPTION, getter);
-    }
-    return TmpAccessorPair.createAccessorPair(getter, goalAnnotation);
-  }
-
-  private static List<ExecutableElement> getters(BeanGoalElement goal) {
+  private static Collection<ExecutableElement> getters(BeanGoalElement goal) {
     Predicate<ExecutableElement> filter = LOOKS_LIKE_GETTER
-        .and(IS_NOT_IGNORED)
-        .and(DECLARES_NO_EXCEPTIONS);
-    return getLocalAndInheritedMethods(goal.beanType, filter)
-        .values()
-        .stream()
-        .collect(Collectors.toList());
+        .and(IS_NOT_IGNORED);
+    return getLocalAndInheritedMethods(goal.beanType, filter).values();
   }
 
   private static Map<String, ExecutableElement> setters(TypeElement beanType,
-                                                        List<ExecutableElement> getters) {
+                                                        Collection<ExecutableElement> getters) {
     Predicate<ExecutableElement> filter = LOOKS_LIKE_SETTER
         .and(setterSieve(getters))
-        .and(DECLARES_NO_EXCEPTIONS)
         .and(DOES_NOT_HAVE_STEP_OR_IGNORE_ANNOTATIONS);
     return getLocalAndInheritedMethods(beanType, filter);
   }
@@ -217,7 +192,7 @@ final class ProjectionValidatorB {
    * @param getters getters
    * @return predicate
    */
-  private static Predicate<ExecutableElement> setterSieve(List<ExecutableElement> getters) {
+  private static Predicate<ExecutableElement> setterSieve(Collection<ExecutableElement> getters) {
     List<SetterTest> setterTests = getters.stream()
         .map(SetterTest::fromGetter)
         .collect(Collectors.toList());

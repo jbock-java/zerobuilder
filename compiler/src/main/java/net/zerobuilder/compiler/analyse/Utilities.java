@@ -1,7 +1,10 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.TypeName;
 
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.lang.Character.isUpperCase;
 import static java.util.stream.Collectors.toList;
@@ -88,6 +92,12 @@ final class Utilities {
       }
     }
     return Optional.empty();
+  }
+
+  static List<TypeName> thrownTypes(ExecutableElement executableElement) {
+    return executableElement.getThrownTypes().stream()
+        .map(TypeName::get)
+        .collect(Collectors.toList());
   }
 
   private Utilities() {

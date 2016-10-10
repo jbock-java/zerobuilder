@@ -1,12 +1,12 @@
 package net.zerobuilder.examples.beans.more;
 
-import net.zerobuilder.examples.beans.more.Experiments.Access;
-import net.zerobuilder.examples.beans.more.Experiments.AeroExperiment;
-import net.zerobuilder.examples.beans.more.Experiments.BioExperiment;
-import net.zerobuilder.examples.beans.more.Experiments.Ignorify;
-import net.zerobuilder.examples.beans.more.Experiments.IterableExperiment;
-import net.zerobuilder.examples.beans.more.Experiments.OverloadedExperiment;
-import net.zerobuilder.examples.beans.more.Experiments.RawExperiment;
+import net.zerobuilder.examples.beans.more.MoreBeans.Access;
+import net.zerobuilder.examples.beans.more.MoreBeans.AeroExperiment;
+import net.zerobuilder.examples.beans.more.MoreBeans.BioExperiment;
+import net.zerobuilder.examples.beans.more.MoreBeans.Ignorify;
+import net.zerobuilder.examples.beans.more.MoreBeans.IterableExperiment;
+import net.zerobuilder.examples.beans.more.MoreBeans.OverloadedExperiment;
+import net.zerobuilder.examples.beans.more.MoreBeans.RawExperiment;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -16,26 +16,26 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static net.zerobuilder.examples.beans.more.Experiments_AccessBuilders.accessBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_AccessBuilders.accessToBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_AeroExperimentBuilders.aeroExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_AeroExperimentBuilders.aeroExperimentToBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_BioExperimentBuilders.bioExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_BioExperimentBuilders.bioExperimentToBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_IgnorifyBuilders.ignorifyBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_IgnorifyBuilders.ignorifyToBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_IterableExperimentBuilders.iterableExperimentToBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_OverloadedExperimentBuilders.overloadedExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_OverloadedExperimentBuilders.overloadedExperimentToBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_RawExperimentBuilders.rawExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.Experiments_RawExperimentBuilders.rawExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_AccessBuilders.accessBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_AccessBuilders.accessToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_AeroExperimentBuilders.aeroExperimentBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_AeroExperimentBuilders.aeroExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_BioExperimentBuilders.bioExperimentBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_BioExperimentBuilders.bioExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_IgnorifyBuilders.ignorifyBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_IgnorifyBuilders.ignorifyToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_IterableExperimentBuilders.iterableExperimentBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_IterableExperimentBuilders.iterableExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_OverloadedExperimentBuilders.overloadedExperimentBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_OverloadedExperimentBuilders.overloadedExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_RawExperimentBuilders.rawExperimentBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_RawExperimentBuilders.rawExperimentToBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class ExperimentsTest {
+public class MoreBeansTest {
 
   @Test
   public void atmosphericTest() {
@@ -128,8 +128,8 @@ public class ExperimentsTest {
     Access bar = accessToBuilder(foo)
         .foo("bar")
         .build();
-    Method builderMethod = Experiments_AccessBuilders.class.getDeclaredMethod("accessBuilder");
-    Method toBuilderMethod = Experiments_AccessBuilders.class.getDeclaredMethod("accessToBuilder", Access.class);
+    Method builderMethod = MoreBeans_AccessBuilders.class.getDeclaredMethod("accessBuilder");
+    Method toBuilderMethod = MoreBeans_AccessBuilders.class.getDeclaredMethod("accessToBuilder", Access.class);
     assertFalse(Modifier.isPublic(builderMethod.getModifiers()));
     assertTrue(Modifier.isPublic(toBuilderMethod.getModifiers()));
     assertThat(foo.getFoo(), is("foo"));

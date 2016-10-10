@@ -30,6 +30,7 @@ import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalElementCases;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValue;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValueIgnoreProjections;
+import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 
 final class ProjectionValidator {
 
@@ -136,11 +137,11 @@ final class ProjectionValidator {
 
     static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = parameter -> parameter.parameter;
 
-    static TmpAccessorPair createAccessorPair(ExecutableElement getter, Goal goalAnnotation) {
+    static TmpAccessorPair accessorPair(ExecutableElement getter, ExecutableElement setter, Goal goalAnnotation) {
       Step stepAnnotation = getter.getAnnotation(Step.class);
       TypeName type = TypeName.get(getter.getReturnType());
       NullPolicy nullPolicy = TmpValidParameter.nullPolicy(getter.getReturnType(), stepAnnotation, goalAnnotation);
-      AccessorPair accessorPair = AccessorPair.create(type, getter, nullPolicy);
+      AccessorPair accessorPair = AccessorPair.create(type, getter, nullPolicy, thrownTypes(getter), thrownTypes(setter));
       return new TmpAccessorPair(getter, ofNullable(stepAnnotation), accessorPair);
     }
 

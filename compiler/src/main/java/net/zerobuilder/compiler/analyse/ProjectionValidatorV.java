@@ -14,12 +14,10 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -33,10 +31,13 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpRegularParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.findKey;
+import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
+import static net.zerobuilder.compiler.generate.DtoProjectionInfo.fieldAccess;
+import static net.zerobuilder.compiler.generate.DtoProjectionInfo.method;
 
 final class ProjectionValidatorV {
 
@@ -51,31 +52,26 @@ final class ProjectionValidatorV {
       = goal -> {
     TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
     validateType(goal, type);
-    Map<String, ExecutableElement> methodsByName = projectionCandidates(type);
-    Map<String, VariableElement> fieldsByName = fields(type);
-    List<TmpRegularParameter> parameters = goal.executableElement.getParameters().stream()
-        .map(parameter -> {
-          ProjectionInfo projectionInfo = projectionInfo(methodsByName, fieldsByName, parameter);
-          return TmpRegularParameter.create(parameter, projectionInfo, goal.goalAnnotation);
-        }).collect(Collectors.toList());
+    Map<String, ExecutableElement> methods = projectionCandidates(type);
+    Map<String, VariableElement> fields = fields(type);
+    List<TmpRegularParameter> parameters = transform(goal.executableElement.getParameters(),
+        parameter -> TmpRegularParameter.create(parameter,
+            projectionInfo(methods, fields, parameter),
+            goal.goalAnnotation));
     return createGoalDescription(goal, parameters);
   };
 
-  private static ProjectionInfo projectionInfo(Map<String, ExecutableElement> methodsByName,
-                                               Map<String, VariableElement> fieldsByName,
+  private static ProjectionInfo projectionInfo(Map<String, ExecutableElement> methods,
+                                               Map<String, VariableElement> fields,
                                                VariableElement parameter) {
     String name = parameter.getSimpleName().toString();
-    VariableElement field = fieldsByName.get(name);
+    VariableElement field = fields.get(name);
     if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
-      return DtoProjectionInfo.fieldAccess(field.getSimpleName().toString());
+      return fieldAccess(field.getSimpleName().toString());
     }
     List<String> possibleNames = Arrays.asList("get" + upcase(name), "is" + upcase(name), name);
-    return findKey(methodsByName, possibleNames)
-        .map(methodName ->
-            DtoProjectionInfo.method(methodName,
-                methodsByName.get(methodName).getThrownTypes().stream()
-                    .map(TypeName::get)
-                    .collect(Collectors.toList())))
+    return findKey(methods, possibleNames)
+        .map(methodName -> method(methodName, thrownTypes(methods.get(methodName))))
         .orElseThrow(() -> new ValidationException(NO_PROJECTION, parameter));
   }
 
@@ -94,13 +90,8 @@ final class ProjectionValidatorV {
     variableElements.stream()
         .filter(field -> !field.getModifiers().contains(PRIVATE)
             && !field.getModifiers().contains(STATIC))
-        .forEach(field -> map.compute(field.getSimpleName().toString(),
-            (name, existingField) -> {
-              if (existingField != null) {
-                throw new IllegalStateException("two fields have the same name: " + name);
-              }
-              return field;
-            }));
+        .forEach(field -> map.computeIfAbsent(
+            field.getSimpleName().toString(), name -> field));
     return map;
   }
 
@@ -123,12 +114,7 @@ final class ProjectionValidatorV {
   }
 
   private static RegularGoalDescription create(RegularGoalElement goal, List<DtoParameter.RegularParameter> parameters) {
-    List<TypeName> thrownTypes = thrownTypes(goal.executableElement);
-    return RegularGoalDescription.create(goal.details, thrownTypes, parameters);
-  }
-
-  private static List<TypeName> thrownTypes(ExecutableElement executableElement) {
-    return transform(executableElement.getThrownTypes(), TypeName::get);
+    return RegularGoalDescription.create(goal.details, thrownTypes(goal.executableElement), parameters);
   }
 
   private ProjectionValidatorV() {

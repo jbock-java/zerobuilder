@@ -86,17 +86,8 @@ public final class Messages {
     public static final String BEAN_ABSTRACT_CLASS
         = "The annotated class may not be abstract." + POJO_HINT;
 
-    public static final String BEAN_GETTER_EXCEPTION
-        = "POJO getters may not declare exceptions." + POJO_HINT;
-
-    public static final String BEAN_GETTER_SETTER_TYPE_MISMATCH
-        = "Getter/setter type mismatch." + POJO_HINT;
-
     public static final String BEAN_COULD_NOT_FIND_SETTER
         = "Could not find setter." + POJO_HINT;
-
-    public static final String BEAN_ACCESSOR_EXCEPTIONS
-        = "Setters may not declare exceptions." + POJO_HINT;
 
     public static final String NO_PROJECTION
         = "Could not find a projection (getter or field).";

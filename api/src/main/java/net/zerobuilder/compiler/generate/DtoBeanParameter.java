@@ -7,10 +7,12 @@ import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 
 import javax.lang.model.element.ExecutableElement;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static com.squareup.javapoet.ClassName.OBJECT;
+import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.Utilities.distinctFrom;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
@@ -25,9 +27,12 @@ public final class DtoBeanParameter {
      */
     final String getter;
 
-    AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy) {
+    final List<TypeName> getterThrownTypes;
+
+    AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy, List<TypeName> getterThrownTypes) {
       super(type, nullPolicy);
       this.getter = getter;
+      this.getterThrownTypes = getterThrownTypes;
     }
 
     public String name() {
@@ -48,12 +53,24 @@ public final class DtoBeanParameter {
 
   public static final class AccessorPair extends AbstractBeanParameter {
 
-    private AccessorPair(TypeName type, String getter, NullPolicy nullPolicy) {
-      super(type, getter, nullPolicy);
+    final List<TypeName> setterThrownTypes;
+
+    private AccessorPair(TypeName type, String getter, NullPolicy nullPolicy,
+                         List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {
+      super(type, getter, nullPolicy, getterThrownTypes);
+      this.setterThrownTypes = setterThrownTypes;
     }
+
+    public static AccessorPair create(TypeName type, ExecutableElement getter, NullPolicy nullPolicy,
+                                      List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {
+      return new AccessorPair(type, getter.getSimpleName().toString(), nullPolicy,
+          getterThrownTypes, setterThrownTypes);
+    }
+
     public static AccessorPair create(TypeName type, ExecutableElement getter, NullPolicy nullPolicy) {
-      return new AccessorPair(type, getter.getSimpleName().toString(), nullPolicy);
+      return new AccessorPair(type, getter.getSimpleName().toString(), nullPolicy, emptyList(), emptyList());
     }
+
     @Override
     public <R> R accept(BeanParameterCases<R> cases) {
       return cases.accessorPair(this);
@@ -84,16 +101,25 @@ public final class DtoBeanParameter {
       return parameterSpec(iterationVar.type, distinctFrom(iterationVar.name, avoid.name));
     }
 
-    private LoneGetter(TypeName type, String getter, NullPolicy nullPolicy, ParameterSpec iterationVar) {
-      super(type, getter, nullPolicy);
+    private LoneGetter(TypeName type, String getter, NullPolicy nullPolicy, ParameterSpec iterationVar,
+                       List<TypeName> getterThrownTypes) {
+      super(type, getter, nullPolicy, getterThrownTypes);
       this.iterationVar = iterationVar;
+    }
+
+    public static LoneGetter create(TypeName type, String getter, NullPolicy nullPolicy,
+                                    List<TypeName> getterThrownTypes) {
+      ClassName collectionType = collectionType(type);
+      String name = downcase(collectionType.simpleName());
+      ParameterSpec iterationVar = parameterSpec(collectionType, name);
+      return new LoneGetter(type, getter, nullPolicy, iterationVar, getterThrownTypes);
     }
 
     public static LoneGetter create(TypeName type, String getter, NullPolicy nullPolicy) {
       ClassName collectionType = collectionType(type);
       String name = downcase(collectionType.simpleName());
       ParameterSpec iterationVar = parameterSpec(collectionType, name);
-      return new LoneGetter(type, getter, nullPolicy, iterationVar);
+      return new LoneGetter(type, getter, nullPolicy, iterationVar, emptyList());
     }
 
     private static ClassName collectionType(TypeName typeName) {

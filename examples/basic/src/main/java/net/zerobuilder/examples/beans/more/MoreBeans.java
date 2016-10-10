@@ -5,6 +5,7 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,8 +13,7 @@ import static net.zerobuilder.AccessLevel.PACKAGE;
 import static net.zerobuilder.AccessLevel.PUBLIC;
 
 // various beans
-// see ExperimentsTest
-public class Experiments {
+public class MoreBeans {
 
   // standard bean
   @Builders(recycle = true)
@@ -129,4 +129,21 @@ public class Experiments {
       this.foo = foo;
     }
   }
+
+  // accessors declare exceptions
+/*
+  @Builders
+  @Goal(toBuilder = true)
+  public static class Kaboom {
+    private String foo;
+    Kaboom() throws SQLException {
+    }
+    public String getFoo() throws IOException {
+      return foo;
+    }
+    public void setFoo(String foo) throws ClassNotFoundException {
+      this.foo = foo;
+    }
+  }
+*/
 }
