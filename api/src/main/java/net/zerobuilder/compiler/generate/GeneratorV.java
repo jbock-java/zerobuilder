@@ -6,6 +6,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
@@ -23,10 +24,11 @@ import java.util.stream.Collectors;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
+import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalDetails;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
@@ -40,20 +42,19 @@ final class GeneratorV {
 
   static final Function<RegularGoalContext, BuilderMethod> goalToToBuilder =
       goal -> {
-        RegularGoalDetails regularGoalDetails = goalDetails.apply(goal);
-        TypeName goalType = regularGoalDetails.goalType;
-        ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
-        ParameterSpec updater = updaterInstance(goal);
-        MethodSpec method = methodBuilder(regularGoalDetails.name + "ToBuilder")
+        RegularGoalDetails details = goalDetails.apply(goal);
+        ParameterSpec updater = varUpdater(goal);
+        MethodSpec method = methodBuilder(details.name + "ToBuilder")
             .addExceptions(thrownByProjections(goal))
-            .addParameter(parameter)
+            .addParameter(toBuilderParameter(goal))
             .returns(updater.type)
-            .addCode(initializeUpdater(goal, updater))
+            .addCode(nullCheckingBlock(goal))
+            .addCode(initUpdater(goal, updater))
             .addCode(copyBlock(goal))
             .addStatement("return $N", updater)
-            .addModifiers(regularGoalDetails.goalOptions.toBuilderAccess.modifiers(STATIC))
+            .addModifiers(details.goalOptions.toBuilderAccess.modifiers(STATIC))
             .build();
-        return new BuilderMethod(regularGoalDetails.name, method);
+        return new BuilderMethod(details.name, method);
       };
 
   private static CodeBlock copyBlock(RegularGoalContext goal) {
@@ -66,33 +67,33 @@ final class GeneratorV {
     return builder.build();
   }
 
+  private static CodeBlock nullCheckingBlock(RegularGoalContext goal) {
+    ProjectionInfoCases<CodeBlock, RegularStep> nullChecks = nullChecks(goal);
+    CodeBlock.Builder builder = CodeBlock.builder();
+    for (RegularStep step : regularSteps.apply(goal)) {
+      ProjectionInfo projectionInfo = step.validParameter.projectionInfo;
+      builder.add(projectionInfo.accept(nullChecks, step));
+    }
+    return builder.build();
+  }
+
   private static ProjectionInfoCases<CodeBlock, RegularStep> copyField(RegularGoalContext goal) {
     return new ProjectionInfoCases<CodeBlock, RegularStep>() {
       @Override
       public CodeBlock projectionMethod(ProjectionMethod projection, RegularStep step) {
-        CodeBlock.Builder builder = CodeBlock.builder();
-        RegularGoalDetails details = goalDetails.apply(goal);
-        TypeName goalType = details.goalType;
-        ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
-        ParameterSpec updater = updaterInstance(goal);
+        ParameterSpec parameter = toBuilderParameter(goal);
+        ParameterSpec updater = varUpdater(goal);
         String field = step.validParameter.name;
-        builder.add(nullCheckGetter(parameter, step, projection.methodName))
-            .addStatement("$N.$N = $N.$N()",
-                updater, field, parameter, projection.methodName);
-        return builder.build();
+        return statement("$N.$N = $N.$N()",
+            updater, field, parameter, projection.methodName);
       }
       @Override
       public CodeBlock fieldAccess(FieldAccess projection, RegularStep step) {
-        CodeBlock.Builder builder = CodeBlock.builder();
         String field = projection.fieldName;
-        RegularGoalDetails details = goalDetails.apply(goal);
-        TypeName goalType = details.goalType;
-        ParameterSpec parameter = parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
-        ParameterSpec updater = updaterInstance(goal);
-        builder.add(nullCheckFieldAccess(parameter, step))
-            .addStatement("$N.$N = $N.$N",
-                updater, field, parameter, field);
-        return builder.build();
+        ParameterSpec parameter = toBuilderParameter(goal);
+        ParameterSpec updater = varUpdater(goal);
+        return statement("$N.$N = $N.$N",
+            updater, field, parameter, field);
       }
       @Override
       public CodeBlock none() {
@@ -101,43 +102,58 @@ final class GeneratorV {
     };
   }
 
-  private static CodeBlock nullCheckFieldAccess(ParameterSpec parameter, RegularStep step) {
-    if (step.validParameter.nullPolicy == ALLOW) {
-      return emptyCodeBlock;
-    }
-    String name = step.validParameter.name;
-    return CodeBlock.builder()
-        .beginControlFlow("if ($N.$N == null)", parameter, name)
-        .addStatement("throw new $T($S)", NullPointerException.class, name)
-        .endControlFlow().build();
+  private static ProjectionInfoCases<CodeBlock, RegularStep> nullChecks(RegularGoalContext goal) {
+    return new ProjectionInfoCases<CodeBlock, RegularStep>() {
+      @Override
+      public CodeBlock projectionMethod(ProjectionMethod projection, RegularStep step) {
+        if (step.validParameter.nullPolicy == ALLOW) {
+          return emptyCodeBlock;
+        }
+        ParameterSpec parameter = toBuilderParameter(goal);
+        String name = step.validParameter.name;
+        return CodeBlock.builder()
+            .beginControlFlow("if ($N.$N() == null)", parameter, projection.methodName)
+            .addStatement("throw new $T($S)", NullPointerException.class, name)
+            .endControlFlow().build();
+      }
+      @Override
+      public CodeBlock fieldAccess(FieldAccess projection, RegularStep step) {
+        if (step.validParameter.nullPolicy == ALLOW) {
+          return emptyCodeBlock;
+        }
+        ParameterSpec parameter = toBuilderParameter(goal);
+        String name = step.validParameter.name;
+        return CodeBlock.builder()
+            .beginControlFlow("if ($N.$N == null)", parameter, name)
+            .addStatement("throw new $T($S)", NullPointerException.class, name)
+            .endControlFlow().build();
+      }
+      @Override
+      public CodeBlock none() {
+        throw new IllegalStateException("should never happen");
+      }
+    };
+  }
+  private static ParameterSpec toBuilderParameter(RegularGoalContext goal) {
+    RegularGoalDetails details = goalDetails.apply(goal);
+    TypeName goalType = details.goalType;
+    return parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
   }
 
-  private static CodeBlock nullCheckGetter(ParameterSpec parameter, RegularStep step, String getter) {
-    if (step.validParameter.nullPolicy == ALLOW) {
-      return emptyCodeBlock;
-    }
-    String name = step.validParameter.name;
-    return CodeBlock.builder()
-        .beginControlFlow("if ($N.$N() == null)", parameter, getter)
-        .addStatement("throw new $T($S)", NullPointerException.class, name)
-        .endControlFlow().build();
-  }
-
-  private static CodeBlock initializeUpdater(RegularGoalContext goal, ParameterSpec updater) {
-    CodeBlock.Builder builder = CodeBlock.builder();
-    DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
-    boolean recycle = buildersContext.lifecycle.recycle();
-    if (recycle) {
+  private static CodeBlock initUpdater(RegularGoalContext goal, ParameterSpec updater) {
+    BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+    if (buildersContext.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = buildersContext.cache;
       String updaterField = updaterField(goal);
-      builder.addStatement("$T $N = $N.get().$N", updater.type, updater, cache, updaterField);
+      return statement("$T $N = $N.get().$N",
+          updater.type, updater, cache, updaterField);
     } else {
-      builder.addStatement("$T $N = new $T()", updater.type, updater, updater.type);
+      return statement("$T $N = new $T()",
+          updater.type, updater, updater.type);
     }
-    return builder.build();
   }
 
-  private static ParameterSpec updaterInstance(RegularGoalContext goal) {
+  private static ParameterSpec varUpdater(RegularGoalContext goal) {
     ClassName updaterType = updaterType(goal);
     return parameterSpec(updaterType, "updater");
   }
@@ -154,7 +170,7 @@ final class GeneratorV {
     ParameterSpec builder = builderInstance(goal);
     method.addCode(initBuilder(goal, builder));
     if (isInstance.test(goal)) {
-      DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+      BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
       ParameterSpec parameter = parameterSpec(buildersContext.type,
           downcase(buildersContext.type.simpleName()));
       method.addParameter(parameter)
@@ -165,7 +181,7 @@ final class GeneratorV {
   };
 
   private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder) {
-    DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+    BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
     return buildersContext.lifecycle.recycle()
         ? statement("$T $N = $N.get().$N", builder.type, builder, buildersContext.cache, stepsField(goal))
         : statement("$T $N = new $T()", builder.type, builder, builder.type);
