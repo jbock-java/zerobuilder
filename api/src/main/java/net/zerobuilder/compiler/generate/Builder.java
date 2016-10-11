@@ -15,6 +15,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractSteps;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
@@ -39,7 +40,7 @@ final class Builder {
     return classBuilder(builderImplType(goal))
         .addSuperinterfaces(stepInterfaceTypes(goal))
         .addFields(fields.apply(goal))
-        .addMethod(constructor(PRIVATE))
+        .addMethod(builderConstructor.apply(goal))
         .addMethods(steps.apply(goal))
         .addModifiers(STATIC, FINAL)
         .build();

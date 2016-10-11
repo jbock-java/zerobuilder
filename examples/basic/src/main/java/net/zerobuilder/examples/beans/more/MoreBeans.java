@@ -131,7 +131,7 @@ public class MoreBeans {
   }
 
   // accessors declare exceptions
-/*
+
   @Builders
   @Goal(toBuilder = true)
   public static class Kaboom {
@@ -165,5 +165,5 @@ public class MoreBeans {
       this.doo = doo;
     }
   }
-*/
+
 }

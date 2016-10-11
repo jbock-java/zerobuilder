@@ -223,7 +223,17 @@ final class ProjectionValidatorB {
     List<TmpAccessorPair> sorted = sortedCopy(tmpAccessorPairs, ALPHABETIC_SORT);
     List<AbstractBeanParameter> validBeanParameters
         = transform(shuffledParameters(sorted), toValidParameter);
-    return BeanGoalDescription.create(goal.details, validBeanParameters);
+    return BeanGoalDescription.create(goal.details, validBeanParameters,
+        beanConstructorExceptions(goal));
+  }
+
+  private static List<TypeName> beanConstructorExceptions(BeanGoalElement goal) {
+    for (ExecutableElement constructor : constructorsIn(goal.beanType.getEnclosedElements())) {
+      if (constructor.getParameters().isEmpty()) {
+        return thrownTypes(constructor);
+      }
+    }
+    throw new IllegalStateException("should never happen");
   }
 
   private static boolean isImplementationOf(TypeMirror typeMirror, ClassName test) {

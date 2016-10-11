@@ -171,7 +171,7 @@ final class GeneratorV {
       ParameterSpec parameter = parameterSpec(buildersContext.type,
           downcase(buildersContext.type.simpleName()));
       method.addParameter(parameter)
-          .addStatement("$N.$N = $N", builder, buildersContext.field, parameter);
+          .addStatement("$N.$N = $N", builder, buildersContext.field(), parameter);
     }
     MethodSpec methodSpec = method.addStatement("return $N", builder).build();
     return new BuilderMethod(name, methodSpec);

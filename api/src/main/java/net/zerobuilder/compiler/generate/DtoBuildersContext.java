@@ -53,7 +53,10 @@ public final class DtoBuildersContext {
      * {@link DtoGoal.MethodGoalDetails#methodType} is
      * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType#INSTANCE_METHOD INSTANCE_METHOD}.
      */
-    final FieldSpec field;
+    final FieldSpec field() {
+      String name = '_' + downcase(type.simpleName());
+      return fieldSpec(type, name, PRIVATE);
+    }
 
     /**
      * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.
@@ -63,11 +66,10 @@ public final class DtoBuildersContext {
     final FieldSpec cache;
 
     private BuildersContext(BuilderLifecycle lifecycle, ClassName type, ClassName generatedType,
-                            FieldSpec field, FieldSpec cache) {
+                            FieldSpec cache) {
       this.lifecycle = lifecycle;
       this.type = type;
       this.generatedType = generatedType;
-      this.field = field;
       this.cache = cache;
     }
   }
@@ -84,9 +86,8 @@ public final class DtoBuildersContext {
   public static BuildersContext createBuildersContext(ClassName type,
                                                       ClassName generatedType,
                                                       BuilderLifecycle builderLifecycle) {
-    FieldSpec field = fieldSpec(type, '_' + downcase(type.simpleName()), PRIVATE);
     FieldSpec cache = defineCache(generatedType);
-    return new BuildersContext(builderLifecycle, type, generatedType, field, cache);
+    return new BuildersContext(builderLifecycle, type, generatedType, cache);
   }
 
   private static FieldSpec defineCache(ClassName generatedType) {

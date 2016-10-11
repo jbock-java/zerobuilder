@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
@@ -13,6 +14,7 @@ import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -21,10 +23,13 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.Builder.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.Builder.defineContract;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.NEW_INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractGoalDetails;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.builder;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.toBuilder;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepareGoal;
 import static net.zerobuilder.compiler.generate.Updater.defineUpdater;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
@@ -46,17 +51,21 @@ public final class Generator {
   }
 
   private static GeneratorOutput generate(Goals analysisResult) {
+    ClassName generatedType = analysisResult.buildersContext.generatedType;
     List<AbstractGoalContext> goals = goals(analysisResult);
-    List<BuilderMethod> methods = new ArrayList<>();
-    methods.addAll(builderMethods(goals));
-    methods.addAll(toBuilderMethods(goals));
+    List<BuilderMethod> methods = Stream.concat(
+        goals.stream().filter(builder).map(goalToBuilder),
+        goals.stream().filter(toBuilder).map(goalToToBuilder))
+        .collect(toList());
+    BuilderLifecycle lifecycle = analysisResult.buildersContext.lifecycle;
     List<FieldSpec> fields = new ArrayList<>();
-    if (analysisResult.buildersContext.lifecycle.recycle()) {
+    if (lifecycle == REUSE_INSTANCES) {
       fields.add(analysisResult.buildersContext.cache);
     }
     fields.addAll(instanceFields(analysisResult, goals));
     return new GeneratorOutput(methods,
-        nestedGoalTypes(goals), fields, analysisResult.buildersContext.generatedType);
+        nestedGoalTypes(goals), fields, generatedType,
+        lifecycle);
   }
 
   private static List<TypeSpec> nestedGoalTypes(List<AbstractGoalContext> goals) {
@@ -72,26 +81,6 @@ public final class Generator {
       }
     }
     return builder;
-  }
-
-  private static List<BuilderMethod> toBuilderMethods(List<AbstractGoalContext> goals) {
-    return goals.stream()
-        .filter(goal -> {
-          AbstractGoalDetails details = abstractGoalDetails.apply(goal);
-          return details.goalOptions.toBuilder;
-        })
-        .map(goalToToBuilder)
-        .collect(toList());
-  }
-
-  private static List<BuilderMethod> builderMethods(List<AbstractGoalContext> goals) {
-    return goals.stream()
-        .filter(goal -> {
-          AbstractGoalDetails details = abstractGoalDetails.apply(goal);
-          return details.goalOptions.builder;
-        })
-        .map(goalToBuilder)
-        .collect(toList());
   }
 
   private static List<FieldSpec> instanceFields(Goals analysisResult,

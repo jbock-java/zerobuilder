@@ -13,9 +13,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
@@ -32,9 +34,9 @@ final class UpdaterV {
       = goal -> {
     DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
     List<FieldSpec> builder = new ArrayList<>();
-    builder.addAll(isInstance.test(goal)
-        ? singletonList(buildersContext.field)
-        : Collections.emptyList());
+    if (isInstance.test(goal)) {
+      builder.add(buildersContext.field());
+    }
     for (RegularStep step : regularSteps.apply(goal)) {
       String name = step.validParameter.name;
       TypeName type = step.validParameter.type;
@@ -44,13 +46,12 @@ final class UpdaterV {
   };
 
   static final Function<RegularGoalContext, List<MethodSpec>> updateMethods
-      = goal -> {
-    List<MethodSpec> builder = new ArrayList<>();
-    for (RegularStep step : regularSteps.apply(goal)) {
-      builder.addAll(updateMethods(goal, step));
-    }
-    return builder;
-  };
+      = goal ->
+      regularSteps.apply(goal).stream()
+          .map(step -> updateMethods(goal, step))
+          .map(List::stream)
+          .flatMap(Function.identity())
+          .collect(toList());
 
   private static List<MethodSpec> updateMethods(RegularGoalContext goal, RegularStep step) {
     List<MethodSpec> builder = new ArrayList<>();

@@ -1,16 +1,20 @@
 package net.zerobuilder.compiler.generate;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
-import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
+import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 
 import java.util.List;
 
+import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
+import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 
@@ -20,26 +24,19 @@ final class DtoBeanGoalContext {
 
     final List<? extends AbstractBeanStep> steps;
     final BeanGoalDetails details;
+    final List<TypeName> thrownTypes;
 
     private BeanGoal(BeanGoalDetails details,
-                     List<? extends AbstractBeanStep> steps) {
+                     List<? extends AbstractBeanStep> steps, List<TypeName> thrownTypes) {
       this.steps = steps;
       this.details = details;
+      this.thrownTypes = thrownTypes;
     }
 
     static BeanGoal create(BeanGoalDetails details,
-                           List<? extends AbstractBeanStep> steps) {
-      return new BeanGoal(details, steps);
-    }
-
-    /**
-     * A mutable field that holds an instance of the bean type.
-     *
-     * @return field spec
-     */
-    FieldSpec bean() {
-      return fieldSpec(details.goalType,
-          downcase(details.goalType.simpleName()), PRIVATE);
+                           List<? extends AbstractBeanStep> steps,
+                           List<TypeName> thrownTypes) {
+      return new BeanGoal(details, steps, thrownTypes);
     }
 
     @Override
@@ -52,6 +49,19 @@ final class DtoBeanGoalContext {
 
     final BuildersContext builders;
     final BeanGoal goal;
+
+    /**
+     * A field that holds an instance of the bean type.
+     *
+     * @return field spec
+     */
+    FieldSpec bean() {
+      ClassName type = goal.details.goalType;
+      String name = downcase(type.simpleName());
+      return builders.lifecycle == REUSE_INSTANCES
+          ? fieldSpec(type, name, PRIVATE)
+          : fieldSpec(type, name, PRIVATE, FINAL);
+    }
 
     BeanGoalContext(BeanGoal goal,
                     BuildersContext builders) {

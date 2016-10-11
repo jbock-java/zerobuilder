@@ -39,7 +39,7 @@ final class BuilderV {
     List<FieldSpec> builder = new ArrayList<>();
     DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
     builder.addAll(isInstance.test(goal)
-        ? singletonList(buildersContext.field)
+        ? singletonList(buildersContext.field())
         : emptyList());
     List<RegularStep> steps = regularSteps.apply(goal);
     builder.addAll(steps.stream().limit(steps.size() - 1)
@@ -169,7 +169,7 @@ final class BuilderV {
     String method = goal.goal.details.methodName;
     builder.add(CodeBlock.of(VOID.equals(type) ? "" : "return "));
     builder.add(goal.goal.details.methodType == INSTANCE_METHOD
-        ? statement("$N.$N($L)", goal.builders.field, method, parameters)
+        ? statement("$N.$N($L)", goal.builders.field(), method, parameters)
         : statement("$T.$N($L)", goal.builders.type, method, parameters));
     return builder.build();
   }

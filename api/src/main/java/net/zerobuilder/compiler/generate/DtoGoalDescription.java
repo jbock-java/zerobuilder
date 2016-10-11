@@ -100,14 +100,18 @@ public final class DtoGoalDescription {
   public static final class BeanGoalDescription implements GoalDescription {
     final BeanGoalDetails details;
     final List<AbstractBeanParameter> parameters;
+    final List<TypeName> thrownTypes;
 
-    private BeanGoalDescription(BeanGoalDetails details, List<AbstractBeanParameter> parameters) {
+    private BeanGoalDescription(BeanGoalDetails details, List<AbstractBeanParameter> parameters,
+                                List<TypeName> thrownTypes) {
       this.details = details;
       this.parameters = parameters;
+      this.thrownTypes = thrownTypes;
     }
 
-    public static BeanGoalDescription create(BeanGoalDetails details, List<AbstractBeanParameter> parameters) {
-      return new BeanGoalDescription(details, parameters);
+    public static BeanGoalDescription create(BeanGoalDetails details, List<AbstractBeanParameter> parameters,
+                                             List<TypeName> thrownTypes) {
+      return new BeanGoalDescription(details, parameters, thrownTypes);
     }
     @Override
     public <R> R accept(GoalDescriptionCases<R> cases) {

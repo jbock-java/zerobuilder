@@ -5,17 +5,18 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle;
 
 import java.util.List;
 import java.util.function.Function;
 
+import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod.getMethod;
-import static net.zerobuilder.compiler.generate.Utilities.constructor;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 
 public final class DtoGeneratorOutput {
@@ -56,6 +57,7 @@ public final class DtoGeneratorOutput {
     private final List<TypeSpec> nestedTypes;
     private final List<FieldSpec> fields;
     private final ClassName generatedType;
+    private BuilderLifecycle lifecycle;
 
     /**
      * Create the definition of the generated class.
@@ -66,11 +68,20 @@ public final class DtoGeneratorOutput {
     public TypeSpec typeSpec(List<AnnotationSpec> generatedAnnotations) {
       return classBuilder(generatedType)
           .addFields(fields)
-          .addMethod(constructor(PRIVATE))
+          .addMethod(constructor())
           .addMethods(transform(methods, getMethod))
           .addAnnotations(generatedAnnotations)
           .addModifiers(PUBLIC, FINAL)
           .addTypes(nestedTypes)
+          .build();
+    }
+
+    private MethodSpec constructor() {
+      return lifecycle == BuilderLifecycle.REUSE_INSTANCES
+          ? Utilities.constructor(PRIVATE)
+          : constructorBuilder()
+          .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
+          .addModifiers(PRIVATE)
           .build();
     }
 
@@ -86,11 +97,13 @@ public final class DtoGeneratorOutput {
     GeneratorOutput(List<BuilderMethod> methods,
                     List<TypeSpec> nestedTypes,
                     List<FieldSpec> fields,
-                    ClassName generatedType) {
+                    ClassName generatedType,
+                    BuilderLifecycle lifecycle) {
       this.methods = methods;
       this.nestedTypes = nestedTypes;
       this.fields = fields;
       this.generatedType = generatedType;
+      this.lifecycle = lifecycle;
     }
 
     /**

@@ -9,6 +9,8 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -27,7 +29,7 @@ final class DtoBeanStep {
   }
 
   static <R> Function<AbstractBeanStep, R> beanStepCases(Function<AccessorPairStep, R> accessorPair,
-                                            Function<LoneGetterStep, R> loneGetter) {
+                                                         Function<LoneGetterStep, R> loneGetter) {
     return asFunction(new BeanStepCases<R>() {
       @Override
       public R accessorPair(AccessorPairStep step) {
@@ -120,6 +122,30 @@ final class DtoBeanStep {
       return Optional.empty();
     }
   };
+
+  static final Function<AbstractBeanStep, List<TypeName>> getterThrownTypes
+      = asFunction(new BeanStepCases<List<TypeName>>() {
+    @Override
+    public List<TypeName> accessorPair(AccessorPairStep step) {
+      return step.accessorPair.getterThrownTypes;
+    }
+    @Override
+    public List<TypeName> loneGetter(LoneGetterStep step) {
+      return step.loneGetter.getterThrownTypes;
+    }
+  });
+
+  static final Function<AbstractBeanStep, List<TypeName>> setterThrownTypes
+      = asFunction(new BeanStepCases<List<TypeName>>() {
+    @Override
+    public List<TypeName> accessorPair(AccessorPairStep step) {
+      return step.accessorPair.setterThrownTypes;
+    }
+    @Override
+    public List<TypeName> loneGetter(LoneGetterStep step) {
+      return Collections.emptyList();
+    }
+  });
 
   private DtoBeanStep() {
     throw new UnsupportedOperationException("no instances");

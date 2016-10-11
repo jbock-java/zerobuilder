@@ -44,7 +44,7 @@ final class GoalContextFactory {
         generatedType,
         goal.parameters,
         beanFactory);
-    return DtoBeanGoalContext.BeanGoal.create(goal.details, steps);
+    return DtoBeanGoalContext.BeanGoal.create(goal.details, steps, goal.thrownTypes);
   }
 
   private static IGoal regularGoal(ClassName generatedType,
