@@ -26,6 +26,20 @@ final class DtoBeanStep {
     return abstractStep -> abstractStep.acceptBean(cases);
   }
 
+  static <R> Function<AbstractBeanStep, R> beanStepCases(Function<AccessorPairStep, R> accessorPair,
+                                            Function<LoneGetterStep, R> loneGetter) {
+    return asFunction(new BeanStepCases<R>() {
+      @Override
+      public R accessorPair(AccessorPairStep step) {
+        return accessorPair.apply(step);
+      }
+      @Override
+      public R loneGetter(LoneGetterStep step) {
+        return loneGetter.apply(step);
+      }
+    });
+  }
+
   static abstract class AbstractBeanStep extends AbstractStep {
     AbstractBeanStep(ClassName thisType, TypeName nextType) {
       super(thisType, nextType);

@@ -78,6 +78,7 @@ final class BuilderB {
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(collectionInfo.name)
         .addAnnotation(Override.class)
+        .addExceptions(step.accessorPair.setterThrownTypes)
         .returns(step.nextType)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)", goal.goal.field, step.accessorPair.setterName(), emptyColl)
@@ -118,6 +119,7 @@ final class BuilderB {
     return methodBuilder(name)
         .addAnnotation(Override.class)
         .returns(step.nextType)
+        .addExceptions(step.loneGetter.getterThrownTypes)
         .addParameter(parameter)
         .addCode(nullCheck(parameter))
         .beginControlFlow("for ($T $N : $N)",
@@ -134,6 +136,7 @@ final class BuilderB {
     ParameterSpec parameter = step.parameter();
     return methodBuilder(step.accessorPair.name())
         .addAnnotation(Override.class)
+        .addExceptions(step.accessorPair.setterThrownTypes)
         .addParameter(parameter)
         .addModifiers(PUBLIC)
         .returns(step.nextType)

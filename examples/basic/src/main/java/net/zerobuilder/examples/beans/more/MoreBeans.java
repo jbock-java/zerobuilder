@@ -136,13 +136,33 @@ public class MoreBeans {
   @Goal(toBuilder = true)
   public static class Kaboom {
     private String foo;
+    private List<String> bar;
+    private List<String> doo;
+
     Kaboom() throws SQLException {
     }
+
     public String getFoo() throws IOException {
       return foo;
     }
+
     public void setFoo(String foo) throws ClassNotFoundException {
       this.foo = foo;
+    }
+
+    public List<String> getBar() throws IOException {
+      if (bar == null) {
+        bar = new ArrayList<>();
+      }
+      return bar;
+    }
+
+    public List<String> getDoo() throws ClassNotFoundException {
+      return doo;
+    }
+
+    public void setDoo(List<String> doo) throws IOException {
+      this.doo = doo;
     }
   }
 */

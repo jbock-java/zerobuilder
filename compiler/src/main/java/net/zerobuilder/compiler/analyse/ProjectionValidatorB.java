@@ -10,7 +10,6 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 
@@ -128,8 +127,6 @@ final class ProjectionValidatorB {
     if (!isImplementationOf(type, COLLECTION)) {
       throw new ValidationException(BEAN_COULD_NOT_FIND_SETTER, getter);
     }
-    // no setter but we have a getter that returns something like List<E>
-    // in this case we need to find what E is ("collectionType")
     TypeName typeName = TypeName.get(type);
     NullPolicy nullPolicy = nullPolicy(type, getter.getAnnotation(Step.class), goalAnnotation);
     AbstractBeanParameter loneGetter = DtoBeanParameter.loneGetter(typeName, name, nullPolicy, thrownTypes(getter));

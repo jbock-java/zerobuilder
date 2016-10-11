@@ -27,7 +27,6 @@ import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.asFunction;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
-import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
@@ -79,7 +78,7 @@ final class BuilderV {
         .addCode(nullCheck.apply(step))
         .addCode(normalAssignment(step, goal, isLast))
         .addModifiers(PUBLIC)
-        .addExceptions(declaredExceptions.apply(step))
+        .addExceptions(step.declaredExceptions)
         .build();
   }
 

@@ -59,12 +59,9 @@ final class GeneratorV {
 
   private static CodeBlock copyBlock(RegularGoalContext goal) {
     ProjectionInfoCases<CodeBlock, RegularStep> copy = copyField(goal);
-    CodeBlock.Builder builder = CodeBlock.builder();
-    for (RegularStep step : regularSteps.apply(goal)) {
-      ProjectionInfo projectionInfo = step.validParameter.projectionInfo;
-      builder.add(projectionInfo.accept(copy, step));
-    }
-    return builder.build();
+    return regularSteps.apply(goal).stream()
+        .map(step -> step.validParameter.projectionInfo.accept(copy, step))
+        .collect(Utilities.join);
   }
 
   private static CodeBlock nullCheckingBlock(RegularGoalContext goal) {

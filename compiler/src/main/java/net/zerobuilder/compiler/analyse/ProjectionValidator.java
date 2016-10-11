@@ -7,8 +7,6 @@ import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
-import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;

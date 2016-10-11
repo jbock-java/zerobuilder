@@ -31,7 +31,7 @@ public final class DtoBeanParameter {
 
     final List<TypeName> getterThrownTypes;
 
-    AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy, List<TypeName> getterThrownTypes) {
+    private AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy, List<TypeName> getterThrownTypes) {
       super(type, nullPolicy);
       this.getter = getter;
       this.getterThrownTypes = getterThrownTypes;
@@ -73,7 +73,7 @@ public final class DtoBeanParameter {
     }
   }
 
-  public static final class LoneGetter extends AbstractBeanParameter {
+  static final class LoneGetter extends AbstractBeanParameter {
 
     /**
      * Example: If getter returns {@code List<String>}, then this would be a variable of type

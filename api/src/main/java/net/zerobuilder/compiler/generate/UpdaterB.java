@@ -76,6 +76,7 @@ final class UpdaterB {
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(collectionInfo.name)
         .returns(updaterType(goal))
+        .addExceptions(step.accessorPair.setterThrownTypes)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)",
             goal.goal.field, step.accessorPair.setterName(), emptyColl)
@@ -89,6 +90,7 @@ final class UpdaterB {
     ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
         .returns(updaterType(goal))
+        .addExceptions(step.accessorPair.setterThrownTypes)
         .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
             goal.goal.field, step.accessorPair.setterName(), parameter)
@@ -113,6 +115,7 @@ final class UpdaterB {
     return methodBuilder(name)
         .returns(updaterType(goal))
         .addParameter(parameter)
+        .addExceptions(step.loneGetter.getterThrownTypes)
         .addCode(nullCheck(name, name))
         .addCode(clearCollection(goal, step))
         .beginControlFlow("for ($T $N : $N)", iterationVar.type, iterationVar, name)
@@ -127,6 +130,7 @@ final class UpdaterB {
   private static MethodSpec loneGetterEmptyCollection(BeanGoalContext goal, LoneGetterStep step) {
     return methodBuilder(step.emptyMethod)
         .returns(updaterType(goal))
+        .addExceptions(step.loneGetter.getterThrownTypes)
         .addCode(clearCollection(goal, step))
         .addStatement("return this")
         .addModifiers(PUBLIC)

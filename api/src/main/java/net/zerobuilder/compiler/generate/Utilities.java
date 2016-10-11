@@ -13,11 +13,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isUpperCase;
@@ -155,6 +161,33 @@ final class Utilities {
     Collections.reverse(reversed);
     return reversed;
   }
+
+  static final Collector<CodeBlock, CodeBlock.Builder, CodeBlock> join
+      = new Collector<CodeBlock, CodeBlock.Builder, CodeBlock>() {
+    @Override
+    public Supplier<CodeBlock.Builder> supplier() {
+      return CodeBlock::builder;
+    }
+    @Override
+    public BiConsumer<CodeBlock.Builder, CodeBlock> accumulator() {
+      return (builder, block) -> builder.add(block);
+    }
+    @Override
+    public BinaryOperator<CodeBlock.Builder> combiner() {
+      return (a, b) -> {
+        a.add(b.build());
+        return a;
+      };
+    }
+    @Override
+    public Function<CodeBlock.Builder, CodeBlock> finisher() {
+      return CodeBlock.Builder::build;
+    }
+    @Override
+    public Set<Characteristics> characteristics() {
+      return EnumSet.noneOf(Characteristics.class);
+    }
+  };
 
   static MethodSpec constructor(Modifier... modifiers) {
     return constructorBuilder().addModifiers(modifiers).build();

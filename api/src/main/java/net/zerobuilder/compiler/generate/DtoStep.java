@@ -147,19 +147,7 @@ final class DtoStep {
       return step.acceptBean(validBeanParameter);
     }
   });
-
-  static final Function<AbstractStep, List<TypeName>> declaredExceptions
-      = asFunction(new StepCases<List<TypeName>>() {
-    @Override
-    public List<TypeName> regularStep(RegularStep step) {
-      return step.declaredExceptions;
-    }
-    @Override
-    public List<TypeName> beanStep(AbstractBeanStep step) {
-      return Collections.emptyList();
-    }
-  });
-
+  
   static <R> Function<AbstractStep, R> always(final Function<AbstractStep, R> parameterFunction) {
     return asFunction(new StepCases<R>() {
       @Override
