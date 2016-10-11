@@ -7,7 +7,6 @@ import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 
 import javax.lang.model.element.ExecutableElement;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +16,7 @@ import static net.zerobuilder.compiler.generate.Utilities.distinctFrom;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
+import static net.zerobuilder.compiler.generate.Utilities.typeArguments;
 
 public final class DtoBeanParameter {
 
@@ -107,35 +107,39 @@ public final class DtoBeanParameter {
       this.iterationVar = iterationVar;
     }
 
+    /**
+     * @param type              should be a subclass of {@link java.util.Collection}
+     * @param getter            getter name
+     * @param nullPolicy        null policy
+     * @param getterThrownTypes thrown types
+     * @return lone getter
+     * @throws IllegalArgumentException if {@code type} has more than one type parameter
+     */
     public static LoneGetter create(TypeName type, String getter, NullPolicy nullPolicy,
                                     List<TypeName> getterThrownTypes) {
-      ClassName collectionType = collectionType(type);
-      String name = downcase(collectionType.simpleName());
+      TypeName collectionType = rawTypeArgument(type).orElse(OBJECT);
+      String name = rawClassName(collectionType)
+          .map(ClassName::simpleName)
+          .map(Utilities::downcase)
+          .orElseThrow(IllegalStateException::new);
       ParameterSpec iterationVar = parameterSpec(collectionType, name);
       return new LoneGetter(type, getter, nullPolicy, iterationVar, getterThrownTypes);
     }
 
-    public static LoneGetter create(TypeName type, String getter, NullPolicy nullPolicy) {
-      ClassName collectionType = collectionType(type);
-      String name = downcase(collectionType.simpleName());
-      ParameterSpec iterationVar = parameterSpec(collectionType, name);
-      return new LoneGetter(type, getter, nullPolicy, iterationVar, emptyList());
-    }
-
-    private static ClassName collectionType(TypeName typeName) {
-      List<TypeName> typeArguments = Utilities.typeArguments(typeName);
-      if (typeArguments.isEmpty()) {
-        // raw collection
-        return OBJECT;
-      } else if (typeArguments.size() == 1) {
-        // one type parameter
-        Optional<ClassName> collectionType = rawClassName(typeArguments.get(0));
-        if (!collectionType.isPresent())
-          throw new IllegalArgumentException("collectionType absent");
-        return collectionType.get();
-      } else {
-        // unlikely: subclass of Collection should not have more than one type parameter
-        throw new IllegalArgumentException("unknown collection type");
+    /**
+     * @param typeName type
+     * @return raw first type argument, if any
+     * @throws IllegalArgumentException if type has multiple type parameters
+     */
+    private static Optional<TypeName> rawTypeArgument(TypeName typeName) {
+      List<TypeName> types = typeArguments(typeName);
+      switch (types.size()) {
+        case 0:
+          return Optional.empty();
+        case 1:
+          return Optional.of(types.get(0));
+        default:
+          throw new IllegalArgumentException("multiple type parameters");
       }
     }
 
