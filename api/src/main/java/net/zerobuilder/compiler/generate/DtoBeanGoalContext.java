@@ -10,8 +10,10 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 
+import java.util.Collections;
 import java.util.List;
 
+import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
@@ -22,13 +24,13 @@ final class DtoBeanGoalContext {
 
   static final class BeanGoal implements IGoal {
 
-    final List<? extends AbstractBeanStep> steps;
+    private final List<AbstractBeanStep> steps;
     final BeanGoalDetails details;
     final List<TypeName> thrownTypes;
 
     private BeanGoal(BeanGoalDetails details,
                      List<? extends AbstractBeanStep> steps, List<TypeName> thrownTypes) {
-      this.steps = steps;
+      this.steps = unmodifiableList(steps);
       this.details = details;
       this.thrownTypes = thrownTypes;
     }
@@ -49,6 +51,11 @@ final class DtoBeanGoalContext {
 
     final BuildersContext builders;
     final BeanGoal goal;
+
+    List<AbstractBeanStep> steps() {
+      return goal.steps;
+    }
+
 
     /**
      * A field that holds an instance of the bean type.

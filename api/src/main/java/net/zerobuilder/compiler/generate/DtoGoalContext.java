@@ -144,7 +144,7 @@ final class DtoGoalContext {
     }
     @Override
     public List<AbstractStep> beanGoal(BeanGoalContext goal) {
-      return unmodifiableList(goal.goal.steps);
+      return unmodifiableList(goal.steps());
     }
   });
 

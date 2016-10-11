@@ -9,7 +9,6 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
-import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 
 import java.util.ArrayList;
@@ -17,12 +16,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
+import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
@@ -32,32 +33,26 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class BuilderB {
 
-  static final Function<BeanGoalContext, List<FieldSpec>> fields
+  static final Function<BeanGoalContext, List<FieldSpec>> fieldsB
       = goal -> singletonList(goal.bean());
 
-  static final Function<BeanGoalContext, List<MethodSpec>> steps
-      = goal -> {
-    List<MethodSpec> builder = new ArrayList<>();
-    Function<AbstractBeanStep, List<MethodSpec>> stepToMethods = stepToMethods(goal, false);
-    for (AbstractBeanStep step : goal.goal.steps.subList(0, goal.goal.steps.size() - 1)) {
-      builder.addAll(stepToMethods.apply(step));
-    }
-    builder.addAll(stepToMethods(goal, true).apply(goal.goal.steps.get(goal.goal.steps.size() - 1)));
-    return builder;
-  };
+  static final Function<BeanGoalContext, List<MethodSpec>> stepsB
+      = goal ->
+      Stream.concat(
+          goal.steps().stream()
+              .limit(goal.steps().size() - 1)
+              .map(stepToMethods(goal, false).andThen(List::stream))
+              .flatMap(Function.identity()),
+          stepToMethods(goal, true)
+              .apply(goal.steps().get(goal.steps().size() - 1))
+              .stream())
+          .collect(toList());
 
   private static Function<AbstractBeanStep, List<MethodSpec>>
-  stepToMethods(final BeanGoalContext goal, final boolean isLast) {
-    return asFunction(new BeanStepCases<List<MethodSpec>>() {
-      @Override
-      public List<MethodSpec> accessorPair(AccessorPairStep step) {
-        return regularMethods(step, goal, isLast);
-      }
-      @Override
-      public List<MethodSpec> loneGetter(LoneGetterStep step) {
-        return collectionMethods(step, goal, isLast);
-      }
-    });
+  stepToMethods(BeanGoalContext goal, boolean isLast) {
+    return beanStepCases(
+        step -> regularMethods(step, goal, isLast),
+        step -> collectionMethods(step, goal, isLast));
   }
 
   private static List<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {

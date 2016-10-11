@@ -14,6 +14,10 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.generate.BuilderB.fieldsB;
+import static net.zerobuilder.compiler.generate.BuilderB.stepsB;
+import static net.zerobuilder.compiler.generate.BuilderV.fieldsV;
+import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
@@ -27,14 +31,14 @@ import static net.zerobuilder.compiler.generate.Utilities.transform;
 final class Builder {
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields
-      = goalCases(BuilderV.fields, BuilderB.fields);
+      = goalCases(fieldsV, fieldsB);
 
   private static List<TypeSpec> stepInterfaces(AbstractGoalContext goal) {
     return transform(abstractSteps.apply(goal), asStepInterface);
   }
 
   private static final Function<AbstractGoalContext, List<MethodSpec>> steps
-      = goalCases(BuilderV.steps, BuilderB.steps);
+      = goalCases(stepsV, stepsB);
 
   static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
     return classBuilder(builderImplType(goal))

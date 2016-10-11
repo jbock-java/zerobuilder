@@ -34,21 +34,21 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class BuilderV {
 
-  static final Function<RegularGoalContext, List<FieldSpec>> fields
+  static final Function<RegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
     List<FieldSpec> builder = new ArrayList<>();
-    DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+    DtoBuildersContext.BuildersContext context = DtoRegularGoalContext.buildersContext.apply(goal);
     builder.addAll(isInstance.test(goal)
-        ? singletonList(buildersContext.field())
+        ? singletonList(context.field())
         : emptyList());
-    List<RegularStep> steps = regularSteps.apply(goal);
-    builder.addAll(steps.stream().limit(steps.size() - 1)
+    regularSteps.apply(goal).stream()
+        .limit(regularSteps.apply(goal).size() - 1)
         .map(RegularStep::field)
-        .collect(Collectors.toList()));
+        .forEach(builder::add);
     return builder;
   };
 
-  static final Function<RegularGoalContext, List<MethodSpec>> steps
+  static final Function<RegularGoalContext, List<MethodSpec>> stepsV
       = goal -> {
     List<RegularStep> steps = regularSteps.apply(goal);
     List<MethodSpec> builder = new ArrayList<>();

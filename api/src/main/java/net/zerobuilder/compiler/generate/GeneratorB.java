@@ -54,9 +54,9 @@ final class GeneratorB {
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
         .returns(updaterType(goal))
         .addExceptions(thrownTypes(goal, asList(getterThrownTypes, setterThrownTypes)))
-        .addCode(goal.goal.steps.stream().map(nullChecks(goal)).collect(join))
+        .addCode(goal.steps().stream().map(nullChecks(goal)).collect(join))
         .addCode(initializeUpdater(goal, updater))
-        .addCode(goal.goal.steps.stream().map(copy(goal)).collect(join))
+        .addCode(goal.steps().stream().map(copy(goal)).collect(join))
         .addStatement("return $N", updater)
         .addModifiers(modifiers)
         .build();
@@ -67,7 +67,7 @@ final class GeneratorB {
                                            List<Function<AbstractBeanStep, List<TypeName>>> functions) {
     Set<TypeName> thrownTypes = new HashSet<>();
     for (Function<AbstractBeanStep, List<TypeName>> function : functions) {
-      thrownTypes.addAll(goal.goal.steps.stream()
+      thrownTypes.addAll(goal.steps().stream()
           .map(function)
           .map(List::stream)
           .flatMap(Function.identity())
@@ -159,7 +159,7 @@ final class GeneratorB {
     ClassName type = goal.goal.details.goalType;
     FieldSpec cache = goal.builders.cache;
     MethodSpec method = methodBuilder(name + "Builder")
-        .returns(goal.goal.steps.get(0).thisType)
+        .returns(goal.steps().get(0).thisType)
         .addModifiers(goal.goal.details.goalOptions.builderAccess.modifiers(STATIC))
         .addExceptions(goal.builders.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
