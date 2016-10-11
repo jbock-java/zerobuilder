@@ -121,6 +121,23 @@ final class Utilities {
     return emptyList();
   }
 
+  /**
+   * @param typeName type
+   * @return first type argument, if any
+   * @throws IllegalArgumentException if type has multiple type arguments
+   */
+  static Optional<TypeName> onlyTypeArgument(TypeName typeName) {
+    List<TypeName> types = typeArguments(typeName);
+    switch (types.size()) {
+      case 0:
+        return Optional.empty();
+      case 1:
+        return Optional.of(types.get(0));
+      default:
+        throw new IllegalArgumentException("multiple type arguments");
+    }
+  }
+
   static <X, E> List<E> transform(Collection<X> input, Function<X, E> function) {
     return input.stream().map(function).collect(toList());
   }

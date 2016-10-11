@@ -14,6 +14,7 @@ import static com.squareup.javapoet.ClassName.OBJECT;
 import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.Utilities.distinctFrom;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.onlyTypeArgument;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
 import static net.zerobuilder.compiler.generate.Utilities.typeArguments;
@@ -61,16 +62,6 @@ public final class DtoBeanParameter {
       this.setterThrownTypes = setterThrownTypes;
     }
 
-    public static AccessorPair create(TypeName type, ExecutableElement getter, NullPolicy nullPolicy,
-                                      List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {
-      return new AccessorPair(type, getter.getSimpleName().toString(), nullPolicy,
-          getterThrownTypes, setterThrownTypes);
-    }
-
-    public static AccessorPair create(TypeName type, ExecutableElement getter, NullPolicy nullPolicy) {
-      return new AccessorPair(type, getter.getSimpleName().toString(), nullPolicy, emptyList(), emptyList());
-    }
-
     @Override
     public <R> R accept(BeanParameterCases<R> cases) {
       return cases.accessorPair(this);
@@ -107,46 +98,47 @@ public final class DtoBeanParameter {
       this.iterationVar = iterationVar;
     }
 
-    /**
-     * @param type              should be a subclass of {@link java.util.Collection}
-     * @param getter            getter name
-     * @param nullPolicy        null policy
-     * @param getterThrownTypes thrown types
-     * @return lone getter
-     * @throws IllegalArgumentException if {@code type} has more than one type parameter
-     */
-    public static LoneGetter create(TypeName type, String getter, NullPolicy nullPolicy,
-                                    List<TypeName> getterThrownTypes) {
-      TypeName collectionType = rawTypeArgument(type).orElse(OBJECT);
-      String name = rawClassName(collectionType)
-          .map(ClassName::simpleName)
-          .map(Utilities::downcase)
-          .orElseThrow(IllegalStateException::new);
-      ParameterSpec iterationVar = parameterSpec(collectionType, name);
-      return new LoneGetter(type, getter, nullPolicy, iterationVar, getterThrownTypes);
-    }
-
-    /**
-     * @param typeName type
-     * @return raw first type argument, if any
-     * @throws IllegalArgumentException if type has multiple type parameters
-     */
-    private static Optional<TypeName> rawTypeArgument(TypeName typeName) {
-      List<TypeName> types = typeArguments(typeName);
-      switch (types.size()) {
-        case 0:
-          return Optional.empty();
-        case 1:
-          return Optional.of(types.get(0));
-        default:
-          throw new IllegalArgumentException("multiple type parameters");
-      }
-    }
-
     @Override
     public <R> R accept(BeanParameterCases<R> cases) {
       return cases.loneGetter(this);
     }
+  }
+
+  /**
+   * Creates a parameter object that describes a standard accessor pair.
+   *
+   * @param type              the type returned by the getter
+   * @param getter            getter name
+   * @param nullPolicy        null policy
+   * @param getterThrownTypes thrown types
+   * @param setterThrownTypes thrown types
+   * @return accessor pair
+   */
+  public static AbstractBeanParameter accessorPair(TypeName type, String getter, NullPolicy nullPolicy,
+                                                   List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {
+    return new AccessorPair(type, getter, nullPolicy,
+        getterThrownTypes, setterThrownTypes);
+  }
+
+  /**
+   * Creates a parameter object that describes a lone getter accessor.
+   *
+   * @param type              should be a subclass of {@link java.util.Collection}
+   * @param getter            getter name
+   * @param nullPolicy        null policy
+   * @param getterThrownTypes thrown types
+   * @return lone getter
+   * @throws IllegalArgumentException if {@code type} has more than one type parameter
+   */
+  public static AbstractBeanParameter loneGetter(TypeName type, String getter, NullPolicy nullPolicy,
+                                                 List<TypeName> getterThrownTypes) {
+    TypeName collectionType = onlyTypeArgument(type).orElse(OBJECT);
+    String name = rawClassName(collectionType)
+        .map(ClassName::simpleName)
+        .map(Utilities::downcase)
+        .orElseThrow(IllegalStateException::new);
+    ParameterSpec iterationVar = parameterSpec(collectionType, name);
+    return new LoneGetter(type, getter, nullPolicy, iterationVar, getterThrownTypes);
   }
 
   private DtoBeanParameter() {

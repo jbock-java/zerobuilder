@@ -5,6 +5,7 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
+import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
@@ -141,11 +142,12 @@ final class ProjectionValidator {
       Step stepAnnotation = getter.getAnnotation(Step.class);
       TypeName type = TypeName.get(getter.getReturnType());
       NullPolicy nullPolicy = TmpValidParameter.nullPolicy(getter.getReturnType(), stepAnnotation, goalAnnotation);
-      AccessorPair accessorPair = AccessorPair.create(type, getter, nullPolicy, thrownTypes(getter), thrownTypes(setter));
+      AbstractBeanParameter accessorPair = DtoBeanParameter.accessorPair(type, getter.getSimpleName().toString(), nullPolicy,
+          thrownTypes(getter), thrownTypes(setter));
       return new TmpAccessorPair(getter, ofNullable(stepAnnotation), accessorPair);
     }
 
-    static TmpAccessorPair createLoneGetter(ExecutableElement getter, LoneGetter loneGetter) {
+    static TmpAccessorPair createLoneGetter(ExecutableElement getter, AbstractBeanParameter loneGetter) {
       Step stepAnnotation = getter.getAnnotation(Step.class);
       return new TmpAccessorPair(getter, ofNullable(stepAnnotation), loneGetter);
     }
