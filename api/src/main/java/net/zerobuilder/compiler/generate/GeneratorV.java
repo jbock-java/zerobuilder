@@ -141,7 +141,7 @@ final class GeneratorV {
     BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
     if (buildersContext.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = buildersContext.cache;
-      String updaterField = updaterField(goal);
+      FieldSpec updaterField = updaterField(goal);
       return statement("$T $N = $N.get().$N",
           updater.type, updater, cache, updaterField);
     } else {

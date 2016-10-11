@@ -60,7 +60,7 @@ final class Updater {
   }
 
   private static final Function<BeanGoalContext, CodeBlock> returnBean
-      = goal -> statement("return this.$N", goal.goal.field);
+      = goal -> statement("return this.$N", goal.goal.bean());
 
   private static final Function<AbstractGoalContext, CodeBlock> invoke
       = goalCases(regularInvoke, returnBean);

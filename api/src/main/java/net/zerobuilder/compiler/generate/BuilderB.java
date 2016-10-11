@@ -33,7 +33,7 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 final class BuilderB {
 
   static final Function<BeanGoalContext, List<FieldSpec>> fields
-      = goal -> singletonList(goal.goal.field);
+      = goal -> singletonList(goal.goal.bean());
 
   static final Function<BeanGoalContext, List<MethodSpec>> steps
       = goal -> {
@@ -81,7 +81,7 @@ final class BuilderB {
         .addExceptions(step.accessorPair.setterThrownTypes)
         .returns(step.nextType)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
-        .addStatement("this.$N.$L($N)", goal.goal.field, step.accessorPair.setterName(), emptyColl)
+        .addStatement("this.$N.$L($N)", goal.goal.bean(), step.accessorPair.setterName(), emptyColl)
         .addCode(regularFinalBlock(goal, isLast))
         .addModifiers(PUBLIC)
         .build());
@@ -104,7 +104,7 @@ final class BuilderB {
 
   private static CodeBlock regularFinalBlock(BeanGoalContext goal, boolean isLast) {
     return isLast
-        ? statement("return this.$N", goal.goal.field)
+        ? statement("return this.$N", goal.goal.bean())
         : statement("return this");
   }
 
@@ -124,7 +124,7 @@ final class BuilderB {
         .addCode(nullCheck(parameter))
         .beginControlFlow("for ($T $N : $N)",
             iterationVar.type, iterationVar, parameter)
-        .addStatement("this.$N.$L().add($N)", goal.goal.field,
+        .addStatement("this.$N.$L().add($N)", goal.goal.bean(),
             step.loneGetter.getter, iterationVar)
         .endControlFlow()
         .addCode(regularFinalBlock(goal, isLast))
@@ -141,7 +141,7 @@ final class BuilderB {
         .addModifiers(PUBLIC)
         .returns(step.nextType)
         .addCode(nullCheck.apply(step))
-        .addStatement("this.$N.$L($N)", goal.goal.field, step.accessorPair.setterName(), parameter)
+        .addStatement("this.$N.$L($N)", goal.goal.bean(), step.accessorPair.setterName(), parameter)
         .addCode(regularFinalBlock(goal, isLast)).build();
   }
 

@@ -20,6 +20,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.Builder.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.Builder.defineContract;
+import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractGoalDetails;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
@@ -95,23 +96,17 @@ public final class Generator {
 
   private static List<FieldSpec> instanceFields(Goals analysisResult,
                                                 List<AbstractGoalContext> goals) {
-    if (!analysisResult.buildersContext.lifecycle.recycle()) {
+    if (analysisResult.buildersContext.lifecycle == NEW_INSTANCE) {
       return emptyList();
     }
     List<FieldSpec> builder = new ArrayList<>();
     for (AbstractGoalContext goal : goals) {
       AbstractGoalDetails details = abstractGoalDetails.apply(goal);
       if (details.goalOptions.toBuilder) {
-        ClassName updaterType = updaterType(goal);
-        builder.add(FieldSpec.builder(updaterType,
-            updaterField(goal), PRIVATE, FINAL)
-            .initializer("new $T()", updaterType).build());
+        builder.add(updaterField(goal));
       }
       if (details.goalOptions.builder) {
-        ClassName stepsType = builderImplType(goal);
-        builder.add(FieldSpec.builder(stepsType,
-            stepsField(goal), PRIVATE, FINAL)
-            .initializer("new $T()", stepsType).build());
+        builder.add(stepsField(goal));
       }
     }
     return builder;
@@ -127,12 +122,18 @@ public final class Generator {
     return transform(goals.goals, goal -> goal.withContext(goals.buildersContext));
   }
 
-  static String updaterField(AbstractGoalContext goal) {
-    return downcase(goalName.apply(goal) + "Updater");
+  static FieldSpec updaterField(AbstractGoalContext goal) {
+    ClassName type = updaterType(goal);
+    return FieldSpec.builder(type, downcase(goalName.apply(goal) + "Updater"), PRIVATE, FINAL)
+        .initializer("new $T()", type)
+        .build();
   }
 
-  static String stepsField(AbstractGoalContext goal) {
-    return downcase(goalName.apply(goal) + "BuilderImpl");
+  static FieldSpec stepsField(AbstractGoalContext goal) {
+    ClassName type = builderImplType(goal);
+    return FieldSpec.builder(type, downcase(goalName.apply(goal) + "BuilderImpl"), PRIVATE, FINAL)
+        .initializer("new $T()", type)
+        .build();
   }
 
   private static final class Goals {

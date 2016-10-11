@@ -32,7 +32,7 @@ import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 final class UpdaterB {
 
   static final Function<BeanGoalContext, List<FieldSpec>> fields
-      = goal -> singletonList(goal.goal.field);
+      = goal -> singletonList(goal.goal.bean());
 
   static final Function<BeanGoalContext, List<MethodSpec>> updateMethods
       = goal -> {
@@ -79,7 +79,7 @@ final class UpdaterB {
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)",
-            goal.goal.field, step.accessorPair.setterName(), emptyColl)
+            goal.goal.bean(), step.accessorPair.setterName(), emptyColl)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build());
@@ -93,7 +93,7 @@ final class UpdaterB {
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
-            goal.goal.field, step.accessorPair.setterName(), parameter)
+            goal.goal.bean(), step.accessorPair.setterName(), parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
@@ -120,7 +120,7 @@ final class UpdaterB {
         .addCode(clearCollection(goal, step))
         .beginControlFlow("for ($T $N : $N)", iterationVar.type, iterationVar, name)
         .addStatement("this.$N.$N().add($N)",
-            goal.goal.field, step.loneGetter.getter, iterationVar)
+            goal.goal.bean(), step.loneGetter.getter, iterationVar)
         .endControlFlow()
         .addStatement("return this")
         .addModifiers(PUBLIC)
@@ -139,7 +139,7 @@ final class UpdaterB {
 
   private static CodeBlock clearCollection(BeanGoalContext goal, LoneGetterStep step) {
     return CodeBlock.builder().addStatement("this.$N.$N().clear()",
-        goal.goal.field, step.loneGetter.getter).build();
+        goal.goal.bean(), step.loneGetter.getter).build();
   }
 
   private UpdaterB() {

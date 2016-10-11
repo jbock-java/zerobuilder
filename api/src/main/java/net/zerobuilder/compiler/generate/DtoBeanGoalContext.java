@@ -20,21 +20,26 @@ final class DtoBeanGoalContext {
 
     final List<? extends AbstractBeanStep> steps;
     final BeanGoalDetails details;
-    final FieldSpec field;
 
     private BeanGoal(BeanGoalDetails details,
-                     List<? extends AbstractBeanStep> steps, FieldSpec field) {
+                     List<? extends AbstractBeanStep> steps) {
       this.steps = steps;
       this.details = details;
-      this.field = field;
     }
 
-    static BeanGoal create(BeanGoalDetails goal,
+    static BeanGoal create(BeanGoalDetails details,
                            List<? extends AbstractBeanStep> steps) {
-      FieldSpec field = fieldSpec(goal.goalType,
-          downcase(goal.goalType.simpleName()), PRIVATE);
-      return new BeanGoal(goal, steps, field);
+      return new BeanGoal(details, steps);
+    }
 
+    /**
+     * A mutable field that holds an instance of the bean type.
+     *
+     * @return field spec
+     */
+    FieldSpec bean() {
+      return fieldSpec(details.goalType,
+          downcase(details.goalType.simpleName()), PRIVATE);
     }
 
     @Override
