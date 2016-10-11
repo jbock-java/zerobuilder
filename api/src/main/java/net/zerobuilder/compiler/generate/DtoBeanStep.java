@@ -39,18 +39,14 @@ final class DtoBeanStep {
 
   static final class AccessorPairStep extends AbstractBeanStep {
     final AccessorPair accessorPair;
-    final String setter;
 
-    private AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
-                             String setter) {
+    private AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair) {
       super(thisType, nextType);
       this.accessorPair = accessorPair;
-      this.setter = setter;
     }
 
-    static AccessorPairStep create(ClassName thisType, TypeName nextType, AccessorPair accessorPair,
-                                          String setter) {
-      return new AccessorPairStep(thisType, nextType, accessorPair, setter);
+    static AccessorPairStep create(ClassName thisType, TypeName nextType, AccessorPair accessorPair) {
+      return new AccessorPairStep(thisType, nextType, accessorPair);
     }
 
     Optional<CollectionInfo> emptyOption() {

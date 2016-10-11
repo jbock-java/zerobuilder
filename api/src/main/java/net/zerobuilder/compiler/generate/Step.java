@@ -14,10 +14,10 @@ import static net.zerobuilder.compiler.generate.DtoStep.abstractParameter;
 import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.DtoStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoStep.stepCases;
-import static net.zerobuilder.compiler.generate.StepContextB.beanStepInterface;
-import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
+import static net.zerobuilder.compiler.generate.StepB.beanStepInterface;
+import static net.zerobuilder.compiler.generate.StepV.regularStepInterface;
 
-final class StepContext {
+final class Step {
 
   static final Function<AbstractStep, CodeBlock> nullCheck
       = always(step -> {
@@ -32,7 +32,7 @@ final class StepContext {
   static final Function<AbstractStep, TypeSpec> asStepInterface
       = asFunction(stepCases(regularStepInterface, beanStepInterface));
 
-  private StepContext() {
+  private Step() {
     throw new UnsupportedOperationException("no instances");
   }
 }

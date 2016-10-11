@@ -23,13 +23,13 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
-import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
+import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 
-final class UpdaterContextB {
+final class UpdaterB {
 
   static final Function<BeanGoalContext, List<FieldSpec>> fields
       = goal -> singletonList(goal.goal.field);
@@ -78,7 +78,7 @@ final class UpdaterContextB {
         .returns(updaterType(goal))
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)",
-            goal.goal.field, step.setter, emptyColl)
+            goal.goal.field, step.accessorPair.setterName(), emptyColl)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build());
@@ -91,7 +91,7 @@ final class UpdaterContextB {
         .returns(updaterType(goal))
         .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
-            goal.goal.field, step.setter, parameter)
+            goal.goal.field, step.accessorPair.setterName(), parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
@@ -138,7 +138,7 @@ final class UpdaterContextB {
         goal.goal.field, step.loneGetter.getter).build();
   }
 
-  private UpdaterContextB() {
+  private UpdaterB() {
     throw new UnsupportedOperationException("no instances");
   }
 }

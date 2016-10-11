@@ -18,6 +18,7 @@ import static net.zerobuilder.compiler.generate.Utilities.onlyTypeArgument;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
 import static net.zerobuilder.compiler.generate.Utilities.typeArguments;
+import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class DtoBeanParameter {
 
@@ -55,6 +56,10 @@ public final class DtoBeanParameter {
   public static final class AccessorPair extends AbstractBeanParameter {
 
     final List<TypeName> setterThrownTypes;
+
+    String setterName() {
+      return "set" + upcase(name());
+    }
 
     private AccessorPair(TypeName type, String getter, NullPolicy nullPolicy,
                          List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {

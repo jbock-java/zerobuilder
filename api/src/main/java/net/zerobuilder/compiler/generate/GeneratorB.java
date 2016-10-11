@@ -26,7 +26,7 @@ import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
-import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
+import static net.zerobuilder.compiler.generate.Updater.updaterType;
 
 final class GeneratorB {
 
@@ -84,7 +84,7 @@ final class GeneratorB {
         .add(nullCheck(parameter, step.accessorPair))
         .addStatement("$N.$N.$L($N.$N())", updater,
             goal.goal.field,
-            step.setter,
+            step.accessorPair.setterName(),
             parameter,
             step.accessorPair.getter)
         .build();

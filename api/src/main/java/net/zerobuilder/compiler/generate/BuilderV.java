@@ -28,12 +28,12 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.asFunction
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.DtoStep.declaredExceptions;
-import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
+import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
-final class BuilderContextV {
+final class BuilderV {
 
   static final Function<RegularGoalContext, List<FieldSpec>> fields
       = goal -> {
@@ -179,7 +179,7 @@ final class BuilderContextV {
     return CodeBlock.of(String.join(", ", parameterNames));
   }
 
-  private BuilderContextV() {
+  private BuilderV() {
     throw new UnsupportedOperationException("no instances");
   }
 }

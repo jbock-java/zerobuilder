@@ -21,9 +21,9 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
-import static net.zerobuilder.compiler.generate.StepContextV.regularStepInterface;
+import static net.zerobuilder.compiler.generate.StepV.regularStepInterface;
 
-final class StepContextB {
+final class StepB {
 
   static final Function<AbstractBeanStep, TypeSpec> beanStepInterface
       = asFunction(new BeanStepCases<TypeSpec>() {
@@ -65,7 +65,7 @@ final class StepContextB {
         .build();
   }
 
-  private StepContextB() {
+  private StepB() {
     throw new UnsupportedOperationException("no instances");
   }
 }

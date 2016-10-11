@@ -20,7 +20,7 @@ import static net.zerobuilder.compiler.generate.DtoStep.emptyOption;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 
-final class StepContextV {
+final class StepV {
 
   static final Function<AbstractStep, TypeSpec> regularStepInterface
       = step -> interfaceBuilder(step.thisType)
@@ -54,7 +54,7 @@ final class StepContextV {
         .build());
   }
 
-  private StepContextV() {
+  private StepV() {
     throw new UnsupportedOperationException("no instances");
   }
 }

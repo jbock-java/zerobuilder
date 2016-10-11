@@ -20,13 +20,13 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
-import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
-import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
+import static net.zerobuilder.compiler.generate.Step.nullCheck;
+import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 
-final class UpdaterContextV {
+final class UpdaterV {
 
   static final Function<RegularGoalContext, List<FieldSpec>> fields
       = goal -> {
@@ -88,7 +88,7 @@ final class UpdaterContextV {
         .build();
   }
 
-  private UpdaterContextV() {
+  private UpdaterV() {
     throw new UnsupportedOperationException("no instances");
   }
 }

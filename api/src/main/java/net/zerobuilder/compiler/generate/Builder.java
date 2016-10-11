@@ -19,21 +19,21 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
-import static net.zerobuilder.compiler.generate.StepContext.asStepInterface;
+import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.constructor;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 
-final class BuilderContext {
+final class Builder {
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields
-      = goalCases(BuilderContextV.fields, BuilderContextB.fields);
+      = goalCases(BuilderV.fields, BuilderB.fields);
 
   private static List<TypeSpec> stepInterfaces(AbstractGoalContext goal) {
     return transform(abstractSteps.apply(goal), asStepInterface);
   }
 
   private static final Function<AbstractGoalContext, List<MethodSpec>> steps
-      = goalCases(BuilderContextV.steps, BuilderContextB.steps);
+      = goalCases(BuilderV.steps, BuilderB.steps);
 
   static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
     return classBuilder(builderImplType(goal))
@@ -58,7 +58,7 @@ final class BuilderContext {
     return DtoGoalContext.contractName(goalName.apply(goal), buildersContext.generatedType);
   }
 
-  private BuilderContext() {
+  private Builder() {
     throw new UnsupportedOperationException("no instances");
   }
 }

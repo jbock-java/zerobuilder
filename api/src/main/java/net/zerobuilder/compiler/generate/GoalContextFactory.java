@@ -4,6 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.BeanParameterCases;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
@@ -38,24 +39,11 @@ import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class GoalContextFactory {
 
-  static Function<GoalDescription, IGoal> prepareGoal(final ClassName generatedType) {
-    return DtoGoalDescription.asFunction(new GoalDescriptionCases<IGoal>() {
-      @Override
-      public IGoal regularGoal(RegularGoalDescription goal) {
-        return GoalContextFactory.regularGoal(generatedType, goal);
-      }
-      @Override
-      public IGoal beanGoal(BeanGoalDescription goal) {
-        return GoalContextFactory.beanGoal(goal, generatedType);
-      }
-    });
-  }
-
   private static IGoal beanGoal(BeanGoalDescription goal, ClassName generatedType) {
     List<? extends AbstractBeanStep> steps = steps(goal,
         generatedType,
         goal.parameters,
-        beansParameterFactory);
+        beanFactory);
     return DtoBeanGoalContext.BeanGoal.create(goal.details, steps);
   }
 
@@ -64,7 +52,7 @@ final class GoalContextFactory {
     final List<RegularStep> steps = steps(validGoal,
         generatedType,
         validGoal.parameters,
-        regularParameterFactory);
+        regularFactory);
     return DtoGoal.asFunction(new RegularGoalCases<IGoal>() {
       @Override
       public IGoal method(MethodGoalDetails goal) {
@@ -81,7 +69,7 @@ final class GoalContextFactory {
   List<S> steps(GoalDescription goal,
                 ClassName generatedType,
                 List<P> parameters,
-                ParameterFactory<P, S> parameterFactory) {
+                Function<P, StepFactory<S>> factoryFactory) {
     ClassName contractName = contractName(goalName(goal), generatedType);
     TypeName nextType = goalType(goal);
     List<TypeName> thrownTypes = GoalContextFactory.thrownTypes.apply(goal);
@@ -89,25 +77,25 @@ final class GoalContextFactory {
     for (P parameter : reverse(parameters)) {
       String thisName = upcase(parameterName.apply(parameter));
       ClassName thisType = contractName.nestedClass(thisName);
-      builder.add(parameterFactory.create(thisType, nextType, parameter, thrownTypes));
+      StepFactory<S> factory = factoryFactory.apply(parameter);
+      builder.add(factory.create(thisType, nextType, thrownTypes));
       nextType = thisType;
     }
     return reverse(builder);
   }
 
-  private static abstract class ParameterFactory<P extends AbstractParameter, R extends AbstractStep> {
-    abstract R create(ClassName typeThisStep, TypeName typeNextStep, P parameter, List<TypeName> declaredExceptions);
+  private static abstract class StepFactory<R extends AbstractStep> {
+    abstract R create(ClassName thisType, TypeName nextType, List<TypeName> thrownTypes);
   }
 
-  private static final ParameterFactory<AbstractBeanParameter, ? extends AbstractBeanStep> beansParameterFactory
-      = new ParameterFactory<AbstractBeanParameter, AbstractBeanStep>() {
+  private static final Function<AbstractBeanParameter, StepFactory<AbstractBeanStep>> beanFactory
+      = regularParameter -> new StepFactory<AbstractBeanStep>() {
     @Override
-    AbstractBeanStep create(final ClassName thisType, final TypeName nextType, final AbstractBeanParameter validParameter, List<TypeName> declaredExceptions) {
-      return validParameter.accept(new DtoBeanParameter.BeanParameterCases<AbstractBeanStep>() {
+    AbstractBeanStep create(ClassName thisType, TypeName nextType, List<TypeName> declaredExceptions) {
+      return regularParameter.accept(new BeanParameterCases<AbstractBeanStep>() {
         @Override
         public AbstractBeanStep accessorPair(AccessorPair pair) {
-          String setter = "set" + upcase(parameterName.apply(pair));
-          return AccessorPairStep.create(thisType, nextType, pair, setter);
+          return AccessorPairStep.create(thisType, nextType, pair);
         }
         @Override
         public AbstractBeanStep loneGetter(LoneGetter loneGetter) {
@@ -117,13 +105,26 @@ final class GoalContextFactory {
     }
   };
 
-  private static final ParameterFactory<RegularParameter, RegularStep> regularParameterFactory
-      = new ParameterFactory<RegularParameter, RegularStep>() {
+  private static final Function<RegularParameter, StepFactory<RegularStep>> regularFactory
+      = regularParameter -> new StepFactory<RegularStep>() {
     @Override
-    RegularStep create(ClassName thisType, TypeName nextType, RegularParameter validParameter, List<TypeName> declaredExceptions) {
-      return RegularStep.create(thisType, nextType, validParameter, declaredExceptions);
+    RegularStep create(ClassName thisType, TypeName nextType, List<TypeName> declaredExceptions) {
+      return RegularStep.create(thisType, nextType, regularParameter, declaredExceptions);
     }
   };
+
+  static Function<GoalDescription, IGoal> prepareGoal(ClassName generatedType) {
+    return DtoGoalDescription.asFunction(new GoalDescriptionCases<IGoal>() {
+      @Override
+      public IGoal regularGoal(RegularGoalDescription goal) {
+        return GoalContextFactory.regularGoal(generatedType, goal);
+      }
+      @Override
+      public IGoal beanGoal(BeanGoalDescription goal) {
+        return GoalContextFactory.beanGoal(goal, generatedType);
+      }
+    });
+  }
 
   private static final Function<GoalDescription, List<TypeName>> thrownTypes
       = asFunction(new GoalDescriptionCases<List<TypeName>>() {
@@ -136,5 +137,4 @@ final class GoalContextFactory {
       return Collections.emptyList();
     }
   });
-
 }

@@ -23,14 +23,14 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
-import static net.zerobuilder.compiler.generate.StepContext.nullCheck;
+import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
-final class BuilderContextB {
+final class BuilderB {
 
   static final Function<BeanGoalContext, List<FieldSpec>> fields
       = goal -> singletonList(goal.goal.field);
@@ -80,7 +80,7 @@ final class BuilderContextB {
         .addAnnotation(Override.class)
         .returns(step.nextType)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
-        .addStatement("this.$N.$L($N)", goal.goal.field, step.setter, emptyColl)
+        .addStatement("this.$N.$L($N)", goal.goal.field, step.accessorPair.setterName(), emptyColl)
         .addCode(regularFinalBlock(goal, isLast))
         .addModifiers(PUBLIC)
         .build());
@@ -138,11 +138,11 @@ final class BuilderContextB {
         .addModifiers(PUBLIC)
         .returns(step.nextType)
         .addCode(nullCheck.apply(step))
-        .addStatement("this.$N.$L($N)", goal.goal.field, step.setter, parameter)
+        .addStatement("this.$N.$L($N)", goal.goal.field, step.accessorPair.setterName(), parameter)
         .addCode(regularFinalBlock(goal, isLast)).build();
   }
 
-  private BuilderContextB() {
+  private BuilderB() {
     throw new UnsupportedOperationException("no instances");
   }
 }

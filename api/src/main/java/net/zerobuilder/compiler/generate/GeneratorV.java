@@ -32,7 +32,7 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.Generator.stepsField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
-import static net.zerobuilder.compiler.generate.UpdaterContext.updaterType;
+import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;

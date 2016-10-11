@@ -17,7 +17,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.BuilderContextV.regularInvoke;
+import static net.zerobuilder.compiler.generate.BuilderV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
@@ -27,7 +27,7 @@ import static net.zerobuilder.compiler.generate.Utilities.constructor;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
-final class UpdaterContext {
+final class Updater {
 
   static ClassName updaterType(AbstractGoalContext goal) {
     return buildersContext.apply(goal).generatedType.nestedClass(
@@ -35,10 +35,10 @@ final class UpdaterContext {
   }
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields
-      = goalCases(UpdaterContextV.fields, UpdaterContextB.fields);
+      = goalCases(UpdaterV.fields, UpdaterB.fields);
 
   private static final Function<AbstractGoalContext, List<MethodSpec>> updateMethods
-      = goalCases(UpdaterContextV.updateMethods, UpdaterContextB.updateMethods);
+      = goalCases(UpdaterV.updateMethods, UpdaterB.updateMethods);
 
   private static MethodSpec buildMethod(AbstractGoalContext goal) {
     return methodBuilder("build")
@@ -65,7 +65,7 @@ final class UpdaterContext {
   private static final Function<AbstractGoalContext, CodeBlock> invoke
       = goalCases(regularInvoke, returnBean);
 
-  private UpdaterContext() {
+  private Updater() {
     throw new UnsupportedOperationException("no instances");
   }
 }
