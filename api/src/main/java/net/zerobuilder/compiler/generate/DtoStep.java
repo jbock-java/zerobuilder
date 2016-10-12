@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
@@ -23,6 +24,7 @@ import static net.zerobuilder.compiler.generate.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.SET;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.memoize;
 import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
@@ -110,11 +112,16 @@ final class DtoStep {
     final RegularParameter validParameter;
     final List<TypeName> declaredExceptions;
 
+    private final Supplier<FieldSpec> field;
+    private final Supplier<Optional<CollectionInfo>> collectionInfo;
+
     private RegularStep(ClassName thisType, TypeName nextType, RegularParameter validParameter,
                         List<TypeName> declaredExceptions) {
       super(thisType, nextType);
       this.declaredExceptions = declaredExceptions;
       this.validParameter = validParameter;
+      this.field = memoize(() -> fieldSpec(validParameter.type, validParameter.name, PRIVATE));
+      this.collectionInfo = memoize(() -> CollectionInfo.create(validParameter.type, validParameter.name));
     }
 
     static RegularStep create(ClassName thisType, TypeName nextType, RegularParameter parameter,
@@ -122,12 +129,12 @@ final class DtoStep {
       return new RegularStep(thisType, nextType, parameter, declaredExceptions);
     }
 
-    Optional<CollectionInfo> emptyOption() {
-      return CollectionInfo.create(validParameter.type, validParameter.name);
+    Optional<CollectionInfo> collectionInfo() {
+      return collectionInfo.get();
     }
 
     FieldSpec field() {
-      return fieldSpec(validParameter.type, validParameter.name, PRIVATE);
+      return field.get();
     }
 
     @Override
@@ -147,7 +154,7 @@ final class DtoStep {
       return step.acceptBean(validBeanParameter);
     }
   });
-  
+
   static <R> Function<AbstractStep, R> always(final Function<AbstractStep, R> parameterFunction) {
     return asFunction(new StepCases<R>() {
       @Override
@@ -160,18 +167,6 @@ final class DtoStep {
       }
     });
   }
-
-  static final Function<AbstractStep, Optional<CollectionInfo>> emptyOption
-      = asFunction(new StepCases<Optional<CollectionInfo>>() {
-    @Override
-    public Optional<CollectionInfo> regularStep(RegularStep step) {
-      return step.emptyOption();
-    }
-    @Override
-    public Optional<CollectionInfo> beanStep(AbstractBeanStep step) {
-      return step.acceptBean(DtoBeanStep.emptyOption);
-    }
-  });
 
   private DtoStep() {
     throw new UnsupportedOperationException("no instances");

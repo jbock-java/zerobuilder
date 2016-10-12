@@ -10,7 +10,7 @@ import static com.google.testing.compile.JavaFileObjects.forSourceLines;
 import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
 import static net.zerobuilder.compiler.GeneratedLines.GENERATED_ANNOTATION;
 
-public class InstanceTest {
+public class CachedInstanceTest {
 
   @Test
   public void instance() {
@@ -18,7 +18,7 @@ public class InstanceTest {
         "package cube;",
         "import net.zerobuilder.*;",
         "",
-        "@Builders",
+        "@Builders(recycle = true)",
         "final class Sum {",
         "  private final int a;",
         "  @Goal(name = \"sum\") int sum(int b) { return a  + b; };",
@@ -31,18 +31,26 @@ public class InstanceTest {
             "",
             GENERATED_ANNOTATION,
             "public final class SumBuilders {",
-            "  private SumBuilders() {",
-            "    throw new UnsupportedOperationException(\"no instances\");",
+            "  private static final ThreadLocal<SumBuilders> INSTANCE = new ThreadLocal<SumBuilders>() {",
+            "    @Override",
+            "    protected SumBuilders initialValue() {",
+            "      return new SumBuilders();",
+            "    }",
             "  }",
             "",
+            "  private final SumBuilderImpl sumBuilderImpl = new SumBuilderImpl();",
+            "",
+            "  private SumBuilders() {}",
+            "",
             "  public static SumBuilder.B sumBuilder(Sum sum) {",
-            "    SumBuilderImpl sumBuilderImpl = new SumBuilderImpl(sum);",
+            "    SumBuilderImpl sumBuilderImpl = INSTANCE.get().sumBuilderImpl;",
+            "    sumBuilderImpl._sum = sum;",
             "    return sumBuilderImpl;",
             "  }",
             "",
             "  static final class SumBuilderImpl implements SumBuilder.B {",
-            "    private final Sum _sum;",
-            "    private StepsImpl(Sum sum) { this._sum = sum; }",
+            "    private Sum _sum;",
+            "    private StepsImpl() {}",
             "    @Override public int b(int b) {",
             "      return this._sum.sum( b );",
             "    }",

@@ -6,7 +6,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
@@ -28,8 +28,8 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.getterThrownTypes;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.setterThrownTypes;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.NEW_INSTANCE;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.Generator.builderField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
@@ -77,13 +77,13 @@ final class GeneratorB {
     return thrownTypes;
   }
 
-  private static final Function<AbstractBeanStep, CodeBlock> copy(BeanGoalContext goal) {
+  private static Function<AbstractBeanStep, CodeBlock> copy(BeanGoalContext goal) {
     return beanStepCases(
         step -> copyRegular(goal, step),
         step -> copyCollection(goal, step));
   }
 
-  private static final Function<AbstractBeanStep, CodeBlock> nullChecks(BeanGoalContext goal) {
+  private static Function<AbstractBeanStep, CodeBlock> nullChecks(BeanGoalContext goal) {
     return beanStepCases(
         step -> step.accessorPair.nullPolicy == ALLOW
             ? emptyCodeBlock
@@ -114,7 +114,7 @@ final class GeneratorB {
     return CodeBlock.builder()
         .addStatement("$N.$N.$L($N.$N())", updater,
             goal.bean(),
-            step.accessorPair.setterName(),
+            step.accessorPair.setterName.get(),
             parameter,
             step.accessorPair.getter)
         .build();
@@ -127,13 +127,13 @@ final class GeneratorB {
         .beginControlFlow("if ($N.$N() == null)", parameter,
             beanParameter.getter)
         .addStatement("throw new $T($S)",
-            NullPointerException.class, beanParameter.name())
+            NullPointerException.class, beanParameter.name.get())
         .endControlFlow().build();
   }
 
   private static CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec updater) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    FieldSpec cache = goal.builders.cache;
+    FieldSpec cache = goal.builders.cache.get();
     ClassName type = goal.goal.details.goalType;
     builder.add(goal.builders.lifecycle == REUSE_INSTANCES
         ? statement("$T $N = $N.get().$N", updater.type, updater, cache, updaterField(goal))
@@ -155,7 +155,7 @@ final class GeneratorB {
     String name = goal.goal.details.name;
     String builder = downcase(builderType.simpleName());
     ClassName type = goal.goal.details.goalType;
-    FieldSpec cache = goal.builders.cache;
+    FieldSpec cache = goal.builders.cache.get();
     MethodSpec method = methodBuilder(name + "Builder")
         .returns(goal.steps().get(0).thisType)
         .addModifiers(goal.goal.details.goalOptions.builderAccess.modifiers(STATIC))

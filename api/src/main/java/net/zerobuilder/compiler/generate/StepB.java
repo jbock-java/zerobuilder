@@ -72,7 +72,7 @@ final class StepB {
   }
 
   private static MethodSpec iterateCollection(LoneGetterStep step) {
-    String name = step.loneGetter.name();
+    String name = step.loneGetter.name.get();
     TypeName type = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
     return methodBuilder(name)

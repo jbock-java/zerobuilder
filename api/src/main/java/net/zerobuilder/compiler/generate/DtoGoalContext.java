@@ -3,11 +3,11 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.Collections;
@@ -18,8 +18,8 @@ import java.util.function.Predicate;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
@@ -71,7 +71,7 @@ final class DtoGoalContext {
       = asFunction(new GoalCases<BuildersContext>() {
     @Override
     public BuildersContext regularGoal(RegularGoalContext goal) {
-      return DtoRegularGoalContext.buildersContext.apply(goal);
+      return DtoRegularGoal.buildersContext.apply(goal);
     }
     @Override
     public BuildersContext beanGoal(BeanGoalContext goal) {
@@ -88,7 +88,7 @@ final class DtoGoalContext {
       asFunction(new GoalCases<TypeName>() {
         @Override
         public TypeName regularGoal(RegularGoalContext goal) {
-          RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.goalDetails.apply(goal);
+          RegularGoalDetails regularGoalDetails = DtoRegularGoal.goalDetails.apply(goal);
           return regularGoalDetails.goalType;
         }
         @Override
@@ -101,7 +101,7 @@ final class DtoGoalContext {
   static final Function<AbstractGoalContext, String> goalName = asFunction(new GoalCases<String>() {
     @Override
     public String regularGoal(RegularGoalContext goal) {
-      RegularGoalDetails regularGoalDetails = DtoRegularGoalContext.goalDetails.apply(goal);
+      RegularGoalDetails regularGoalDetails = DtoRegularGoal.goalDetails.apply(goal);
       return regularGoalDetails.name;
     }
     @Override
@@ -112,7 +112,7 @@ final class DtoGoalContext {
 
   static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails =
       goalCases(
-          rGoal -> DtoRegularGoalContext.goalDetails.apply(rGoal),
+          rGoal -> DtoRegularGoal.goalDetails.apply(rGoal),
           bGoal -> bGoal.goal.details);
 
   private static final Function<AbstractGoalContext, DtoGoal.GoalOptions> goalOptions
@@ -131,7 +131,7 @@ final class DtoGoalContext {
 
   static final Function<AbstractGoalContext, MethodSpec> builderConstructor =
       goalCases(
-          DtoRegularGoalContext.builderConstructor,
+          DtoRegularGoal.builderConstructor,
           bGoal -> constructorBuilder()
               .addModifiers(PRIVATE)
               .addExceptions(bGoal.builders.lifecycle == REUSE_INSTANCES

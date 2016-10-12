@@ -4,23 +4,22 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
-import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 
-import java.util.Collections;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 
-final class DtoBeanGoalContext {
+final class DtoBeanGoal {
 
   static final class BeanGoal implements IGoal {
 
@@ -85,7 +84,7 @@ final class DtoBeanGoalContext {
     }
   }
 
-  private DtoBeanGoalContext() {
+  private DtoBeanGoal() {
     throw new UnsupportedOperationException("no instances");
   }
 }

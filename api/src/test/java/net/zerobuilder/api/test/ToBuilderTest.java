@@ -2,12 +2,10 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoal;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
-import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
@@ -18,15 +16,12 @@ import org.junit.Test;
 
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
-import static net.zerobuilder.compiler.generate.Access.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.NEW_INSTANCE;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuildersContext;
-import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.STATIC_METHOD;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

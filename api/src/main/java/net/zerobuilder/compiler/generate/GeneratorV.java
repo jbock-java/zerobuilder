@@ -6,14 +6,14 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoCases;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.List;
@@ -24,12 +24,14 @@ import java.util.stream.Collectors;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalDetails;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.goalDetails;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.isInstance;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Generator.builderField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
@@ -138,9 +140,9 @@ final class GeneratorV {
   }
 
   private static CodeBlock initUpdater(RegularGoalContext goal, ParameterSpec updater) {
-    BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
+    BuildersContext buildersContext = DtoRegularGoal.buildersContext.apply(goal);
     if (buildersContext.lifecycle == REUSE_INSTANCES) {
-      FieldSpec cache = buildersContext.cache;
+      FieldSpec cache = buildersContext.cache.get();
       FieldSpec updaterField = updaterField(goal);
       return statement("$T $N = $N.get().$N",
           updater.type, updater, cache, updaterField);
@@ -165,9 +167,9 @@ final class GeneratorV {
         .returns(steps.get(0).thisType)
         .addModifiers(regularGoalDetails.goalOptions.builderAccess.modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
-    BuildersContext context = DtoRegularGoalContext.buildersContext.apply(goal);
+    BuildersContext context = DtoRegularGoal.buildersContext.apply(goal);
     ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));
-    method.addCode(initBuilder(goal, builder, instance));
+    method.addCode(initBuilder(builder, instance).apply(goal));
     if (isInstance.test(goal)) {
       method.addParameter(instance);
     }
@@ -175,15 +177,32 @@ final class GeneratorV {
     return new BuilderMethod(name, methodSpec);
   };
 
-  private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder, ParameterSpec instance) {
-    BuildersContext context = DtoRegularGoalContext.buildersContext.apply(goal);
-    TypeName type = builder.type;
-    FieldSpec cache = context.cache;
-    return context.lifecycle == REUSE_INSTANCES ?
-        statement("$T $N = $N.get().$N", type, builder, cache, builderField(goal)) :
-        isInstance.test(goal) ?
-            statement("$T $N = new $T($N)", type, builder, type, instance) :
-            statement("$T $N = new $T()", type, builder, type);
+  private static Function<RegularGoalContext, CodeBlock> initBuilder(
+      ParameterSpec builder, ParameterSpec instance) {
+    return regularGoalContextCases(
+        cGoal -> {
+          BuildersContext context = DtoRegularGoal.buildersContext.apply(cGoal);
+          TypeName type = builder.type;
+          FieldSpec cache = context.cache.get();
+          return context.lifecycle == REUSE_INSTANCES ?
+              statement("$T $N = $N.get().$N", type, builder, cache, builderField(cGoal)) :
+              statement("$T $N = new $T()", type, builder, type);
+        },
+        mGoal -> {
+          BuildersContext context = DtoRegularGoal.buildersContext.apply(mGoal);
+          TypeName type = builder.type;
+          FieldSpec cache = context.cache.get();
+          return mGoal.methodType() == INSTANCE_METHOD ?
+              context.lifecycle == REUSE_INSTANCES ?
+                  CodeBlock.builder()
+                      .addStatement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal))
+                      .addStatement("$N.$N = $N", builder, mGoal.field(), instance)
+                      .build() :
+                  statement("$T $N = new $T($N)", type, builder, type, instance) :
+              context.lifecycle == REUSE_INSTANCES ?
+                  statement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal)) :
+                  statement("$T $N = new $T()", type, builder, type);
+        });
   }
 
   private static ParameterSpec builderInstance(RegularGoalContext goal) {

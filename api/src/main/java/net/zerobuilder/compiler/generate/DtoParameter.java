@@ -14,8 +14,23 @@ public final class DtoParameter {
     R beanParameter(AbstractBeanParameter parameter);
   }
 
-  public static <R> Function<AbstractParameter, R> asFunction(final ParameterCases<R> cases) {
+  static <R> Function<AbstractParameter, R> asFunction(ParameterCases<R> cases) {
     return parameter -> parameter.acceptParameter(cases);
+  }
+
+  static <R> Function<AbstractParameter, R> parameterCases(
+      Function<RegularParameter, R> regularParameter,
+      Function<AbstractBeanParameter, R> beanParameter) {
+    return asFunction(new ParameterCases<R>() {
+      @Override
+      public R regularParameter(RegularParameter parameter) {
+        return regularParameter.apply(parameter);
+      }
+      @Override
+      public R beanParameter(AbstractBeanParameter parameter) {
+        return beanParameter.apply(parameter);
+      }
+    });
   }
 
   abstract static class AbstractParameter {
@@ -31,6 +46,8 @@ public final class DtoParameter {
      * true if null checks should be added
      */
     final NullPolicy nullPolicy;
+
+    public abstract String name();
 
     AbstractParameter(TypeName type, NullPolicy nullPolicy) {
       this.type = type;
@@ -87,22 +104,19 @@ public final class DtoParameter {
     }
 
     @Override
+    public String name() {
+      return name;
+    }
+
+    @Override
     public <R> R acceptParameter(ParameterCases<R> cases) {
       return cases.regularParameter(this);
     }
   }
 
-  static final Function<AbstractParameter, String> parameterName
-      = asFunction(new ParameterCases<String>() {
-    @Override
-    public String regularParameter(RegularParameter parameter) {
-      return parameter.name;
-    }
-    @Override
-    public String beanParameter(AbstractBeanParameter parameter) {
-      return parameter.name();
-    }
-  });
+  static final Function<AbstractParameter, String> parameterName = parameterCases(
+      parameter -> parameter.name,
+      parameter -> parameter.name.get());
 
   private DtoParameter() {
     throw new UnsupportedOperationException("no instances");

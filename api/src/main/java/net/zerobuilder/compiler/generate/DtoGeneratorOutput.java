@@ -5,7 +5,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle;
+import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 
 import java.util.List;
 import java.util.function.Function;
@@ -77,12 +77,12 @@ public final class DtoGeneratorOutput {
     }
 
     private MethodSpec constructor() {
-      return lifecycle == BuilderLifecycle.REUSE_INSTANCES
-          ? Utilities.constructor(PRIVATE)
-          : constructorBuilder()
-          .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
-          .addModifiers(PRIVATE)
-          .build();
+      return lifecycle == BuilderLifecycle.REUSE_INSTANCES ?
+          Utilities.constructor(PRIVATE) :
+          constructorBuilder()
+              .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
+              .addModifiers(PRIVATE)
+              .build();
     }
 
     /**

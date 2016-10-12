@@ -3,7 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle;
+import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
@@ -22,8 +22,8 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.Builder.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.Builder.defineContract;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.NEW_INSTANCE;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractGoalDetails;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builder;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
@@ -60,7 +60,7 @@ public final class Generator {
     BuilderLifecycle lifecycle = analysisResult.buildersContext.lifecycle;
     List<FieldSpec> fields = new ArrayList<>();
     if (lifecycle == REUSE_INSTANCES) {
-      fields.add(analysisResult.buildersContext.cache);
+      fields.add(analysisResult.buildersContext.cache.get());
     }
     fields.addAll(instanceFields(analysisResult, goals));
     return new GeneratorOutput(methods,
@@ -126,10 +126,10 @@ public final class Generator {
   }
 
   private static final class Goals {
-    private final DtoBuildersContext.BuildersContext buildersContext;
+    private final DtoContext.BuildersContext buildersContext;
     private final List<? extends IGoal> goals;
 
-    private Goals(DtoBuildersContext.BuildersContext buildersContext,
+    private Goals(DtoContext.BuildersContext buildersContext,
                   List<? extends IGoal> goals) {
       this.buildersContext = buildersContext;
       this.goals = goals;

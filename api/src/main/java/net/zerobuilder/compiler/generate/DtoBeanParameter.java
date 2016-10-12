@@ -6,18 +6,16 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 
-import javax.lang.model.element.ExecutableElement;
 import java.util.List;
-import java.util.Optional;
+import java.util.function.Supplier;
 
 import static com.squareup.javapoet.ClassName.OBJECT;
-import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.Utilities.distinctFrom;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.memoize;
 import static net.zerobuilder.compiler.generate.Utilities.onlyTypeArgument;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
-import static net.zerobuilder.compiler.generate.Utilities.typeArguments;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class DtoBeanParameter {
@@ -31,14 +29,22 @@ public final class DtoBeanParameter {
 
     final List<TypeName> getterThrownTypes;
 
+    final Supplier<String> name;
+
     private AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy, List<TypeName> getterThrownTypes) {
       super(type, nullPolicy);
       this.getter = getter;
       this.getterThrownTypes = getterThrownTypes;
+      this.name = memoize(() -> name(getter));
     }
 
-    public String name() {
+    private static String name(String getter) {
       return downcase(getter.substring(getter.startsWith("is") ? 2 : 3));
+    }
+
+    @Override
+    public final String name() {
+      return name.get();
     }
 
     public abstract <R> R accept(BeanParameterCases<R> cases);
@@ -57,14 +63,13 @@ public final class DtoBeanParameter {
 
     final List<TypeName> setterThrownTypes;
 
-    String setterName() {
-      return "set" + upcase(name());
-    }
+    final Supplier<String> setterName;
 
     private AccessorPair(TypeName type, String getter, NullPolicy nullPolicy,
                          List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {
       super(type, getter, nullPolicy, getterThrownTypes);
       this.setterThrownTypes = setterThrownTypes;
+      this.setterName = memoize(() -> "set" + upcase(name.get()));
     }
 
     @Override

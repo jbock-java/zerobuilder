@@ -5,6 +5,8 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 
+import java.util.function.Supplier;
+
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.anonymousClassBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -14,22 +16,12 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.THREAD_LOCAL;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.memoize;
 
-public final class DtoBuildersContext {
+public final class DtoContext {
 
   public enum BuilderLifecycle {
-    REUSE_INSTANCES {
-      @Override
-      boolean recycle() {
-        return true;
-      }
-    }, NEW_INSTANCE {
-      @Override
-      boolean recycle() {
-        return false;
-      }
-    };
-    abstract boolean recycle();
+    REUSE_INSTANCES, NEW_INSTANCE;
   }
 
   public static final class BuildersContext {
@@ -47,20 +39,18 @@ public final class DtoBuildersContext {
      */
     final ClassName type;
 
-
     /**
      * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.
      * Only used when {@link #lifecycle} is
      * {@link BuilderLifecycle#REUSE_INSTANCES REUSE_INSTANCES}.
      */
-    final FieldSpec cache;
+    final Supplier<FieldSpec> cache;
 
-    private BuildersContext(BuilderLifecycle lifecycle, ClassName type, ClassName generatedType,
-                            FieldSpec cache) {
+    private BuildersContext(BuilderLifecycle lifecycle, ClassName type, ClassName generatedType) {
       this.lifecycle = lifecycle;
       this.type = type;
       this.generatedType = generatedType;
-      this.cache = cache;
+      this.cache = memoize(() -> defineCache(generatedType));
     }
   }
 
@@ -76,8 +66,7 @@ public final class DtoBuildersContext {
   public static BuildersContext createBuildersContext(ClassName type,
                                                       ClassName generatedType,
                                                       BuilderLifecycle builderLifecycle) {
-    FieldSpec cache = defineCache(generatedType);
-    return new BuildersContext(builderLifecycle, type, generatedType, cache);
+    return new BuildersContext(builderLifecycle, type, generatedType);
   }
 
   private static FieldSpec defineCache(ClassName generatedType) {
@@ -97,7 +86,7 @@ public final class DtoBuildersContext {
         .build();
   }
 
-  private DtoBuildersContext() {
+  private DtoContext() {
     throw new UnsupportedOperationException("no instances");
   }
 }

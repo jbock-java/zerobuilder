@@ -5,8 +5,9 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
@@ -18,18 +19,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.util.Optional.empty;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.generate.Utilities.asPredicate;
 import static net.zerobuilder.compiler.generate.Utilities.constructor;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.memoize;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 
-final class DtoRegularGoalContext {
+final class DtoRegularGoal {
 
   interface RegularGoalContext extends AbstractGoalContext {
 
@@ -43,7 +48,7 @@ final class DtoRegularGoalContext {
     R methodGoal(MethodGoalContext goal);
   }
 
-  static <R> Function<RegularGoalContext, R> asFunction(final RegularGoalContextCases<R> cases) {
+  static <R> Function<RegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegular(cases);
   }
 
@@ -60,25 +65,6 @@ final class DtoRegularGoalContext {
         return method.apply(goal);
       }
     });
-  }
-
-  static Predicate<RegularGoalContext> regularGoalContextPredicate(
-      Predicate<ConstructorGoalContext> constructor,
-      Predicate<MethodGoalContext> method) {
-    return asPredicate(new RegularGoalContextCases<Boolean>() {
-      @Override
-      public Boolean constructorGoal(ConstructorGoalContext goal) {
-        return constructor.test(goal);
-      }
-      @Override
-      public Boolean methodGoal(MethodGoalContext goal) {
-        return method.test(goal);
-      }
-    });
-  }
-
-  static Predicate<RegularGoalContext> asPredicate(final RegularGoalContextCases<Boolean> cases) {
-    return goal -> goal.acceptRegular(cases);
   }
 
   static final class ConstructorGoal implements IGoal {
@@ -172,21 +158,30 @@ final class DtoRegularGoalContext {
     final BuildersContext builders;
     final MethodGoal goal;
 
+    GoalMethodType methodType() {
+      return goal.details.methodType;
+    }
+
+    private final Supplier<FieldSpec> field;
+
     /**
-     * An instance of {@link BuildersContext#type}.
+     * @return An instance of type {@link BuildersContext#type}.
      */
-    final FieldSpec field() {
-      ClassName type = builders.type;
-      String name = '_' + downcase(type.simpleName());
-      return builders.lifecycle == REUSE_INSTANCES
-          ? fieldSpec(type, name, PRIVATE)
-          : fieldSpec(type, name, PRIVATE, FINAL);
+    FieldSpec field() {
+      return field.get();
     }
 
     MethodGoalContext(MethodGoal goal,
                       BuildersContext builders) {
       this.goal = goal;
       this.builders = builders;
+      this.field = memoize(() -> {
+        ClassName type = builders.type;
+        String name = '_' + downcase(type.simpleName());
+        return builders.lifecycle == REUSE_INSTANCES
+            ? fieldSpec(type, name, PRIVATE)
+            : fieldSpec(type, name, PRIVATE, FINAL);
+      });
     }
 
     @Override
@@ -216,9 +211,9 @@ final class DtoRegularGoalContext {
           mGoal -> mGoal.goal.details);
 
   static final Predicate<RegularGoalContext> isInstance =
-      regularGoalContextPredicate(
+      asPredicate(regularGoalContextCases(
           cGoal -> false,
-          mGoal -> mGoal.goal.details.methodType.isInstance());
+          mGoal -> mGoal.goal.details.methodType == INSTANCE_METHOD));
 
   static final Function<RegularGoalContext, BuildersContext> buildersContext =
       regularGoalContextCases(
@@ -241,7 +236,8 @@ final class DtoRegularGoalContext {
       regularGoalContextCases(
           cGoal -> constructor(PRIVATE),
           mGoal -> {
-            if (!isInstance.test(mGoal)) {
+            if (!isInstance.test(mGoal)
+                || mGoal.builders.lifecycle == REUSE_INSTANCES) {
               return constructor(PRIVATE);
             }
             ClassName type = mGoal.builders.type;
@@ -253,7 +249,7 @@ final class DtoRegularGoalContext {
                 .build();
           });
 
-  private DtoRegularGoalContext() {
+  private DtoRegularGoal() {
     throw new UnsupportedOperationException("no instances");
   }
 }

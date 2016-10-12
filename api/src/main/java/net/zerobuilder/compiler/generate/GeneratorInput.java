@@ -9,14 +9,14 @@ import static java.util.Collections.unmodifiableList;
 public final class GeneratorInput {
 
   public final List<GoalDescription> validGoals;
-  public final DtoBuildersContext.BuildersContext buildersContext;
+  public final DtoContext.BuildersContext buildersContext;
 
-  private GeneratorInput(DtoBuildersContext.BuildersContext buildersContext, List<GoalDescription> validGoals) {
+  private GeneratorInput(DtoContext.BuildersContext buildersContext, List<GoalDescription> validGoals) {
     this.validGoals = validGoals;
     this.buildersContext = buildersContext;
   }
 
-  public static GeneratorInput create(DtoBuildersContext.BuildersContext buildersContext, List<? extends GoalDescription> goalDescriptions) {
+  public static GeneratorInput create(DtoContext.BuildersContext buildersContext, List<? extends GoalDescription> goalDescriptions) {
     return new GeneratorInput(buildersContext, unmodifiableList(goalDescriptions));
   }
 }

@@ -7,8 +7,8 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
-import net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle;
-import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.GeneratorInput;
 
@@ -32,7 +32,7 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersClass;
 import static net.zerobuilder.compiler.analyse.Utilities.appendSuffix;
 import static net.zerobuilder.compiler.common.LessElements.asExecutable;
-import static net.zerobuilder.compiler.generate.DtoBuildersContext.createBuildersContext;
+import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext;
 
 public final class Analyser {
 

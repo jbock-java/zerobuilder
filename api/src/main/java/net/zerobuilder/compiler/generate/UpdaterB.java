@@ -6,10 +6,9 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
-import net.zerobuilder.compiler.generate.DtoBeanStep.BeanStepCases;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
@@ -23,7 +22,6 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoBeanStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
@@ -63,28 +61,28 @@ final class UpdaterB {
     }
     CollectionInfo collectionInfo = maybeEmptyOption.get();
     TypeName type = step.accessorPair.type;
-    String name = step.accessorPair.name();
+    String name = step.accessorPair.name.get();
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(collectionInfo.name)
         .returns(updaterType(goal))
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)",
-            goal.bean(), step.accessorPair.setterName(), emptyColl)
+            goal.bean(), step.accessorPair.setterName.get(), emptyColl)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build());
   }
 
   private static MethodSpec normalUpdate(BeanGoalContext goal, AccessorPairStep step) {
-    String name = step.accessorPair.name();
+    String name = step.accessorPair.name.get();
     ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
         .returns(updaterType(goal))
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
-            goal.bean(), step.accessorPair.setterName(), parameter)
+            goal.bean(), step.accessorPair.setterName.get(), parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
@@ -100,7 +98,7 @@ final class UpdaterB {
   private static MethodSpec iterateCollection(BeanGoalContext goal, LoneGetterStep step) {
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
-    String name = step.loneGetter.name();
+    String name = step.loneGetter.name.get();
     ParameterSpec parameter = parameterSpec(iterable, name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)

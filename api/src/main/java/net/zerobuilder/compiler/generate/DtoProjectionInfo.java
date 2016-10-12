@@ -5,8 +5,10 @@ import com.squareup.javapoet.TypeName;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
+import static net.zerobuilder.compiler.generate.Utilities.asPredicate;
 
 public final class DtoProjectionInfo {
 
@@ -24,8 +26,24 @@ public final class DtoProjectionInfo {
     return projectionInfo -> projectionInfo.accept(cases, null);
   }
 
-  static Predicate<ProjectionInfo> asPredicate(ProjectionInfoCases<Boolean, Void> cases) {
-    return projectionInfo -> projectionInfo.accept(cases, null);
+  static <R> Function<ProjectionInfo, R> projectionInfoCases(
+      Function<ProjectionMethod, R> projectionMethod,
+      Function<FieldAccess, R> fieldAccess,
+      Supplier<R> none) {
+    return asFunction(new ProjectionInfoCases<R, Void>() {
+      @Override
+      public R projectionMethod(ProjectionMethod projection, Void aVoid) {
+        return projectionMethod.apply(projection);
+      }
+      @Override
+      public R fieldAccess(FieldAccess projection, Void aVoid) {
+        return fieldAccess.apply(projection);
+      }
+      @Override
+      public R none() {
+        return none.get();
+      }
+    });
   }
 
   static final class ProjectionMethod implements ProjectionInfo {
@@ -82,37 +100,17 @@ public final class DtoProjectionInfo {
     return new None();
   }
 
-  static final Predicate<ProjectionInfo> isPresent
-      = asPredicate(new ProjectionInfoCases<Boolean, Void>() {
-    @Override
-    public Boolean projectionMethod(ProjectionMethod projection, Void p) {
-      return true;
-    }
-    @Override
-    public Boolean fieldAccess(FieldAccess projection, Void p) {
-      return true;
-    }
-    @Override
-    public Boolean none() {
-      return false;
-    }
-  });
+  static final Predicate<ProjectionInfo> isPresent =
+      asPredicate(projectionInfoCases(
+          projection -> true,
+          projection -> true,
+          () -> false));
 
-  static final Function<ProjectionInfo, List<TypeName>> thrownTypes
-      = asFunction(new ProjectionInfoCases<List<TypeName>, Void>() {
-    @Override
-    public List<TypeName> projectionMethod(ProjectionMethod projection, Void p) {
-      return projection.thrownTypes;
-    }
-    @Override
-    public List<TypeName> fieldAccess(FieldAccess projection, Void p) {
-      return emptyList();
-    }
-    @Override
-    public List<TypeName> none() {
-      return emptyList();
-    }
-  });
+  static final Function<ProjectionInfo, List<TypeName>> thrownTypes =
+      projectionInfoCases(
+          projection -> projection.thrownTypes,
+          projection -> emptyList(),
+          () -> emptyList());
 
   private DtoProjectionInfo() {
     throw new UnsupportedOperationException("no instances");

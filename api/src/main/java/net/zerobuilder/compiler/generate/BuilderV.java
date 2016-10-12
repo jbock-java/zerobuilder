@@ -5,10 +5,10 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContextCases;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -16,14 +16,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.fields;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.fields;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
@@ -34,13 +36,13 @@ final class BuilderV {
 
   static final Function<RegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
-    List<FieldSpec> builder = new ArrayList<>();
-    builder.addAll(presentInstances(fields.apply(goal)));
-    regularSteps.apply(goal).stream()
-        .limit(regularSteps.apply(goal).size() - 1)
-        .map(RegularStep::field)
-        .forEach(builder::add);
-    return builder;
+    List<RegularStep> steps = regularSteps.apply(goal);
+    return Stream.concat(
+        presentInstances(fields.apply(goal)).stream(),
+        steps.stream()
+            .limit(steps.size() - 1)
+            .map(RegularStep::field))
+        .collect(Collectors.toList());
   };
 
   static final Function<RegularGoalContext, List<MethodSpec>> stepsV
@@ -79,7 +81,7 @@ final class BuilderV {
 
   private static Optional<MethodSpec> maybeEmptyCollection(
       RegularStep step, RegularGoalContext goal, boolean isLast) {
-    Optional<CollectionInfo> maybeEmptyOption = step.emptyOption();
+    Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
     }

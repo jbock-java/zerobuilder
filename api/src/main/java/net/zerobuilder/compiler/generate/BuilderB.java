@@ -6,7 +6,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoBeanGoalContext.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
@@ -71,14 +71,14 @@ final class BuilderB {
     }
     DtoStep.CollectionInfo collectionInfo = maybeEmptyOption.get();
     TypeName type = step.accessorPair.type;
-    String name = step.accessorPair.name();
+    String name = step.accessorPair.name.get();
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(collectionInfo.name)
         .addAnnotation(Override.class)
         .addExceptions(step.accessorPair.setterThrownTypes)
         .returns(step.nextType)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
-        .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), emptyColl)
+        .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName.get(), emptyColl)
         .addCode(regularFinalBlock(goal, isLast))
         .addModifiers(PUBLIC)
         .build());
@@ -108,7 +108,7 @@ final class BuilderB {
   private static MethodSpec iterateCollection(LoneGetterStep step,
                                               BeanGoalContext goal,
                                               boolean isLast) {
-    String name = step.loneGetter.name();
+    String name = step.loneGetter.name.get();
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
     ParameterSpec parameter = parameterSpec(iterable, name);
@@ -131,14 +131,14 @@ final class BuilderB {
 
   private static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
     ParameterSpec parameter = step.parameter();
-    return methodBuilder(step.accessorPair.name())
+    return methodBuilder(step.accessorPair.name.get())
         .addAnnotation(Override.class)
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addParameter(parameter)
         .addModifiers(PUBLIC)
         .returns(step.nextType)
         .addCode(nullCheck.apply(step))
-        .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), parameter)
+        .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName.get(), parameter)
         .addCode(regularFinalBlock(goal, isLast)).build();
   }
 

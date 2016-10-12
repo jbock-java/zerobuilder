@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
@@ -187,6 +188,22 @@ final class Utilities {
       return EnumSet.noneOf(Characteristics.class);
     }
   };
+
+  static <R> Supplier<R> memoize(Supplier<R> supplier) {
+    List<R> ref = new ArrayList<>(singletonList(null));
+    return () -> {
+      R element = ref.get(0);
+      if (element == null) {
+        element = supplier.get();
+        ref.set(0, element);
+      }
+      return element;
+    };
+  }
+
+  static <R> Predicate<R> asPredicate(Function<R, Boolean> function) {
+    return r -> function.apply(r);
+  }
 
   static MethodSpec constructor(Modifier... modifiers) {
     return constructorBuilder().addModifiers(modifiers).build();

@@ -11,18 +11,7 @@ import static net.zerobuilder.compiler.generate.Access.PUBLIC;
 public final class DtoGoal {
 
   public enum GoalMethodType {
-    STATIC_METHOD {
-      @Override
-      boolean isInstance() {
-        return false;
-      }
-    }, INSTANCE_METHOD {
-      @Override
-      boolean isInstance() {
-        return true;
-      }
-    };
-    abstract boolean isInstance();
+    STATIC_METHOD, INSTANCE_METHOD;
   }
 
   public static final class GoalOptions {

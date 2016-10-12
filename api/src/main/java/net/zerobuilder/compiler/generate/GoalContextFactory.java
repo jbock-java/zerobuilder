@@ -19,8 +19,8 @@ import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.ConstructorGoal;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.MethodGoal;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoal;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -44,7 +44,7 @@ final class GoalContextFactory {
         generatedType,
         goal.parameters,
         beanFactory);
-    return DtoBeanGoalContext.BeanGoal.create(goal.details, steps, goal.thrownTypes);
+    return DtoBeanGoal.BeanGoal.create(goal.details, steps, goal.thrownTypes);
   }
 
   private static IGoal regularGoal(ClassName generatedType,

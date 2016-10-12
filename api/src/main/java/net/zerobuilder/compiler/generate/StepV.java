@@ -40,7 +40,7 @@ final class StepV {
   }
 
   private static Optional<MethodSpec> emptyCollection(RegularStep step) {
-    Optional<DtoStep.CollectionInfo> maybeEmptyOption = step.emptyOption();
+    Optional<DtoStep.CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
     }

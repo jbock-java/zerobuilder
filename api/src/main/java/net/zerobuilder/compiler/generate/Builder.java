@@ -4,11 +4,13 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
 import java.util.List;
 import java.util.function.Function;
 
+import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -21,6 +23,7 @@ import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
@@ -54,13 +57,17 @@ final class Builder {
     return classBuilder(contractName(goal))
         .addTypes(stepInterfaces(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
-        .addMethod(constructor(PRIVATE))
+        .addMethod(constructorBuilder()
+            .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
+            .addModifiers(PRIVATE)
+            .build())
         .build();
   }
 
   private static ClassName contractName(AbstractGoalContext goal) {
-    DtoBuildersContext.BuildersContext buildersContext = DtoGoalContext.buildersContext.apply(goal);
-    return DtoGoalContext.contractName(goalName.apply(goal), buildersContext.generatedType);
+    BuildersContext context = buildersContext.apply(goal);
+    String name = goalName.apply(goal);
+    return DtoGoalContext.contractName(name, context.generatedType);
   }
 
   private Builder() {
