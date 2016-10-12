@@ -47,16 +47,6 @@ public final class DtoBuildersContext {
      */
     final ClassName type;
 
-    /**
-     * An instance of {@link #type}.
-     * Only used in method goals, where
-     * {@link DtoGoal.MethodGoalDetails#methodType} is
-     * {@link net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType#INSTANCE_METHOD INSTANCE_METHOD}.
-     */
-    final FieldSpec field() {
-      String name = '_' + downcase(type.simpleName());
-      return fieldSpec(type, name, PRIVATE);
-    }
 
     /**
      * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.

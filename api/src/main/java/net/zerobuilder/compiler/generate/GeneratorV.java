@@ -30,7 +30,7 @@ import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
-import static net.zerobuilder.compiler.generate.Generator.stepsField;
+import static net.zerobuilder.compiler.generate.Generator.builderField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
@@ -165,28 +165,30 @@ final class GeneratorV {
         .returns(steps.get(0).thisType)
         .addModifiers(regularGoalDetails.goalOptions.builderAccess.modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
-    method.addCode(initBuilder(goal, builder));
+    BuildersContext context = DtoRegularGoalContext.buildersContext.apply(goal);
+    ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));
+    method.addCode(initBuilder(goal, builder, instance));
     if (isInstance.test(goal)) {
-      BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
-      ParameterSpec parameter = parameterSpec(buildersContext.type,
-          downcase(buildersContext.type.simpleName()));
-      method.addParameter(parameter)
-          .addStatement("$N.$N = $N", builder, buildersContext.field(), parameter);
+      method.addParameter(instance);
     }
     MethodSpec methodSpec = method.addStatement("return $N", builder).build();
     return new BuilderMethod(name, methodSpec);
   };
 
-  private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder) {
-    BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
-    return buildersContext.lifecycle.recycle()
-        ? statement("$T $N = $N.get().$N", builder.type, builder, buildersContext.cache, stepsField(goal))
-        : statement("$T $N = new $T()", builder.type, builder, builder.type);
+  private static CodeBlock initBuilder(RegularGoalContext goal, ParameterSpec builder, ParameterSpec instance) {
+    BuildersContext context = DtoRegularGoalContext.buildersContext.apply(goal);
+    TypeName type = builder.type;
+    FieldSpec cache = context.cache;
+    return context.lifecycle == REUSE_INSTANCES ?
+        statement("$T $N = $N.get().$N", type, builder, cache, builderField(goal)) :
+        isInstance.test(goal) ?
+            statement("$T $N = new $T($N)", type, builder, type, instance) :
+            statement("$T $N = new $T()", type, builder, type);
   }
 
   private static ParameterSpec builderInstance(RegularGoalContext goal) {
-    ClassName stepsType = builderImplType(goal);
-    return parameterSpec(stepsType, downcase(stepsType.simpleName()));
+    ClassName type = builderImplType(goal);
+    return parameterSpec(type, downcase(type.simpleName()));
   }
 
   private static Set<TypeName> thrownByProjections(RegularGoalContext goal) {

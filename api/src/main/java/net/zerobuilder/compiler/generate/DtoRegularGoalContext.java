@@ -1,5 +1,9 @@
 package net.zerobuilder.compiler.generate;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBuildersContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
@@ -11,15 +15,27 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import static com.squareup.javapoet.MethodSpec.constructorBuilder;
+import static java.util.Optional.empty;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.Utilities.constructor;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 
 final class DtoRegularGoalContext {
 
   interface RegularGoalContext extends AbstractGoalContext {
 
     <R> R acceptRegular(RegularGoalContextCases<R> cases);
+    List<String> parameterNames();
+    TypeName type();
   }
 
   interface RegularGoalContextCases<R> {
@@ -29,6 +45,36 @@ final class DtoRegularGoalContext {
 
   static <R> Function<RegularGoalContext, R> asFunction(final RegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegular(cases);
+  }
+
+  static <R> Function<RegularGoalContext, R> regularGoalContextCases(
+      Function<ConstructorGoalContext, R> constructor,
+      Function<MethodGoalContext, R> method) {
+    return asFunction(new RegularGoalContextCases<R>() {
+      @Override
+      public R constructorGoal(ConstructorGoalContext goal) {
+        return constructor.apply(goal);
+      }
+      @Override
+      public R methodGoal(MethodGoalContext goal) {
+        return method.apply(goal);
+      }
+    });
+  }
+
+  static Predicate<RegularGoalContext> regularGoalContextPredicate(
+      Predicate<ConstructorGoalContext> constructor,
+      Predicate<MethodGoalContext> method) {
+    return asPredicate(new RegularGoalContextCases<Boolean>() {
+      @Override
+      public Boolean constructorGoal(ConstructorGoalContext goal) {
+        return constructor.test(goal);
+      }
+      @Override
+      public Boolean methodGoal(MethodGoalContext goal) {
+        return method.test(goal);
+      }
+    });
   }
 
   static Predicate<RegularGoalContext> asPredicate(final RegularGoalContextCases<Boolean> cases) {
@@ -79,6 +125,16 @@ final class DtoRegularGoalContext {
     }
 
     @Override
+    public List<String> parameterNames() {
+      return goal.details.parameterNames;
+    }
+
+    @Override
+    public TypeName type() {
+      return goal.details.goalType;
+    }
+
+    @Override
     public <R> R accept(GoalCases<R> cases) {
       return cases.regularGoal(this);
     }
@@ -112,8 +168,20 @@ final class DtoRegularGoalContext {
 
   static final class MethodGoalContext
       implements RegularGoalContext {
+
     final BuildersContext builders;
     final MethodGoal goal;
+
+    /**
+     * An instance of {@link BuildersContext#type}.
+     */
+    final FieldSpec field() {
+      ClassName type = builders.type;
+      String name = '_' + downcase(type.simpleName());
+      return builders.lifecycle == REUSE_INSTANCES
+          ? fieldSpec(type, name, PRIVATE)
+          : fieldSpec(type, name, PRIVATE, FINAL);
+    }
 
     MethodGoalContext(MethodGoal goal,
                       BuildersContext builders) {
@@ -130,67 +198,60 @@ final class DtoRegularGoalContext {
     public <R> R accept(GoalCases<R> cases) {
       return cases.regularGoal(this);
     }
+
+    @Override
+    public List<String> parameterNames() {
+      return goal.details.parameterNames;
+    }
+
+    @Override
+    public TypeName type() {
+      return goal.details.goalType;
+    }
   }
 
-  static final Function<RegularGoalContext, RegularGoalDetails> goalDetails
-      = asFunction(new RegularGoalContextCases<RegularGoalDetails>() {
-    @Override
-    public RegularGoalDetails constructorGoal(ConstructorGoalContext goal) {
-      return goal.goal.details;
-    }
-    @Override
-    public RegularGoalDetails methodGoal(MethodGoalContext goal) {
-      return goal.goal.details;
-    }
-  });
+  static final Function<RegularGoalContext, RegularGoalDetails> goalDetails =
+      regularGoalContextCases(
+          cGoal -> cGoal.goal.details,
+          mGoal -> mGoal.goal.details);
 
-  static final Predicate<RegularGoalContext> isInstance
-      = asPredicate(new RegularGoalContextCases<Boolean>() {
-    @Override
-    public Boolean constructorGoal(ConstructorGoalContext goal) {
-      return false;
-    }
-    @Override
-    public Boolean methodGoal(MethodGoalContext goal) {
-      return goal.goal.details.methodType.isInstance();
-    }
-  });
+  static final Predicate<RegularGoalContext> isInstance =
+      regularGoalContextPredicate(
+          cGoal -> false,
+          mGoal -> mGoal.goal.details.methodType.isInstance());
 
-  static final Function<RegularGoalContext, BuildersContext> buildersContext
-      = asFunction(new RegularGoalContextCases<BuildersContext>() {
-    @Override
-    public BuildersContext constructorGoal(ConstructorGoalContext goal) {
-      return goal.builders;
-    }
-    @Override
-    public BuildersContext methodGoal(MethodGoalContext goal) {
-      return goal.builders;
-    }
-  });
+  static final Function<RegularGoalContext, BuildersContext> buildersContext =
+      regularGoalContextCases(
+          cGoal -> cGoal.builders,
+          mGoal -> mGoal.builders);
 
-  static final Function<RegularGoalContext, List<TypeName>> thrownTypes
-      = asFunction(new RegularGoalContextCases<List<TypeName>>() {
-    @Override
-    public List<TypeName> constructorGoal(ConstructorGoalContext goal) {
-      return goal.goal.thrownTypes;
-    }
-    @Override
-    public List<TypeName> methodGoal(MethodGoalContext goal) {
-      return goal.goal.thrownTypes;
-    }
-  });
+  static final Function<RegularGoalContext, List<RegularStep>> regularSteps =
+      regularGoalContextCases(
+          cGoal -> cGoal.goal.steps,
+          mGoal -> mGoal.goal.steps);
 
-  static final Function<RegularGoalContext, List<RegularStep>> regularSteps
-      = asFunction(new RegularGoalContextCases<List<RegularStep>>() {
-    @Override
-    public List<RegularStep> constructorGoal(ConstructorGoalContext goal) {
-      return goal.goal.steps;
-    }
-    @Override
-    public List<RegularStep> methodGoal(MethodGoalContext goal) {
-      return goal.goal.steps;
-    }
-  });
+  static final Function<RegularGoalContext, Optional<FieldSpec>> fields =
+      regularGoalContextCases(
+          cGoal -> empty(),
+          mGoal -> isInstance.test(mGoal) ?
+              Optional.of(mGoal.field()) :
+              empty());
+
+  static final Function<RegularGoalContext, MethodSpec> builderConstructor =
+      regularGoalContextCases(
+          cGoal -> constructor(PRIVATE),
+          mGoal -> {
+            if (!isInstance.test(mGoal)) {
+              return constructor(PRIVATE);
+            }
+            ClassName type = mGoal.builders.type;
+            ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
+            return constructorBuilder()
+                .addParameter(parameter)
+                .addStatement("this.$N = $N", mGoal.field(), parameter)
+                .addModifiers(PRIVATE)
+                .build();
+          });
 
   private DtoRegularGoalContext() {
     throw new UnsupportedOperationException("no instances");

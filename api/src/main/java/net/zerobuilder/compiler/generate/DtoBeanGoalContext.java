@@ -76,6 +76,10 @@ final class DtoBeanGoalContext {
       this.builders = builders;
     }
 
+    ClassName type() {
+      return goal.details.goalType;
+    }
+
     public <R> R accept(GoalCases<R> cases) {
       return cases.beanGoal(this);
     }

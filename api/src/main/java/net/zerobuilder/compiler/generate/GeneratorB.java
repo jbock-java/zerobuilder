@@ -14,8 +14,6 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
 import javax.lang.model.element.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +31,7 @@ import static net.zerobuilder.compiler.generate.DtoBeanStep.setterThrownTypes;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
-import static net.zerobuilder.compiler.generate.Generator.stepsField;
+import static net.zerobuilder.compiler.generate.Generator.builderField;
 import static net.zerobuilder.compiler.generate.Generator.updaterField;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
@@ -165,7 +163,7 @@ final class GeneratorB {
             ? Collections.emptyList()
             : goal.goal.thrownTypes)
         .addCode(goal.builders.lifecycle == REUSE_INSTANCES
-            ? statement("$T $N = $N.get().$N", builderType, builder, cache, stepsField(goal))
+            ? statement("$T $N = $N.get().$N", builderType, builder, cache, builderField(goal))
             : statement("$T $N = new $T()", builderType, builder, builderType))
         .addCode(goal.builders.lifecycle == REUSE_INSTANCES
             ? statement("$N.$N = new $T()", builder, goal.bean(), type)

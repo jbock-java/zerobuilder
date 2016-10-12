@@ -41,15 +41,17 @@ final class BuilderB {
       Stream.concat(
           goal.steps().stream()
               .limit(goal.steps().size() - 1)
-              .map(stepToMethods(goal, false).andThen(List::stream))
+              .map(stepToMethods(goal, false))
+              .map(List::stream)
               .flatMap(Function.identity()),
-          stepToMethods(goal, true)
-              .apply(goal.steps().get(goal.steps().size() - 1))
-              .stream())
+          Stream.of(goal.steps().get(goal.steps().size() - 1))
+              .map(stepToMethods(goal, true))
+              .map(List::stream)
+              .flatMap(Function.identity()))
           .collect(toList());
 
-  private static Function<AbstractBeanStep, List<MethodSpec>>
-  stepToMethods(BeanGoalContext goal, boolean isLast) {
+  private static Function<AbstractBeanStep, List<MethodSpec>> stepToMethods(
+      BeanGoalContext goal, boolean isLast) {
     return beanStepCases(
         step -> regularMethods(step, goal, isLast),
         step -> collectionMethods(step, goal, isLast));

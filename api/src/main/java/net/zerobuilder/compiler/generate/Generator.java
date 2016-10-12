@@ -95,7 +95,7 @@ public final class Generator {
         builder.add(updaterField(goal));
       }
       if (details.goalOptions.builder) {
-        builder.add(stepsField(goal));
+        builder.add(builderField(goal));
       }
     }
     return builder;
@@ -118,7 +118,7 @@ public final class Generator {
         .build();
   }
 
-  static FieldSpec stepsField(AbstractGoalContext goal) {
+  static FieldSpec builderField(AbstractGoalContext goal) {
     ClassName type = builderImplType(goal);
     return FieldSpec.builder(type, downcase(goalName.apply(goal) + "BuilderImpl"), PRIVATE, FINAL)
         .initializer("new $T()", type)

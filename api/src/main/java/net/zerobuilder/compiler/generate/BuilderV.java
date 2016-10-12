@@ -16,18 +16,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.asFunction;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.isInstance;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.fields;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
+import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
@@ -37,10 +35,7 @@ final class BuilderV {
   static final Function<RegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
     List<FieldSpec> builder = new ArrayList<>();
-    DtoBuildersContext.BuildersContext context = DtoRegularGoalContext.buildersContext.apply(goal);
-    builder.addAll(isInstance.test(goal)
-        ? singletonList(context.field())
-        : emptyList());
+    builder.addAll(presentInstances(fields.apply(goal)));
     regularSteps.apply(goal).stream()
         .limit(regularSteps.apply(goal).size() - 1)
         .map(RegularStep::field)
@@ -123,31 +118,25 @@ final class BuilderV {
     }
   }
 
-  static final Function<RegularGoalContext, CodeBlock> regularInvoke
-      = asFunction(new RegularGoalContextCases<CodeBlock>() {
-    @Override
-    public CodeBlock constructorGoal(ConstructorGoalContext goal) {
-      CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
-      return statement("return new $T($L)", goal.goal.details.goalType, parameters);
-    }
-    @Override
-    public CodeBlock methodGoal(MethodGoalContext goal) {
-      CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
-      return methodGoalInvocation(goal, parameters);
-    }
-  });
+  static final Function<RegularGoalContext, CodeBlock> regularInvoke =
+      regularGoalContextCases(
+          goal -> statement("return new $T($L)", goal.type(),
+              invocationParameters(goal.parameterNames())),
+          goal ->
+              methodGoalInvocation(goal,
+                  invocationParameters(goal.parameterNames())));
 
   private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final RegularStep step,
                                                                           final CollectionInfo collectionInfo) {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
       public CodeBlock constructorGoal(ConstructorGoalContext goal) {
-        CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
+        CodeBlock parameters = invocationParameters(goal.parameterNames());
         TypeName type = step.validParameter.type;
         String name = step.validParameter.name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
-            .addStatement("return new $T($L)", goal.goal.details.goalType, parameters)
+            .addStatement("return new $T($L)", goal.type(), parameters)
             .build();
       }
       @Override
@@ -165,12 +154,14 @@ final class BuilderV {
 
   private static CodeBlock methodGoalInvocation(MethodGoalContext goal, CodeBlock parameters) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    TypeName type = goal.goal.details.goalType;
+    TypeName type = goal.type();
     String method = goal.goal.details.methodName;
-    builder.add(CodeBlock.of(VOID.equals(type) ? "" : "return "));
-    builder.add(goal.goal.details.methodType == INSTANCE_METHOD
-        ? statement("$N.$N($L)", goal.builders.field(), method, parameters)
-        : statement("$T.$N($L)", goal.builders.type, method, parameters));
+    builder.add(goal.goal.details.methodType == INSTANCE_METHOD ?
+        statement("return this.$N.$N($L)", goal.field(), method, parameters) :
+        CodeBlock.builder()
+            .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
+            .addStatement("$T.$N($L)", goal.builders.type, method, parameters)
+            .build());
     return builder.build();
   }
 

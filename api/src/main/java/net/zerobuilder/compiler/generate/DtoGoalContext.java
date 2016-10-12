@@ -10,21 +10,19 @@ import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoBuildersContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularSteps;
-import static net.zerobuilder.compiler.generate.Utilities.constructor;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
+import static net.zerobuilder.compiler.generate.Utilities.transform;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class DtoGoalContext {
@@ -64,11 +62,9 @@ final class DtoGoalContext {
   }
 
   static List<ClassName> stepInterfaceTypes(AbstractGoalContext goal) {
-    List<ClassName> specs = new ArrayList<>();
-    for (AbstractStep abstractStep : abstractSteps.apply(goal)) {
-      specs.add(abstractStep.thisType);
-    }
-    return specs;
+    return transform(
+        abstractSteps.apply(goal),
+        step -> step.thisType);
   }
 
   static final Function<AbstractGoalContext, BuildersContext> buildersContext
@@ -114,18 +110,10 @@ final class DtoGoalContext {
     }
   });
 
-
-  static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails
-      = asFunction(new GoalCases<AbstractGoalDetails>() {
-    @Override
-    public AbstractGoalDetails regularGoal(RegularGoalContext goal) {
-      return DtoRegularGoalContext.goalDetails.apply(goal);
-    }
-    @Override
-    public AbstractGoalDetails beanGoal(BeanGoalContext goal) {
-      return goal.goal.details;
-    }
-  });
+  static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails =
+      goalCases(
+          rGoal -> DtoRegularGoalContext.goalDetails.apply(rGoal),
+          bGoal -> bGoal.goal.details);
 
   private static final Function<AbstractGoalContext, DtoGoal.GoalOptions> goalOptions
       = abstractGoalDetails.andThen(details -> details.goalOptions);
@@ -136,38 +124,23 @@ final class DtoGoalContext {
   static final Predicate<AbstractGoalContext> toBuilder
       = context -> goalOptions.apply(context).toBuilder;
 
-  static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps
-      = asFunction(new GoalCases<List<AbstractStep>>() {
-    @Override
-    public List<AbstractStep> regularGoal(RegularGoalContext goal) {
-      return unmodifiableList(regularSteps.apply(goal));
-    }
-    @Override
-    public List<AbstractStep> beanGoal(BeanGoalContext goal) {
-      return unmodifiableList(goal.steps());
-    }
-  });
+  static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps =
+      goalCases(
+          rGoal -> unmodifiableList(regularSteps.apply(rGoal)),
+          bGoal -> unmodifiableList(bGoal.steps()));
 
-  static final Function<AbstractGoalContext, MethodSpec> builderConstructor
-      = asFunction(new GoalCases<MethodSpec>() {
-    @Override
-    public MethodSpec regularGoal(RegularGoalContext goal) {
-      return constructor(PRIVATE);
-    }
-    @Override
-    public MethodSpec beanGoal(BeanGoalContext goal) {
-      ClassName type = goal.goal.details.goalType;
-      return constructorBuilder()
-          .addModifiers(PRIVATE)
-          .addExceptions(goal.builders.lifecycle == REUSE_INSTANCES
-              ? Collections.emptyList()
-              : goal.goal.thrownTypes)
-          .addCode(goal.builders.lifecycle == REUSE_INSTANCES
-              ? emptyCodeBlock
-              : statement("this.$N = new $T()", goal.bean(), type))
-          .build();
-    }
-  });
+  static final Function<AbstractGoalContext, MethodSpec> builderConstructor =
+      goalCases(
+          DtoRegularGoalContext.builderConstructor,
+          bGoal -> constructorBuilder()
+              .addModifiers(PRIVATE)
+              .addExceptions(bGoal.builders.lifecycle == REUSE_INSTANCES
+                  ? Collections.emptyList()
+                  : bGoal.goal.thrownTypes)
+              .addCode(bGoal.builders.lifecycle == REUSE_INSTANCES
+                  ? emptyCodeBlock
+                  : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))
+              .build());
 
   static ClassName contractName(String goalName, ClassName generatedType) {
     return generatedType.nestedClass(upcase(goalName + "Builder"));

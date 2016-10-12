@@ -32,11 +32,8 @@ final class UpdaterV {
 
   static final Function<RegularGoalContext, List<FieldSpec>> fields
       = goal -> {
-    DtoBuildersContext.BuildersContext buildersContext = DtoRegularGoalContext.buildersContext.apply(goal);
     List<FieldSpec> builder = new ArrayList<>();
-    if (isInstance.test(goal)) {
-      builder.add(buildersContext.field());
-    }
+    builder.addAll(presentInstances(DtoRegularGoalContext.fields.apply(goal)));
     for (RegularStep step : regularSteps.apply(goal)) {
       String name = step.validParameter.name;
       TypeName type = step.validParameter.type;
