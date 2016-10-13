@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.TypeName;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -19,11 +20,15 @@ public final class DtoProjectionInfo {
   public interface ProjectionInfoCases<R, P> {
     R projectionMethod(ProjectionMethod projection, P p);
     R fieldAccess(FieldAccess projection, P p);
-    R none();
+    R none(P p);
   }
 
   static <R> Function<ProjectionInfo, R> asFunction(ProjectionInfoCases<R, Void> cases) {
     return projectionInfo -> projectionInfo.accept(cases, null);
+  }
+
+  static <R, P> BiFunction<ProjectionInfo, P, R> asBiFunction(ProjectionInfoCases<R, P> cases) {
+    return (projectionInfo, p) -> projectionInfo.accept(cases, p);
   }
 
   static <R> Function<ProjectionInfo, R> projectionInfoCases(
@@ -40,8 +45,28 @@ public final class DtoProjectionInfo {
         return fieldAccess.apply(projection);
       }
       @Override
-      public R none() {
+      public R none(Void aVoid) {
         return none.get();
+      }
+    });
+  }
+
+  static <R, P> BiFunction<ProjectionInfo, P, R> projectionInfoCases(
+      BiFunction<ProjectionMethod, P, R> projectionMethod,
+      BiFunction<FieldAccess, P, R> fieldAccess,
+      Function<P, R> none) {
+    return asBiFunction(new ProjectionInfoCases<R, P>() {
+      @Override
+      public R projectionMethod(ProjectionMethod projection, P p) {
+        return projectionMethod.apply(projection, p);
+      }
+      @Override
+      public R fieldAccess(FieldAccess projection, P p) {
+        return fieldAccess.apply(projection, p);
+      }
+      @Override
+      public R none(P p) {
+        return none.apply(p);
       }
     });
   }
@@ -80,7 +105,7 @@ public final class DtoProjectionInfo {
 
     @Override
     public <R, P> R accept(ProjectionInfoCases<R, P> cases, P p) {
-      return cases.none();
+      return cases.none(p);
     }
   }
 

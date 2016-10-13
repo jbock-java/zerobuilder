@@ -42,7 +42,7 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class GeneratorB {
 
-  static final Function<BeanGoalContext, BuilderMethod> goalToToBuilder
+  static final Function<BeanGoalContext, BuilderMethod> goalToUpdaterB
       = goal -> {
     String name = goal.goal.details.name;
     ClassName type = goal.goal.details.goalType;
@@ -149,7 +149,7 @@ final class GeneratorB {
     return parameterSpec(updaterType, "updater");
   }
 
-  static final Function<BeanGoalContext, BuilderMethod> goalToBuilder
+  static final Function<BeanGoalContext, BuilderMethod> goalToBuilderB
       = goal -> {
     ClassName builderType = builderImplType(goal);
     String name = goal.goal.details.name;

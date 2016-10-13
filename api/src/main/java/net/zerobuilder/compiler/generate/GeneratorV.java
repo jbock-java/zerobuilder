@@ -20,6 +20,7 @@ import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
+import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.isInstance;
@@ -44,7 +46,7 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class GeneratorV {
 
-  static final Function<RegularGoalContext, BuilderMethod> goalToToBuilder =
+  static final Function<RegularGoalContext, BuilderMethod> goalToUpdaterV =
       goal -> {
         RegularGoalDetails details = goalDetails.apply(goal);
         ParameterSpec updater = varUpdater(goal);
@@ -62,9 +64,8 @@ final class GeneratorV {
       };
 
   private static CodeBlock copyBlock(RegularGoalContext goal) {
-    ProjectionInfoCases<CodeBlock, RegularStep> copy = copyField(goal);
     return regularSteps.apply(goal).stream()
-        .map(step -> step.validParameter.projectionInfo.accept(copy, step))
+        .map(copyField(goal))
         .collect(Utilities.join);
   }
 
@@ -78,28 +79,33 @@ final class GeneratorV {
     return builder.build();
   }
 
-  private static ProjectionInfoCases<CodeBlock, RegularStep> copyField(RegularGoalContext goal) {
-    return new ProjectionInfoCases<CodeBlock, RegularStep>() {
-      @Override
-      public CodeBlock projectionMethod(ProjectionMethod projection, RegularStep step) {
-        ParameterSpec parameter = toBuilderParameter(goal);
-        ParameterSpec updater = varUpdater(goal);
-        String field = step.validParameter.name;
-        return statement("$N.$N = $N.$N()",
-            updater, field, parameter, projection.methodName);
-      }
-      @Override
-      public CodeBlock fieldAccess(FieldAccess projection, RegularStep step) {
-        String field = projection.fieldName;
-        ParameterSpec parameter = toBuilderParameter(goal);
-        ParameterSpec updater = varUpdater(goal);
-        return statement("$N.$N = $N.$N",
-            updater, field, parameter, field);
-      }
-      @Override
-      public CodeBlock none() {
-        throw new IllegalStateException("should never happen");
-      }
+  private static Function<RegularStep, CodeBlock> copyField(RegularGoalContext goal) {
+    BiFunction<ProjectionInfo, RegularStep, CodeBlock> copy = projectionInfoCases(
+        copyFromMethod(goal),
+        copyFromField(goal),
+        step -> {
+          throw new IllegalStateException("should never happen");
+        });
+    return step -> copy.apply(step.validParameter.projectionInfo, step);
+  }
+
+  private static BiFunction<FieldAccess, RegularStep, CodeBlock> copyFromField(RegularGoalContext goal) {
+    return (FieldAccess projection, RegularStep step) -> {
+      String field = projection.fieldName;
+      ParameterSpec parameter = toBuilderParameter(goal);
+      ParameterSpec updater = varUpdater(goal);
+      return statement("$N.$N = $N.$N",
+          updater, field, parameter, field);
+    };
+  }
+
+  private static BiFunction<ProjectionMethod, RegularStep, CodeBlock> copyFromMethod(RegularGoalContext goal) {
+    return (ProjectionMethod projection, RegularStep step) -> {
+      ParameterSpec parameter = toBuilderParameter(goal);
+      ParameterSpec updater = varUpdater(goal);
+      String field = step.validParameter.name;
+      return statement("$N.$N = $N.$N()",
+          updater, field, parameter, projection.methodName);
     };
   }
 
@@ -130,11 +136,12 @@ final class GeneratorV {
             .endControlFlow().build();
       }
       @Override
-      public CodeBlock none() {
+      public CodeBlock none(RegularStep step) {
         throw new IllegalStateException("should never happen");
       }
     };
   }
+
   private static ParameterSpec toBuilderParameter(RegularGoalContext goal) {
     RegularGoalDetails details = goalDetails.apply(goal);
     TypeName goalType = details.goalType;
@@ -159,8 +166,7 @@ final class GeneratorV {
     return parameterSpec(updaterType, "updater");
   }
 
-
-  static final Function<RegularGoalContext, BuilderMethod> goalToBuilder
+  static final Function<RegularGoalContext, BuilderMethod> goalToBuilderV
       = goal -> {
     RegularGoalDetails regularGoalDetails = goalDetails.apply(goal);
     List<RegularStep> steps = regularSteps.apply(goal);
@@ -200,21 +206,32 @@ final class GeneratorV {
 
   private static Function<MethodGoalContext, CodeBlock> initMethodBuilder(
       ParameterSpec builder, ParameterSpec instance) {
-    return mGoal -> {
-      BuildersContext context = mGoal.context;
-      TypeName type = builder.type;
-      FieldSpec cache = context.cache.get();
-      return mGoal.methodType() == INSTANCE_METHOD ?
-          context.lifecycle == REUSE_INSTANCES ?
-              CodeBlock.builder()
-                  .addStatement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal))
-                  .addStatement("$N.$N = $N", builder, mGoal.field(), instance)
-                  .build() :
-              statement("$T $N = new $T($N)", type, builder, type, instance) :
-          context.lifecycle == REUSE_INSTANCES ?
-              statement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal)) :
-              statement("$T $N = new $T()", type, builder, type);
-    };
+    return mGoal -> mGoal.methodType() == INSTANCE_METHOD ?
+        initInstanceMethodBuilder(mGoal, builder, instance) :
+        initStaticMethodBuilder(mGoal, builder);
+  }
+
+  private static CodeBlock initInstanceMethodBuilder(
+      MethodGoalContext mGoal, ParameterSpec builder, ParameterSpec instance) {
+    BuildersContext context = mGoal.context;
+    TypeName type = builder.type;
+    FieldSpec cache = context.cache.get();
+    return context.lifecycle == REUSE_INSTANCES ?
+        CodeBlock.builder()
+            .addStatement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal))
+            .addStatement("$N.$N = $N", builder, mGoal.field(), instance)
+            .build() :
+        statement("$T $N = new $T($N)", type, builder, type, instance);
+  }
+
+  private static CodeBlock initStaticMethodBuilder(
+      MethodGoalContext mGoal, ParameterSpec builder) {
+    BuildersContext context = mGoal.context;
+    TypeName type = builder.type;
+    FieldSpec cache = context.cache.get();
+    return context.lifecycle == REUSE_INSTANCES ?
+        statement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal)) :
+        statement("$T $N = new $T()", type, builder, type);
   }
 
   private static ParameterSpec builderInstance(RegularGoalContext goal) {

@@ -3,7 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -30,6 +29,10 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.toBuilder;
+import static net.zerobuilder.compiler.generate.GeneratorB.goalToBuilderB;
+import static net.zerobuilder.compiler.generate.GeneratorB.goalToUpdaterB;
+import static net.zerobuilder.compiler.generate.GeneratorV.goalToBuilderV;
+import static net.zerobuilder.compiler.generate.GeneratorV.goalToUpdaterV;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepareGoal;
 import static net.zerobuilder.compiler.generate.Updater.defineUpdater;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
@@ -47,28 +50,41 @@ public final class Generator {
   public static GeneratorOutput generate(GeneratorInput goals) {
     Function<GoalDescription, IGoal> prepare = prepareGoal(goals.buildersContext.generatedType);
     List<IGoal> builder = transform(goals.validGoals, prepare);
-    return generate(new Goals(goals.buildersContext, builder));
+    return generate(goals.buildersContext, builder);
   }
 
-  private static GeneratorOutput generate(Goals analysisResult) {
-    ClassName generatedType = analysisResult.buildersContext.generatedType;
-    List<AbstractGoalContext> goals = goals(analysisResult);
-    List<BuilderMethod> methods = Stream.concat(
-        goals.stream().filter(builder).map(goalToBuilder),
-        goals.stream().filter(toBuilder).map(goalToToBuilder))
+  private static GeneratorOutput generate(BuildersContext context, List<IGoal> iGoals) {
+    return new GeneratorOutput(
+        methods(goals(context, iGoals)),
+        nestedTypes(goals(context, iGoals)),
+        fields(context, goals(context, iGoals)),
+        context.generatedType,
+        context.lifecycle);
+  }
+
+  private static List<FieldSpec> fields(BuildersContext context, List<AbstractGoalContext> goals) {
+    return Stream.concat(
+        context.lifecycle == REUSE_INSTANCES ?
+            Stream.of(context.cache.get()) :
+            Stream.empty(),
+        context.lifecycle == NEW_INSTANCE ?
+            Stream.empty() :
+            instanceFields(goals).stream())
         .collect(toList());
-    BuilderLifecycle lifecycle = analysisResult.buildersContext.lifecycle;
-    List<FieldSpec> fields = new ArrayList<>();
-    if (lifecycle == REUSE_INSTANCES) {
-      fields.add(analysisResult.buildersContext.cache.get());
-    }
-    fields.addAll(instanceFields(analysisResult, goals));
-    return new GeneratorOutput(methods,
-        nestedGoalTypes(goals), fields, generatedType,
-        lifecycle);
   }
 
-  private static List<TypeSpec> nestedGoalTypes(List<AbstractGoalContext> goals) {
+  private static List<BuilderMethod> methods(List<AbstractGoalContext> goals) {
+    return Stream.concat(
+        goals.stream()
+            .filter(builder)
+            .map(goalToBuilder),
+        goals.stream()
+            .filter(toBuilder)
+            .map(goalToUpdater))
+        .collect(toList());
+  }
+
+  private static List<TypeSpec> nestedTypes(List<AbstractGoalContext> goals) {
     List<TypeSpec> builder = new ArrayList<>();
     for (AbstractGoalContext goal : goals) {
       AbstractGoalDetails details = abstractGoalDetails.apply(goal);
@@ -83,11 +99,7 @@ public final class Generator {
     return builder;
   }
 
-  private static List<FieldSpec> instanceFields(Goals analysisResult,
-                                                List<AbstractGoalContext> goals) {
-    if (analysisResult.buildersContext.lifecycle == NEW_INSTANCE) {
-      return emptyList();
-    }
+  private static List<FieldSpec> instanceFields(List<AbstractGoalContext> goals) {
     List<FieldSpec> builder = new ArrayList<>();
     for (AbstractGoalContext goal : goals) {
       AbstractGoalDetails details = abstractGoalDetails.apply(goal);
@@ -101,14 +113,14 @@ public final class Generator {
     return builder;
   }
 
-  private static final Function<AbstractGoalContext, BuilderMethod> goalToToBuilder
-      = goalCases(GeneratorV.goalToToBuilder, GeneratorB.goalToToBuilder);
+  private static final Function<AbstractGoalContext, BuilderMethod> goalToUpdater
+      = goalCases(goalToUpdaterV, goalToUpdaterB);
 
   private static final Function<AbstractGoalContext, BuilderMethod> goalToBuilder
-      = goalCases(GeneratorV.goalToBuilder, GeneratorB.goalToBuilder);
+      = goalCases(goalToBuilderV, goalToBuilderB);
 
-  private static List<AbstractGoalContext> goals(final Goals goals) {
-    return transform(goals.goals, goal -> goal.withContext(goals.buildersContext));
+  private static List<AbstractGoalContext> goals(BuildersContext context, List<IGoal> goals) {
+    return transform(goals, goal -> goal.withContext(context));
   }
 
   static FieldSpec updaterField(AbstractGoalContext goal) {
@@ -123,16 +135,5 @@ public final class Generator {
     return FieldSpec.builder(type, downcase(goalName.apply(goal) + "BuilderImpl"), PRIVATE, FINAL)
         .initializer("new $T()", type)
         .build();
-  }
-
-  private static final class Goals {
-    private final DtoContext.BuildersContext buildersContext;
-    private final List<? extends IGoal> goals;
-
-    private Goals(DtoContext.BuildersContext buildersContext,
-                  List<? extends IGoal> goals) {
-      this.buildersContext = buildersContext;
-      this.goals = goals;
-    }
   }
 }
