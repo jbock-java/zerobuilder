@@ -8,16 +8,17 @@ classic JavaBeans, also known as POJOs, are still in widespread use.
 Certain frameworks like [JAXB](https://jaxb.java.net/) and
 [JPA](https://en.wikipedia.org/wiki/Java_Persistence_API) require the bean standard.
 
-By definition, a bean always has a public default constructor, and can be manipulated via setters.
+By definition, a bean always has a public default constructor, and can be manipulated <em>in-place</em> via setters.
 This kind of datatype is inherently tied to a programming model based on mutation.
 
-The situation changes if all _create_ and _update_ operations are handled by zerobuilder:
+One way to avoid the <em>destructive updates</em> is by calling `clone()` on your bean.
+But this creates a deep copy, which is often unnecessary.
 
-* Beans are created as if all properties had to be passed to the constructor. 
-  That means that code which creates a bean without invoking _every_ setter will not compile. 
-* Beans are updated as if they were immutable.
-  The generated `static beanToBuilder(Bean bean)` creates a shallow copy. 
-  The original bean is never modified.
+As an alternative to `clone`, zerobuilder's generated `toUpdater` method creates a shallow copy instead.
+Additionally you can choose to use the generated `builder` method.
+
+These two generated methods together allow to create and modify beans without ever calling a setter,
+amd without any destructive updates to beans that are already "built".
 
 ### How?
 
