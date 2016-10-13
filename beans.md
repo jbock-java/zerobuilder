@@ -8,7 +8,7 @@ classic JavaBeans, also known as POJOs, are still in widespread use.
 Certain frameworks like [JAXB](https://jaxb.java.net/) and
 [JPA](https://en.wikipedia.org/wiki/Java_Persistence_API) require the bean standard.
 
-By definition, a bean always has a public default constructor, and can only be manipulated via setters.
+By definition, a bean always has a public default constructor, and can be manipulated via setters.
 This kind of datatype is inherently tied to a programming model based on mutation.
 
 The situation changes if all _create_ and _update_ operations are handled by zerobuilder:
