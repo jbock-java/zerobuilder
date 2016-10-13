@@ -25,17 +25,17 @@ import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-public class ToBuilderTest {
+public class UpdaterTest {
 
   private static final ClassName STRING = ClassName.get(String.class);
   private static final ClassName IO_EXCEPTION = ClassName.get(IOException.class);
 
   // "goal type", see below
-  private static final ClassName TYPE = ClassName.get(ToBuilderTest.class)
+  private static final ClassName TYPE = ClassName.get(UpdaterTest.class)
       .peerClass("MyType");
 
   // the type we wish to generate; in this case, a nested type
-  private static final ClassName GENERATED_TYPE = ClassName.get(ToBuilderTest.class)
+  private static final ClassName GENERATED_TYPE = ClassName.get(UpdaterTest.class)
       .nestedClass("MyTypeBuilders");
 
   /**
@@ -78,7 +78,7 @@ public class ToBuilderTest {
 
     assertThat(generatorOutput.methods().size(), is(1));
     assertThat(generatorOutput.methods().get(0).name(), is(goalName));
-    assertThat(generatorOutput.methods().get(0).method().name, is("myGoalToBuilder"));
+    assertThat(generatorOutput.methods().get(0).method().name, is("myGoalToUpdater"));
     assertThat(generatorOutput.methods().get(0).method().parameters.size(), is(1));
     assertThat(generatorOutput.methods().get(0).method().exceptions, is(singletonList(IO_EXCEPTION)));
     assertThat(generatorOutput.methods().get(0).method().modifiers.contains(Modifier.STATIC), is(true));
