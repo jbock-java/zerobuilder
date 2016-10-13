@@ -47,6 +47,12 @@ public final class DtoParameter {
      */
     final NullPolicy nullPolicy;
 
+    /**
+     * For regular parameters, this is just the parameter name.
+     * For bean goals, it's the truncated, lower case getter name.
+     *
+     * @return parameter name
+     */
     public abstract String name();
 
     AbstractParameter(TypeName type, NullPolicy nullPolicy) {
@@ -116,7 +122,7 @@ public final class DtoParameter {
 
   static final Function<AbstractParameter, String> parameterName = parameterCases(
       parameter -> parameter.name,
-      parameter -> parameter.name.get());
+      parameter -> parameter.name());
 
   private DtoParameter() {
     throw new UnsupportedOperationException("no instances");

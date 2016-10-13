@@ -14,8 +14,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.THREAD_LOCAL;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.generate.Utilities.memoize;
 
 public final class DtoContext {
@@ -50,7 +48,7 @@ public final class DtoContext {
       this.lifecycle = lifecycle;
       this.type = type;
       this.generatedType = generatedType;
-      this.cache = memoize(() -> defineCache(generatedType));
+      this.cache = memoizeCache(generatedType);
     }
   }
 
@@ -69,7 +67,7 @@ public final class DtoContext {
     return new BuildersContext(builderLifecycle, type, generatedType);
   }
 
-  private static FieldSpec defineCache(ClassName generatedType) {
+  private static Supplier<FieldSpec> memoizeCache(ClassName generatedType) {
     ParameterizedTypeName type = ParameterizedTypeName.get(THREAD_LOCAL, generatedType);
     TypeSpec initializer = anonymousClassBuilder("")
         .addSuperinterface(type)
@@ -80,10 +78,10 @@ public final class DtoContext {
             .addStatement("return new $T()", generatedType)
             .build())
         .build();
-    return FieldSpec.builder(type, "INSTANCE")
+    return memoize(() -> FieldSpec.builder(type, "INSTANCE")
         .initializer("$L", initializer)
         .addModifiers(PRIVATE, STATIC, FINAL)
-        .build();
+        .build());
   }
 
   private DtoContext() {

@@ -97,12 +97,12 @@ final class DtoRegularGoal {
       implements RegularGoalContext {
 
     final ConstructorGoal goal;
-    final BuildersContext builders;
+    final BuildersContext context;
 
     ConstructorGoalContext(ConstructorGoal goal,
-                           BuildersContext builders) {
+                           BuildersContext context) {
       this.goal = goal;
-      this.builders = builders;
+      this.context = context;
     }
 
     @Override
@@ -155,7 +155,7 @@ final class DtoRegularGoal {
   static final class MethodGoalContext
       implements RegularGoalContext {
 
-    final BuildersContext builders;
+    final BuildersContext context;
     final MethodGoal goal;
 
     GoalMethodType methodType() {
@@ -172,13 +172,17 @@ final class DtoRegularGoal {
     }
 
     MethodGoalContext(MethodGoal goal,
-                      BuildersContext builders) {
+                      BuildersContext context) {
       this.goal = goal;
-      this.builders = builders;
-      this.field = memoize(() -> {
-        ClassName type = builders.type;
+      this.context = context;
+      this.field = memoizeField(context);
+    }
+
+    private static Supplier<FieldSpec> memoizeField(BuildersContext context) {
+      return memoize(() -> {
+        ClassName type = context.type;
         String name = '_' + downcase(type.simpleName());
-        return builders.lifecycle == REUSE_INSTANCES
+        return context.lifecycle == REUSE_INSTANCES
             ? fieldSpec(type, name, PRIVATE)
             : fieldSpec(type, name, PRIVATE, FINAL);
       });
@@ -217,8 +221,8 @@ final class DtoRegularGoal {
 
   static final Function<RegularGoalContext, BuildersContext> buildersContext =
       regularGoalContextCases(
-          cGoal -> cGoal.builders,
-          mGoal -> mGoal.builders);
+          cGoal -> cGoal.context,
+          mGoal -> mGoal.context);
 
   static final Function<RegularGoalContext, List<RegularStep>> regularSteps =
       regularGoalContextCases(
@@ -237,10 +241,10 @@ final class DtoRegularGoal {
           cGoal -> constructor(PRIVATE),
           mGoal -> {
             if (!isInstance.test(mGoal)
-                || mGoal.builders.lifecycle == REUSE_INSTANCES) {
+                || mGoal.context.lifecycle == REUSE_INSTANCES) {
               return constructor(PRIVATE);
             }
-            ClassName type = mGoal.builders.type;
+            ClassName type = mGoal.context.type;
             ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
             return constructorBuilder()
                 .addParameter(parameter)

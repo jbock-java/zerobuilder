@@ -120,8 +120,19 @@ final class DtoStep {
       super(thisType, nextType);
       this.declaredExceptions = declaredExceptions;
       this.validParameter = validParameter;
-      this.field = memoize(() -> fieldSpec(validParameter.type, validParameter.name, PRIVATE));
-      this.collectionInfo = memoize(() -> CollectionInfo.create(validParameter.type, validParameter.name));
+      this.field = memoizeField(validParameter);
+      this.collectionInfo = memoizeCollectionInfo(validParameter);
+    }
+
+    private static Supplier<Optional<CollectionInfo>> memoizeCollectionInfo(
+        RegularParameter validParameter) {
+      return memoize(() ->
+          CollectionInfo.create(validParameter.type, validParameter.name));
+    }
+
+    private static Supplier<FieldSpec> memoizeField(RegularParameter validParameter) {
+      return memoize(() ->
+          fieldSpec(validParameter.type, validParameter.name, PRIVATE));
     }
 
     static RegularStep create(ClassName thisType, TypeName nextType, RegularParameter parameter,

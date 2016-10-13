@@ -162,7 +162,7 @@ final class BuilderV {
         statement("return this.$N.$N($L)", goal.field(), method, parameters) :
         CodeBlock.builder()
             .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
-            .addStatement("$T.$N($L)", goal.builders.type, method, parameters)
+            .addStatement("$T.$N($L)", goal.context.type, method, parameters)
             .build());
     return builder.build();
   }

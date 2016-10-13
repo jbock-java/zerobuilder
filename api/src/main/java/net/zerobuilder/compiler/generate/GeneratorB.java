@@ -71,7 +71,7 @@ final class GeneratorB {
           .flatMap(Function.identity())
           .collect(Collectors.toList()));
     }
-    if (goal.builders.lifecycle == NEW_INSTANCE) {
+    if (goal.context.lifecycle == NEW_INSTANCE) {
       thrownTypes.addAll(goal.goal.thrownTypes);
     }
     return thrownTypes;
@@ -114,7 +114,7 @@ final class GeneratorB {
     return CodeBlock.builder()
         .addStatement("$N.$N.$L($N.$N())", updater,
             goal.bean(),
-            step.accessorPair.setterName.get(),
+            step.accessorPair.setterName(),
             parameter,
             step.accessorPair.getter)
         .build();
@@ -127,18 +127,18 @@ final class GeneratorB {
         .beginControlFlow("if ($N.$N() == null)", parameter,
             beanParameter.getter)
         .addStatement("throw new $T($S)",
-            NullPointerException.class, beanParameter.name.get())
+            NullPointerException.class, beanParameter.name())
         .endControlFlow().build();
   }
 
   private static CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec updater) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    FieldSpec cache = goal.builders.cache.get();
+    FieldSpec cache = goal.context.cache.get();
     ClassName type = goal.goal.details.goalType;
-    builder.add(goal.builders.lifecycle == REUSE_INSTANCES
+    builder.add(goal.context.lifecycle == REUSE_INSTANCES
         ? statement("$T $N = $N.get().$N", updater.type, updater, cache, updaterField(goal))
         : statement("$T $N = new $T()", updater.type, updater, updater.type));
-    builder.add(goal.builders.lifecycle == REUSE_INSTANCES
+    builder.add(goal.context.lifecycle == REUSE_INSTANCES
         ? statement("$N.$N = new $T()", updater, goal.bean(), type)
         : emptyCodeBlock);
     return builder.build();
@@ -155,17 +155,17 @@ final class GeneratorB {
     String name = goal.goal.details.name;
     String builder = downcase(builderType.simpleName());
     ClassName type = goal.goal.details.goalType;
-    FieldSpec cache = goal.builders.cache.get();
+    FieldSpec cache = goal.context.cache.get();
     MethodSpec method = methodBuilder(name + "Builder")
         .returns(goal.steps().get(0).thisType)
         .addModifiers(goal.goal.details.goalOptions.builderAccess.modifiers(STATIC))
-        .addExceptions(goal.builders.lifecycle == REUSE_INSTANCES
+        .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
             : goal.goal.thrownTypes)
-        .addCode(goal.builders.lifecycle == REUSE_INSTANCES
+        .addCode(goal.context.lifecycle == REUSE_INSTANCES
             ? statement("$T $N = $N.get().$N", builderType, builder, cache, builderField(goal))
             : statement("$T $N = new $T()", builderType, builder, builderType))
-        .addCode(goal.builders.lifecycle == REUSE_INSTANCES
+        .addCode(goal.context.lifecycle == REUSE_INSTANCES
             ? statement("$N.$N = new $T()", builder, goal.bean(), type)
             : emptyCodeBlock)
         .addStatement("return $N", builder)

@@ -11,6 +11,7 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -18,6 +19,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.memoize;
 
 final class DtoBeanGoal {
 
@@ -48,13 +50,14 @@ final class DtoBeanGoal {
 
   static final class BeanGoalContext implements AbstractGoalContext {
 
-    final BuildersContext builders;
+    final BuildersContext context;
     final BeanGoal goal;
+
+    private final Supplier<FieldSpec> bean;
 
     List<AbstractBeanStep> steps() {
       return goal.steps;
     }
-
 
     /**
      * A field that holds an instance of the bean type.
@@ -62,17 +65,24 @@ final class DtoBeanGoal {
      * @return field spec
      */
     FieldSpec bean() {
-      ClassName type = goal.details.goalType;
-      String name = downcase(type.simpleName());
-      return builders.lifecycle == REUSE_INSTANCES
-          ? fieldSpec(type, name, PRIVATE)
-          : fieldSpec(type, name, PRIVATE, FINAL);
+      return bean.get();
     }
 
     BeanGoalContext(BeanGoal goal,
-                    BuildersContext builders) {
+                    BuildersContext context) {
       this.goal = goal;
-      this.builders = builders;
+      this.context = context;
+      this.bean = beanSupplier(goal, context);
+    }
+
+    private static Supplier<FieldSpec> beanSupplier(BeanGoal goal, BuildersContext context) {
+      return memoize(() -> {
+        ClassName type = goal.details.goalType;
+        String name = downcase(type.simpleName());
+        return context.lifecycle == REUSE_INSTANCES
+            ? fieldSpec(type, name, PRIVATE)
+            : fieldSpec(type, name, PRIVATE, FINAL);
+      });
     }
 
     ClassName type() {

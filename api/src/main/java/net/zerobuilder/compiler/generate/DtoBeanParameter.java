@@ -29,17 +29,18 @@ public final class DtoBeanParameter {
 
     final List<TypeName> getterThrownTypes;
 
-    final Supplier<String> name;
+    private final Supplier<String> name;
 
     private AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy, List<TypeName> getterThrownTypes) {
       super(type, nullPolicy);
       this.getter = getter;
       this.getterThrownTypes = getterThrownTypes;
-      this.name = memoize(() -> name(getter));
+      this.name = memoizeName(getter);
     }
 
-    private static String name(String getter) {
-      return downcase(getter.substring(getter.startsWith("is") ? 2 : 3));
+    private static Supplier<String> memoizeName(String getter) {
+      return memoize(() ->
+          downcase(getter.substring(getter.startsWith("is") ? 2 : 3)));
     }
 
     @Override
@@ -63,13 +64,21 @@ public final class DtoBeanParameter {
 
     final List<TypeName> setterThrownTypes;
 
-    final Supplier<String> setterName;
+    private final Supplier<String> setterName;
 
     private AccessorPair(TypeName type, String getter, NullPolicy nullPolicy,
                          List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {
       super(type, getter, nullPolicy, getterThrownTypes);
       this.setterThrownTypes = setterThrownTypes;
-      this.setterName = memoize(() -> "set" + upcase(name.get()));
+      this.setterName = memoizeSetterName(name());
+    }
+
+    private static Supplier<String> memoizeSetterName(String name) {
+      return memoize(() -> "set" + upcase(name));
+    }
+
+    String setterName() {
+      return setterName.get();
     }
 
     @Override

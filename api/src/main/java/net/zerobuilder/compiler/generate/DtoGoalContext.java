@@ -75,7 +75,7 @@ final class DtoGoalContext {
     }
     @Override
     public BuildersContext beanGoal(BeanGoalContext goal) {
-      return goal.builders;
+      return goal.context;
     }
   });
 
@@ -134,10 +134,10 @@ final class DtoGoalContext {
           DtoRegularGoal.builderConstructor,
           bGoal -> constructorBuilder()
               .addModifiers(PRIVATE)
-              .addExceptions(bGoal.builders.lifecycle == REUSE_INSTANCES
+              .addExceptions(bGoal.context.lifecycle == REUSE_INSTANCES
                   ? Collections.emptyList()
                   : bGoal.goal.thrownTypes)
-              .addCode(bGoal.builders.lifecycle == REUSE_INSTANCES
+              .addCode(bGoal.context.lifecycle == REUSE_INSTANCES
                   ? emptyCodeBlock
                   : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))
               .build());

@@ -13,6 +13,8 @@ import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoCases;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -180,29 +182,39 @@ final class GeneratorV {
   private static Function<RegularGoalContext, CodeBlock> initBuilder(
       ParameterSpec builder, ParameterSpec instance) {
     return regularGoalContextCases(
-        cGoal -> {
-          BuildersContext context = DtoRegularGoal.buildersContext.apply(cGoal);
-          TypeName type = builder.type;
-          FieldSpec cache = context.cache.get();
-          return context.lifecycle == REUSE_INSTANCES ?
-              statement("$T $N = $N.get().$N", type, builder, cache, builderField(cGoal)) :
+        initConstructorBuilder(builder),
+        initMethodBuilder(builder, instance));
+  }
+
+  private static Function<ConstructorGoalContext, CodeBlock> initConstructorBuilder(
+      ParameterSpec builder) {
+    return cGoal -> {
+      BuildersContext context = cGoal.context;
+      TypeName type = builder.type;
+      FieldSpec cache = context.cache.get();
+      return context.lifecycle == REUSE_INSTANCES ?
+          statement("$T $N = $N.get().$N", type, builder, cache, builderField(cGoal)) :
+          statement("$T $N = new $T()", type, builder, type);
+    };
+  }
+
+  private static Function<MethodGoalContext, CodeBlock> initMethodBuilder(
+      ParameterSpec builder, ParameterSpec instance) {
+    return mGoal -> {
+      BuildersContext context = mGoal.context;
+      TypeName type = builder.type;
+      FieldSpec cache = context.cache.get();
+      return mGoal.methodType() == INSTANCE_METHOD ?
+          context.lifecycle == REUSE_INSTANCES ?
+              CodeBlock.builder()
+                  .addStatement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal))
+                  .addStatement("$N.$N = $N", builder, mGoal.field(), instance)
+                  .build() :
+              statement("$T $N = new $T($N)", type, builder, type, instance) :
+          context.lifecycle == REUSE_INSTANCES ?
+              statement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal)) :
               statement("$T $N = new $T()", type, builder, type);
-        },
-        mGoal -> {
-          BuildersContext context = DtoRegularGoal.buildersContext.apply(mGoal);
-          TypeName type = builder.type;
-          FieldSpec cache = context.cache.get();
-          return mGoal.methodType() == INSTANCE_METHOD ?
-              context.lifecycle == REUSE_INSTANCES ?
-                  CodeBlock.builder()
-                      .addStatement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal))
-                      .addStatement("$N.$N = $N", builder, mGoal.field(), instance)
-                      .build() :
-                  statement("$T $N = new $T($N)", type, builder, type, instance) :
-              context.lifecycle == REUSE_INSTANCES ?
-                  statement("$T $N = $N.get().$N", type, builder, cache, builderField(mGoal)) :
-                  statement("$T $N = new $T()", type, builder, type);
-        });
+    };
   }
 
   private static ParameterSpec builderInstance(RegularGoalContext goal) {

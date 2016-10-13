@@ -66,12 +66,12 @@ final class DtoBeanStep {
     }
 
     Optional<CollectionInfo> emptyOption() {
-      String name = accessorPair.name.get();
+      String name = accessorPair.name();
       return CollectionInfo.create(accessorPair.type, name);
     }
 
     ParameterSpec parameter() {
-      return parameterSpec(accessorPair.type, accessorPair.name.get());
+      return parameterSpec(accessorPair.type, accessorPair.name());
     }
 
     @Override
@@ -90,7 +90,7 @@ final class DtoBeanStep {
       this.emptyMethod = emptyMethod;
     }
     static LoneGetterStep create(ClassName thisType, TypeName nextType, LoneGetter loneGetter) {
-      String emptyMethod = "empty" + upcase(loneGetter.name.get());
+      String emptyMethod = "empty" + upcase(loneGetter.name());
       return new LoneGetterStep(thisType, nextType, loneGetter, emptyMethod);
     }
     @Override
