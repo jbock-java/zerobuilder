@@ -16,12 +16,12 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.Builder.defineBuilderImpl;
 import static net.zerobuilder.compiler.generate.Builder.defineContract;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractGoalDetails;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builder;
@@ -49,8 +49,8 @@ public final class Generator {
    */
   public static GeneratorOutput generate(GeneratorInput goals) {
     Function<GoalDescription, IGoal> prepare = prepareGoal(goals.buildersContext.generatedType);
-    List<IGoal> builder = transform(goals.validGoals, prepare);
-    return generate(goals.buildersContext, builder);
+    List<IGoal> iGoals = transform(goals.goals, prepare);
+    return generate(goals.buildersContext, iGoals);
   }
 
   private static GeneratorOutput generate(BuildersContext context, List<IGoal> iGoals) {
@@ -63,14 +63,12 @@ public final class Generator {
   }
 
   private static List<FieldSpec> fields(BuildersContext context, List<AbstractGoalContext> goals) {
-    return Stream.concat(
-        context.lifecycle == REUSE_INSTANCES ?
-            Stream.of(context.cache.get()) :
-            Stream.empty(),
-        context.lifecycle == NEW_INSTANCE ?
-            Stream.empty() :
+    return context.lifecycle == REUSE_INSTANCES ?
+        Stream.concat(
+            Stream.of(context.cache.get()),
             instanceFields(goals).stream())
-        .collect(toList());
+            .collect(toList()) :
+        emptyList();
   }
 
   private static List<BuilderMethod> methods(List<AbstractGoalContext> goals) {

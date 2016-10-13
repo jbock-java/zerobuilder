@@ -28,7 +28,6 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
-import static net.zerobuilder.compiler.generate.Utilities.constructor;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 
 final class Builder {
