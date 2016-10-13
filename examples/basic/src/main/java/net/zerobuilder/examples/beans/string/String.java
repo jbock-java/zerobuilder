@@ -10,7 +10,7 @@ import static net.zerobuilder.NullPolicy.REJECT;
 
 // danger of variable name conflict
 @Builders
-@Goal(toBuilder = true, nullPolicy = REJECT)
+@Goal(updater = true, nullPolicy = REJECT)
 public class String {
 
   private List<String> string;

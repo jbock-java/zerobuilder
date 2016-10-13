@@ -50,7 +50,7 @@ final class GeneratorV {
       goal -> {
         RegularGoalDetails details = goalDetails.apply(goal);
         ParameterSpec updater = varUpdater(goal);
-        MethodSpec method = methodBuilder(details.name + "ToUpdater")
+        MethodSpec method = methodBuilder(details.name + "Updater")
             .addExceptions(thrownByProjections(goal))
             .addParameter(toBuilderParameter(goal))
             .returns(updater.type)

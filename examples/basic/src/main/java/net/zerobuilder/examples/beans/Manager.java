@@ -5,7 +5,7 @@ import net.zerobuilder.Goal;
 
 // inheritance + overrides
 @Builders
-@Goal(toBuilder = true)
+@Goal(updater = true)
 final class Manager extends Employee {
 
   @Override

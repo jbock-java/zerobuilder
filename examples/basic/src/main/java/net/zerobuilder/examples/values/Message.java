@@ -13,7 +13,7 @@ final class Message {
   final String recipient;
   final String subject;
 
-  @Goal(toBuilder = true)
+  @Goal(updater = true)
   Message(String sender, String body, String recipient, String subject) {
     this.sender = sender;
     this.body = body;

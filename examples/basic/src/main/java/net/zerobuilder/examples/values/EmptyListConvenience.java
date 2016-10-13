@@ -16,7 +16,7 @@ final class EmptyListConvenience {
   final Iterable<Collection<List<String>>> iterables;
   final Set<Iterable<Collection<List<String>>>> sets;
 
-  @Goal(toBuilder = true)
+  @Goal(updater = true)
   EmptyListConvenience(List things,
                        List<String> strings,
                        Collection<List<String>> collection,

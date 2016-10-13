@@ -40,7 +40,7 @@ public class MoreValues {
   static final class NothingSpecial {
     private final String foo;
 
-    @Goal(toBuilder = true)
+    @Goal(updater = true)
     NothingSpecial(String foo) {
       this.foo = foo;
     }

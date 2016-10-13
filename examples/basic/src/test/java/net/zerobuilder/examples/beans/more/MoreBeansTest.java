@@ -17,19 +17,19 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.examples.beans.more.MoreBeans_AccessBuilders.accessBuilder;
-import static net.zerobuilder.examples.beans.more.MoreBeans_AccessBuilders.accessToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_AccessBuilders.accessUpdater;
 import static net.zerobuilder.examples.beans.more.MoreBeans_AeroExperimentBuilders.aeroExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.MoreBeans_AeroExperimentBuilders.aeroExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_AeroExperimentBuilders.aeroExperimentUpdater;
 import static net.zerobuilder.examples.beans.more.MoreBeans_BioExperimentBuilders.bioExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.MoreBeans_BioExperimentBuilders.bioExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_BioExperimentBuilders.bioExperimentUpdater;
 import static net.zerobuilder.examples.beans.more.MoreBeans_IgnorifyBuilders.ignorifyBuilder;
-import static net.zerobuilder.examples.beans.more.MoreBeans_IgnorifyBuilders.ignorifyToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_IgnorifyBuilders.ignorifyUpdater;
 import static net.zerobuilder.examples.beans.more.MoreBeans_IterableExperimentBuilders.iterableExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.MoreBeans_IterableExperimentBuilders.iterableExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_IterableExperimentBuilders.iterableExperimentUpdater;
 import static net.zerobuilder.examples.beans.more.MoreBeans_OverloadedExperimentBuilders.overloadedExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.MoreBeans_OverloadedExperimentBuilders.overloadedExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_OverloadedExperimentBuilders.overloadedExperimentUpdater;
 import static net.zerobuilder.examples.beans.more.MoreBeans_RawExperimentBuilders.rawExperimentBuilder;
-import static net.zerobuilder.examples.beans.more.MoreBeans_RawExperimentBuilders.rawExperimentToBuilder;
+import static net.zerobuilder.examples.beans.more.MoreBeans_RawExperimentBuilders.rawExperimentUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -42,9 +42,9 @@ public class MoreBeansTest {
     AeroExperiment experiment1 = aeroExperimentBuilder()
         .altitude(10)
         .yield(20);
-    AeroExperiment experiment2 = aeroExperimentToBuilder(experiment1)
+    AeroExperiment experiment2 = aeroExperimentUpdater(experiment1)
         .yield(100)
-        .build();
+        .done();
     assertThat(experiment1.getAltitude(), is(10));
     assertThat(experiment1.getYield(), is(20));
     assertThat(experiment2.getAltitude(), is(10));
@@ -55,9 +55,9 @@ public class MoreBeansTest {
   public void overloadedTest() {
     OverloadedExperiment experiment1 = overloadedExperimentBuilder()
         .yield(10);
-    OverloadedExperiment experiment2 = overloadedExperimentToBuilder(experiment1)
+    OverloadedExperiment experiment2 = overloadedExperimentUpdater(experiment1)
         .yield(20)
-        .build();
+        .done();
     assertThat(experiment1.getYield(), is(10));
     assertThat(experiment2.getYield(), is(20));
   }
@@ -66,9 +66,9 @@ public class MoreBeansTest {
   public void biologicalTest() {
     BioExperiment experiment1 = bioExperimentBuilder()
         .candidates(singletonList(asList("Goku", "Frieza")));
-    BioExperiment experiment2 = bioExperimentToBuilder(experiment1)
+    BioExperiment experiment2 = bioExperimentUpdater(experiment1)
         .candidates(singletonList(asList("Gohan")))
-        .build();
+        .done();
     assertThat(experiment1.getCandidates(), is(singletonList(asList("Goku", "Frieza"))));
     assertThat(experiment2.getCandidates(), is(singletonList(asList("Gohan"))));
   }
@@ -78,9 +78,9 @@ public class MoreBeansTest {
   public void objectTest() {
     RawExperiment experiment1 = rawExperimentBuilder()
         .things(asList(1, "one"));
-    RawExperiment experiment2 = rawExperimentToBuilder(experiment1)
+    RawExperiment experiment2 = rawExperimentUpdater(experiment1)
         .things(asList(2))
-        .build();
+        .done();
     List expectedList1 = new ArrayList();
     expectedList1.add(1);
     expectedList1.add("one");
@@ -94,9 +94,9 @@ public class MoreBeansTest {
   public void iterableTest() {
     IterableExperiment experiment1 = iterableExperimentBuilder()
         .things(asList(asList("1")));
-    IterableExperiment experiment2 = iterableExperimentToBuilder(experiment1)
+    IterableExperiment experiment2 = iterableExperimentUpdater(experiment1)
         .things(asList(asList("2")))
-        .build();
+        .done();
     List<Iterable<String>> expectedList1 = new ArrayList();
     expectedList1.add(asList("1"));
     List<Iterable<String>> expectedList2 = new ArrayList();
@@ -108,12 +108,12 @@ public class MoreBeansTest {
   @Test
   public void ignoreTest() {
     Ignorify nothing = ignorifyBuilder().emptyThings();
-    Ignorify something = ignorifyToBuilder(nothing)
+    Ignorify something = ignorifyUpdater(nothing)
         .things(singletonList(singletonList("a")))
-        .build();
-    Ignorify nothing2 = ignorifyToBuilder(nothing)
+        .done();
+    Ignorify nothing2 = ignorifyUpdater(nothing)
         .emptyThings()
-        .build();
+        .done();
     assertThat(nothing.getThings().size(), is(0));
     assertThat(something.getThings().size(), is(1));
     assertThat(something.getThings().get(0),
@@ -125,13 +125,13 @@ public class MoreBeansTest {
   public void accessTest() throws NoSuchMethodException {
     Access foo = accessBuilder()
         .foo("foo");
-    Access bar = accessToBuilder(foo)
+    Access bar = accessUpdater(foo)
         .foo("bar")
-        .build();
+        .done();
     Method builderMethod = MoreBeans_AccessBuilders.class.getDeclaredMethod("accessBuilder");
-    Method toBuilderMethod = MoreBeans_AccessBuilders.class.getDeclaredMethod("accessToBuilder", Access.class);
+    Method updaterMethod = MoreBeans_AccessBuilders.class.getDeclaredMethod("accessUpdater", Access.class);
     assertFalse(Modifier.isPublic(builderMethod.getModifiers()));
-    assertTrue(Modifier.isPublic(toBuilderMethod.getModifiers()));
+    assertTrue(Modifier.isPublic(updaterMethod.getModifiers()));
     assertThat(foo.getFoo(), is("foo"));
     assertThat(bar.getFoo(), is("bar"));
   }

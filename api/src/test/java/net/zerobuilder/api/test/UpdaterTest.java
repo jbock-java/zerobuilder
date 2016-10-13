@@ -78,7 +78,7 @@ public class UpdaterTest {
 
     assertThat(generatorOutput.methods().size(), is(1));
     assertThat(generatorOutput.methods().get(0).name(), is(goalName));
-    assertThat(generatorOutput.methods().get(0).method().name, is("myGoalToUpdater"));
+    assertThat(generatorOutput.methods().get(0).method().name, is("myGoalUpdater"));
     assertThat(generatorOutput.methods().get(0).method().parameters.size(), is(1));
     assertThat(generatorOutput.methods().get(0).method().exceptions, is(singletonList(IO_EXCEPTION)));
     assertThat(generatorOutput.methods().get(0).method().modifiers.contains(Modifier.STATIC), is(true));

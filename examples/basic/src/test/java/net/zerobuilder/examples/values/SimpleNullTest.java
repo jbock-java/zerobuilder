@@ -5,7 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static net.zerobuilder.examples.values.SimpleNull_BasicNullBuilders.basicNullToBuilder;
+import static net.zerobuilder.examples.values.SimpleNull_BasicNullBuilders.basicNullUpdater;
 
 public class SimpleNullTest {
 
@@ -17,6 +17,6 @@ public class SimpleNullTest {
     thrown.expect(NullPointerException.class);
     thrown.expectMessage("string");
     BasicNull invalid = new BasicNull(null);
-    basicNullToBuilder(invalid).build();
+    basicNullUpdater(invalid).done();
   }
 }

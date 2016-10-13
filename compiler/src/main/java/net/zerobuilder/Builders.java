@@ -37,7 +37,7 @@ public @interface Builders {
    *
    * @return default access level
    * @see Goal#builderAccess()
-   * @see Goal#toBuilderAccess()
+   * @see Goal#updaterAccess()
    */
   AccessLevel access() default PUBLIC;
 

@@ -36,7 +36,7 @@ final class Message {
   final String body;
   final String recipient;
 
-  @Goal(toBuilder = true)
+  @Goal(updater = true)
   Message(String sender, String body, String recipient) {
     this.sender = sender;
     this.body = body;
@@ -46,7 +46,7 @@ final class Message {
 
 ````
 
-In order for the `toBuilder = true` option to make sense,
+In order for the `updater = true` option to make sense,
 there has to exist one corresponding _projection_, i.e. a getter or instance field, for each goal parameter.
 This is the case in `Message.java`.
 
@@ -56,13 +56,13 @@ The following structure will be generated (omitting `public` keyword and other c
 @Generated final class MessageBuilders {
 
   static MessageBuilder.Sender messageBuilder() { ... }
-  static MessageUpdater messageToBuilder(Message message) { ... }
+  static MessageUpdater messageUpdater(Message message) { ... }
 
   static final class MessageUpdater {
     MessageUpdater sender(String sender) { ... }
     MessageUpdater body(String body) { ... }
     MessageUpdater recipient(String recipient) { ... }
-    Message build() { ... }
+    Message done() { ... }
   }
   
   static final class MessageBuilder {
@@ -140,7 +140,7 @@ The default behaviour is `NullPolicy.ALLOW`.
 
 ### Access level
 
-By default, the generated static methods `fooBuilder` and `fooToBuilder` are public.
+By default, the generated static methods `fooBuilder` and `fooUpdater` are public.
 You can change this to default (package) visibility using `@Builders(access = AccessLevel.PACKAGE)`.
 
-Each goal can override this setting with `@Goal(builderAccess)` and `@Goal(toBuilderAccess)`.
+Each goal can override this setting with `@Goal(builderAccess)` and `@Goal(updaterAccess)`.

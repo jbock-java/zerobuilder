@@ -4,7 +4,7 @@ import com.google.auto.value.AutoValue;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
-import static net.zerobuilder.examples.autovalue.BobBuilders.bobToBuilder;
+import static net.zerobuilder.examples.autovalue.BobBuilders.bobUpdater;
 
 // see BobTest
 @Builders
@@ -15,25 +15,25 @@ abstract class Bob {
   abstract String chantal();
   abstract String justin();
 
-  @Goal(toBuilder = true)
+  @Goal(updater = true)
   static Bob create(String kevin, String chantal, String justin) {
     return new AutoValue_Bob(kevin, chantal, justin);
   }
 
-  BobBuilders.BobUpdater toBuilder() {
-    return bobToBuilder(this);
+  BobBuilders.BobUpdater updater() {
+    return bobUpdater(this);
   }
 
   Bob withChantal(String chantal) {
-    return toBuilder().chantal(chantal).build();
+    return updater().chantal(chantal).done();
   }
 
   Bob withKevin(String kevin) {
-    return toBuilder().kevin(kevin).build();
+    return updater().kevin(kevin).done();
   }
 
   Bob withJustin(String justin) {
-    return toBuilder().justin(justin).build();
+    return updater().justin(justin).done();
   }
 
 }

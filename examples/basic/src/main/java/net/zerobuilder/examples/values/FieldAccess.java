@@ -12,7 +12,7 @@ final class FieldAccess {
   final double width;
   final double height;
 
-  @Goal(toBuilder = true)
+  @Goal(updater = true)
   FieldAccess(double length, double width, double height) {
     this.length = length;
     this.width = width;

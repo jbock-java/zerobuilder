@@ -7,7 +7,7 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.emptyListConvenienceBuilder;
-import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.emptyListConvenienceToBuilder;
+import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.emptyListConvenienceUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -21,13 +21,13 @@ public class EmptyListConvenienceTest {
         .emptyCollection()
         .emptyIterables()
         .emptySets();
-    EmptyListConvenience notEmpty = emptyListConvenienceToBuilder(empty)
+    EmptyListConvenience notEmpty = emptyListConvenienceUpdater(empty)
         .strings(singletonList(""))
         .things(singletonList(""))
         .collection(singletonList(singletonList("")))
         .emptySets()
         .emptyIterables()
-        .build();
+        .done();
     assertThat(empty.collection.size(), is(0));
     assertThat(empty.sets.size(), is(0));
     assertThat(empty.strings.size(), is(0));
@@ -38,11 +38,5 @@ public class EmptyListConvenienceTest {
     assertThat(notEmpty.collection.size(), is(1));
     assertThat(notEmpty.sets.size(), is(0));
     assertThat(notEmpty.iterables.iterator().hasNext(), is(false));
-    myMethod(Collections.<String>emptyList());
   }
-
-  static String myMethod(List<String> foo) {
-    return "bar";
-  }
-
 }

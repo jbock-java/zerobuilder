@@ -157,11 +157,11 @@ final class DtoGoalElement {
   }
 
   private static GoalOptions goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
-    boolean toBuilder = goalAnnotation.toBuilder();
+    boolean toBuilder = goalAnnotation.updater();
     boolean builder = goalAnnotation.builder();
     return GoalOptions.builder()
         .builderAccess(accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess))
-        .toBuilderAccess(accessLevelOverride(goalAnnotation.toBuilderAccess(), defaultAccess))
+        .toBuilderAccess(accessLevelOverride(goalAnnotation.updaterAccess(), defaultAccess))
         .toBuilder(toBuilder)
         .builder(builder)
         .build();

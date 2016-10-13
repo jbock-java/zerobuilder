@@ -12,7 +12,7 @@ final class Spaghetti {
   final String sauce;
   final boolean alDente;
 
-  @Goal(toBuilder = true)
+  @Goal(updater = true)
   Spaghetti(String cheese, @Step(0) String sauce, boolean alDente) {
     this.cheese = cheese;
     this.sauce = sauce;

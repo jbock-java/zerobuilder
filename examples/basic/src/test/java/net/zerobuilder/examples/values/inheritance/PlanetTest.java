@@ -5,7 +5,7 @@ import org.junit.Test;
 import java.math.BigInteger;
 
 import static java.math.BigInteger.TEN;
-import static net.zerobuilder.examples.values.inheritance.PlanetBuilders.planetToBuilder;
+import static net.zerobuilder.examples.values.inheritance.PlanetBuilders.planetUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -18,7 +18,7 @@ public class PlanetTest {
         .mass(mass)
         .numberOfMoons(1)
         .habitable(true);
-    planet = planetToBuilder(planet).mass(mass.multiply(TEN)).build();
+    planet = planetUpdater(planet).mass(mass.multiply(TEN)).done();
     assertThat(planet.getNumberOfMoons(), is(1));
     assertThat(planet.isHabitable(), is(true));
     assertThat(planet.getMass(), is(mass.multiply(TEN)));

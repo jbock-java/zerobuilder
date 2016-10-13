@@ -14,7 +14,7 @@ final class Getters {
   private final double width;
   private final double height;
 
-  @Goal(toBuilder = true)
+  @Goal(updater = true)
   Getters(double lenght, double width, double height) {
     this.lenght = lenght;
     this.width = width;

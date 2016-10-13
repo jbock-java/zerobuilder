@@ -11,7 +11,7 @@ import java.util.List;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableCollection;
 import static net.zerobuilder.examples.beans.EmptyBeanConvenienceBuilders.emptyBeanConvenienceBuilder;
-import static net.zerobuilder.examples.beans.EmptyBeanConvenienceBuilders.emptyBeanConvenienceToBuilder;
+import static net.zerobuilder.examples.beans.EmptyBeanConvenienceBuilders.emptyBeanConvenienceUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -25,13 +25,13 @@ public class EmptyBeanConvenienceTest {
         .emptySets()
         .emptyStrings()
         .emptyThings();
-    EmptyBeanConvenience notEmpty = emptyBeanConvenienceToBuilder(empty)
+    EmptyBeanConvenience notEmpty = emptyBeanConvenienceUpdater(empty)
         .strings(singletonList(""))
         .things(singletonList(""))
         .collection(singletonList(singletonList("")))
         .emptyIterables()
         .emptySets()
-        .build();
+        .done();
     assertThat(empty.getStrings().size(), is(0));
     assertThat(empty.getThings().size(), is(0));
     assertThat(empty.getCollection().size(), is(0));

@@ -3,7 +3,7 @@ package net.zerobuilder.examples.values;
 import org.junit.Test;
 
 import static net.zerobuilder.examples.values.MessageBuilders.messageBuilder;
-import static net.zerobuilder.examples.values.MessageBuilders.messageToBuilder;
+import static net.zerobuilder.examples.values.MessageBuilders.messageUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -20,9 +20,9 @@ public class MessageTest {
     assertThat(message.body, is("Hi"));
     assertThat(message.recipient, is("Bob"));
     assertThat(message.subject, is("test"));
-    message = messageToBuilder(message)
+    message = messageUpdater(message)
         .body("Goodbye")
-        .build();
+        .done();
     assertThat(message.body, is("Goodbye"));
   }
 

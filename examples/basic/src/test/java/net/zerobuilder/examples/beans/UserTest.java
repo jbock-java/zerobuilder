@@ -3,7 +3,7 @@ package net.zerobuilder.examples.beans;
 import org.junit.Test;
 
 import static net.zerobuilder.examples.beans.UserBuilders.userBuilder;
-import static net.zerobuilder.examples.beans.UserBuilders.userToBuilder;
+import static net.zerobuilder.examples.beans.UserBuilders.userUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
@@ -15,9 +15,9 @@ public class UserTest {
         .id(12)
         .name("foo")
         .power(false);
-    User bar = userToBuilder(foo)
+    User bar = userUpdater(foo)
         .name("bar")
-        .build();
+        .done();
     assertThat(foo.getId(), is(12));
     assertThat(foo.getName(), is("foo"));
     assertThat(foo.isPower(), is(false));

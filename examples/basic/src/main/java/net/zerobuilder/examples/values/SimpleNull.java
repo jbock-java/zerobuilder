@@ -13,7 +13,7 @@ public class SimpleNull {
   static final class BasicNull {
     final String string;
 
-    @Goal(toBuilder = true)
+    @Goal(updater = true)
     BasicNull(@Step(nullPolicy = REJECT) String string) {
       this.string = string;
     }

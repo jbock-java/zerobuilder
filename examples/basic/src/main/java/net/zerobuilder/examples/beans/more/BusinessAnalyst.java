@@ -9,7 +9,7 @@ import java.util.List;
 // bean with setterless collection (notes)
 // see BusinessAnalystTest
 @Builders(recycle = true)
-@Goal(toBuilder = true)
+@Goal(updater = true)
 public class BusinessAnalyst {
 
   private String name;

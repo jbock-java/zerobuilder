@@ -9,7 +9,6 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
 import static net.zerobuilder.NullPolicy.ALLOW;
-import static net.zerobuilder.NullPolicy.DEFAULT;
 
 /**
  * <p>
@@ -46,16 +45,16 @@ public @interface Goal {
   String name() default "";
 
   /**
-   * <p>If {@code true}, declares that a {@code static toBuilder} method
+   * <p>If {@code true}, declares that a {@code static updater} method
    * should be generated for this goal.
    * </p><p>
    * In this case, the goal may be a constructor, beanGoal or static method,
    * but not an instance method.
    * </p>
    *
-   * @return toBuilder flag, defaults to {@code false}
+   * @return updater flag, defaults to {@code false}
    */
-  boolean toBuilder() default false;
+  boolean updater() default false;
 
   /**
    * <p>Set to {@code false} if no {@code static builder} method
@@ -86,11 +85,11 @@ public @interface Goal {
   AccessLevel builderAccess() default UNSPECIFIED;
 
   /**
-   * <p>A handle to override the default access level of the generated static toBuilder method.</p>
-   * <p>If {@link #toBuilder} is not set to {@code true}, then this setting has no effect.</p>
+   * <p>A handle to override the default access level of the generated static updater method.</p>
+   * <p>If {@link #updater} is not set to {@code true}, then this setting has no effect.</p>
    *
-   * @return toBuilder access level
+   * @return updater access level
    * @see Builders#access()
    */
-  AccessLevel toBuilderAccess() default UNSPECIFIED;
+  AccessLevel updaterAccess() default UNSPECIFIED;
 }

@@ -4,7 +4,7 @@ import net.zerobuilder.examples.values.MessageFactory.Message;
 import org.junit.Test;
 
 import static net.zerobuilder.examples.values.MessageFactoryBuilders.messageFactoryBuilder;
-import static net.zerobuilder.examples.values.MessageFactory_MessageBuilders.messageToBuilder;
+import static net.zerobuilder.examples.values.MessageFactory_MessageBuilders.messageUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -23,7 +23,7 @@ public class MessageFactoryTest {
     assertThat(message.body, is("Hi"));
     assertThat(message.recipient, is("Bob"));
     assertThat(message.subject, is("test"));
-    assertThat(messageToBuilder(message).body("Goodbye").build().body,
+    assertThat(messageUpdater(message).body("Goodbye").done().body,
         is("Goodbye"));
   }
 

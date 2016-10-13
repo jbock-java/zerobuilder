@@ -3,7 +3,7 @@ package net.zerobuilder.examples.beans;
 import org.junit.Test;
 
 import static net.zerobuilder.examples.beans.ManagerBuilders.managerBuilder;
-import static net.zerobuilder.examples.beans.ManagerBuilders.managerToBuilder;
+import static net.zerobuilder.examples.beans.ManagerBuilders.managerUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
@@ -15,9 +15,9 @@ public class ManagerTest {
         .name("foo")
         .id(12)
         .salary(13);
-    Manager bar = managerToBuilder(foo)
+    Manager bar = managerUpdater(foo)
         .name("bar")
-        .build();
+        .done();
     assertThat(foo.getSalary(), is(13));
     assertThat(foo.getName(), is("foo"));
     assertThat(foo.getId(), is(12));

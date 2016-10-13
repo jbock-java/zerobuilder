@@ -9,7 +9,7 @@ final class Rabbit {
 
   final String name;
 
-  @Goal(name = "hare", toBuilder = true)
+  @Goal(name = "hare", updater = true)
   Rabbit(String name) {
     this.name = name;
   }

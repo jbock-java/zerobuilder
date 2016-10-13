@@ -14,21 +14,21 @@ public class BobTest {
         .chantal("chantal")
         .justin("justin");
     assertThat(bob, is(Bob.create("kevin", "chantal", "justin")));
-    assertThat(bob.toBuilder().build(),
+    assertThat(bob.updater().done(),
         is(Bob.create("kevin", "chantal", "justin")));
-    assertThat(bob.toBuilder().kevin("bob").build(),
+    assertThat(bob.updater().kevin("bob").done(),
         is(Bob.create("bob", "chantal", "justin")));
-    assertThat(bob.toBuilder().chantal("bob").build(),
+    assertThat(bob.updater().chantal("bob").done(),
         is(Bob.create("kevin", "bob", "justin")));
-    assertThat(bob.toBuilder().justin("bob").build(),
+    assertThat(bob.updater().justin("bob").done(),
         is(Bob.create("kevin", "chantal", "bob")));
-    assertThat(bob.toBuilder().kevin("bob").chantal("bob").build(),
+    assertThat(bob.updater().kevin("bob").chantal("bob").done(),
         is(Bob.create("bob", "bob", "justin")));
-    assertThat(bob.toBuilder().kevin("bob").justin("bob").build(),
+    assertThat(bob.updater().kevin("bob").justin("bob").done(),
         is(Bob.create("bob", "chantal", "bob")));
-    assertThat(bob.toBuilder().chantal("bob").justin("bob").build(),
+    assertThat(bob.updater().chantal("bob").justin("bob").done(),
         is(Bob.create("kevin", "bob", "bob")));
-    assertThat(bob.toBuilder().kevin("bob").chantal("bob").justin("bob").build(),
+    assertThat(bob.updater().kevin("bob").chantal("bob").justin("bob").done(),
         is(Bob.create("bob", "bob", "bob")));
   }
 
@@ -46,7 +46,7 @@ public class BobTest {
   @Test
   public void updateTwice() {
     Bob bob = Bob.create("kevin", "chantal", "justin");
-    assertThat(bob.toBuilder().kevin("bob").kevin("bobby").chantal("bob").build(),
+    assertThat(bob.updater().kevin("bob").kevin("bobby").chantal("bob").done(),
         is(Bob.create("bobby", "bob", "justin")));
   }
 

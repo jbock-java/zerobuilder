@@ -7,7 +7,7 @@ import java.util.Arrays;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.examples.beans.more.BusinessAnalystBuilders.businessAnalystBuilder;
-import static net.zerobuilder.examples.beans.more.BusinessAnalystBuilders.businessAnalystToBuilder;
+import static net.zerobuilder.examples.beans.more.BusinessAnalystBuilders.businessAnalystUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -20,11 +20,11 @@ public class BusinessAnalystTest {
         .executive(false)
         .name("Peter")
         .notes(asList("entry"));
-    BusinessAnalyst updated = businessAnalystToBuilder(peter)
+    BusinessAnalyst updated = businessAnalystUpdater(peter)
         .executive(true)
         .age(37)
         .notes(asList("entry0", "entry1"))
-        .build();
+        .done();
     assertThat(peter.getAge(), is(36));
     assertThat(peter.getName(), is("Peter"));
     assertThat(peter.getNotes(), is(singletonList("entry")));
@@ -42,11 +42,11 @@ public class BusinessAnalystTest {
         .executive(true)
         .name("Peter")
         .notes(asList("entry0", "entry1"));
-    BusinessAnalyst updated = businessAnalystToBuilder(peter)
+    BusinessAnalyst updated = businessAnalystUpdater(peter)
         .age(37)
         .executive(false)
         .notes(singletonList("entry"))
-        .build();
+        .done();
     assertThat(peter.getAge(), is(36));
     assertThat(peter.getName(), is("Peter"));
     assertThat(peter.getNotes(), is(asList("entry0", "entry1")));

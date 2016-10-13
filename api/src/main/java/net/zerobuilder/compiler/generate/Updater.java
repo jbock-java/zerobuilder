@@ -39,7 +39,7 @@ final class Updater {
       = goalCases(UpdaterV.updateMethods, UpdaterB.updateMethods);
 
   private static MethodSpec buildMethod(AbstractGoalContext goal) {
-    return methodBuilder("build")
+    return methodBuilder("done")
         .addModifiers(PUBLIC)
         .returns(goalType.apply(goal))
         .addCode(invoke.apply(goal))

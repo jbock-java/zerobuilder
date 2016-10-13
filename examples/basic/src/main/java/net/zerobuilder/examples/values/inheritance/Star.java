@@ -9,7 +9,7 @@ import java.math.BigInteger;
 @Builders
 final class Star extends CelestialBody {
 
-  @Goal(toBuilder = true)
+  @Goal(updater = true)
   Star(BigInteger mass) {
     super(mass);
   }

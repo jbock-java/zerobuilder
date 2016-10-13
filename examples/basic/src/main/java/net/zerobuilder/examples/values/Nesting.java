@@ -11,7 +11,7 @@ final class Nesting {
     final int smallEgg;
     final int regularEgg;
 
-    @Goal(toBuilder = true)
+    @Goal(updater = true)
     DovesNest(int smallEgg, int regularEgg) {
       this.smallEgg = smallEgg;
       this.regularEgg = regularEgg;
@@ -27,13 +27,13 @@ final class Nesting {
     static class LizardsNest {
       final int spottedEgg;
 
-      @Goal(toBuilder = true)
+      @Goal(updater = true)
       LizardsNest(int spottedEgg) {
         this.spottedEgg = spottedEgg;
       }
     }
 
-    @Goal(toBuilder = true)
+    @Goal(updater = true)
     CrowsNest(int largeEgg, int hugeEgg) {
       this.largeEgg = largeEgg;
       this.hugeEgg = hugeEgg;

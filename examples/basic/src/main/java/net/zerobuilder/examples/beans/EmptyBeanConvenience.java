@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 @Builders
-@Goal(toBuilder = true)
+@Goal(updater = true)
 public class EmptyBeanConvenience {
 
   private List things;

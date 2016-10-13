@@ -48,7 +48,7 @@ public final class Analyser {
     validateBuildersClass(buildersAnnotatedClass);
     List<GoalDescription> validGoals = new ArrayList<>();
     for (AbstractGoalElement goal : goals) {
-      boolean toBuilder = goal.goalAnnotation.toBuilder();
+      boolean toBuilder = goal.goalAnnotation.updater();
       GoalDescription goalDescription = goal.accept(toBuilder ? validate : skip);
       validGoals.add(goalDescription);
     }

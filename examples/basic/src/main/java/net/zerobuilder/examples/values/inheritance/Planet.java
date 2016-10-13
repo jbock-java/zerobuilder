@@ -11,7 +11,7 @@ final class Planet extends CelestialBody implements IMoons {
   private final int numberOfMoons;
   private final boolean habitable;
 
-  @Goal(toBuilder = true)
+  @Goal(updater = true)
   Planet(BigInteger mass, int numberOfMoons, boolean habitable) {
     super(mass);
     this.numberOfMoons = numberOfMoons;

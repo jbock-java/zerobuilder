@@ -9,7 +9,7 @@ import java.io.IOException;
 import static net.zerobuilder.examples.values.MoreValues_InterfaceBuilders.interfaceBuilder;
 import static net.zerobuilder.examples.values.MoreValues_NothingBuilders.appendBuilder;
 import static net.zerobuilder.examples.values.MoreValues_NothingSpecialBuilders.nothingSpecialBuilder;
-import static net.zerobuilder.examples.values.MoreValues_NothingSpecialBuilders.nothingSpecialToBuilder;
+import static net.zerobuilder.examples.values.MoreValues_NothingSpecialBuilders.nothingSpecialUpdater;
 import static net.zerobuilder.examples.values.MoreValues_SumBuilders.sumBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -41,9 +41,9 @@ public class MoreValuesTest {
   public void testNothingSpecial() throws IOException {
     NothingSpecial foo = nothingSpecialBuilder()
         .foo("foo");
-    NothingSpecial bar = nothingSpecialToBuilder(foo)
+    NothingSpecial bar = nothingSpecialUpdater(foo)
         .foo("bar")
-        .build();
+        .done();
     assertThat(foo.foo(), is("foo"));
     assertThat(bar.foo(), is("bar"));
   }

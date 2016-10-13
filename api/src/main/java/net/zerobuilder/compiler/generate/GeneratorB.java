@@ -48,7 +48,7 @@ final class GeneratorB {
     ClassName type = goal.goal.details.goalType;
     ParameterSpec updater = updaterInstance(goal);
     Modifier[] modifiers = goal.goal.details.goalOptions.toBuilderAccess.modifiers(STATIC);
-    MethodSpec method = methodBuilder(downcase(name + "ToUpdater"))
+    MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
         .returns(updaterType(goal))
         .addExceptions(thrownTypes(goal, asList(getterThrownTypes, setterThrownTypes)))

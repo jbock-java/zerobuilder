@@ -7,7 +7,7 @@ import static net.zerobuilder.AccessLevel.PACKAGE;
 
 // not public
 @Builders
-@Goal(toBuilder = true, builderAccess = PACKAGE, toBuilderAccess = PACKAGE)
+@Goal(updater = true, builderAccess = PACKAGE, updaterAccess = PACKAGE)
 class User {
 
   private int id;

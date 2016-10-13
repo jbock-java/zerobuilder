@@ -3,7 +3,7 @@ package net.zerobuilder.examples.values;
 import org.junit.Test;
 
 import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessBuilder;
-import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessToBuilder;
+import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -15,7 +15,7 @@ public class FieldAccessTest {
     assertThat(getters.length, is(12d));
     assertThat(getters.width, is(10d));
     assertThat(getters.height, is(11d));
-    getters = fieldAccessToBuilder(getters).length(0).build();
+    getters = fieldAccessUpdater(getters).length(0).done();
     assertThat(getters.length, is(0d));
     assertThat(getters.width, is(10d));
     assertThat(getters.height, is(11d));
