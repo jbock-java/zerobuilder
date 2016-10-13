@@ -14,7 +14,7 @@ This kind of datatype is inherently tied to a programming model based on mutatio
 One way to avoid the <em>destructive updates</em> is by calling `clone()` on your bean.
 But this creates a deep copy, which is often unnecessary.
 
-As an alternative to `clone`, zerobuilder's generated `toUpdater` method creates a shallow copy instead.
+As an alternative to `clone`, zerobuilder's generated `toBuilder` method creates a shallow copy instead.
 Additionally you can choose to use the generated `builder` method.
 
 These two generated methods together allow to create and modify beans without ever calling a setter,
