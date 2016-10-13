@@ -116,3 +116,8 @@
 * changes to the generated structure: 
   throw UnsupportedOperationException in unused constructors,
   use final fields where possible
+
+### 2016-10-13 zerobuilder 1.501 released
+
+* rename `toBuilder` -> `updater` (breaking)
+* rename `build()` -> `done()` (breaking)
