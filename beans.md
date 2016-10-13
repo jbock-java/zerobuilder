@@ -13,22 +13,22 @@ This kind of datatype is inherently tied to a programming model based on mutatio
 
 One way to avoid the <em>destructive updates</em> is by calling `clone()` on your bean.
 But this creates a deep copy, which is often unnecessary.
+Zerobuilder's generated `toUpdater` method creates shallow copies.
+It is a cheaper and safer alternative to `clone`.
 
-As an alternative to `clone`, zerobuilder's generated `toBuilder` method creates a shallow copy instead.
 Additionally you can choose to use the generated `builder` method.
-
-These two generated methods together allow to create and modify beans without ever calling a setter,
-amd without any destructive updates to beans that are already "built".
+These two generated methods together allow to create and "modify" any bean 
+without calling any setters,
+and without ever updating a bean in-place.
 
 ### How?
 
-Zerobuilder will not extend your classes. It generates code that helps you work with them.
-
-This happens if you add two annotations `@Builders` and `@Goal` to a POJO class:
+The builder code will be generated if you add two 
+annotations `@Builders` and `@Goal` to a POJO class:
 
 ````java
 @Builders(recycle = true)
-@Goal(toBuilder = true)
+@Goal(updater = true)
 public class BusinessAnalyst {
   private String name;
   private int age;
@@ -40,14 +40,14 @@ public class BusinessAnalyst {
 }
 ````
 
-If zerobuilder is in the classpath, a class `BusinessAnalystBuilders` will be generated.
+A class `BusinessAnalystBuilders` will be generated.
 This class has two static methods that can be used to create and "update" instances of `BusinessAnalystBuilder`.
 
 ````java
 @Generated
 public final class BusinessAnalystBuilders {
   public static BusinessAnalystBuilder.Age businessAnalystBuilder() { ... }
-  public static BusinessAnalystUpdater businessAnalystToBuilder(BusinessAnalyst businessAnalyst) { ... }
+  public static BusinessAnalystUpdater businessAnalystToUpdater(BusinessAnalyst businessAnalyst) { ... }
 }
 ````
 
@@ -60,7 +60,7 @@ To see how the generated class is used, have a look at
 ### Recycle
 
 Creating and discarding an intermediate builder object for every create or update operation 
-may create additional pressure on the garbage collector.
+may increase the pressure on the garbage collector.
 
 If you feel that zerobuilder affects performance,
 you could try the `recycle = true` option.
