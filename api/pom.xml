@@ -18,7 +18,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <revision>0-SNAPSHOT</revision>
-        <guava.version>19.0</guava.version>
     </properties>
 
     <dependencies>

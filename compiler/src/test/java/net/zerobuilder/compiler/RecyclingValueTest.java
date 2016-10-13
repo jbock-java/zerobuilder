@@ -10,7 +10,7 @@ import static com.google.testing.compile.JavaFileObjects.forSourceLines;
 import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
 import static net.zerobuilder.compiler.GeneratedLines.GENERATED_ANNOTATION;
 
-public class ValueTest {
+public class RecyclingValueTest {
 
   @Test
   public void simpleCube() {

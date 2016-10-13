@@ -18,7 +18,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <revision>0-SNAPSHOT</revision>
-        <guava.version>19.0</guava.version>
     </properties>
 
     <dependencies>
@@ -35,12 +34,14 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.google.testing.compile</groupId>
             <artifactId>compile-testing</artifactId>
             <version>0.9</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.google.truth</groupId>
             <artifactId>truth</artifactId>

@@ -16,8 +16,8 @@
 
 package net.zerobuilder.compiler;
 
-public final class GeneratedLines {
-  public static final String GENERATED_ANNOTATION =
+final class GeneratedLines {
+  static final String GENERATED_ANNOTATION =
       "@Generated("
           + "value = \""
           + ZeroProcessor.class.getName()
@@ -25,4 +25,8 @@ public final class GeneratedLines {
           + "comments = \""
           + Messages.JavadocMessages.GENERATED_COMMENTS
           + "\")";
+
+  private GeneratedLines() {
+    throw new UnsupportedOperationException("no instances");
+  }
 }
