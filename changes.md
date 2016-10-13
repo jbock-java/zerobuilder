@@ -110,3 +110,9 @@
 ### 2016-10-09 zerobuilder 1.483 released
 
 * allow projections to declare exceptions (value)
+
+### 2016-10-13 zerobuilder 1.484 released
+
+* changes to the generated structure: 
+  throw UnsupportedOperationException in unused constructors,
+  use final fields where possible
