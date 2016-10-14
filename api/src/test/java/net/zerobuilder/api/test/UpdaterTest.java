@@ -39,7 +39,7 @@ public class UpdaterTest {
       .nestedClass("MyTypeBuilders");
 
   /**
-   * <p>We want to generate toBuilder for the following
+   * <p>We want to generate updater for the following
    * </p>
    * <pre><code>
    *   class MyType {
@@ -59,7 +59,7 @@ public class UpdaterTest {
     RegularGoalDetails details = ConstructorGoalDetails.create(
         TYPE, goalName, singletonList("foo"),
         GoalOptions.builder()
-            .toBuilder(true)
+            .updater(true)
             .build());
 
     RegularParameter fooParameter = RegularParameter.create("foo", STRING, ALLOW,

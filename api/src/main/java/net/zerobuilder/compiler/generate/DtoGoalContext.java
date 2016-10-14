@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
@@ -14,12 +15,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.util.Collections.unmodifiableList;
+import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
+import static net.zerobuilder.compiler.generate.Updater.updaterType;
+import static net.zerobuilder.compiler.generate.Utilities.asPredicate;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
@@ -32,9 +38,37 @@ final class DtoGoalContext {
     AbstractGoalContext withContext(BuildersContext context);
   }
 
-  interface AbstractGoalContext {
+  static abstract class AbstractGoalContext {
 
-    <R> R accept(GoalCases<R> cases);
+    abstract <R> R accept(GoalCases<R> cases);
+
+    private final Supplier<FieldSpec> updaterField =
+        () -> updaterField(this);
+
+    private final Supplier<FieldSpec> builderField =
+        () -> builderField(this);
+
+    final FieldSpec updaterField() {
+      return updaterField.get();
+    }
+
+    final FieldSpec builderField() {
+      return builderField.get();
+    }
+
+    private static FieldSpec updaterField(AbstractGoalContext context) {
+      ClassName type = updaterType(context);
+      return FieldSpec.builder(type, downcase(goalName.apply(context) + "Updater"), PRIVATE, FINAL)
+          .initializer("new $T()", type)
+          .build();
+    }
+
+    private static FieldSpec builderField(AbstractGoalContext context) {
+      ClassName type = builderImplType(context);
+      return FieldSpec.builder(type, downcase(goalName.apply(context) + "BuilderImpl"), PRIVATE, FINAL)
+          .initializer("new $T()", type)
+          .build();
+    }
   }
 
   interface GoalCases<R> {
@@ -47,8 +81,8 @@ final class DtoGoalContext {
   }
 
   static <R> Function<AbstractGoalContext, R>
-  goalCases(final Function<RegularGoalContext, R> regularFunction,
-            final Function<BeanGoalContext, R> beanFunction) {
+  goalCases(final Function<? super RegularGoalContext, ? extends R> regularFunction,
+            final Function<? super BeanGoalContext, ? extends R> beanFunction) {
     return asFunction(new GoalCases<R>() {
       @Override
       public R regularGoal(RegularGoalContext goal) {
@@ -112,7 +146,7 @@ final class DtoGoalContext {
 
   static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails =
       goalCases(
-          rGoal -> DtoRegularGoal.goalDetails.apply(rGoal),
+          DtoRegularGoal.goalDetails,
           bGoal -> bGoal.goal.details);
 
   private static final Function<AbstractGoalContext, DtoGoal.GoalOptions> goalOptions
@@ -122,7 +156,7 @@ final class DtoGoalContext {
       = context -> goalOptions.apply(context).builder;
 
   static final Predicate<AbstractGoalContext> toBuilder
-      = context -> goalOptions.apply(context).toBuilder;
+      = context -> goalOptions.apply(context).updater;
 
   static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps =
       goalCases(
@@ -141,6 +175,9 @@ final class DtoGoalContext {
                   ? emptyCodeBlock
                   : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))
               .build());
+
+  static final Predicate<AbstractGoalContext> isRecycle = asPredicate(
+      goal -> buildersContext.apply(goal).lifecycle == REUSE_INSTANCES);
 
   static ClassName contractName(String goalName, ClassName generatedType) {
     return generatedType.nestedClass(upcase(goalName + "Builder"));

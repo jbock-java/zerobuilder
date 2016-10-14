@@ -36,11 +36,11 @@ import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 
 final class DtoRegularGoal {
 
-  interface RegularGoalContext extends AbstractGoalContext {
+  static abstract class RegularGoalContext extends AbstractGoalContext {
 
-    <R> R acceptRegular(RegularGoalContextCases<R> cases);
-    List<String> parameterNames();
-    TypeName type();
+    abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
+    abstract List<String> parameterNames();
+    abstract TypeName type();
   }
 
   interface RegularGoalContextCases<R> {
@@ -94,7 +94,7 @@ final class DtoRegularGoal {
   }
 
   static final class ConstructorGoalContext
-      implements RegularGoalContext {
+      extends RegularGoalContext {
 
     final ConstructorGoal goal;
     final BuildersContext context;
@@ -153,7 +153,7 @@ final class DtoRegularGoal {
   }
 
   static final class MethodGoalContext
-      implements RegularGoalContext {
+      extends RegularGoalContext {
 
     final BuildersContext context;
     final MethodGoal goal;

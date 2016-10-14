@@ -48,7 +48,7 @@ final class DtoBeanGoal {
     }
   }
 
-  static final class BeanGoalContext implements AbstractGoalContext {
+  static final class BeanGoalContext extends AbstractGoalContext {
 
     final BuildersContext context;
     final BeanGoal goal;

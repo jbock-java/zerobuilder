@@ -17,13 +17,13 @@ public final class DtoGoal {
   public static final class GoalOptions {
     final Access builderAccess;
     final Access toBuilderAccess;
-    final boolean toBuilder;
+    final boolean updater;
     final boolean builder;
 
-    private GoalOptions(Access builderAccess, Access toBuilderAccess, boolean toBuilder, boolean builder) {
+    private GoalOptions(Access builderAccess, Access toBuilderAccess, boolean updater, boolean builder) {
       this.builderAccess = builderAccess;
       this.toBuilderAccess = toBuilderAccess;
-      this.toBuilder = toBuilder;
+      this.updater = updater;
       this.builder = builder;
     }
 
@@ -42,11 +42,11 @@ public final class DtoGoal {
         this.builderAccess = builderAccess;
         return this;
       }
-      public Builder toBuilderAccess(Access toBuilderAccess) {
+      public Builder updaterAccess(Access toBuilderAccess) {
         this.toBuilderAccess = toBuilderAccess;
         return this;
       }
-      public Builder toBuilder(boolean toBuilder) {
+      public Builder updater(boolean toBuilder) {
         this.toBuilder = toBuilder;
         return this;
       }

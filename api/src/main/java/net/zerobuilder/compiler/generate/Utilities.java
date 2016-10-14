@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -163,7 +162,14 @@ final class Utilities {
     return reversed;
   }
 
-  static final Collector<CodeBlock, CodeBlock.Builder, CodeBlock> join
+  static <P> List<P> concat(P first, List<P> list) {
+    ArrayList<P> builder = new ArrayList<>(list.size() + 1);
+    builder.add(first);
+    builder.addAll(list);
+    return builder;
+  }
+
+  static final Collector<CodeBlock, CodeBlock.Builder, CodeBlock> joinCodeBlocks
       = new Collector<CodeBlock, CodeBlock.Builder, CodeBlock>() {
     @Override
     public Supplier<CodeBlock.Builder> supplier() {
@@ -175,9 +181,9 @@ final class Utilities {
     }
     @Override
     public BinaryOperator<CodeBlock.Builder> combiner() {
-      return (a, b) -> {
-        a.add(b.build());
-        return a;
+      return (left, right) -> {
+        left.add(right.build());
+        return left;
       };
     }
     @Override

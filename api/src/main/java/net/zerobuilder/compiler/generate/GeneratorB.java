@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.Arrays.asList;
@@ -31,13 +30,11 @@ import static net.zerobuilder.compiler.generate.DtoBeanStep.setterThrownTypes;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
-import static net.zerobuilder.compiler.generate.Generator.builderField;
-import static net.zerobuilder.compiler.generate.Generator.updaterField;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.flatList;
-import static net.zerobuilder.compiler.generate.Utilities.join;
+import static net.zerobuilder.compiler.generate.Utilities.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
@@ -53,9 +50,9 @@ final class GeneratorB {
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
         .returns(updaterType(goal))
         .addExceptions(thrownTypes(goal, asList(getterThrownTypes, setterThrownTypes)))
-        .addCode(goal.steps().stream().map(nullChecks(goal)).collect(join))
+        .addCode(goal.steps().stream().map(nullChecks(goal)).collect(joinCodeBlocks))
         .addCode(initializeUpdater(goal, updater))
-        .addCode(goal.steps().stream().map(copy(goal)).collect(join))
+        .addCode(goal.steps().stream().map(copy(goal)).collect(joinCodeBlocks))
         .addStatement("return $N", updater)
         .addModifiers(modifiers)
         .build();
@@ -135,7 +132,7 @@ final class GeneratorB {
     FieldSpec cache = goal.context.cache.get();
     ClassName type = goal.goal.details.goalType;
     builder.add(goal.context.lifecycle == REUSE_INSTANCES
-        ? statement("$T $N = $N.get().$N", updater.type, updater, cache, updaterField(goal))
+        ? statement("$T $N = $N.get().$N", updater.type, updater, cache, goal.updaterField())
         : statement("$T $N = new $T()", updater.type, updater, updater.type));
     builder.add(goal.context.lifecycle == REUSE_INSTANCES
         ? statement("$N.$N = new $T()", updater, goal.bean(), type)
@@ -162,7 +159,7 @@ final class GeneratorB {
             ? Collections.emptyList()
             : goal.goal.thrownTypes)
         .addCode(goal.context.lifecycle == REUSE_INSTANCES
-            ? statement("$T $N = $N.get().$N", builderType, builder, cache, builderField(goal))
+            ? statement("$T $N = $N.get().$N", builderType, builder, cache, goal.builderField())
             : statement("$T $N = new $T()", builderType, builder, builderType))
         .addCode(goal.context.lifecycle == REUSE_INSTANCES
             ? statement("$N.$N = new $T()", builder, goal.bean(), type)

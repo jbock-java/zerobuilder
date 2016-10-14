@@ -60,7 +60,7 @@ public final class DtoGoalDescription {
 
     private static void validateProjectionInfo(DtoGoal.GoalOptions options,
                                                List<RegularParameter> parameters) {
-      if (!options.toBuilder) {
+      if (!options.updater) {
         return;
       }
       if (parameters.stream()

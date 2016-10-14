@@ -22,7 +22,7 @@ import static net.zerobuilder.compiler.generate.Utilities.transform;
 public final class DtoGeneratorOutput {
 
   /**
-   * Can be either a {@code builder} or {@code toBuilder} method
+   * Can be either a {@code builder} or {@code updater} method
    */
   public static final class BuilderMethod {
 
@@ -124,16 +124,6 @@ public final class DtoGeneratorOutput {
      */
     public List<TypeSpec> nestedTypes() {
       return nestedTypes;
-    }
-
-    /**
-     * All fields of the type returned by {@link #typeSpec(List)}.
-     * Includes static fields, if any.
-     *
-     * @return list of fields
-     */
-    public List<FieldSpec> fields() {
-      return fields;
     }
 
     /**

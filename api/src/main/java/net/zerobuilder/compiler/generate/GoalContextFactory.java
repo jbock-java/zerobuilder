@@ -12,6 +12,7 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
+import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
@@ -113,15 +114,18 @@ final class GoalContextFactory {
     }
   };
 
-  static Function<GoalDescription, IGoal> prepareGoal(ClassName generatedType) {
-    return DtoGoalDescription.asFunction(new GoalDescriptionCases<IGoal>() {
+  static Function<GoalDescription, AbstractGoalContext> prepare(DtoContext.BuildersContext context, GeneratorInput goals) {
+    ClassName generatedType = goals.buildersContext.generatedType;
+    return DtoGoalDescription.asFunction(new GoalDescriptionCases<AbstractGoalContext>() {
       @Override
-      public IGoal regularGoal(RegularGoalDescription goal) {
-        return GoalContextFactory.regularGoal(generatedType, goal);
+      public AbstractGoalContext regularGoal(RegularGoalDescription goal) {
+        return GoalContextFactory.regularGoal(generatedType, goal)
+            .withContext(context);
       }
       @Override
-      public IGoal beanGoal(BeanGoalDescription goal) {
-        return GoalContextFactory.beanGoal(goal, generatedType);
+      public AbstractGoalContext beanGoal(BeanGoalDescription goal) {
+        return GoalContextFactory.beanGoal(goal, generatedType)
+            .withContext(context);
       }
     });
   }

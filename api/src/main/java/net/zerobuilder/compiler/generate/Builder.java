@@ -5,8 +5,10 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -20,6 +22,7 @@ import static net.zerobuilder.compiler.generate.BuilderB.fieldsB;
 import static net.zerobuilder.compiler.generate.BuilderB.stepsB;
 import static net.zerobuilder.compiler.generate.BuilderV.fieldsV;
 import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractGoalDetails;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
@@ -27,10 +30,12 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
+import static net.zerobuilder.compiler.generate.GeneratorB.goalToBuilderB;
+import static net.zerobuilder.compiler.generate.GeneratorV.goalToBuilderV;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 
-final class Builder {
+final class Builder implements Generator.Module {
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields
       = goalCases(fieldsV, fieldsB);
@@ -42,7 +47,10 @@ final class Builder {
   private static final Function<AbstractGoalContext, List<MethodSpec>> steps
       = goalCases(stepsV, stepsB);
 
-  static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
+  private static final Function<AbstractGoalContext, BuilderMethod> goalToBuilder
+      = goalCases(goalToBuilderV, goalToBuilderB);
+
+  private static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
     return classBuilder(builderImplType(goal))
         .addSuperinterfaces(stepInterfaceTypes(goal))
         .addFields(fields.apply(goal))
@@ -52,7 +60,7 @@ final class Builder {
         .build();
   }
 
-  static TypeSpec defineContract(AbstractGoalContext goal) {
+  private static TypeSpec defineContract(AbstractGoalContext goal) {
     return classBuilder(contractName(goal))
         .addTypes(stepInterfaces(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
@@ -69,7 +77,26 @@ final class Builder {
     return DtoGoalContext.contractName(name, context.generatedType);
   }
 
-  private Builder() {
-    throw new UnsupportedOperationException("no instances");
+  @Override
+  public BuilderMethod method(AbstractGoalContext goal) {
+    return goalToBuilder.apply(goal);
+  }
+
+  @Override
+  public List<TypeSpec> nestedTypes(AbstractGoalContext goal) {
+    return Arrays.asList(
+        defineBuilderImpl(goal),
+        defineContract(goal));
+  }
+
+  @Override
+  public FieldSpec field(AbstractGoalContext goal) {
+    return goal.builderField();
+  }
+
+  @Override
+  public boolean handles(AbstractGoalContext goal) {
+    DtoGoal.AbstractGoalDetails details = abstractGoalDetails.apply(goal);
+    return details.goalOptions.builder;
   }
 }
