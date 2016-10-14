@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.stream.Collectors.toList;
@@ -21,12 +22,13 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
+import static net.zerobuilder.compiler.generate.Utilities.flatList;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 
 final class UpdaterV {
 
-  static final Function<RegularGoalContext, List<FieldSpec>> fields
+  static final Function<RegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
     List<FieldSpec> builder = new ArrayList<>();
     builder.addAll(presentInstances(DtoRegularGoal.fields.apply(goal)));
@@ -38,22 +40,20 @@ final class UpdaterV {
     return builder;
   };
 
-  static final Function<RegularGoalContext, List<MethodSpec>> updateMethods
+  static final Function<RegularGoalContext, List<MethodSpec>> updateMethodsV
       = goal ->
       regularSteps.apply(goal).stream()
-          .map(step -> updateMethods(goal, step))
-          .map(List::stream)
-          .flatMap(Function.identity())
-          .collect(toList());
+          .map(updateMethods(goal))
+          .collect(flatList());
 
-  private static List<MethodSpec> updateMethods(RegularGoalContext goal, RegularStep step) {
-    List<MethodSpec> builder = new ArrayList<>();
-    builder.add(normalUpdate(goal, step));
-    builder.addAll(presentInstances(regularEmptyCollection(goal, step)));
-    return builder;
+  private static Function<RegularStep, List<MethodSpec>> updateMethods(RegularGoalContext goal) {
+    return step -> Stream.concat(
+        Stream.of(normalUpdate(goal, step)),
+        presentInstances(emptyCollection(goal, step)).stream())
+        .collect(toList());
   }
 
-  private static Optional<MethodSpec> regularEmptyCollection(RegularGoalContext goal, RegularStep step) {
+  private static Optional<MethodSpec> emptyCollection(RegularGoalContext goal, RegularStep step) {
     Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();

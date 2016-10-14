@@ -25,21 +25,20 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.Utilities.flatList;
 import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 
 final class UpdaterB {
 
-  static final Function<BeanGoalContext, List<FieldSpec>> fields
+  static final Function<BeanGoalContext, List<FieldSpec>> fieldsB
       = goal -> singletonList(goal.bean());
 
-  static final Function<BeanGoalContext, List<MethodSpec>> updateMethods = goal ->
+  static final Function<BeanGoalContext, List<MethodSpec>> updateMethodsB = goal ->
       goal.steps().stream()
           .map(stepToMethods(goal))
-          .map(List::stream)
-          .flatMap(Function.identity())
-          .collect(Collectors.toList());
+          .collect(flatList());
 
   private static Function<AbstractBeanStep, List<MethodSpec>> stepToMethods(BeanGoalContext goal) {
     return beanStepCases(

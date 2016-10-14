@@ -21,11 +21,11 @@ import java.util.stream.Stream;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.Utilities.flatList;
 import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
@@ -41,14 +41,10 @@ final class BuilderB {
       Stream.concat(
           goal.steps().stream()
               .limit(goal.steps().size() - 1)
-              .map(stepToMethods(goal, false))
-              .map(List::stream)
-              .flatMap(Function.identity()),
+              .map(stepToMethods(goal, false)),
           Stream.of(goal.steps().get(goal.steps().size() - 1))
-              .map(stepToMethods(goal, true))
-              .map(List::stream)
-              .flatMap(Function.identity()))
-          .collect(toList());
+              .map(stepToMethods(goal, true)))
+          .collect(flatList());
 
   private static Function<AbstractBeanStep, List<MethodSpec>> stepToMethods(
       BeanGoalContext goal, boolean isLast) {

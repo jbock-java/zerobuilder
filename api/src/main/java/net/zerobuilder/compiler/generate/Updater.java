@@ -22,6 +22,10 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalType;
+import static net.zerobuilder.compiler.generate.UpdaterB.fieldsB;
+import static net.zerobuilder.compiler.generate.UpdaterB.updateMethodsB;
+import static net.zerobuilder.compiler.generate.UpdaterV.fieldsV;
+import static net.zerobuilder.compiler.generate.UpdaterV.updateMethodsV;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
@@ -33,10 +37,10 @@ final class Updater {
   }
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields
-      = goalCases(UpdaterV.fields, UpdaterB.fields);
+      = goalCases(fieldsV, fieldsB);
 
   private static final Function<AbstractGoalContext, List<MethodSpec>> updateMethods
-      = goalCases(UpdaterV.updateMethods, UpdaterB.updateMethods);
+      = goalCases(updateMethodsV, updateMethodsB);
 
   private static MethodSpec buildMethod(AbstractGoalContext goal) {
     return methodBuilder("done")

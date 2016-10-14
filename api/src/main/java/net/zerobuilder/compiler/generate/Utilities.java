@@ -28,6 +28,7 @@ import java.util.stream.Collector;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isUpperCase;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -185,9 +186,38 @@ final class Utilities {
     }
     @Override
     public Set<Characteristics> characteristics() {
-      return EnumSet.noneOf(Characteristics.class);
+      return emptySet();
     }
   };
+
+  static final <E> Collector<List<E>, List<E>, List<E>> flatList() {
+    return new Collector<List<E>, List<E>, List<E>>() {
+      @Override
+      public Supplier<List<E>> supplier() {
+        return ArrayList::new;
+      }
+      @Override
+      public BiConsumer<List<E>, List<E>> accumulator() {
+        return (left, right) -> left.addAll(right);
+      }
+      @Override
+      public BinaryOperator<List<E>> combiner() {
+        return (left, right) -> {
+          left.addAll(right);
+          return left;
+        };
+      }
+      @Override
+      public Function<List<E>, List<E>> finisher() {
+        return Function.identity();
+      }
+      @Override
+      public Set<Characteristics> characteristics() {
+        return emptySet();
+      }
+    };
+  }
+
 
   static <R> Supplier<R> memoize(Supplier<R> supplier) {
     List<R> ref = new ArrayList<>(singletonList(null));

@@ -36,6 +36,7 @@ import static net.zerobuilder.compiler.generate.Generator.updaterField;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.Utilities.flatList;
 import static net.zerobuilder.compiler.generate.Utilities.join;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
@@ -67,9 +68,7 @@ final class GeneratorB {
     for (Function<AbstractBeanStep, List<TypeName>> function : functions) {
       thrownTypes.addAll(goal.steps().stream()
           .map(function)
-          .map(List::stream)
-          .flatMap(Function.identity())
-          .collect(Collectors.toList()));
+          .collect(flatList()));
     }
     if (goal.context.lifecycle == NEW_INSTANCE) {
       thrownTypes.addAll(goal.goal.thrownTypes);
