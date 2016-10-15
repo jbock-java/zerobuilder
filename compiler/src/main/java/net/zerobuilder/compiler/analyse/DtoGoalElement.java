@@ -5,12 +5,15 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.generate.Access;
+import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
+import net.zerobuilder.compiler.generate.Updater;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -157,12 +160,16 @@ final class DtoGoalElement {
   }
 
   private static GoalOptions goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
-    return GoalOptions.builder()
-        .builderAccess(accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess))
-        .updaterAccess(accessLevelOverride(goalAnnotation.updaterAccess(), defaultAccess))
-        .updater(goalAnnotation.updater())
-        .builder(goalAnnotation.builder())
-        .build();
+    ArrayList<GoalOption> options = new ArrayList<>();
+    if (goalAnnotation.updater()) {
+      options.add(GoalOption.create(
+          accessLevelOverride(goalAnnotation.updaterAccess(), defaultAccess), new Updater()));
+    }
+    if (goalAnnotation.builder()) {
+      options.add(GoalOption.create(
+          accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess), new Builder()));
+    }
+    return GoalOptions.create(options);
   }
 
   private static TypeName goalType(ExecutableElement goal) {

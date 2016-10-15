@@ -8,7 +8,6 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -23,7 +22,6 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractGoalDetai
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalType;
 import static net.zerobuilder.compiler.generate.GeneratorB.goalToUpdaterB;
 import static net.zerobuilder.compiler.generate.GeneratorV.goalToUpdaterV;
@@ -34,11 +32,11 @@ import static net.zerobuilder.compiler.generate.UpdaterV.updateMethodsV;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
-final class Updater implements Generator.Module {
+public final class Updater implements Generator.Module {
 
   static ClassName updaterType(AbstractGoalContext goal) {
     return buildersContext.apply(goal).generatedType.nestedClass(
-        upcase(goalName.apply(goal) + "Updater"));
+        upcase(goal.name() + "Updater"));
   }
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields
@@ -92,6 +90,6 @@ final class Updater implements Generator.Module {
   @Override
   public boolean handles(AbstractGoalContext goal) {
     DtoGoal.AbstractGoalDetails details = abstractGoalDetails.apply(goal);
-    return details.goalOptions.updater;
+    return details.goalOptions.handles(this.getClass());
   }
 }

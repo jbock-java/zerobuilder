@@ -28,14 +28,13 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructo
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.goalName;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.GeneratorB.goalToBuilderB;
 import static net.zerobuilder.compiler.generate.GeneratorV.goalToBuilderV;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 
-final class Builder implements Generator.Module {
+public final class Builder implements Generator.Module {
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields
       = goalCases(fieldsV, fieldsB);
@@ -73,8 +72,7 @@ final class Builder implements Generator.Module {
 
   private static ClassName contractName(AbstractGoalContext goal) {
     BuildersContext context = buildersContext.apply(goal);
-    String name = goalName.apply(goal);
-    return DtoGoalContext.contractName(name, context.generatedType);
+    return DtoGoalContext.contractName(goal.name(), context.generatedType);
   }
 
   @Override
@@ -97,6 +95,6 @@ final class Builder implements Generator.Module {
   @Override
   public boolean handles(AbstractGoalContext goal) {
     DtoGoal.AbstractGoalDetails details = abstractGoalDetails.apply(goal);
-    return details.goalOptions.builder;
+    return details.goalOptions.handles(this.getClass());
   }
 }

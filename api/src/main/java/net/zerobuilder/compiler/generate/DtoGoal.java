@@ -2,61 +2,59 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
 import java.util.List;
 import java.util.function.Function;
-
-import static net.zerobuilder.compiler.generate.Access.PUBLIC;
+import java.util.function.Predicate;
 
 public final class DtoGoal {
 
   public enum GoalMethodType {
-    STATIC_METHOD, INSTANCE_METHOD;
+    STATIC_METHOD, INSTANCE_METHOD
+  }
+
+  public static final class GoalOption {
+    final Access access;
+    final Predicate<Class<? extends Generator.Module>> handles;
+
+    private GoalOption(Access access, Predicate<Class<? extends Generator.Module>> handles) {
+      this.access = access;
+      this.handles = handles;
+    }
+
+    public static GoalOption create(Access access, Generator.Module module) {
+      return new GoalOption(access, clazz -> clazz == module.getClass());
+    }
   }
 
   public static final class GoalOptions {
-    final Access builderAccess;
-    final Access toBuilderAccess;
-    final boolean updater;
-    final boolean builder;
+    final List<GoalOption> goalOptions;
 
-    private GoalOptions(Access builderAccess, Access toBuilderAccess, boolean updater, boolean builder) {
-      this.builderAccess = builderAccess;
-      this.toBuilderAccess = toBuilderAccess;
-      this.updater = updater;
-      this.builder = builder;
+    private GoalOptions(List<GoalOption> goalOptions) {
+      this.goalOptions = goalOptions;
     }
 
-    public static Builder builder() {
-      return new Builder();
+    Access access(Class<? extends Generator.Module> clazz) {
+      for (GoalOption goalOption : goalOptions) {
+        if (goalOption.handles.test(clazz)) {
+          return goalOption.access;
+        }
+      }
+      return Access.PUBLIC;
     }
 
-    public static final class Builder {
-      private Access builderAccess = PUBLIC;
-      private Access toBuilderAccess = PUBLIC;
-      private boolean toBuilder;
-      private boolean builder;
-      private Builder() {
+    boolean handles(Class<? extends Generator.Module> clazz) {
+      for (GoalOption goalOption : goalOptions) {
+        if (goalOption.handles.test(clazz)) {
+          return true;
+        }
       }
-      public Builder builderAccess(Access builderAccess) {
-        this.builderAccess = builderAccess;
-        return this;
-      }
-      public Builder updaterAccess(Access toBuilderAccess) {
-        this.toBuilderAccess = toBuilderAccess;
-        return this;
-      }
-      public Builder updater(boolean toBuilder) {
-        this.toBuilder = toBuilder;
-        return this;
-      }
-      public Builder builder(boolean builder) {
-        this.builder = builder;
-        return this;
-      }
-      public GoalOptions build() {
-        return new GoalOptions(builderAccess, toBuilderAccess, toBuilder, builder);
-      }
+      return false;
+    }
+
+    public static GoalOptions create(List<GoalOption> goalOptions) {
+      return new GoalOptions(goalOptions);
     }
   }
 

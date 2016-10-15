@@ -2,9 +2,12 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.Access;
+import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
@@ -12,12 +15,14 @@ import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
+import net.zerobuilder.compiler.generate.Updater;
 import org.junit.Test;
 
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.Collections;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
@@ -56,11 +61,10 @@ public class UpdaterTest {
     BuildersContext buildersContext = createBuildersContext(TYPE, GENERATED_TYPE, NEW_INSTANCE);
 
     String goalName = "myGoal";
+    GoalOption updaterOption = GoalOption.create(Access.PUBLIC, new Updater()); // create an updater
     RegularGoalDetails details = ConstructorGoalDetails.create(
         TYPE, goalName, singletonList("foo"),
-        GoalOptions.builder()
-            .updater(true)
-            .build());
+        GoalOptions.create(singletonList(updaterOption)));
 
     RegularParameter fooParameter = RegularParameter.create("foo", STRING, ALLOW,
         DtoProjectionInfo.method("getFoo", singletonList(IO_EXCEPTION)));
@@ -74,7 +78,8 @@ public class UpdaterTest {
         buildersContext, singletonList(goalDescription));
 
     // Invoke the generator
-    GeneratorOutput generatorOutput = Generator.generate(generatorInput);
+    Generator generator = Generator.create(asList(new Updater(), new Builder()));
+    GeneratorOutput generatorOutput = generator.generate(generatorInput);
 
     assertThat(generatorOutput.methods().size(), is(1));
     assertThat(generatorOutput.methods().get(0).name(), is(goalName));

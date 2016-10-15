@@ -14,7 +14,6 @@ import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
@@ -24,7 +23,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Updater.updaterType;
-import static net.zerobuilder.compiler.generate.Utilities.asPredicate;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
@@ -55,6 +53,17 @@ final class DtoGoalContext {
     final FieldSpec builderField() {
       return builderField.get();
     }
+
+    final String name() {
+      return goalName.apply(this);
+    }
+
+    final DtoGoal.GoalOptions goalOptions() {
+      return goalOptions.apply(this);
+    }
+
+    private static final Function<AbstractGoalContext, DtoGoal.GoalOptions> goalOptions
+        = abstractGoalDetails.andThen(details -> details.goalOptions);
 
     private static FieldSpec updaterField(AbstractGoalContext context) {
       ClassName type = updaterType(context);
@@ -132,7 +141,7 @@ final class DtoGoalContext {
       });
 
 
-  static final Function<AbstractGoalContext, String> goalName = asFunction(new GoalCases<String>() {
+  private static final Function<AbstractGoalContext, String> goalName = asFunction(new GoalCases<String>() {
     @Override
     public String regularGoal(RegularGoalContext goal) {
       RegularGoalDetails regularGoalDetails = DtoRegularGoal.goalDetails.apply(goal);
@@ -148,15 +157,6 @@ final class DtoGoalContext {
       goalCases(
           DtoRegularGoal.goalDetails,
           bGoal -> bGoal.goal.details);
-
-  private static final Function<AbstractGoalContext, DtoGoal.GoalOptions> goalOptions
-      = abstractGoalDetails.andThen(details -> details.goalOptions);
-
-  static final Predicate<AbstractGoalContext> builder
-      = context -> goalOptions.apply(context).builder;
-
-  static final Predicate<AbstractGoalContext> toBuilder
-      = context -> goalOptions.apply(context).updater;
 
   static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps =
       goalCases(
@@ -175,9 +175,6 @@ final class DtoGoalContext {
                   ? emptyCodeBlock
                   : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))
               .build());
-
-  static final Predicate<AbstractGoalContext> isRecycle = asPredicate(
-      goal -> buildersContext.apply(goal).lifecycle == REUSE_INSTANCES);
 
   static ClassName contractName(String goalName, ClassName generatedType) {
     return generatedType.nestedClass(upcase(goalName + "Builder"));

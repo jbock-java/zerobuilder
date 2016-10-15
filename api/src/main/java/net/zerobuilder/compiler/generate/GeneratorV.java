@@ -56,7 +56,7 @@ final class GeneratorV {
             .addCode(initUpdater(goal, updater))
             .addCode(copyBlock(goal))
             .addStatement("return $N", updater)
-            .addModifiers(details.goalOptions.toBuilderAccess.modifiers(STATIC))
+            .addModifiers(details.goalOptions.access(Updater.class).modifiers(STATIC))
             .build();
         return new BuilderMethod(details.name, method);
       };
@@ -168,10 +168,9 @@ final class GeneratorV {
       = goal -> {
     RegularGoalDetails regularGoalDetails = goalDetails.apply(goal);
     List<RegularStep> steps = regularSteps.apply(goal);
-    String name = DtoGoalContext.goalName.apply(goal);
-    MethodSpec.Builder method = methodBuilder(name + "Builder")
+    MethodSpec.Builder method = methodBuilder(goal.name() + "Builder")
         .returns(steps.get(0).thisType)
-        .addModifiers(regularGoalDetails.goalOptions.builderAccess.modifiers(STATIC));
+        .addModifiers(regularGoalDetails.goalOptions.access(Builder.class).modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
     BuildersContext context = DtoRegularGoal.buildersContext.apply(goal);
     ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));
@@ -180,7 +179,7 @@ final class GeneratorV {
       method.addParameter(instance);
     }
     MethodSpec methodSpec = method.addStatement("return $N", builder).build();
-    return new BuilderMethod(name, methodSpec);
+    return new BuilderMethod(goal.name(), methodSpec);
   };
 
   private static Function<RegularGoalContext, CodeBlock> initBuilder(

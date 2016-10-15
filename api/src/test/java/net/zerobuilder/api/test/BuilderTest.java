@@ -2,8 +2,10 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
@@ -11,12 +13,13 @@ import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescripti
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
+import net.zerobuilder.compiler.generate.Updater;
 import org.junit.Test;
 
 import javax.lang.model.element.Modifier;
-import java.util.Arrays;
 import java.util.Collections;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
@@ -63,18 +66,16 @@ public class BuilderTest {
 
     // create goal details
     String goalName = "myGoal"; // free choice, but should be a valid java identifier
+    GoalOption builderOption = GoalOption.create(PRIVATE, new Builder()); // create a builder
     RegularGoalDetails details = MethodGoalDetails.create(
         TYPE, // return type of the goal method
         // names of generated classes and methods are based on this
         goalName,
         // parameter names in correct order
-        Arrays.asList("foo", "bar"),
+        asList("foo", "bar"),
         "create", // correct goal method name
         STATIC_METHOD, // goal method is static
-        GoalOptions.builder()
-            .builder(true) // DO generate builder pattern
-            .builderAccess(PRIVATE) // "myGoalBuilder" will be private
-            .build());
+        GoalOptions.create(singletonList(builderOption)));
 
     // create parameter representations
     RegularParameter fooParameter = RegularParameter.create("foo", STRING, ALLOW);
@@ -83,14 +84,15 @@ public class BuilderTest {
         details,
         Collections.emptyList(), // the goal method declares no exceptions
         // step order; not necessarily the order of the goal parameters
-        Arrays.asList(fooParameter, barParameter));
+        asList(fooParameter, barParameter));
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(
         buildersContext, singletonList(goalDescription));
 
     // Invoke the generator
-    GeneratorOutput generatorOutput = Generator.generate(generatorInput);
+    Generator generator = Generator.create(asList(new Updater(), new Builder()));
+    GeneratorOutput generatorOutput = generator.generate(generatorInput);
 
     assertThat(generatorOutput.methods().size(), is(1));
     assertThat(generatorOutput.methods().get(0).name(), is(goalName));
