@@ -107,7 +107,7 @@ final class DtoGoalContext {
   static List<ClassName> stepInterfaceTypes(AbstractGoalContext goal) {
     return transform(
         abstractSteps.apply(goal),
-        step -> step.thisType);
+        step -> Builder.contractName(goal).nestedClass(step.thisType));
   }
 
   static final Function<AbstractGoalContext, BuildersContext> buildersContext

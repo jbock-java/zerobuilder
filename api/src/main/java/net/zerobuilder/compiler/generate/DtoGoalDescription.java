@@ -25,6 +25,26 @@ public final class DtoGoalDescription {
     return goal -> goal.accept(cases);
   }
 
+  static <R> Function<GoalDescription, R> goalDescriptionCases(
+      Function<? super RegularGoalDescription, ? extends R> regular,
+      Function<? super BeanGoalDescription, ? extends R> bean) {
+    return asFunction(new GoalDescriptionCases<R>() {
+      @Override
+      public R regularGoal(RegularGoalDescription goal) {
+        return regular.apply(goal);
+      }
+      @Override
+      public R beanGoal(BeanGoalDescription goal) {
+        return bean.apply(goal);
+      }
+    });
+  }
+
+  static final Function<GoalDescription, AbstractGoalDetails> goalDetails =
+      goalDescriptionCases(
+          description -> description.details,
+          description -> description.details);
+
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
@@ -60,7 +80,7 @@ public final class DtoGoalDescription {
 
     private static void validateProjectionInfo(DtoGoal.GoalOptions options,
                                                List<RegularParameter> parameters) {
-      if (!options.handles(Updater.class)) {
+      if (!options.needsProjections()) {
         return;
       }
       if (parameters.stream()

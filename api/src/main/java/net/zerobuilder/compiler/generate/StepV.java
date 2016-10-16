@@ -14,6 +14,7 @@ import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
+import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.DtoStep.abstractParameter;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
@@ -32,7 +33,7 @@ final class StepV {
     String name = parameterName.apply(parameter);
     TypeName type = parameter.type;
     return methodBuilder(name)
-        .returns(step.nextType)
+        .returns(nextType(step))
         .addParameter(parameterSpec(type, name))
         .addExceptions(step.declaredExceptions)
         .addModifiers(PUBLIC, ABSTRACT)
@@ -46,7 +47,7 @@ final class StepV {
     }
     DtoStep.CollectionInfo collectionInfo = maybeEmptyOption.get();
     return Optional.of(methodBuilder(collectionInfo.name)
-        .returns(step.nextType)
+        .returns(nextType(step))
         .addModifiers(PUBLIC, ABSTRACT)
         .build());
   }

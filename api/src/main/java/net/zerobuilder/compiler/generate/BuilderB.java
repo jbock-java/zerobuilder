@@ -23,6 +23,7 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
+import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.Utilities.flatList;
@@ -72,7 +73,7 @@ final class BuilderB {
     return Optional.of(methodBuilder(collectionInfo.name)
         .addAnnotation(Override.class)
         .addExceptions(step.accessorPair.setterThrownTypes)
-        .returns(step.nextType)
+        .returns(nextType(step))
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), emptyColl)
         .addCode(regularFinalBlock(goal, isLast))
@@ -89,7 +90,7 @@ final class BuilderB {
   private static MethodSpec loneGetterEmptyCollection(LoneGetterStep step, BeanGoalContext goal, boolean isLast) {
     return methodBuilder(step.emptyMethod)
         .addAnnotation(Override.class)
-        .returns(step.nextType)
+        .returns(nextType(step))
         .addCode(regularFinalBlock(goal, isLast))
         .addModifiers(PUBLIC)
         .build();
@@ -111,7 +112,7 @@ final class BuilderB {
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
         .addAnnotation(Override.class)
-        .returns(step.nextType)
+        .returns(nextType(step))
         .addExceptions(step.loneGetter.getterThrownTypes)
         .addParameter(parameter)
         .addCode(nullCheck(parameter))
@@ -132,7 +133,7 @@ final class BuilderB {
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addParameter(parameter)
         .addModifiers(PUBLIC)
-        .returns(step.nextType)
+        .returns(nextType(step))
         .addCode(nullCheck.apply(step))
         .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), parameter)
         .addCode(regularFinalBlock(goal, isLast)).build();

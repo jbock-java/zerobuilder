@@ -22,7 +22,6 @@ import static net.zerobuilder.compiler.generate.BuilderB.fieldsB;
 import static net.zerobuilder.compiler.generate.BuilderB.stepsB;
 import static net.zerobuilder.compiler.generate.BuilderV.fieldsV;
 import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractGoalDetails;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
@@ -33,21 +32,29 @@ import static net.zerobuilder.compiler.generate.GeneratorB.goalToBuilderB;
 import static net.zerobuilder.compiler.generate.GeneratorV.goalToBuilderV;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
+import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class Builder implements Generator.Module {
 
-  private static final Function<AbstractGoalContext, List<FieldSpec>> fields
-      = goalCases(fieldsV, fieldsB);
+  static final String MODULE_NAME = "builder";
+
+  private static final Function<AbstractGoalContext, List<FieldSpec>> fields =
+      goalCases(fieldsV, fieldsB);
 
   private static List<TypeSpec> stepInterfaces(AbstractGoalContext goal) {
     return transform(abstractSteps.apply(goal), asStepInterface);
   }
 
-  private static final Function<AbstractGoalContext, List<MethodSpec>> steps
-      = goalCases(stepsV, stepsB);
+  private static final Function<AbstractGoalContext, List<MethodSpec>> steps =
+      goalCases(stepsV, stepsB);
 
-  private static final Function<AbstractGoalContext, BuilderMethod> goalToBuilder
-      = goalCases(goalToBuilderV, goalToBuilderB);
+  private static final Function<AbstractGoalContext, BuilderMethod> goalToBuilder =
+      goalCases(goalToBuilderV, goalToBuilderB);
+
+  static ClassName contractName(AbstractGoalContext goal) {
+    BuildersContext context = buildersContext.apply(goal);
+    return context.generatedType.nestedClass(upcase(goal.name() + "Builder"));
+  }
 
   private static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
     return classBuilder(builderImplType(goal))
@@ -70,11 +77,6 @@ public final class Builder implements Generator.Module {
         .build();
   }
 
-  private static ClassName contractName(AbstractGoalContext goal) {
-    BuildersContext context = buildersContext.apply(goal);
-    return DtoGoalContext.contractName(goal.name(), context.generatedType);
-  }
-
   @Override
   public BuilderMethod method(AbstractGoalContext goal) {
     return goalToBuilder.apply(goal);
@@ -93,8 +95,12 @@ public final class Builder implements Generator.Module {
   }
 
   @Override
-  public boolean handles(AbstractGoalContext goal) {
-    DtoGoal.AbstractGoalDetails details = abstractGoalDetails.apply(goal);
-    return details.goalOptions.handles(this.getClass());
+  public boolean needsProjections() {
+    return false;
+  }
+
+  @Override
+  public String name() {
+    return MODULE_NAME;
   }
 }

@@ -5,6 +5,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractGoalDetails;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
 import static net.zerobuilder.compiler.generate.Utilities.concat;
 import static net.zerobuilder.compiler.generate.Utilities.flatList;
@@ -46,7 +48,8 @@ public final class Generator {
     BuilderMethod method(AbstractGoalContext goal);
     List<TypeSpec> nestedTypes(AbstractGoalContext goal);
     FieldSpec field(AbstractGoalContext goal);
-    boolean handles(AbstractGoalContext goal);
+    boolean needsProjections();
+    String name();
   }
 
   /**
@@ -69,24 +72,28 @@ public final class Generator {
         context.lifecycle);
   }
 
+  private static boolean handles(Module module, AbstractGoalContext goal) {
+    AbstractGoalDetails details = abstractGoalDetails.apply(goal);
+    return details.goalOptions.handles(module);
+  }
 
   private static Function<AbstractGoalContext, List<BuilderMethod>> methodsFunction(List<Module> modules) {
     return goal -> modules.stream()
-        .filter(module -> module.handles(goal))
+        .filter(module -> handles(module, goal))
         .map(module -> module.method(goal))
         .collect(toList());
   }
 
   private static Function<AbstractGoalContext, List<TypeSpec>> nestedTypesFunction(List<Module> modules) {
     return goal -> modules.stream()
-        .filter(module -> module.handles(goal))
+        .filter(module -> handles(module, goal))
         .map(module -> module.nestedTypes(goal))
         .collect(flatList());
   }
 
   private static Function<AbstractGoalContext, List<FieldSpec>> fieldsFunction(List<Module> modules) {
     return goal -> modules.stream()
-        .filter(module -> module.handles(goal))
+        .filter(module -> handles(module, goal))
         .map(module -> module.field(goal))
         .collect(toList());
   }

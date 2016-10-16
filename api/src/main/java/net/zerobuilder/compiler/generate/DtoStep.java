@@ -5,6 +5,8 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.Utilities.ClassNames;
@@ -75,12 +77,30 @@ final class DtoStep {
     }
   }
 
-  static abstract class AbstractStep {
-    final ClassName thisType;
-    final TypeName nextType;
-    AbstractStep(ClassName thisType, TypeName nextType) {
-      this.thisType = thisType;
-      this.nextType = nextType;
+  public static abstract class AbstractStep {
+
+    public final AbstractGoalDetails goalDetails;
+    public final BuildersContext context;
+    public final String thisType;
+    public final Optional<? extends AbstractStep> nextStep;
+
+    static TypeName nextType(AbstractStep step) {
+      if (step.nextStep.isPresent()) {
+        return step.context.generatedType
+            .nestedClass(upcase(step.goalDetails.name + "Builder"))
+            .nestedClass(step.nextStep.get().thisType);
+      }
+      return step.goalDetails.type();
+    }
+
+    AbstractStep(ClassName thisType,
+                 Optional<? extends AbstractStep> nextStep,
+                 AbstractGoalDetails goalDetails,
+                 BuildersContext context) {
+      this.thisType = thisType.simpleName();
+      this.nextStep = nextStep;
+      this.goalDetails = goalDetails;
+      this.context = context;
     }
     abstract <R> R accept(StepCases<R> cases);
   }
@@ -115,9 +135,13 @@ final class DtoStep {
     private final Supplier<FieldSpec> field;
     private final Supplier<Optional<CollectionInfo>> collectionInfo;
 
-    private RegularStep(ClassName thisType, TypeName nextType, RegularParameter validParameter,
+    private RegularStep(ClassName thisType,
+                        Optional<? extends AbstractStep> nextType,
+                        AbstractGoalDetails goalDetails,
+                        BuildersContext context,
+                        RegularParameter validParameter,
                         List<TypeName> declaredExceptions) {
-      super(thisType, nextType);
+      super(thisType, nextType, goalDetails, context);
       this.declaredExceptions = declaredExceptions;
       this.validParameter = validParameter;
       this.field = memoizeField(validParameter);
@@ -135,9 +159,13 @@ final class DtoStep {
           fieldSpec(validParameter.type, validParameter.name, PRIVATE));
     }
 
-    static RegularStep create(ClassName thisType, TypeName nextType, RegularParameter parameter,
+    static RegularStep create(ClassName thisType,
+                              Optional<? extends AbstractStep> nextType,
+                              AbstractGoalDetails goalDetails,
+                              BuildersContext context,
+                              RegularParameter parameter,
                               List<TypeName> declaredExceptions) {
-      return new RegularStep(thisType, nextType, parameter, declaredExceptions);
+      return new RegularStep(thisType, nextType, goalDetails, context, parameter, declaredExceptions);
     }
 
     Optional<CollectionInfo> collectionInfo() {

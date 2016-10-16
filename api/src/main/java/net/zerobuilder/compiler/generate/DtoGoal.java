@@ -2,11 +2,10 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.Generator.Module;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 public final class DtoGoal {
 
@@ -16,15 +15,15 @@ public final class DtoGoal {
 
   public static final class GoalOption {
     final Access access;
-    final Predicate<Class<? extends Generator.Module>> handles;
+    final Module module;
 
-    private GoalOption(Access access, Predicate<Class<? extends Generator.Module>> handles) {
+    private GoalOption(Access access, Module module) {
       this.access = access;
-      this.handles = handles;
+      this.module = module;
     }
 
-    public static GoalOption create(Access access, Generator.Module module) {
-      return new GoalOption(access, clazz -> clazz == module.getClass());
+    public static GoalOption create(Access access, Module module) {
+      return new GoalOption(access, module);
     }
   }
 
@@ -35,18 +34,27 @@ public final class DtoGoal {
       this.goalOptions = goalOptions;
     }
 
-    Access access(Class<? extends Generator.Module> clazz) {
+    Access access(String moduleName) {
       for (GoalOption goalOption : goalOptions) {
-        if (goalOption.handles.test(clazz)) {
+        if (goalOption.module.name().equals(moduleName)) {
           return goalOption.access;
         }
       }
       return Access.PUBLIC;
     }
 
-    boolean handles(Class<? extends Generator.Module> clazz) {
+    boolean handles(Module module) {
       for (GoalOption goalOption : goalOptions) {
-        if (goalOption.handles.test(clazz)) {
+        if (goalOption.module.name().equals(module.name())) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    boolean needsProjections() {
+      for (GoalOption goalOption : goalOptions) {
+        if (goalOption.module.needsProjections()) {
           return true;
         }
       }
@@ -70,6 +78,8 @@ public final class DtoGoal {
     public final String name() {
       return name;
     }
+
+    abstract TypeName type();
 
     AbstractGoalDetails(String name, GoalOptions goalOptions) {
       this.name = name;
@@ -109,6 +119,10 @@ public final class DtoGoal {
      */
     final List<String> parameterNames;
 
+    @Override
+    final TypeName type() {
+      return goalType;
+    }
     /**
      * @param goalType       goal type
      * @param name           goal name
@@ -180,6 +194,11 @@ public final class DtoGoal {
     public BeanGoalDetails(ClassName goalType, String name, GoalOptions goalOptions) {
       super(name, goalOptions);
       this.goalType = goalType;
+    }
+
+    @Override
+    TypeName type() {
+      return goalType;
     }
 
     @Override

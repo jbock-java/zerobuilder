@@ -18,7 +18,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.BuilderV.regularInvoke;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractGoalDetails;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
@@ -33,6 +32,8 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class Updater implements Generator.Module {
+
+  static final String MODULE_NAME = "updater";
 
   static ClassName updaterType(AbstractGoalContext goal) {
     return buildersContext.apply(goal).generatedType.nestedClass(
@@ -88,8 +89,12 @@ public final class Updater implements Generator.Module {
   }
 
   @Override
-  public boolean handles(AbstractGoalContext goal) {
-    DtoGoal.AbstractGoalDetails details = abstractGoalDetails.apply(goal);
-    return details.goalOptions.handles(this.getClass());
+  public boolean needsProjections() {
+    return true;
+  }
+
+  @Override
+  public String name() {
+    return MODULE_NAME;
   }
 }

@@ -6,6 +6,8 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
@@ -43,8 +45,11 @@ final class DtoBeanStep {
   }
 
   static abstract class AbstractBeanStep extends AbstractStep {
-    AbstractBeanStep(ClassName thisType, TypeName nextType) {
-      super(thisType, nextType);
+    AbstractBeanStep(ClassName thisType,
+                     Optional<? extends AbstractStep> nextType,
+                     AbstractGoalDetails goalDetails,
+                     BuildersContext context) {
+      super(thisType, nextType, goalDetails, context);
     }
     @Override
     final <R> R accept(DtoStep.StepCases<R> cases) {
@@ -56,13 +61,21 @@ final class DtoBeanStep {
   static final class AccessorPairStep extends AbstractBeanStep {
     final AccessorPair accessorPair;
 
-    private AccessorPairStep(ClassName thisType, TypeName nextType, AccessorPair accessorPair) {
-      super(thisType, nextType);
+    private AccessorPairStep(ClassName thisType,
+                             Optional<? extends AbstractStep> nextType,
+                             AbstractGoalDetails goalDetails,
+                             BuildersContext context,
+                             AccessorPair accessorPair) {
+      super(thisType, nextType, goalDetails, context);
       this.accessorPair = accessorPair;
     }
 
-    static AccessorPairStep create(ClassName thisType, TypeName nextType, AccessorPair accessorPair) {
-      return new AccessorPairStep(thisType, nextType, accessorPair);
+    static AccessorPairStep create(ClassName thisType,
+                                   Optional<? extends AbstractStep> nextType,
+                                   AbstractGoalDetails goalDetails,
+                                   BuildersContext context,
+                                   AccessorPair accessorPair) {
+      return new AccessorPairStep(thisType, nextType, goalDetails, context, accessorPair);
     }
 
     Optional<CollectionInfo> emptyOption() {
@@ -84,15 +97,26 @@ final class DtoBeanStep {
     final LoneGetter loneGetter;
     final String emptyMethod;
 
-    private LoneGetterStep(ClassName thisType, TypeName nextType, LoneGetter loneGetter, String emptyMethod) {
-      super(thisType, nextType);
+    private LoneGetterStep(ClassName thisType,
+                           Optional<? extends AbstractStep> nextType,
+                           AbstractGoalDetails goalDetails,
+                           BuildersContext context,
+                           LoneGetter loneGetter,
+                           String emptyMethod) {
+      super(thisType, nextType, goalDetails, context);
       this.loneGetter = loneGetter;
       this.emptyMethod = emptyMethod;
     }
-    static LoneGetterStep create(ClassName thisType, TypeName nextType, LoneGetter loneGetter) {
+
+    static LoneGetterStep create(ClassName thisType,
+                                 Optional<? extends AbstractStep> nextType,
+                                 AbstractGoalDetails goalDetails,
+                                 BuildersContext context,
+                                 LoneGetter loneGetter) {
       String emptyMethod = "empty" + upcase(loneGetter.name());
-      return new LoneGetterStep(thisType, nextType, loneGetter, emptyMethod);
+      return new LoneGetterStep(thisType, nextType, goalDetails, context, loneGetter, emptyMethod);
     }
+
     @Override
     <R> R acceptBean(BeanStepCases<R> cases) {
       return cases.loneGetter(this);

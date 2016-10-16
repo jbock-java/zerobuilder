@@ -26,6 +26,7 @@ import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.fields;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
+import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
@@ -71,7 +72,7 @@ final class BuilderV {
     return methodBuilder(step.validParameter.name)
         .addAnnotation(Override.class)
         .addParameter(parameter)
-        .returns(step.nextType)
+        .returns(nextType(step))
         .addCode(nullCheck.apply(step))
         .addCode(normalAssignment(step, goal, isLast))
         .addModifiers(PUBLIC)
@@ -88,7 +89,7 @@ final class BuilderV {
     CollectionInfo collectionInfo = maybeEmptyOption.get();
     return Optional.of(methodBuilder(collectionInfo.name)
         .addAnnotation(Override.class)
-        .returns(step.nextType)
+        .returns(nextType(step))
         .addCode(emptyCollectionAssignment(step, goal, collectionInfo, isLast))
         .addModifiers(PUBLIC)
         .build());
