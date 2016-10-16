@@ -3,6 +3,10 @@
 A library of the core functionality of zerobuilder.
 It is intended for use in other annotation processors.
 
+### Caution
+
+Work in progress!
+
 ### Usage
 
 See tests.
