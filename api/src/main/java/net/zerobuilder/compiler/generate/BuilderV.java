@@ -66,10 +66,10 @@ final class BuilderV {
   }
 
   private static MethodSpec stepMethod(RegularStep step, RegularGoalContext goal, boolean isLast) {
-    TypeName type = step.validParameter.type;
-    String name = step.validParameter.name;
+    TypeName type = step.parameter.type;
+    String name = step.parameter.name;
     ParameterSpec parameter = parameterSpec(type, name);
-    return methodBuilder(step.validParameter.name)
+    return methodBuilder(step.parameter.name)
         .addAnnotation(Override.class)
         .addParameter(parameter)
         .returns(nextType(step))
@@ -96,8 +96,8 @@ final class BuilderV {
   }
 
   private static CodeBlock normalAssignment(RegularStep step, RegularGoalContext goal, boolean isLast) {
-    TypeName type = step.validParameter.type;
-    String name = step.validParameter.name;
+    TypeName type = step.parameter.type;
+    String name = step.parameter.name;
     ParameterSpec parameter = parameterSpec(type, name);
     if (isLast) {
       return regularInvoke.apply(goal);
@@ -135,8 +135,8 @@ final class BuilderV {
       @Override
       public CodeBlock constructorGoal(ConstructorGoalContext goal) {
         CodeBlock parameters = invocationParameters(goal.parameterNames());
-        TypeName type = step.validParameter.type;
-        String name = step.validParameter.name;
+        TypeName type = step.parameter.type;
+        String name = step.parameter.name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
             .addStatement("return new $T($L)", goal.type(), parameters)
@@ -145,8 +145,8 @@ final class BuilderV {
       @Override
       public CodeBlock methodGoal(MethodGoalContext goal) {
         CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
-        TypeName type = step.validParameter.type;
-        String name = step.validParameter.name;
+        TypeName type = step.parameter.type;
+        String name = step.parameter.name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
             .add(methodGoalInvocation(goal, parameters))

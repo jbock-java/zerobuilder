@@ -8,7 +8,7 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.Utilities.ClassNames;
 
 import java.util.Arrays;
@@ -129,7 +129,7 @@ final class DtoStep {
   }
 
   static final class RegularStep extends AbstractStep {
-    final RegularParameter validParameter;
+    final AbstractRegularParameter parameter;
     final List<TypeName> declaredExceptions;
 
     private final Supplier<FieldSpec> field;
@@ -139,31 +139,31 @@ final class DtoStep {
                         Optional<? extends AbstractStep> nextType,
                         AbstractGoalDetails goalDetails,
                         BuildersContext context,
-                        RegularParameter validParameter,
+                        AbstractRegularParameter parameter,
                         List<TypeName> declaredExceptions) {
       super(thisType, nextType, goalDetails, context);
       this.declaredExceptions = declaredExceptions;
-      this.validParameter = validParameter;
-      this.field = memoizeField(validParameter);
-      this.collectionInfo = memoizeCollectionInfo(validParameter);
+      this.parameter = parameter;
+      this.field = memoizeField(parameter);
+      this.collectionInfo = memoizeCollectionInfo(parameter);
     }
 
     private static Supplier<Optional<CollectionInfo>> memoizeCollectionInfo(
-        RegularParameter validParameter) {
+        AbstractRegularParameter parameter) {
       return memoize(() ->
-          CollectionInfo.create(validParameter.type, validParameter.name));
+          CollectionInfo.create(parameter.type, parameter.name));
     }
 
-    private static Supplier<FieldSpec> memoizeField(RegularParameter validParameter) {
+    private static Supplier<FieldSpec> memoizeField(AbstractRegularParameter parameter) {
       return memoize(() ->
-          fieldSpec(validParameter.type, validParameter.name, PRIVATE));
+          fieldSpec(parameter.type, parameter.name, PRIVATE));
     }
 
     static RegularStep create(ClassName thisType,
                               Optional<? extends AbstractStep> nextType,
                               AbstractGoalDetails goalDetails,
                               BuildersContext context,
-                              RegularParameter parameter,
+                              AbstractRegularParameter parameter,
                               List<TypeName> declaredExceptions) {
       return new RegularStep(thisType, nextType, goalDetails, context, parameter, declaredExceptions);
     }
@@ -186,7 +186,7 @@ final class DtoStep {
       = asFunction(new StepCases<AbstractParameter>() {
     @Override
     public AbstractParameter regularStep(RegularStep step) {
-      return step.validParameter;
+      return step.parameter;
     }
     @Override
     public AbstractParameter beanStep(AbstractBeanStep step) {

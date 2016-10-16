@@ -20,7 +20,6 @@ public final class DtoProjectionInfo {
   public interface ProjectionInfoCases<R, P> {
     R projectionMethod(ProjectionMethod projection, P p);
     R fieldAccess(FieldAccess projection, P p);
-    R none(P p);
   }
 
   static <R> Function<ProjectionInfo, R> asFunction(ProjectionInfoCases<R, Void> cases) {
@@ -44,17 +43,12 @@ public final class DtoProjectionInfo {
       public R fieldAccess(FieldAccess projection, Void aVoid) {
         return fieldAccess.apply(projection);
       }
-      @Override
-      public R none(Void aVoid) {
-        return none.get();
-      }
     });
   }
 
   static <R, P> BiFunction<ProjectionInfo, P, R> projectionInfoCases(
       BiFunction<ProjectionMethod, P, R> projectionMethod,
-      BiFunction<FieldAccess, P, R> fieldAccess,
-      Function<P, R> none) {
+      BiFunction<FieldAccess, P, R> fieldAccess) {
     return asBiFunction(new ProjectionInfoCases<R, P>() {
       @Override
       public R projectionMethod(ProjectionMethod projection, P p) {
@@ -63,10 +57,6 @@ public final class DtoProjectionInfo {
       @Override
       public R fieldAccess(FieldAccess projection, P p) {
         return fieldAccess.apply(projection, p);
-      }
-      @Override
-      public R none(P p) {
-        return none.apply(p);
       }
     });
   }
@@ -99,16 +89,6 @@ public final class DtoProjectionInfo {
     }
   }
 
-  static final class None implements ProjectionInfo {
-    private None() {
-    }
-
-    @Override
-    public <R, P> R accept(ProjectionInfoCases<R, P> cases, P p) {
-      return cases.none(p);
-    }
-  }
-
   public static ProjectionInfo method(String methodName, List<TypeName> thrownTypes) {
     return new ProjectionMethod(methodName, thrownTypes);
   }
@@ -119,10 +99,6 @@ public final class DtoProjectionInfo {
 
   public static ProjectionInfo fieldAccess(String fieldName) {
     return new FieldAccess(fieldName);
-  }
-
-  public static ProjectionInfo none() {
-    return new None();
   }
 
   static final Predicate<ProjectionInfo> isPresent =

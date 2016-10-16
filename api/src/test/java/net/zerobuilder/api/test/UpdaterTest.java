@@ -11,8 +11,9 @@ import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoRegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
 import net.zerobuilder.compiler.generate.Updater;
@@ -66,7 +67,7 @@ public class UpdaterTest {
         TYPE, goalName, singletonList("foo"),
         GoalOptions.create(singletonList(updaterOption)));
 
-    RegularParameter fooParameter = RegularParameter.create("foo", STRING, ALLOW,
+    AbstractRegularParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW,
         DtoProjectionInfo.method("getFoo", singletonList(IO_EXCEPTION)));
     RegularGoalDescription goalDescription = RegularGoalDescription.create(
         details,

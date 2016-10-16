@@ -33,8 +33,8 @@ final class UpdaterV {
     List<FieldSpec> builder = new ArrayList<>();
     builder.addAll(presentInstances(DtoRegularGoal.fields.apply(goal)));
     for (RegularStep step : regularSteps.apply(goal)) {
-      String name = step.validParameter.name;
-      TypeName type = step.validParameter.type;
+      String name = step.parameter.name;
+      TypeName type = step.parameter.type;
       builder.add(fieldSpec(type, name, PRIVATE));
     }
     return builder;
@@ -69,8 +69,8 @@ final class UpdaterV {
   }
 
   private static MethodSpec normalUpdate(RegularGoalContext goal, RegularStep step) {
-    String name = step.validParameter.name;
-    TypeName type = step.validParameter.type;
+    String name = step.parameter.name;
+    TypeName type = step.parameter.type;
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
         .returns(updaterType(goal))

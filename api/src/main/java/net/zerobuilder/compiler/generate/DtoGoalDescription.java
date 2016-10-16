@@ -5,9 +5,10 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 public final class DtoGoalDescription {
@@ -51,11 +52,11 @@ public final class DtoGoalDescription {
   public static final class RegularGoalDescription implements GoalDescription {
     final RegularGoalDetails details;
     final List<TypeName> thrownTypes;
-    final List<RegularParameter> parameters;
+    final List<AbstractRegularParameter> parameters;
 
     private RegularGoalDescription(RegularGoalDetails details,
                                    List<TypeName> thrownTypes,
-                                   List<RegularParameter> parameters) {
+                                   List<AbstractRegularParameter> parameters) {
       this.details = details;
       this.thrownTypes = thrownTypes;
       this.parameters = parameters;
@@ -72,27 +73,27 @@ public final class DtoGoalDescription {
      */
     public static RegularGoalDescription create(RegularGoalDetails details,
                                                 List<TypeName> thrownTypes,
-                                                List<RegularParameter> parameters) {
+                                                List<AbstractRegularParameter> parameters) {
       checkParameterNames(details.parameterNames, parameters);
       validateProjectionInfo(details.goalOptions, parameters);
       return new RegularGoalDescription(details, thrownTypes, parameters);
     }
 
     private static void validateProjectionInfo(DtoGoal.GoalOptions options,
-                                               List<RegularParameter> parameters) {
+                                               List<AbstractRegularParameter> parameters) {
       if (!options.needsProjections()) {
         return;
       }
       if (parameters.stream()
-          .map(parameter -> parameter.projectionInfo)
-          .allMatch(DtoProjectionInfo.isPresent)) {
+          .map(parameter -> parameter.projectionInfo())
+          .allMatch(Optional::isPresent)) {
         return;
       }
       throw new IllegalStateException("projection info required");
     }
 
     private static void checkParameterNames(List<String> parameterNames,
-                                            List<RegularParameter> parameters) {
+                                            List<AbstractRegularParameter> parameters) {
       if (parameters.isEmpty()) {
         throw new IllegalArgumentException("need at least one parameter");
       }
@@ -100,7 +101,7 @@ public final class DtoGoalDescription {
         throw new IllegalArgumentException("parameter names mismatch");
       }
       int[] positions = new int[parameterNames.size()];
-      for (RegularParameter parameter : parameters) {
+      for (AbstractRegularParameter parameter : parameters) {
         int i = parameterNames.indexOf(parameter.name);
         if (positions[i]++ != 0) {
           throw new IllegalArgumentException("parameter names mismatch");

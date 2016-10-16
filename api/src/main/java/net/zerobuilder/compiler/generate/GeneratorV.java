@@ -16,15 +16,18 @@ import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
@@ -71,8 +74,8 @@ final class GeneratorV {
     ProjectionInfoCases<CodeBlock, RegularStep> nullChecks = nullChecks(goal);
     CodeBlock.Builder builder = CodeBlock.builder();
     for (RegularStep step : regularSteps.apply(goal)) {
-      ProjectionInfo projectionInfo = step.validParameter.projectionInfo;
-      builder.add(projectionInfo.accept(nullChecks, step));
+      Optional<ProjectionInfo> projectionInfo = step.parameter.projectionInfo();
+      builder.add(projectionInfo.get().accept(nullChecks, step));
     }
     return builder.build();
   }
@@ -80,11 +83,8 @@ final class GeneratorV {
   private static Function<RegularStep, CodeBlock> copyField(RegularGoalContext goal) {
     BiFunction<ProjectionInfo, RegularStep, CodeBlock> copy = projectionInfoCases(
         copyFromMethod(goal),
-        copyFromField(goal),
-        step -> {
-          throw new IllegalStateException("should never happen");
-        });
-    return step -> copy.apply(step.validParameter.projectionInfo, step);
+        copyFromField(goal));
+    return step -> copy.apply(step.parameter.projectionInfo().get(), step);
   }
 
   private static BiFunction<FieldAccess, RegularStep, CodeBlock> copyFromField(RegularGoalContext goal) {
@@ -101,7 +101,7 @@ final class GeneratorV {
     return (ProjectionMethod projection, RegularStep step) -> {
       ParameterSpec parameter = toBuilderParameter(goal);
       ParameterSpec updater = varUpdater(goal);
-      String field = step.validParameter.name;
+      String field = step.parameter.name;
       return statement("$N.$N = $N.$N()",
           updater, field, parameter, projection.methodName);
     };
@@ -111,11 +111,11 @@ final class GeneratorV {
     return new ProjectionInfoCases<CodeBlock, RegularStep>() {
       @Override
       public CodeBlock projectionMethod(ProjectionMethod projection, RegularStep step) {
-        if (step.validParameter.nullPolicy == ALLOW) {
+        if (step.parameter.nullPolicy == ALLOW) {
           return emptyCodeBlock;
         }
         ParameterSpec parameter = toBuilderParameter(goal);
-        String name = step.validParameter.name;
+        String name = step.parameter.name;
         return CodeBlock.builder()
             .beginControlFlow("if ($N.$N() == null)", parameter, projection.methodName)
             .addStatement("throw new $T($S)", NullPointerException.class, name)
@@ -123,19 +123,15 @@ final class GeneratorV {
       }
       @Override
       public CodeBlock fieldAccess(FieldAccess projection, RegularStep step) {
-        if (step.validParameter.nullPolicy == ALLOW) {
+        if (step.parameter.nullPolicy == ALLOW) {
           return emptyCodeBlock;
         }
         ParameterSpec parameter = toBuilderParameter(goal);
-        String name = step.validParameter.name;
+        String name = step.parameter.name;
         return CodeBlock.builder()
             .beginControlFlow("if ($N.$N == null)", parameter, name)
             .addStatement("throw new $T($S)", NullPointerException.class, name)
             .endControlFlow().build();
-      }
-      @Override
-      public CodeBlock none(RegularStep step) {
-        throw new IllegalStateException("should never happen");
       }
     };
   }
@@ -238,12 +234,14 @@ final class GeneratorV {
 
   private static Set<TypeName> thrownByProjections(RegularGoalContext goal) {
     return regularSteps.apply(goal).stream()
-        .map(step -> step.validParameter)
-        .map(parameter -> parameter.projectionInfo)
+        .map(step -> step.parameter)
+        .map(AbstractRegularParameter::projectionInfo)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         .map(thrownTypes)
         .map(List::stream)
-        .flatMap(Function.identity())
-        .collect(Collectors.toSet());
+        .flatMap(identity())
+        .collect(toSet());
   }
 
   private GeneratorV() {

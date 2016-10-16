@@ -8,8 +8,9 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoRegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -108,21 +109,25 @@ final class ProjectionValidator {
   }
 
   static final class TmpRegularParameter extends TmpValidParameter {
-    private final RegularParameter parameter;
-    private TmpRegularParameter(Element element, Optional<Step> annotation, RegularParameter parameter) {
+    private final AbstractRegularParameter parameter;
+    private TmpRegularParameter(Element element, Optional<Step> annotation, AbstractRegularParameter parameter) {
       super(element, annotation);
       this.parameter = parameter;
     }
 
-    static final Function<TmpRegularParameter, RegularParameter> toValidParameter = parameter -> parameter.parameter;
+    static final Function<TmpRegularParameter, AbstractRegularParameter> toValidParameter =
+        parameter -> parameter.parameter;
 
-    static TmpRegularParameter create(VariableElement parameter, ProjectionInfo projectionInfo,
+    static TmpRegularParameter create(VariableElement parameter, Optional<ProjectionInfo> projectionInfo,
                                       Goal goalAnnotation) {
       Step stepAnnotation = parameter.getAnnotation(Step.class);
       NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepAnnotation, goalAnnotation);
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
-      RegularParameter regularParameter = RegularParameter.create(name, type, nullPolicy, projectionInfo);
+      AbstractRegularParameter regularParameter =
+          projectionInfo.isPresent() ?
+              DtoRegularParameter.create(name, type, nullPolicy, projectionInfo.get()) :
+              DtoRegularParameter.create(name, type, nullPolicy);
       return new TmpRegularParameter(parameter, ofNullable(stepAnnotation), regularParameter);
     }
   }

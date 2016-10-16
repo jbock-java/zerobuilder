@@ -5,9 +5,8 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpRegularParameter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoParameter;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -18,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -56,7 +56,7 @@ final class ProjectionValidatorV {
     Map<String, VariableElement> fields = fields(type);
     List<TmpRegularParameter> parameters = transform(goal.executableElement.getParameters(),
         parameter -> TmpRegularParameter.create(parameter,
-            projectionInfo(methods, fields, parameter),
+            Optional.of(projectionInfo(methods, fields, parameter)),
             goal.goalAnnotation));
     return createGoalDescription(goal, parameters);
   };
@@ -103,7 +103,7 @@ final class ProjectionValidatorV {
       = goal -> {
     List<TmpRegularParameter> builder = goal.executableElement.getParameters()
         .stream()
-        .map(parameter -> TmpRegularParameter.create(parameter, DtoProjectionInfo.none(), goal.goalAnnotation))
+        .map(parameter -> TmpRegularParameter.create(parameter, Optional.empty(), goal.goalAnnotation))
         .collect(Collectors.toList());
     return createGoalDescription(goal, builder);
   };
@@ -113,7 +113,7 @@ final class ProjectionValidatorV {
     return create(goal, transform(shuffled, toValidParameter));
   }
 
-  private static RegularGoalDescription create(RegularGoalElement goal, List<DtoParameter.RegularParameter> parameters) {
+  private static RegularGoalDescription create(RegularGoalElement goal, List<AbstractRegularParameter> parameters) {
     return RegularGoalDescription.create(goal.details, thrownTypes(goal.executableElement), parameters);
   }
 

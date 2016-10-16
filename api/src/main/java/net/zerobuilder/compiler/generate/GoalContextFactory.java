@@ -21,9 +21,9 @@ import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoParameter.RegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoal;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -141,7 +141,7 @@ final class GoalContextFactory {
     }
   };
 
-  private static final Function<RegularParameter, StepFactory<RegularStep>> regularFactory
+  private static final Function<AbstractRegularParameter, StepFactory<RegularStep>> regularFactory
       = regularParameter -> new StepFactory<RegularStep>() {
     @Override
     RegularStep create(ClassName thisType,
