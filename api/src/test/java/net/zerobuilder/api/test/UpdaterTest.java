@@ -2,13 +2,11 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
@@ -26,6 +24,7 @@ import java.util.Collections;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
+import static net.zerobuilder.compiler.generate.Access.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext;
 import static org.hamcrest.core.Is.is;
@@ -62,10 +61,10 @@ public class UpdaterTest {
     BuildersContext buildersContext = createBuildersContext(TYPE, GENERATED_TYPE, NEW_INSTANCE);
 
     String goalName = "myGoal";
-    GoalOption updaterOption = GoalOption.create(Access.PUBLIC, new Updater()); // create an updater
+    GoalOption updaterOption = GoalOption.create(PUBLIC, new Updater()); // create an updater
     RegularGoalDetails details = ConstructorGoalDetails.create(
         TYPE, goalName, singletonList("foo"),
-        GoalOptions.create(singletonList(updaterOption)));
+        updaterOption);
 
     AbstractRegularParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW,
         DtoProjectionInfo.method("getFoo", singletonList(IO_EXCEPTION)));

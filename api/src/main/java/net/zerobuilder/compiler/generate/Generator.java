@@ -48,7 +48,6 @@ public final class Generator {
     BuilderMethod method(AbstractGoalContext goal);
     List<TypeSpec> nestedTypes(AbstractGoalContext goal);
     FieldSpec field(AbstractGoalContext goal);
-    boolean needsProjections();
     String name();
   }
 
@@ -59,8 +58,8 @@ public final class Generator {
    * @return a GeneratorOutput
    */
   public GeneratorOutput generate(GeneratorInput goals) {
-    return generate(goals.buildersContext,
-        transform(goals.goals, prepare(goals.buildersContext, goals)));
+    return generate(goals.context,
+        transform(goals.goals, prepare(goals)));
   }
 
   private GeneratorOutput generate(BuildersContext context, List<AbstractGoalContext> goals) {
@@ -74,7 +73,7 @@ public final class Generator {
 
   private static boolean handles(Module module, AbstractGoalContext goal) {
     AbstractGoalDetails details = abstractGoalDetails.apply(goal);
-    return details.goalOptions.handles(module);
+    return details.goalOptions.module.name().equals(module.name());
   }
 
   private static Function<AbstractGoalContext, List<BuilderMethod>> methodsFunction(List<Module> modules) {

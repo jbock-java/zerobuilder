@@ -8,13 +8,12 @@ import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 public final class DtoGoalDescription {
 
-  public interface GoalDescription {
-    <R> R accept(GoalDescriptionCases<R> cases);
+  public static abstract class GoalDescription {
+    abstract <R> R accept(GoalDescriptionCases<R> cases);
   }
 
   interface GoalDescriptionCases<R> {
@@ -27,16 +26,16 @@ public final class DtoGoalDescription {
   }
 
   static <R> Function<GoalDescription, R> goalDescriptionCases(
-      Function<? super RegularGoalDescription, ? extends R> regular,
-      Function<? super BeanGoalDescription, ? extends R> bean) {
+      Function<? super RegularGoalDescription, ? extends R> regularGoal,
+      Function<? super BeanGoalDescription, ? extends R> beanGoal) {
     return asFunction(new GoalDescriptionCases<R>() {
       @Override
       public R regularGoal(RegularGoalDescription goal) {
-        return regular.apply(goal);
+        return regularGoal.apply(goal);
       }
       @Override
       public R beanGoal(BeanGoalDescription goal) {
-        return bean.apply(goal);
+        return beanGoal.apply(goal);
       }
     });
   }
@@ -49,7 +48,7 @@ public final class DtoGoalDescription {
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
-  public static final class RegularGoalDescription implements GoalDescription {
+  public static final class RegularGoalDescription extends GoalDescription {
     final RegularGoalDetails details;
     final List<TypeName> thrownTypes;
     final List<AbstractRegularParameter> parameters;
@@ -75,21 +74,7 @@ public final class DtoGoalDescription {
                                                 List<TypeName> thrownTypes,
                                                 List<AbstractRegularParameter> parameters) {
       checkParameterNames(details.parameterNames, parameters);
-      validateProjectionInfo(details.goalOptions, parameters);
       return new RegularGoalDescription(details, thrownTypes, parameters);
-    }
-
-    private static void validateProjectionInfo(DtoGoal.GoalOptions options,
-                                               List<AbstractRegularParameter> parameters) {
-      if (!options.needsProjections()) {
-        return;
-      }
-      if (parameters.stream()
-          .map(parameter -> parameter.projectionInfo())
-          .allMatch(Optional::isPresent)) {
-        return;
-      }
-      throw new IllegalStateException("projection info required");
     }
 
     private static void checkParameterNames(List<String> parameterNames,
@@ -118,12 +103,13 @@ public final class DtoGoalDescription {
   /**
    * Describes the task of creating and / or updating a JavaBean.
    */
-  public static final class BeanGoalDescription implements GoalDescription {
+  public static final class BeanGoalDescription extends GoalDescription {
     final BeanGoalDetails details;
     final List<AbstractBeanParameter> parameters;
     final List<TypeName> thrownTypes;
 
-    private BeanGoalDescription(BeanGoalDetails details, List<AbstractBeanParameter> parameters,
+    private BeanGoalDescription(BeanGoalDetails details,
+                                List<AbstractBeanParameter> parameters,
                                 List<TypeName> thrownTypes) {
       this.details = details;
       this.parameters = parameters;
@@ -134,6 +120,7 @@ public final class DtoGoalDescription {
                                              List<TypeName> thrownTypes) {
       return new BeanGoalDescription(details, parameters, thrownTypes);
     }
+
     @Override
     public <R> R accept(GoalDescriptionCases<R> cases) {
       return cases.beanGoal(this);

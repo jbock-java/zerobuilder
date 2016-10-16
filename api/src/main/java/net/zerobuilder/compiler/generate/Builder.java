@@ -95,11 +95,6 @@ public final class Builder implements Generator.Module {
   }
 
   @Override
-  public boolean needsProjections() {
-    return false;
-  }
-
-  @Override
   public String name() {
     return MODULE_NAME;
   }

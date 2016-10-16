@@ -10,9 +10,9 @@ import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
+import net.zerobuilder.compiler.generate.Generator.Module;
 import net.zerobuilder.compiler.generate.Updater;
 
 import javax.lang.model.element.Element;
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
@@ -47,10 +48,10 @@ final class DtoGoalElement {
     abstract <R> R accept(GoalElementCases<R> goalElementCases);
   }
 
-  static <R> GoalElementCases<R> goalElementCases(
+  static <R> Function<AbstractGoalElement, R> goalElementCases(
       final Function<RegularGoalElement, R> regularGoalFunction,
       final Function<BeanGoalElement, R> beanGoalFunction) {
-    return new GoalElementCases<R>() {
+    return asFunction(new GoalElementCases<R>() {
       @Override
       public R regularGoal(RegularGoalElement executableGoal) {
         return regularGoalFunction.apply(executableGoal);
@@ -59,7 +60,7 @@ final class DtoGoalElement {
       public R beanGoal(BeanGoalElement beanGoal) {
         return beanGoalFunction.apply(beanGoal);
       }
-    };
+    });
   }
 
   static final Function<AbstractGoalElement, String> goalName = asFunction(new GoalElementCases<String>() {
@@ -74,29 +75,35 @@ final class DtoGoalElement {
   });
 
   static final class RegularGoalElement extends AbstractGoalElement {
+    final List<? extends Module> modules;
     final RegularGoalDetails details;
     final ExecutableElement executableElement;
 
-    private RegularGoalElement(ExecutableElement element, RegularGoalDetails details) {
+    private RegularGoalElement(List<? extends Module> modules, ExecutableElement element, RegularGoalDetails details) {
       super(element.getAnnotation(Goal.class));
+      this.modules = modules;
       this.details = details;
       this.executableElement = element;
     }
 
-    static RegularGoalElement create(ExecutableElement element, AccessLevel defaultAccess) {
+    static List<RegularGoalElement> create(ExecutableElement element, AccessLevel defaultAccess) {
       TypeName goalType = goalType(element);
       Goal goalAnnotation = element.getAnnotation(Goal.class);
       String name = goalName(goalAnnotation, goalType);
-      GoalOptions goalOptions = goalOptions(goalAnnotation, defaultAccess);
+      List<GoalOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
       String methodName = element.getSimpleName().toString();
       GoalMethodType goalMethodType = element.getModifiers().contains(STATIC)
           ? GoalMethodType.STATIC_METHOD
           : GoalMethodType.INSTANCE_METHOD;
+      List<? extends Module> modules = Analyser.modules(goalAnnotation);
       List<String> parameterNames = parameterNames(element);
-      RegularGoalDetails goal = element.getKind() == CONSTRUCTOR
-          ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOptions)
-          : MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOptions);
-      return new RegularGoalElement(element, goal);
+      return goalOptions.stream()
+          .map(goalOption ->
+              element.getKind() == CONSTRUCTOR
+                  ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption)
+                  : MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOption))
+          .map(goal -> new RegularGoalElement(modules, element, goal))
+          .collect(toList());
     }
 
     <R> R accept(GoalElementCases<R> goalElementCases) {
@@ -115,18 +122,23 @@ final class DtoGoalElement {
   static final class BeanGoalElement extends AbstractGoalElement {
     final BeanGoalDetails details;
     final TypeElement beanType;
+
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
-                            Goal goalAnnotation, GoalOptions goalOptions) {
+                            Goal goalAnnotation, GoalOption goalOptions) {
       super(goalAnnotation);
       this.details = new BeanGoalDetails(goalType, name, goalOptions);
       this.beanType = beanType;
     }
-    static BeanGoalElement create(TypeElement beanType, AccessLevel defaultAccess) {
+
+    static List<BeanGoalElement> create(TypeElement beanType, AccessLevel defaultAccess) {
       ClassName goalType = ClassName.get(beanType);
       Goal goalAnnotation = beanType.getAnnotation(Goal.class);
       String name = goalName(goalAnnotation, goalType);
-      GoalOptions goalOptions = goalOptions(goalAnnotation, defaultAccess);
-      return new BeanGoalElement(goalType, name, beanType, goalAnnotation, goalOptions);
+      List<GoalOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
+      return goalOptions.stream()
+          .map(goalOption ->
+              new BeanGoalElement(goalType, name, beanType, goalAnnotation, goalOption))
+          .collect(toList());
     }
     <R> R accept(GoalElementCases<R> goalElementCases) {
       return goalElementCases.beanGoal(this);
@@ -144,7 +156,7 @@ final class DtoGoalElement {
     }
   };
 
-  private static String goalName(Goal goalAnnotation, TypeName goalType) {
+  static String goalName(Goal goalAnnotation, TypeName goalType) {
     return goalAnnotation.name().isEmpty()
         ? downcase(((ClassName) goalType.box()).simpleName())
         : goalAnnotation.name();
@@ -159,8 +171,8 @@ final class DtoGoalElement {
         : override.access();
   }
 
-  private static GoalOptions goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
-    ArrayList<GoalOption> options = new ArrayList<>();
+  private static List<GoalOption> goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
+    List<GoalOption> options = new ArrayList<>(2);
     if (goalAnnotation.updater()) {
       options.add(GoalOption.create(
           accessLevelOverride(goalAnnotation.updaterAccess(), defaultAccess), new Updater()));
@@ -169,10 +181,10 @@ final class DtoGoalElement {
       options.add(GoalOption.create(
           accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess), new Builder()));
     }
-    return GoalOptions.create(options);
+    return options;
   }
 
-  private static TypeName goalType(ExecutableElement goal) {
+  static TypeName goalType(ExecutableElement goal) {
     switch (goal.getKind()) {
       case CONSTRUCTOR:
         return ClassName.get(goal.getEnclosingElement().asType());

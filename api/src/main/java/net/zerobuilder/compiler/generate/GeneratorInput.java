@@ -10,11 +10,11 @@ import static java.util.Collections.unmodifiableList;
 public final class GeneratorInput {
 
   public final List<GoalDescription> goals;
-  public final BuildersContext buildersContext;
+  public final BuildersContext context;
 
-  private GeneratorInput(BuildersContext buildersContext, List<GoalDescription> goals) {
+  private GeneratorInput(BuildersContext context, List<GoalDescription> goals) {
     this.goals = goals;
-    this.buildersContext = buildersContext;
+    this.context = context;
   }
 
   public static GeneratorInput create(BuildersContext buildersContext, List<? extends GoalDescription> goals) {

@@ -6,7 +6,6 @@ import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalOptions;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
@@ -76,7 +75,7 @@ public class BuilderTest {
         asList("foo", "bar"),
         "create", // correct goal method name
         STATIC_METHOD, // goal method is static
-        GoalOptions.create(singletonList(builderOption)));
+        builderOption);
 
     // create parameter representations
     AbstractRegularParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW);

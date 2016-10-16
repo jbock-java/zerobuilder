@@ -59,7 +59,7 @@ final class GeneratorV {
             .addCode(initUpdater(goal, updater))
             .addCode(copyBlock(goal))
             .addStatement("return $N", updater)
-            .addModifiers(details.goalOptions.access(Updater.MODULE_NAME).modifiers(STATIC))
+            .addModifiers(details.goalOptions.access.modifiers(STATIC))
             .build();
         return new BuilderMethod(details.name, method);
       };
@@ -166,7 +166,7 @@ final class GeneratorV {
     List<RegularStep> steps = regularSteps.apply(goal);
     MethodSpec.Builder method = methodBuilder(goal.name() + "Builder")
         .returns(Builder.contractName(goal).nestedClass(steps.get(0).thisType))
-        .addModifiers(regularGoalDetails.goalOptions.access(Builder.MODULE_NAME).modifiers(STATIC));
+        .addModifiers(regularGoalDetails.goalOptions.access.modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
     BuildersContext context = DtoRegularGoal.buildersContext.apply(goal);
     ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));

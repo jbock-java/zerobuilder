@@ -89,11 +89,6 @@ public final class Updater implements Generator.Module {
   }
 
   @Override
-  public boolean needsProjections() {
-    return true;
-  }
-
-  @Override
   public String name() {
     return MODULE_NAME;
   }

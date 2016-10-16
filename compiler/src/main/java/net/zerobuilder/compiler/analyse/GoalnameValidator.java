@@ -1,7 +1,7 @@
 package net.zerobuilder.compiler.analyse;
 
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
+import net.zerobuilder.compiler.analyse.Analyser.NameElement;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -18,14 +18,12 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NECC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NEMM;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.GOALNAME_NN;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.getElement;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalName;
 import static net.zerobuilder.compiler.analyse.Utilities.sortedCopy;
 
 final class GoalnameValidator {
 
-  private static int goalWeight(AbstractGoalElement goal) throws ValidationException {
-    ElementKind kind = goal.accept(getElement).getKind();
+  private static int goalWeight(NameElement goal) throws ValidationException {
+    ElementKind kind = goal.element.getKind();
     Goal annotation = goal.goalAnnotation;
     String name = annotation.name();
     return name.isEmpty()
@@ -36,21 +34,21 @@ final class GoalnameValidator {
   /**
    * to generate better error messages, in case of goal name conflict
    */
-  static final Comparator<AbstractGoalElement> INTERMEDIATE_GOAL_ORDER = (g0, g1) -> Integer.compare(goalWeight(g0), goalWeight(g1));
+  static final Comparator<NameElement> INTERMEDIATE_GOAL_ORDER = (g0, g1) -> Integer.compare(goalWeight(g0), goalWeight(g1));
 
-  static void checkNameConflict(List<AbstractGoalElement> goals) throws ValidationException {
+  static void checkNameConflict(List<NameElement> goals) throws ValidationException {
     goals = sortedCopy(goals, INTERMEDIATE_GOAL_ORDER);
-    HashMap<String, AbstractGoalElement> byName = new HashMap<>();
-    for (AbstractGoalElement goal : goals) {
-      AbstractGoalElement otherGoal = byName.put(goalName.apply(goal), goal);
+    HashMap<String, NameElement> byName = new HashMap<>();
+    for (NameElement goal : goals) {
+      NameElement otherGoal = byName.put(goal.name, goal);
       if (otherGoal != null) {
         Goal goalAnnotation = goal.goalAnnotation;
         Goal otherAnnotation = otherGoal.goalAnnotation;
         String thisName = goalAnnotation.name();
         String otherName = otherAnnotation.name();
-        Element element = goal.accept(getElement);
+        Element element = goal.element;
         ElementKind thisKind = element.getKind();
-        ElementKind otherKind = otherGoal.accept(getElement).getKind();
+        ElementKind otherKind = otherGoal.element.getKind();
         if (thisName.isEmpty()) {
           if (thisKind == CONSTRUCTOR && otherKind == CONSTRUCTOR) {
             throw new ValidationException(GOALNAME_EECC, element);

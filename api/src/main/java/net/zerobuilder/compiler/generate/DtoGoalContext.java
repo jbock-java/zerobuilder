@@ -58,11 +58,11 @@ final class DtoGoalContext {
       return goalName.apply(this);
     }
 
-    final DtoGoal.GoalOptions goalOptions() {
+    final DtoGoal.GoalOption goalOptions() {
       return goalOptions.apply(this);
     }
 
-    private static final Function<AbstractGoalContext, DtoGoal.GoalOptions> goalOptions
+    private static final Function<AbstractGoalContext, DtoGoal.GoalOption> goalOptions
         = abstractGoalDetails.andThen(details -> details.goalOptions);
 
     private static FieldSpec updaterField(AbstractGoalContext context) {

@@ -27,48 +27,9 @@ public final class DtoGoal {
     }
   }
 
-  public static final class GoalOptions {
-    final List<GoalOption> goalOptions;
-
-    private GoalOptions(List<GoalOption> goalOptions) {
-      this.goalOptions = goalOptions;
-    }
-
-    Access access(String moduleName) {
-      for (GoalOption goalOption : goalOptions) {
-        if (goalOption.module.name().equals(moduleName)) {
-          return goalOption.access;
-        }
-      }
-      return Access.PUBLIC;
-    }
-
-    boolean handles(Module module) {
-      for (GoalOption goalOption : goalOptions) {
-        if (goalOption.module.name().equals(module.name())) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    boolean needsProjections() {
-      for (GoalOption goalOption : goalOptions) {
-        if (goalOption.module.needsProjections()) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    public static GoalOptions create(List<GoalOption> goalOptions) {
-      return new GoalOptions(goalOptions);
-    }
-  }
-
   static abstract class AbstractGoalDetails {
     final String name;
-    final GoalOptions goalOptions;
+    final GoalOption goalOptions;
 
     /**
      * Returns the goal name.
@@ -81,7 +42,7 @@ public final class DtoGoal {
 
     abstract TypeName type();
 
-    AbstractGoalDetails(String name, GoalOptions goalOptions) {
+    AbstractGoalDetails(String name, GoalOption goalOptions) {
       this.name = name;
       this.goalOptions = goalOptions;
     }
@@ -130,7 +91,7 @@ public final class DtoGoal {
      * @param goalOptions    goal options
      */
     RegularGoalDetails(TypeName goalType, String name, List<String> parameterNames,
-                       GoalOptions goalOptions) {
+                       GoalOption goalOptions) {
       super(name, goalOptions);
       this.goalType = goalType;
       this.parameterNames = parameterNames;
@@ -147,12 +108,12 @@ public final class DtoGoal {
   public static final class ConstructorGoalDetails extends RegularGoalDetails {
 
     private ConstructorGoalDetails(TypeName goalType, String name, List<String> parameterNames,
-                                   GoalOptions goalOptions) {
+                                   GoalOption goalOptions) {
       super(goalType, name, parameterNames, goalOptions);
     }
 
     public static ConstructorGoalDetails create(TypeName goalType, String name, List<String> parameterNames,
-                                                GoalOptions goalOptions) {
+                                                GoalOption goalOptions) {
       return new ConstructorGoalDetails(goalType, name, parameterNames, goalOptions);
     }
 
@@ -167,7 +128,7 @@ public final class DtoGoal {
     final GoalMethodType methodType;
 
     private MethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
-                              GoalMethodType methodType, GoalOptions goalOptions) {
+                              GoalMethodType methodType, GoalOption goalOptions) {
       super(goalType, name, parameterNames, goalOptions);
       this.methodName = methodName;
       this.methodType = methodType;
@@ -178,7 +139,7 @@ public final class DtoGoal {
                                            List<String> parameterNames,
                                            String methodName,
                                            GoalMethodType goalMethodType,
-                                           GoalOptions goalOptions) {
+                                           GoalOption goalOptions) {
       return new MethodGoalDetails(goalType, name, parameterNames, methodName,
           goalMethodType, goalOptions);
     }
@@ -191,7 +152,7 @@ public final class DtoGoal {
 
   public static final class BeanGoalDetails extends AbstractGoalDetails {
     public final ClassName goalType;
-    public BeanGoalDetails(ClassName goalType, String name, GoalOptions goalOptions) {
+    public BeanGoalDetails(ClassName goalType, String name, GoalOption goalOptions) {
       super(name, goalOptions);
       this.goalType = goalType;
     }

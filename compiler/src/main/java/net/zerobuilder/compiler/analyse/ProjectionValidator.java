@@ -4,6 +4,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
@@ -34,8 +35,11 @@ import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 
 final class ProjectionValidator {
 
-  static final GoalElementCases<GoalDescription> validate = goalElementCases(validateValue, validateBean);
-  static final GoalElementCases<GoalDescription> skip = goalElementCases(validateValueIgnoreProjections, validateBean);
+  static final Function<AbstractGoalElement, GoalDescription> validate =
+      goalElementCases(validateValue, validateBean);
+
+  static final Function<AbstractGoalElement, GoalDescription> skip =
+      goalElementCases(validateValueIgnoreProjections, validateBean);
 
   /**
    * Modifies the parameter order, depending on {@link Step} annotations.

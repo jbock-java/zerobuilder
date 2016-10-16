@@ -45,7 +45,7 @@ final class GeneratorB {
     String name = goal.goal.details.name;
     ClassName type = goal.goal.details.goalType;
     ParameterSpec updater = updaterInstance(goal);
-    Modifier[] modifiers = goal.goal.details.goalOptions.access(Updater.MODULE_NAME)
+    Modifier[] modifiers = goal.goal.details.goalOptions.access
         .modifiers(STATIC);
     MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
@@ -155,7 +155,7 @@ final class GeneratorB {
     FieldSpec cache = goal.context.cache.get();
     MethodSpec method = methodBuilder(name + "Builder")
         .returns(Builder.contractName(goal).nestedClass(goal.steps().get(0).thisType))
-        .addModifiers(goal.goal.details.goalOptions.access(Builder.MODULE_NAME).modifiers(STATIC))
+        .addModifiers(goal.goal.details.goalOptions.access.modifiers(STATIC))
         .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
             : goal.goal.thrownTypes)

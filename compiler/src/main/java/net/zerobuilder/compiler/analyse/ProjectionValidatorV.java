@@ -108,13 +108,17 @@ final class ProjectionValidatorV {
     return createGoalDescription(goal, builder);
   };
 
-  private static GoalDescription createGoalDescription(RegularGoalElement goal, List<TmpRegularParameter> parameters) {
+  private static GoalDescription createGoalDescription(RegularGoalElement goal,
+                                                       List<TmpRegularParameter> parameters) {
     List<TmpRegularParameter> shuffled = shuffledParameters(parameters);
     return create(goal, transform(shuffled, toValidParameter));
   }
 
-  private static RegularGoalDescription create(RegularGoalElement goal, List<AbstractRegularParameter> parameters) {
-    return RegularGoalDescription.create(goal.details, thrownTypes(goal.executableElement), parameters);
+  private static RegularGoalDescription create(RegularGoalElement goal,
+                                               List<AbstractRegularParameter> parameters) {
+    return RegularGoalDescription.create(
+        goal.details, thrownTypes(goal.executableElement),
+        parameters);
   }
 
   private ProjectionValidatorV() {
