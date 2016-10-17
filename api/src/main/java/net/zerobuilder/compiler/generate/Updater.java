@@ -13,7 +13,6 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
-import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -31,7 +30,7 @@ import static net.zerobuilder.compiler.generate.UpdaterV.updateMethodsV;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
-public final class Updater implements Generator.Module {
+public final class Updater extends Generator.SimpleModule {
 
   static final String MODULE_NAME = "updater";
 
@@ -79,8 +78,8 @@ public final class Updater implements Generator.Module {
   }
 
   @Override
-  public List<TypeSpec> nestedTypes(AbstractGoalContext goal) {
-    return singletonList(defineUpdater(goal));
+  public TypeSpec impl(AbstractGoalContext goal) {
+    return defineUpdater(goal);
   }
 
   @Override

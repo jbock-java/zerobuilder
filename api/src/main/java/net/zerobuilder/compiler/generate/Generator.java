@@ -7,9 +7,13 @@ import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
@@ -21,9 +25,51 @@ public final class Generator {
 
   public interface Module {
     BuilderMethod method(AbstractGoalContext goal);
-    List<TypeSpec> nestedTypes(AbstractGoalContext goal);
+    TypeSpec impl(AbstractGoalContext goal);
     FieldSpec field(AbstractGoalContext goal);
     String name();
+    <R, P> R accept(ModuleCases<R, P> cases, P p);
+  }
+
+  interface ModuleCases<R, P> {
+    R simple(SimpleModule module, P p);
+    R contract(ContractModule module, P p);
+  }
+
+  public static abstract class SimpleModule implements Module {
+
+    @Override
+    public final <R, P> R accept(ModuleCases<R, P> cases, P p) {
+      return cases.simple(this, p);
+    }
+  }
+
+  public static abstract class ContractModule implements Module {
+    public abstract TypeSpec contract(AbstractGoalContext goal);
+
+    @Override
+    public final <R, P> R accept(ModuleCases<R, P> cases, P p) {
+      return cases.contract(this, p);
+    }
+  }
+
+  static <R, P> BiFunction<Module, P, R> asFunction(ModuleCases<R, P> cases) {
+    return (module, p) -> module.accept(cases, p);
+  }
+
+  static <R, P> BiFunction<Module, P, R> moduleCases(
+      BiFunction<SimpleModule, P, R> simple,
+      BiFunction<ContractModule, P, R> contract) {
+    return asFunction(new ModuleCases<R, P>() {
+      @Override
+      public R simple(SimpleModule module, P p) {
+        return simple.apply(module, p);
+      }
+      @Override
+      public R contract(ContractModule module, P p) {
+        return contract.apply(module, p);
+      }
+    });
   }
 
   /**
@@ -64,7 +110,13 @@ public final class Generator {
 
   private static List<TypeSpec> nestedTypes(List<AbstractGoalContext> goals) {
     return goals.stream()
-        .map(goal -> goal.module().module.nestedTypes(goal))
+        .map(goal -> nestedTypes.apply(goal.module().module, goal))
         .collect(flatList());
   }
+
+  private static final BiFunction<Module, AbstractGoalContext, List<TypeSpec>> nestedTypes =
+      moduleCases(
+          (simple, goal) -> singletonList(simple.impl(goal)),
+          (contract, goal) -> Arrays.asList(contract.impl(goal), contract.contract(goal)));
+
 }

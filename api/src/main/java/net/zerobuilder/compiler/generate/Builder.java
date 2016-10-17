@@ -7,8 +7,8 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.Generator.ContractModule;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -33,7 +33,7 @@ import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
-public final class Builder implements Generator.Module {
+public final class Builder extends ContractModule {
 
   static final String MODULE_NAME = "builder";
 
@@ -82,10 +82,13 @@ public final class Builder implements Generator.Module {
   }
 
   @Override
-  public List<TypeSpec> nestedTypes(AbstractGoalContext goal) {
-    return Arrays.asList(
-        defineBuilderImpl(goal),
-        defineContract(goal));
+  public TypeSpec impl(AbstractGoalContext goal) {
+    return defineBuilderImpl(goal);
+  }
+
+  @Override
+  public TypeSpec contract(AbstractGoalContext goal) {
+    return defineContract(goal);
   }
 
   @Override
