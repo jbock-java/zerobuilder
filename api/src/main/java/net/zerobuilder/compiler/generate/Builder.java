@@ -92,11 +92,6 @@ public final class Builder extends ContractModule {
   }
 
   @Override
-  public FieldSpec field(AbstractGoalContext goal) {
-    return goal.builderField();
-  }
-
-  @Override
   public String name() {
     return MODULE_NAME;
   }

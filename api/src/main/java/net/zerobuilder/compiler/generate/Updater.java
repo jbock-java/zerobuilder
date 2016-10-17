@@ -83,11 +83,6 @@ public final class Updater extends Generator.SimpleModule {
   }
 
   @Override
-  public FieldSpec field(AbstractGoalContext goal) {
-    return goal.updaterField();
-  }
-
-  @Override
   public String name() {
     return MODULE_NAME;
   }
