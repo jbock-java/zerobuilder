@@ -18,7 +18,6 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
 import static net.zerobuilder.compiler.generate.Utilities.concat;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
@@ -28,25 +27,11 @@ import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class Generator {
 
-  public static abstract class Module {
-    public abstract BuilderMethod method(AbstractGoalContext goal);
-    public abstract TypeSpec impl(AbstractGoalContext goal);
-    public abstract String name();
-    public abstract <R, P> R accept(ModuleCases<R, P> cases, P p);
-
-    public final FieldSpec field(AbstractGoalContext goal) {
-      ClassName type = builderImplType(goal);
-      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
-          .initializer("new $T()", type)
-          .build();
-    }
-
-    private ClassName builderImplType(AbstractGoalContext goal) {
-      String implName = Generator.implName.apply(this, goal);
-      return buildersContext.apply(goal)
-          .generatedType.nestedClass(implName);
-    }
-
+  public interface Module {
+    BuilderMethod method(AbstractGoalContext goal);
+    TypeSpec impl(AbstractGoalContext goal);
+    String name();
+    <R, P> R accept(ModuleCases<R, P> cases, P p);
   }
 
   interface ModuleCases<R, P> {
@@ -54,7 +39,7 @@ public final class Generator {
     R contract(ContractModule module, P p);
   }
 
-  public static abstract class SimpleModule extends Module {
+  public static abstract class SimpleModule implements Module {
 
     @Override
     public final <R, P> R accept(ModuleCases<R, P> cases, P p) {
@@ -62,7 +47,7 @@ public final class Generator {
     }
   }
 
-  public static abstract class ContractModule extends Module {
+  public static abstract class ContractModule implements Module {
     public abstract TypeSpec contract(AbstractGoalContext goal);
 
     @Override
@@ -116,19 +101,19 @@ public final class Generator {
         concat(
             context.cache.get(),
             goals.stream()
-                .map(goal -> goal.module().module.field(goal))
+                .map(AbstractGoalContext::cacheField)
                 .collect(toList()));
   }
 
   private static List<BuilderMethod> methods(List<AbstractGoalContext> goals) {
     return goals.stream()
-        .map(goal -> goal.module().module.method(goal))
+        .map(goal -> goal.goalOption().module.method(goal))
         .collect(toList());
   }
 
   private static List<TypeSpec> nestedTypes(List<AbstractGoalContext> goals) {
     return goals.stream()
-        .map(goal -> nestedTypes.apply(goal.module().module, goal))
+        .map(goal -> nestedTypes.apply(goal.goalOption().module, goal))
         .collect(flatList());
   }
 
@@ -137,7 +122,7 @@ public final class Generator {
           (simple, goal) -> singletonList(simple.impl(goal)),
           (contract, goal) -> Arrays.asList(contract.impl(goal), contract.contract(goal)));
 
-  private static final BiFunction<Module, AbstractGoalContext, String> implName =
+  static final BiFunction<Module, AbstractGoalContext, String> implName =
       moduleCases(
           (simple, goal) -> upcase(goal.name()) + upcase(simple.name()),
           (contract, goal) -> upcase(goal.name()) + upcase(contract.name()) + "Impl");

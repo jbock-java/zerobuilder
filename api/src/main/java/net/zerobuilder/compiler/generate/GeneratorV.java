@@ -32,14 +32,12 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
-import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
@@ -146,7 +144,7 @@ final class GeneratorV {
     BuildersContext buildersContext = DtoRegularGoal.buildersContext.apply(goal);
     if (buildersContext.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = buildersContext.cache.get();
-      FieldSpec updaterField = goal.updaterField();
+      FieldSpec updaterField = goal.cacheField();
       return statement("$T $N = $N.get().$N",
           updater.type, updater, cache, updaterField);
     } else {
@@ -156,7 +154,7 @@ final class GeneratorV {
   }
 
   private static ParameterSpec varUpdater(RegularGoalContext goal) {
-    ClassName updaterType = updaterType(goal);
+    ClassName updaterType = goal.implType();
     return parameterSpec(updaterType, "updater");
   }
 
@@ -192,7 +190,7 @@ final class GeneratorV {
       TypeName type = builder.type;
       FieldSpec cache = context.cache.get();
       return context.lifecycle == REUSE_INSTANCES ?
-          statement("$T $N = $N.get().$N", type, builder, cache, cGoal.builderField()) :
+          statement("$T $N = $N.get().$N", type, builder, cache, cGoal.cacheField()) :
           statement("$T $N = new $T()", type, builder, type);
     };
   }
@@ -211,7 +209,7 @@ final class GeneratorV {
     FieldSpec cache = context.cache.get();
     return context.lifecycle == REUSE_INSTANCES ?
         CodeBlock.builder()
-            .addStatement("$T $N = $N.get().$N", type, builder, cache, mGoal.builderField())
+            .addStatement("$T $N = $N.get().$N", type, builder, cache, mGoal.cacheField())
             .addStatement("$N.$N = $N", builder, mGoal.field(), instance)
             .build() :
         statement("$T $N = new $T($N)", type, builder, type, instance);
@@ -223,12 +221,12 @@ final class GeneratorV {
     TypeName type = builder.type;
     FieldSpec cache = context.cache.get();
     return context.lifecycle == REUSE_INSTANCES ?
-        statement("$T $N = $N.get().$N", type, builder, cache, mGoal.builderField()) :
+        statement("$T $N = $N.get().$N", type, builder, cache, mGoal.cacheField()) :
         statement("$T $N = new $T()", type, builder, type);
   }
 
   private static ParameterSpec builderInstance(RegularGoalContext goal) {
-    ClassName type = builderImplType(goal);
+    ClassName type = goal.implType();
     return parameterSpec(type, downcase(type.simpleName()));
   }
 

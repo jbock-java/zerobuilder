@@ -29,8 +29,6 @@ import static net.zerobuilder.compiler.generate.DtoBeanStep.getterThrownTypes;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.setterThrownTypes;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
-import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.flatList;
@@ -49,7 +47,7 @@ final class GeneratorB {
         .modifiers(STATIC);
     MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
-        .returns(updaterType(goal))
+        .returns(goal.implType())
         .addExceptions(thrownTypes(goal, asList(getterThrownTypes, setterThrownTypes)))
         .addCode(goal.goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
         .addCode(initializeUpdater(goal, updater))
@@ -133,7 +131,7 @@ final class GeneratorB {
     FieldSpec cache = goal.context.cache.get();
     ClassName type = goal.goal.details.goalType;
     builder.add(goal.context.lifecycle == REUSE_INSTANCES
-        ? statement("$T $N = $N.get().$N", updater.type, updater, cache, goal.updaterField())
+        ? statement("$T $N = $N.get().$N", updater.type, updater, cache, goal.cacheField())
         : statement("$T $N = new $T()", updater.type, updater, updater.type));
     builder.add(goal.context.lifecycle == REUSE_INSTANCES
         ? statement("$N.$N = new $T()", updater, goal.bean(), type)
@@ -142,13 +140,13 @@ final class GeneratorB {
   }
 
   private static ParameterSpec updaterInstance(BeanGoalContext goal) {
-    ClassName updaterType = updaterType(goal);
+    ClassName updaterType = goal.implType();
     return parameterSpec(updaterType, "updater");
   }
 
   static final Function<BeanGoalContext, BuilderMethod> goalToBuilderB
       = goal -> {
-    ClassName builderType = builderImplType(goal);
+    ClassName builderType = goal.implType();
     String name = goal.goal.details.name;
     String builder = downcase(builderType.simpleName());
     ClassName type = goal.goal.details.goalType;
@@ -160,7 +158,7 @@ final class GeneratorB {
             ? Collections.emptyList()
             : goal.goal.thrownTypes)
         .addCode(goal.context.lifecycle == REUSE_INSTANCES
-            ? statement("$T $N = $N.get().$N", builderType, builder, cache, goal.builderField())
+            ? statement("$T $N = $N.get().$N", builderType, builder, cache, goal.cacheField())
             : statement("$T $N = new $T()", builderType, builder, builderType))
         .addCode(goal.context.lifecycle == REUSE_INSTANCES
             ? statement("$N.$N = new $T()", builder, goal.bean(), type)

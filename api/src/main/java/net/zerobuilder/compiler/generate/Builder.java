@@ -23,7 +23,6 @@ import static net.zerobuilder.compiler.generate.BuilderB.stepsB;
 import static net.zerobuilder.compiler.generate.BuilderV.fieldsV;
 import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
@@ -56,7 +55,7 @@ public final class Builder extends ContractModule {
   }
 
   private static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
-    return classBuilder(builderImplType(goal))
+    return classBuilder(goal.implType())
         .addSuperinterfaces(stepInterfaceTypes(goal))
         .addFields(fields.apply(goal))
         .addMethod(builderConstructor.apply(goal))

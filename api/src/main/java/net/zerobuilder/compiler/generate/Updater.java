@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -18,7 +17,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.BuilderV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalType;
 import static net.zerobuilder.compiler.generate.GeneratorB.goalToUpdaterB;
@@ -28,16 +26,10 @@ import static net.zerobuilder.compiler.generate.UpdaterB.updateMethodsB;
 import static net.zerobuilder.compiler.generate.UpdaterV.fieldsV;
 import static net.zerobuilder.compiler.generate.UpdaterV.updateMethodsV;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
-import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class Updater extends Generator.SimpleModule {
 
   static final String MODULE_NAME = "updater";
-
-  static ClassName updaterType(AbstractGoalContext goal) {
-    return buildersContext.apply(goal).generatedType.nestedClass(
-        upcase(goal.name() + "Updater"));
-  }
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields
       = goalCases(fieldsV, fieldsB);
@@ -57,7 +49,7 @@ public final class Updater extends Generator.SimpleModule {
   }
 
   private static TypeSpec defineUpdater(AbstractGoalContext goal) {
-    return classBuilder(updaterType(goal))
+    return classBuilder(goal.implType())
         .addFields(fields.apply(goal))
         .addMethods(updateMethods.apply(goal))
         .addMethod(buildMethod(goal))

@@ -20,7 +20,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
-import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.generate.Utilities.flatList;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
@@ -60,7 +59,7 @@ final class UpdaterV {
     }
     CollectionInfo collectionInfo = maybeEmptyOption.get();
     return Optional.of(methodBuilder(collectionInfo.name)
-        .returns(updaterType(goal))
+        .returns(goal.implType())
         .addStatement("this.$N = $L",
             step.field(), collectionInfo.initializer)
         .addStatement("return this")
@@ -73,7 +72,7 @@ final class UpdaterV {
     TypeName type = step.parameter.type;
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
-        .returns(updaterType(goal))
+        .returns(goal.implType())
         .addParameter(parameter)
         .addCode(nullCheck.apply(step))
         .addStatement("this.$N = $N", step.field(), parameter)

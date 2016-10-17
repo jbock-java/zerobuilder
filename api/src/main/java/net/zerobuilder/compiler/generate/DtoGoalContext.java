@@ -22,7 +22,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
-import static net.zerobuilder.compiler.generate.Updater.updaterType;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
@@ -40,18 +39,11 @@ final class DtoGoalContext {
 
     abstract <R> R accept(GoalCases<R> cases);
 
-    private final Supplier<FieldSpec> updaterField =
-        () -> updaterField(this);
-
-    private final Supplier<FieldSpec> builderField =
-        () -> builderField(this);
-
-    final FieldSpec updaterField() {
-      return updaterField.get();
-    }
-
-    final FieldSpec builderField() {
-      return builderField.get();
+    final FieldSpec cacheField() {
+      ClassName type = implType();
+      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
+          .initializer("new $T()", type)
+          .build();
     }
 
     final List<AbstractStep> steps() {
@@ -62,26 +54,32 @@ final class DtoGoalContext {
       return goalName.apply(this);
     }
 
-    final DtoGoal.GoalOption module() {
+    final DtoGoal.GoalOption goalOption() {
       return goalOptions.apply(this);
+    }
+
+    final Generator.Module module() {
+      return goalOption().module;
+    }
+
+    final ClassName implType() {
+      String implName = Generator.implName.apply(module(), this);
+      return buildersContext.apply(this)
+          .generatedType.nestedClass(implName);
     }
 
     private static final Function<AbstractGoalContext, DtoGoal.GoalOption> goalOptions
         = abstractGoalDetails.andThen(details -> details.goalOptions);
+  }
 
-    private static FieldSpec updaterField(AbstractGoalContext goal) {
-      ClassName type = updaterType(goal);
-      return FieldSpec.builder(type, downcase(goalName.apply(goal) + "Updater"), PRIVATE, FINAL)
-          .initializer("new $T()", type)
-          .build();
-    }
+  private static ClassName builderImplType(AbstractGoalContext goal) {
+    return buildersContext.apply(goal).generatedType.nestedClass(
+        upcase(goalName.apply(goal) + "BuilderImpl"));
+  }
 
-    private static FieldSpec builderField(AbstractGoalContext context) {
-      ClassName type = builderImplType(context);
-      return FieldSpec.builder(type, downcase(goalName.apply(context) + "BuilderImpl"), PRIVATE, FINAL)
-          .initializer("new $T()", type)
-          .build();
-    }
+  private static ClassName updaterType(AbstractGoalContext goal) {
+    return buildersContext.apply(goal).generatedType.nestedClass(
+        upcase(goal.name() + "Updater"));
   }
 
   interface GoalCases<R> {
@@ -125,11 +123,6 @@ final class DtoGoalContext {
       return goal.context;
     }
   });
-
-  static ClassName builderImplType(AbstractGoalContext goal) {
-    return buildersContext.apply(goal).generatedType.nestedClass(
-        upcase(goalName.apply(goal) + "BuilderImpl"));
-  }
 
   static final Function<AbstractGoalContext, TypeName> goalType =
       asFunction(new GoalCases<TypeName>() {
