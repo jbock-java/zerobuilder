@@ -25,7 +25,7 @@ final class DtoBeanGoal {
 
   static final class BeanGoal implements IGoal {
 
-    private final List<AbstractBeanStep> steps;
+    final List<AbstractBeanStep> steps;
     final BeanGoalDetails details;
     final List<TypeName> thrownTypes;
 
@@ -54,10 +54,6 @@ final class DtoBeanGoal {
     final BeanGoal goal;
 
     private final Supplier<FieldSpec> bean;
-
-    List<AbstractBeanStep> steps() {
-      return goal.steps;
-    }
 
     /**
      * A field that holds an instance of the bean type.

@@ -13,7 +13,6 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
-import net.zerobuilder.compiler.generate.Updater;
 import org.junit.Test;
 
 import javax.lang.model.element.Modifier;
@@ -91,8 +90,7 @@ public class BuilderTest {
         buildersContext, singletonList(goalDescription));
 
     // Invoke the generator
-    Generator generator = Generator.create(asList(new Updater(), new Builder()));
-    GeneratorOutput generatorOutput = generator.generate(generatorInput);
+    GeneratorOutput generatorOutput = Generator.generate(generatorInput);
 
     assertThat(generatorOutput.methods().size(), is(1));
     assertThat(generatorOutput.methods().get(0).name(), is(goalName));

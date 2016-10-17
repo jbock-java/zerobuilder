@@ -36,7 +36,7 @@ final class UpdaterB {
       = goal -> singletonList(goal.bean());
 
   static final Function<BeanGoalContext, List<MethodSpec>> updateMethodsB = goal ->
-      goal.steps().stream()
+      goal.goal.steps.stream()
           .map(stepToMethods(goal))
           .collect(flatList());
 

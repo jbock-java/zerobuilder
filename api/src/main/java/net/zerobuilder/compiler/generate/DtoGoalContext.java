@@ -54,20 +54,24 @@ final class DtoGoalContext {
       return builderField.get();
     }
 
+    final List<AbstractStep> steps() {
+      return abstractSteps.apply(this);
+    }
+
     final String name() {
       return goalName.apply(this);
     }
 
-    final DtoGoal.GoalOption goalOptions() {
+    final DtoGoal.GoalOption module() {
       return goalOptions.apply(this);
     }
 
     private static final Function<AbstractGoalContext, DtoGoal.GoalOption> goalOptions
         = abstractGoalDetails.andThen(details -> details.goalOptions);
 
-    private static FieldSpec updaterField(AbstractGoalContext context) {
-      ClassName type = updaterType(context);
-      return FieldSpec.builder(type, downcase(goalName.apply(context) + "Updater"), PRIVATE, FINAL)
+    private static FieldSpec updaterField(AbstractGoalContext goal) {
+      ClassName type = updaterType(goal);
+      return FieldSpec.builder(type, downcase(goalName.apply(goal) + "Updater"), PRIVATE, FINAL)
           .initializer("new $T()", type)
           .build();
     }
@@ -153,15 +157,15 @@ final class DtoGoalContext {
     }
   });
 
-  static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails =
+  private static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails =
       goalCases(
           DtoRegularGoal.goalDetails,
           bGoal -> bGoal.goal.details);
 
-  static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps =
+  private static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps =
       goalCases(
           rGoal -> unmodifiableList(regularSteps.apply(rGoal)),
-          bGoal -> unmodifiableList(bGoal.steps()));
+          bGoal -> unmodifiableList(bGoal.goal.steps));
 
   static final Function<AbstractGoalContext, MethodSpec> builderConstructor =
       goalCases(

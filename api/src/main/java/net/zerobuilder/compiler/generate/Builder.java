@@ -22,7 +22,6 @@ import static net.zerobuilder.compiler.generate.BuilderB.fieldsB;
 import static net.zerobuilder.compiler.generate.BuilderB.stepsB;
 import static net.zerobuilder.compiler.generate.BuilderV.fieldsV;
 import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderImplType;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
@@ -42,7 +41,7 @@ public final class Builder implements Generator.Module {
       goalCases(fieldsV, fieldsB);
 
   private static List<TypeSpec> stepInterfaces(AbstractGoalContext goal) {
-    return transform(abstractSteps.apply(goal), asStepInterface);
+    return transform(goal.steps(), asStepInterface);
   }
 
   private static final Function<AbstractGoalContext, List<MethodSpec>> steps =

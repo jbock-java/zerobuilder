@@ -51,9 +51,9 @@ final class GeneratorB {
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
         .returns(updaterType(goal))
         .addExceptions(thrownTypes(goal, asList(getterThrownTypes, setterThrownTypes)))
-        .addCode(goal.steps().stream().map(nullChecks(goal)).collect(joinCodeBlocks))
+        .addCode(goal.goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
         .addCode(initializeUpdater(goal, updater))
-        .addCode(goal.steps().stream().map(copy(goal)).collect(joinCodeBlocks))
+        .addCode(goal.goal.steps.stream().map(copy(goal)).collect(joinCodeBlocks))
         .addStatement("return $N", updater)
         .addModifiers(modifiers)
         .build();
@@ -64,7 +64,7 @@ final class GeneratorB {
                                            List<Function<AbstractBeanStep, List<TypeName>>> functions) {
     Set<TypeName> thrownTypes = new HashSet<>();
     for (Function<AbstractBeanStep, List<TypeName>> function : functions) {
-      thrownTypes.addAll(goal.steps().stream()
+      thrownTypes.addAll(goal.goal.steps.stream()
           .map(function)
           .collect(flatList()));
     }

@@ -40,10 +40,10 @@ final class BuilderB {
   static final Function<BeanGoalContext, List<MethodSpec>> stepsB
       = goal ->
       Stream.concat(
-          goal.steps().stream()
+          goal.goal.steps.stream()
               .limit(goal.steps().size() - 1)
               .map(stepToMethods(goal, false)),
-          Stream.of(goal.steps().get(goal.steps().size() - 1))
+          Stream.of(goal.goal.steps.get(goal.steps().size() - 1))
               .map(stepToMethods(goal, true)))
           .collect(flatList());
 

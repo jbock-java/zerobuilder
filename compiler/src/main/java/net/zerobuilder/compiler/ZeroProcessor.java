@@ -8,11 +8,9 @@ import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.Analyser;
 import net.zerobuilder.compiler.analyse.ValidationException;
-import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
-import net.zerobuilder.compiler.generate.Updater;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -31,7 +29,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -67,8 +64,7 @@ public final class ZeroProcessor extends AbstractProcessor {
     for (TypeElement annotatedType : types) {
       try {
         GeneratorInput generatorInput = Analyser.analyse(annotatedType);
-        Generator generator = Generator.create(asList(new Updater(), new Builder()));
-        GeneratorOutput generatorOutput = generator.generate(generatorInput);
+        GeneratorOutput generatorOutput = Generator.generate(generatorInput);
         TypeSpec typeSpec = generatorOutput.typeSpec(generatedAnnotations);
         try {
           write(generatorOutput.generatedType(), typeSpec);

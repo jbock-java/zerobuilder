@@ -2,7 +2,6 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
@@ -21,7 +20,6 @@ import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.Collections;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PUBLIC;
@@ -78,8 +76,7 @@ public class UpdaterTest {
         buildersContext, singletonList(goalDescription));
 
     // Invoke the generator
-    Generator generator = Generator.create(asList(new Updater(), new Builder()));
-    GeneratorOutput generatorOutput = generator.generate(generatorInput);
+    GeneratorOutput generatorOutput = Generator.generate(generatorInput);
 
     assertThat(generatorOutput.methods().size(), is(1));
     assertThat(generatorOutput.methods().get(0).name(), is(goalName));
