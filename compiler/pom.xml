@@ -21,9 +21,22 @@
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>com.github.h908714124</groupId>
             <artifactId>zerobuilder-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.h908714124</groupId>
+            <artifactId>zerobuilder-module-builder</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.h908714124</groupId>
+            <artifactId>zerobuilder-module-updater</artifactId>
             <version>${project.version}</version>
         </dependency>
 

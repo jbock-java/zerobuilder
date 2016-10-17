@@ -5,21 +5,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.h908714124</groupId>
-    <artifactId>zerobuilder-parent</artifactId>
+    <artifactId>zerobuilder-modules</artifactId>
     <version>${revision}</version>
 
     <packaging>pom</packaging>
-
-    <modules>
-        <module>api</module>
-        <module>modules</module>
-        <module>compiler</module>
-        <module>examples</module>
-    </modules>
 
     <properties>
         <revision>0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <modules>
+        <module>module-builder</module>
+        <module>module-updater</module>
+    </modules>
 
 </project>
