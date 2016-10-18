@@ -27,7 +27,7 @@ import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.GeneratorB.goalToBuilderB;
-import static net.zerobuilder.compiler.generate.GeneratorV.goalToBuilderV;
+import static net.zerobuilder.compiler.generate.GeneratorVB.goalToBuilderV;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
