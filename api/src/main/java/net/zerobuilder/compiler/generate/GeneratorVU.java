@@ -13,8 +13,6 @@ import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoCases;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
@@ -31,12 +29,9 @@ import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.goalDetails;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.isInstance;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
@@ -49,7 +44,7 @@ final class GeneratorVU {
       goal -> {
         RegularGoalDetails details = goalDetails.apply(goal);
         ParameterSpec updater = varUpdater(goal);
-        MethodSpec method = methodBuilder(details.name + "Updater")
+        MethodSpec method = methodBuilder(goal.methodName())
             .addExceptions(thrownByProjections(goal))
             .addParameter(toBuilderParameter(goal))
             .returns(updater.type)

@@ -2,7 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.Generator.Module;
+import net.zerobuilder.compiler.generate.DtoModule.Module;
 
 import java.util.List;
 import java.util.function.Function;

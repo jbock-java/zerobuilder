@@ -9,37 +9,23 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoCases;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
-import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
@@ -49,8 +35,8 @@ final class GeneratorVB {
       = goal -> {
     RegularGoalDetails regularGoalDetails = goalDetails.apply(goal);
     List<RegularStep> steps = regularSteps.apply(goal);
-    MethodSpec.Builder method = methodBuilder(goal.name() + "Builder")
-        .returns(Builder.contractName(goal).nestedClass(steps.get(0).thisType))
+    MethodSpec.Builder method = methodBuilder(goal.methodName())
+        .returns(goal.contractType().nestedClass(steps.get(0).thisType))
         .addModifiers(regularGoalDetails.goalOptions.access.modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
     BuildersContext context = DtoRegularGoal.buildersContext.apply(goal);

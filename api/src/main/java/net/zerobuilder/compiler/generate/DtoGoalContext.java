@@ -8,13 +8,13 @@ import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.util.Collections.unmodifiableList;
@@ -54,11 +54,15 @@ final class DtoGoalContext {
       return goalName.apply(this);
     }
 
+    final String methodName() {
+      return name() + upcase(module().name());
+    }
+
     final DtoGoal.GoalOption goalOption() {
       return goalOptions.apply(this);
     }
 
-    final Generator.Module module() {
+    final Module module() {
       return goalOption().module;
     }
 
@@ -67,6 +71,13 @@ final class DtoGoalContext {
       return buildersContext.apply(this)
           .generatedType.nestedClass(implName);
     }
+
+    final ClassName contractType() {
+      String contractName = Generator.contractName.apply(module(), this);
+      return buildersContext.apply(this)
+          .generatedType.nestedClass(contractName);
+    }
+
 
     private static final Function<AbstractGoalContext, DtoGoal.GoalOption> goalOptions
         = abstractGoalDetails.andThen(details -> details.goalOptions);
@@ -109,7 +120,7 @@ final class DtoGoalContext {
   static List<ClassName> stepInterfaceTypes(AbstractGoalContext goal) {
     return transform(
         abstractSteps.apply(goal),
-        step -> Builder.contractName(goal).nestedClass(step.thisType));
+        step -> goal.contractType().nestedClass(step.thisType));
   }
 
   static final Function<AbstractGoalContext, BuildersContext> buildersContext

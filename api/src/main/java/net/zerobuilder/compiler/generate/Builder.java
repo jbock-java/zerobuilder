@@ -1,13 +1,12 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.Generator.ContractModule;
+import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 
 import java.util.List;
 import java.util.function.Function;
@@ -23,18 +22,14 @@ import static net.zerobuilder.compiler.generate.BuilderB.stepsB;
 import static net.zerobuilder.compiler.generate.BuilderV.fieldsV;
 import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.buildersContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.GeneratorB.goalToBuilderB;
 import static net.zerobuilder.compiler.generate.GeneratorVB.goalToBuilderV;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
-import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class Builder extends ContractModule {
-
-  static final String MODULE_NAME = "builder";
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields =
       goalCases(fieldsV, fieldsB);
@@ -49,11 +44,6 @@ public final class Builder extends ContractModule {
   private static final Function<AbstractGoalContext, BuilderMethod> goalToBuilder =
       goalCases(goalToBuilderV, goalToBuilderB);
 
-  static ClassName contractName(AbstractGoalContext goal) {
-    BuildersContext context = buildersContext.apply(goal);
-    return context.generatedType.nestedClass(upcase(goal.name() + "Builder"));
-  }
-
   private static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
     return classBuilder(goal.implType())
         .addSuperinterfaces(stepInterfaceTypes(goal))
@@ -65,7 +55,7 @@ public final class Builder extends ContractModule {
   }
 
   private static TypeSpec defineContract(AbstractGoalContext goal) {
-    return classBuilder(contractName(goal))
+    return classBuilder(goal.contractType())
         .addTypes(stepInterfaces(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder()
@@ -76,22 +66,15 @@ public final class Builder extends ContractModule {
   }
 
   @Override
-  public BuilderMethod method(AbstractGoalContext goal) {
-    return goalToBuilder.apply(goal);
-  }
-
-  @Override
-  public TypeSpec impl(AbstractGoalContext goal) {
-    return defineBuilderImpl(goal);
-  }
-
-  @Override
-  public TypeSpec contract(AbstractGoalContext goal) {
-    return defineContract(goal);
+  protected ContractModuleOutput process(AbstractGoalContext goal) {
+    return new ContractModuleOutput(
+        goalToBuilder.apply(goal),
+        defineBuilderImpl(goal),
+        defineContract(goal));
   }
 
   @Override
   public String name() {
-    return MODULE_NAME;
+    return "builder";
   }
 }

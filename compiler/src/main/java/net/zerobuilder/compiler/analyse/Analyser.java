@@ -11,7 +11,8 @@ import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.Generator.Module;
+import net.zerobuilder.compiler.generate.DtoModule;
+import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.GeneratorInput;
 import net.zerobuilder.compiler.generate.Updater;
 

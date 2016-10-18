@@ -6,6 +6,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 
 import java.util.List;
 import java.util.function.Function;
@@ -27,9 +28,7 @@ import static net.zerobuilder.compiler.generate.UpdaterV.fieldsV;
 import static net.zerobuilder.compiler.generate.UpdaterV.updateMethodsV;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
-public final class Updater extends Generator.SimpleModule {
-
-  static final String MODULE_NAME = "updater";
+public final class Updater extends DtoModule.SimpleModule {
 
   private static final Function<AbstractGoalContext, List<FieldSpec>> fields
       = goalCases(fieldsV, fieldsB);
@@ -65,17 +64,14 @@ public final class Updater extends Generator.SimpleModule {
       = goalCases(regularInvoke, returnBean);
 
   @Override
-  public DtoGeneratorOutput.BuilderMethod method(AbstractGoalContext goal) {
-    return goalToUpdater.apply(goal);
-  }
-
-  @Override
-  public TypeSpec impl(AbstractGoalContext goal) {
-    return defineUpdater(goal);
-  }
-
-  @Override
   public String name() {
-    return MODULE_NAME;
+    return "updater";
+  }
+
+  @Override
+  protected SimpleModuleOutput process(AbstractGoalContext goal) {
+    return new SimpleModuleOutput(
+        goalToUpdater.apply(goal),
+        defineUpdater(goal));
   }
 }
