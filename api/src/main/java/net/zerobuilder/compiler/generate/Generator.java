@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
@@ -15,17 +14,48 @@ import java.util.function.BiFunction;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
 import static net.zerobuilder.compiler.generate.Utilities.concat;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.flatList;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class Generator {
+
+  public interface ModuleOutput {
+    <R> R accept(ModuleOutputCases<R> cases);
+  }
+
+  public interface ModuleOutputCases<R> {
+    R simple(SimpleModuleOutput simple);
+    R contract(ContractModuleOutput contract);
+  }
+
+  public static abstract class AbstractModuleOutput {
+    final BuilderMethod method;
+    final TypeSpec impl;
+    protected AbstractModuleOutput(BuilderMethod method, TypeSpec impl) {
+      this.method = method;
+      this.impl = impl;
+    }
+  }
+
+  public static final class SimpleModuleOutput extends AbstractModuleOutput {
+
+    protected SimpleModuleOutput(BuilderMethod method, TypeSpec impl) {
+      super(method, impl);
+    }
+  }
+
+  public static final class ContractModuleOutput extends AbstractModuleOutput {
+    final TypeSpec contract;
+
+    protected ContractModuleOutput(BuilderMethod method, TypeSpec impl, TypeSpec contract) {
+      super(method, impl);
+      this.contract = contract;
+    }
+  }
 
   public interface Module {
     BuilderMethod method(AbstractGoalContext goal);
