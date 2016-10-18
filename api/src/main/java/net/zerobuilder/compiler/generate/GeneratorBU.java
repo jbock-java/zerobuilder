@@ -36,7 +36,7 @@ import static net.zerobuilder.compiler.generate.Utilities.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
-final class GeneratorB {
+final class GeneratorBU {
 
   static final Function<BeanGoalContext, BuilderMethod> goalToUpdaterB
       = goal -> {
@@ -144,31 +144,7 @@ final class GeneratorB {
     return parameterSpec(updaterType, "updater");
   }
 
-  static final Function<BeanGoalContext, BuilderMethod> goalToBuilderB
-      = goal -> {
-    ClassName builderType = goal.implType();
-    String name = goal.goal.details.name;
-    String builder = downcase(builderType.simpleName());
-    ClassName type = goal.goal.details.goalType;
-    FieldSpec cache = goal.context.cache.get();
-    MethodSpec method = methodBuilder(name + "Builder")
-        .returns(goal.contractType().nestedClass(goal.steps().get(0).thisType))
-        .addModifiers(goal.goal.details.goalOptions.access.modifiers(STATIC))
-        .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
-            ? Collections.emptyList()
-            : goal.goal.thrownTypes)
-        .addCode(goal.context.lifecycle == REUSE_INSTANCES
-            ? statement("$T $N = $N.get().$N", builderType, builder, cache, goal.cacheField())
-            : statement("$T $N = new $T()", builderType, builder, builderType))
-        .addCode(goal.context.lifecycle == REUSE_INSTANCES
-            ? statement("$N.$N = new $T()", builder, goal.bean(), type)
-            : emptyCodeBlock)
-        .addStatement("return $N", builder)
-        .build();
-    return new BuilderMethod(name, method);
-  };
-
-  private GeneratorB() {
+  private GeneratorBU() {
     throw new UnsupportedOperationException("no instances");
   }
 }

@@ -20,7 +20,7 @@ import static net.zerobuilder.compiler.generate.BuilderV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalType;
-import static net.zerobuilder.compiler.generate.GeneratorB.goalToUpdaterB;
+import static net.zerobuilder.compiler.generate.GeneratorBU.goalToUpdaterB;
 import static net.zerobuilder.compiler.generate.GeneratorVU.goalToUpdaterV;
 import static net.zerobuilder.compiler.generate.UpdaterB.fieldsB;
 import static net.zerobuilder.compiler.generate.UpdaterB.updateMethodsB;
