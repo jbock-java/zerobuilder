@@ -6,7 +6,6 @@ import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoParameter.ParameterCases;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.function.Function;
 
