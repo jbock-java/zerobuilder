@@ -27,7 +27,7 @@ final class GeneratorBB {
     FieldSpec cache = goal.context.cache.get();
     MethodSpec method = methodBuilder(name + "Builder")
         .returns(goal.contractType().nestedClass(goal.steps().get(0).thisType))
-        .addModifiers(goal.goal.details.goalOption.access.modifiers(STATIC))
+        .addModifiers(goal.goal.details.option.access.modifiers(STATIC))
         .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
             : goal.goal.thrownTypes)

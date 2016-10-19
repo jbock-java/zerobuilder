@@ -29,7 +29,7 @@ public final class DtoGoal {
 
   static abstract class AbstractGoalDetails {
     final String name;
-    final GoalOption goalOption;
+    final GoalOption option;
 
     /**
      * Returns the goal name.
@@ -41,20 +41,20 @@ public final class DtoGoal {
     }
 
     public final Module module() {
-      return goalOption.module;
+      return option.module;
     }
 
     abstract TypeName type();
 
-    AbstractGoalDetails(String name, GoalOption goalOption) {
+    AbstractGoalDetails(String name, GoalOption option) {
       this.name = name;
-      this.goalOption = goalOption;
+      this.option = option;
     }
     public abstract <R> R acceptAbstract(AbstractGoalCases<R> cases);
   }
 
   interface AbstractGoalCases<R> {
-    R regular(RegularGoalDetails goal);
+    R regular(AbstractRegularGoalDetails goal);
     R bean(BeanGoalDetails goal);
   }
 
@@ -67,11 +67,11 @@ public final class DtoGoal {
     return goal -> goal.acceptAbstract(cases);
   }
 
-  public static <R> Function<RegularGoalDetails, R> asFunction(final RegularGoalCases<R> cases) {
+  public static <R> Function<AbstractRegularGoalDetails, R> asFunction(final RegularGoalCases<R> cases) {
     return goal -> goal.accept(cases);
   }
 
-  public static abstract class RegularGoalDetails extends AbstractGoalDetails {
+  public static abstract class AbstractRegularGoalDetails extends AbstractGoalDetails {
 
     /**
      * <p>method goal: return type</p>
@@ -94,8 +94,8 @@ public final class DtoGoal {
      * @param parameterNames parameter names in original order
      * @param goalOptions    goal options
      */
-    RegularGoalDetails(TypeName goalType, String name, List<String> parameterNames,
-                       GoalOption goalOptions) {
+    AbstractRegularGoalDetails(TypeName goalType, String name, List<String> parameterNames,
+                               GoalOption goalOptions) {
       super(name, goalOptions);
       this.goalType = goalType;
       this.parameterNames = parameterNames;
@@ -109,7 +109,7 @@ public final class DtoGoal {
     }
   }
 
-  public static final class ConstructorGoalDetails extends RegularGoalDetails {
+  public static final class ConstructorGoalDetails extends AbstractRegularGoalDetails {
 
     private ConstructorGoalDetails(TypeName goalType, String name, List<String> parameterNames,
                                    GoalOption goalOptions) {
@@ -127,7 +127,7 @@ public final class DtoGoal {
     }
   }
 
-  public static final class MethodGoalDetails extends RegularGoalDetails {
+  public static final class MethodGoalDetails extends AbstractRegularGoalDetails {
     final String methodName;
     final GoalMethodType methodType;
 
@@ -175,7 +175,7 @@ public final class DtoGoal {
   public static final Function<AbstractGoalDetails, TypeName> goalType
       = asFunction(new AbstractGoalCases<TypeName>() {
     @Override
-    public TypeName regular(RegularGoalDetails goal) {
+    public TypeName regular(AbstractRegularGoalDetails goal) {
       return goal.goalType;
     }
     @Override

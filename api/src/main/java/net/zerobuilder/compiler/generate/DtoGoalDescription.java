@@ -58,7 +58,7 @@ public final class DtoGoalDescription {
           regularGoal -> regularGoal.thrownTypes,
           beanGoal -> Collections.emptyList());
 
-  static String goalName(GoalDescription goal) {
+  private static String goalName(GoalDescription goal) {
     return goalDetails.apply(goal).name;
   }
 

@@ -6,13 +6,12 @@ import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.Builder;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoModule;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.Updater;
 
@@ -77,10 +76,10 @@ final class DtoGoalElement {
 
   static final class RegularGoalElement extends AbstractGoalElement {
     final List<? extends Module> modules;
-    final RegularGoalDetails details;
+    final AbstractRegularGoalDetails details;
     final ExecutableElement executableElement;
 
-    private RegularGoalElement(List<? extends Module> modules, ExecutableElement element, RegularGoalDetails details) {
+    private RegularGoalElement(List<? extends Module> modules, ExecutableElement element, AbstractRegularGoalDetails details) {
       super(element.getAnnotation(Goal.class));
       this.modules = modules;
       this.details = details;

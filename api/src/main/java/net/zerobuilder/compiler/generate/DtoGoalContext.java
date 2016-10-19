@@ -131,7 +131,7 @@ final class DtoGoalContext {
           bean -> unmodifiableList(bean.goal.steps));
 
   private static final Function<AbstractGoalContext, GoalOption> goalOption
-      = abstractGoalDetails.andThen(details -> details.goalOption);
+      = abstractGoalDetails.andThen(details -> details.option);
 
   private DtoGoalContext() {
     throw new UnsupportedOperationException("no instances");

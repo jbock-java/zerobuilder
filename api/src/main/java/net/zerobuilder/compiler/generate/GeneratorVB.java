@@ -8,7 +8,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
@@ -33,11 +33,11 @@ final class GeneratorVB {
 
   static final Function<RegularGoalContext, BuilderMethod> goalToBuilderV
       = goal -> {
-    RegularGoalDetails regularGoalDetails = goalDetails.apply(goal);
+    AbstractRegularGoalDetails abstractRegularGoalDetails = goalDetails.apply(goal);
     List<RegularStep> steps = regularSteps.apply(goal);
     MethodSpec.Builder method = methodBuilder(goal.methodName())
         .returns(goal.contractType().nestedClass(steps.get(0).thisType))
-        .addModifiers(regularGoalDetails.goalOption.access.modifiers(STATIC));
+        .addModifiers(abstractRegularGoalDetails.option.access.modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
     BuildersContext context = DtoRegularGoal.buildersContext.apply(goal);
     ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));

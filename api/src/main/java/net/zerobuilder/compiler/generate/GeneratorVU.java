@@ -8,7 +8,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoCases;
@@ -42,7 +42,7 @@ final class GeneratorVU {
 
   static final Function<RegularGoalContext, BuilderMethod> goalToUpdaterV =
       goal -> {
-        RegularGoalDetails details = goalDetails.apply(goal);
+        AbstractRegularGoalDetails details = goalDetails.apply(goal);
         ParameterSpec updater = varUpdater(goal);
         MethodSpec method = methodBuilder(goal.methodName())
             .addExceptions(thrownByProjections(goal))
@@ -52,7 +52,7 @@ final class GeneratorVU {
             .addCode(initUpdater(goal, updater))
             .addCode(copyBlock(goal))
             .addStatement("return $N", updater)
-            .addModifiers(details.goalOption.access.modifiers(STATIC))
+            .addModifiers(details.option.access.modifiers(STATIC))
             .build();
         return new BuilderMethod(details.name, method);
       };
@@ -130,7 +130,7 @@ final class GeneratorVU {
   }
 
   private static ParameterSpec toBuilderParameter(RegularGoalContext goal) {
-    RegularGoalDetails details = goalDetails.apply(goal);
+    AbstractRegularGoalDetails details = goalDetails.apply(goal);
     TypeName goalType = details.goalType;
     return parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
   }

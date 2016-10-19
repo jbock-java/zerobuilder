@@ -9,7 +9,7 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
@@ -209,7 +209,7 @@ final class DtoRegularGoal {
     }
   }
 
-  static final Function<RegularGoalContext, RegularGoalDetails> goalDetails =
+  static final Function<RegularGoalContext, AbstractRegularGoalDetails> goalDetails =
       regularGoalContextCases(
           cGoal -> cGoal.goal.details,
           mGoal -> mGoal.goal.details);

@@ -45,7 +45,7 @@ final class DtoBeanStep {
   }
 
   static abstract class AbstractBeanStep extends AbstractStep {
-    AbstractBeanStep(ClassName thisType,
+    AbstractBeanStep(String thisType,
                      Optional<? extends AbstractStep> nextType,
                      AbstractGoalDetails goalDetails,
                      BuildersContext context) {
@@ -61,7 +61,7 @@ final class DtoBeanStep {
   static final class AccessorPairStep extends AbstractBeanStep {
     final AccessorPair accessorPair;
 
-    private AccessorPairStep(ClassName thisType,
+    private AccessorPairStep(String thisType,
                              Optional<? extends AbstractStep> nextType,
                              AbstractGoalDetails goalDetails,
                              BuildersContext context,
@@ -70,7 +70,7 @@ final class DtoBeanStep {
       this.accessorPair = accessorPair;
     }
 
-    static AccessorPairStep create(ClassName thisType,
+    static AccessorPairStep create(String thisType,
                                    Optional<? extends AbstractStep> nextType,
                                    AbstractGoalDetails goalDetails,
                                    BuildersContext context,
@@ -97,7 +97,7 @@ final class DtoBeanStep {
     final LoneGetter loneGetter;
     final String emptyMethod;
 
-    private LoneGetterStep(ClassName thisType,
+    private LoneGetterStep(String thisType,
                            Optional<? extends AbstractStep> nextType,
                            AbstractGoalDetails goalDetails,
                            BuildersContext context,
@@ -108,7 +108,7 @@ final class DtoBeanStep {
       this.emptyMethod = emptyMethod;
     }
 
-    static LoneGetterStep create(ClassName thisType,
+    static LoneGetterStep create(String thisType,
                                  Optional<? extends AbstractStep> nextType,
                                  AbstractGoalDetails goalDetails,
                                  BuildersContext context,
@@ -132,18 +132,6 @@ final class DtoBeanStep {
     @Override
     public AbstractBeanParameter loneGetter(LoneGetterStep step) {
       return step.loneGetter;
-    }
-  };
-
-  static final BeanStepCases<Optional<CollectionInfo>> emptyOption
-      = new BeanStepCases<Optional<CollectionInfo>>() {
-    @Override
-    public Optional<CollectionInfo> accessorPair(AccessorPairStep step) {
-      return step.emptyOption();
-    }
-    @Override
-    public Optional<CollectionInfo> loneGetter(LoneGetterStep step) {
-      return Optional.empty();
     }
   };
 

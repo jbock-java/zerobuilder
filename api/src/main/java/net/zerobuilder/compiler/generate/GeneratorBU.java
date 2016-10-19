@@ -42,7 +42,7 @@ final class GeneratorBU {
     String name = goal.goal.details.name;
     ClassName type = goal.goal.details.goalType;
     ParameterSpec updater = updaterInstance(goal);
-    Modifier[] modifiers = goal.goal.details.goalOption.access
+    Modifier[] modifiers = goal.goal.details.option.access
         .modifiers(STATIC);
     MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))

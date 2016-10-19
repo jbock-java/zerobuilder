@@ -93,11 +93,11 @@ final class DtoStep {
       return step.goalDetails.type();
     }
 
-    AbstractStep(ClassName thisType,
+    AbstractStep(String thisType,
                  Optional<? extends AbstractStep> nextStep,
                  AbstractGoalDetails goalDetails,
                  BuildersContext context) {
-      this.thisType = thisType.simpleName();
+      this.thisType = thisType;
       this.nextStep = nextStep;
       this.goalDetails = goalDetails;
       this.context = context;
@@ -135,7 +135,7 @@ final class DtoStep {
     private final Supplier<FieldSpec> field;
     private final Supplier<Optional<CollectionInfo>> collectionInfo;
 
-    private RegularStep(ClassName thisType,
+    private RegularStep(String thisType,
                         Optional<? extends AbstractStep> nextType,
                         AbstractGoalDetails goalDetails,
                         BuildersContext context,
@@ -159,7 +159,7 @@ final class DtoStep {
           fieldSpec(parameter.type, parameter.name, PRIVATE));
     }
 
-    static RegularStep create(ClassName thisType,
+    static RegularStep create(String thisType,
                               Optional<? extends AbstractStep> nextType,
                               AbstractGoalDetails goalDetails,
                               BuildersContext context,
