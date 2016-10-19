@@ -5,6 +5,8 @@ import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescript
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.RegularGoalDescription;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 
 public final class DtoGoalDescription {
@@ -13,7 +15,13 @@ public final class DtoGoalDescription {
     public final AbstractGoalDetails details() {
       return goalDetails.apply(this);
     }
-    public abstract  <R> R accept(GoalDescriptionCases<R> cases);
+    public final String name() {
+      return details().name;
+    }
+    public final List<TypeName> thrownTypes() {
+      return thrownTypes.apply(this);
+    }
+    public abstract <R> R accept(GoalDescriptionCases<R> cases);
   }
 
   interface GoalDescriptionCases<R> {
@@ -40,29 +48,18 @@ public final class DtoGoalDescription {
     });
   }
 
-  static final Function<GoalDescription, AbstractGoalDetails> goalDetails =
+  private static final Function<GoalDescription, AbstractGoalDetails> goalDetails =
       goalDescriptionCases(
           description -> description.details,
           description -> description.details);
 
-  private static final Function<GoalDescription, AbstractGoalDetails> abstractGoal =
-      asFunction(new GoalDescriptionCases<AbstractGoalDetails>() {
-        @Override
-        public AbstractGoalDetails regularGoal(RegularGoalDescription goal) {
-          return goal.details;
-        }
-        @Override
-        public AbstractGoalDetails beanGoal(BeanGoalDescription goal) {
-          return goal.details;
-        }
-      });
+  private static final Function<GoalDescription, List<TypeName>> thrownTypes =
+      goalDescriptionCases(
+          regularGoal -> regularGoal.thrownTypes,
+          beanGoal -> Collections.emptyList());
 
   static String goalName(GoalDescription goal) {
-    return abstractGoal.apply(goal).name;
-  }
-
-  static TypeName goalType(GoalDescription goal) {
-    return DtoGoal.goalType.apply(DtoGoalDescription.abstractGoal.apply(goal));
+    return goalDetails.apply(goal).name;
   }
 
   private DtoGoalDescription() {

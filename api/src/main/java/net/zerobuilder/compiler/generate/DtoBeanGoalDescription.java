@@ -2,18 +2,11 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.RegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 
 import java.util.List;
-import java.util.function.Function;
-
-import static net.zerobuilder.compiler.generate.DtoGoalDescription.asFunction;
 
 public final class DtoBeanGoalDescription {
 

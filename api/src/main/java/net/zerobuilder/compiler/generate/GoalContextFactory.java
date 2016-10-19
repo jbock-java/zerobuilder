@@ -29,13 +29,12 @@ import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalDescriptionCases;
-import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalName;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.Utilities.reverse;
@@ -84,9 +83,9 @@ final class GoalContextFactory {
       List<P> parameters,
       Function<P, StepFactory<S>> factoryFactory) {
     ClassName contractName = contractName(goalName(goal), generatedType, goal.details().module());
-    AbstractGoalDetails details = goalDetails.apply(goal);
+    AbstractGoalDetails details = goal.details();
     Optional<? extends AbstractStep> nextStep = Optional.empty();
-    List<TypeName> thrownTypes = GoalContextFactory.thrownTypes.apply(goal);
+    List<TypeName> thrownTypes = goal.thrownTypes();
     List<S> builder = new ArrayList<>(parameters.size());
     for (P parameter : reverse(parameters)) {
       String thisName = upcase(parameterName.apply(parameter));
@@ -99,6 +98,7 @@ final class GoalContextFactory {
           context,
           thrownTypes);
       builder.add(step);
+      thrownTypes = emptyList();
       nextStep = Optional.of(step);
     }
     return reverse(builder);
@@ -170,11 +170,6 @@ final class GoalContextFactory {
             context, goal, context.generatedType)
             .withContext(context));
   }
-
-  private static final Function<GoalDescription, List<TypeName>> thrownTypes =
-      goalDescriptionCases(
-          regularGoal -> regularGoal.thrownTypes,
-          beanGoal -> Collections.emptyList());
 
   private static ClassName contractName(String goalName, ClassName generatedType, Module module) {
     return generatedType.nestedClass(upcase(goalName + upcase(module.name())));
