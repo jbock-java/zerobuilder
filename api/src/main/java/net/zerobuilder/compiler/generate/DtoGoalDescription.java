@@ -1,13 +1,10 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.RegularGoalDescription;
 
-import java.util.List;
 import java.util.function.Function;
 
 public final class DtoGoalDescription {
@@ -44,88 +41,6 @@ public final class DtoGoalDescription {
       goalDescriptionCases(
           description -> description.details,
           description -> description.details);
-
-  /**
-   * Describes of a goal that represents either a static method or an instance method, or a constructor.
-   */
-  public static final class RegularGoalDescription extends GoalDescription {
-    final RegularGoalDetails details;
-    final List<TypeName> thrownTypes;
-    final List<AbstractRegularParameter> parameters;
-
-    private RegularGoalDescription(RegularGoalDetails details,
-                                   List<TypeName> thrownTypes,
-                                   List<AbstractRegularParameter> parameters) {
-      this.details = details;
-      this.thrownTypes = thrownTypes;
-      this.parameters = parameters;
-    }
-
-    /**
-     * @param details     goal details
-     * @param thrownTypes exceptions thrown by the goal method, if any
-     * @param parameters  parameter names, possibly in a different order;
-     *                    must contain each parameter name in {@link RegularGoalDetails#parameterNames}
-     *                    exactly once
-     * @return goal description
-     * @throws IllegalArgumentException if {@code parameters} don't match the parameter names in {@code details}
-     */
-    public static RegularGoalDescription create(RegularGoalDetails details,
-                                                List<TypeName> thrownTypes,
-                                                List<AbstractRegularParameter> parameters) {
-      checkParameterNames(details.parameterNames, parameters);
-      return new RegularGoalDescription(details, thrownTypes, parameters);
-    }
-
-    private static void checkParameterNames(List<String> parameterNames,
-                                            List<AbstractRegularParameter> parameters) {
-      if (parameters.isEmpty()) {
-        throw new IllegalArgumentException("need at least one parameter");
-      }
-      if (parameterNames.size() != parameters.size()) {
-        throw new IllegalArgumentException("parameter names mismatch");
-      }
-      int[] positions = new int[parameterNames.size()];
-      for (AbstractRegularParameter parameter : parameters) {
-        int i = parameterNames.indexOf(parameter.name);
-        if (positions[i]++ != 0) {
-          throw new IllegalArgumentException("parameter names mismatch");
-        }
-      }
-    }
-
-    @Override
-    public <R> R accept(GoalDescriptionCases<R> cases) {
-      return cases.regularGoal(this);
-    }
-  }
-
-  /**
-   * Describes the task of creating and / or updating a JavaBean.
-   */
-  public static final class BeanGoalDescription extends GoalDescription {
-    final BeanGoalDetails details;
-    final List<AbstractBeanParameter> parameters;
-    final List<TypeName> thrownTypes;
-
-    private BeanGoalDescription(BeanGoalDetails details,
-                                List<AbstractBeanParameter> parameters,
-                                List<TypeName> thrownTypes) {
-      this.details = details;
-      this.parameters = parameters;
-      this.thrownTypes = thrownTypes;
-    }
-
-    public static BeanGoalDescription create(BeanGoalDetails details, List<AbstractBeanParameter> parameters,
-                                             List<TypeName> thrownTypes) {
-      return new BeanGoalDescription(details, parameters, thrownTypes);
-    }
-
-    @Override
-    public <R> R accept(GoalDescriptionCases<R> cases) {
-      return cases.beanGoal(this);
-    }
-  }
 
   private static final Function<GoalDescription, AbstractGoalDetails> abstractGoal =
       asFunction(new GoalDescriptionCases<AbstractGoalDetails>() {

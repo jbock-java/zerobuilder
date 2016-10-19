@@ -8,9 +8,10 @@ import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
+import net.zerobuilder.compiler.generate.DtoBeanGoalDescription;
+import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 
 import javax.lang.model.element.ElementKind;

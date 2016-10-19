@@ -4,8 +4,9 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpRegularParameter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 
 import javax.lang.model.element.ElementKind;
@@ -115,7 +116,7 @@ final class ProjectionValidatorV {
   }
 
   private static RegularGoalDescription create(RegularGoalElement goal,
-                                               List<AbstractRegularParameter> parameters) {
+                                                                         List<AbstractRegularParameter> parameters) {
     return RegularGoalDescription.create(
         goal.details, thrownTypes(goal.executableElement),
         parameters);
