@@ -14,7 +14,6 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
 import javax.lang.model.element.Modifier;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +42,7 @@ final class GeneratorBU {
     String name = goal.goal.details.name;
     ClassName type = goal.goal.details.goalType;
     ParameterSpec updater = updaterInstance(goal);
-    Modifier[] modifiers = goal.goal.details.goalOptions.access
+    Modifier[] modifiers = goal.goal.details.goalOption.access
         .modifiers(STATIC);
     MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))

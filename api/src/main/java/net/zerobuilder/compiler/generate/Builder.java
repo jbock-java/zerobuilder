@@ -8,6 +8,7 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -21,12 +22,14 @@ import static net.zerobuilder.compiler.generate.BuilderB.fieldsB;
 import static net.zerobuilder.compiler.generate.BuilderB.stepsB;
 import static net.zerobuilder.compiler.generate.BuilderV.fieldsV;
 import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.GeneratorBB.goalToBuilderB;
 import static net.zerobuilder.compiler.generate.GeneratorVB.goalToBuilderV;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
+import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 
 public final class Builder extends ContractModule {
@@ -64,6 +67,19 @@ public final class Builder extends ContractModule {
             .build())
         .build();
   }
+
+  private static final Function<AbstractGoalContext, MethodSpec> builderConstructor =
+      goalCases(
+          DtoRegularGoal.builderConstructor,
+          bGoal -> constructorBuilder()
+              .addModifiers(PRIVATE)
+              .addExceptions(bGoal.context.lifecycle == REUSE_INSTANCES
+                  ? Collections.emptyList()
+                  : bGoal.goal.thrownTypes)
+              .addCode(bGoal.context.lifecycle == REUSE_INSTANCES
+                  ? emptyCodeBlock
+                  : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))
+              .build());
 
   @Override
   protected ContractModuleOutput process(AbstractGoalContext goal) {

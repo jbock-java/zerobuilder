@@ -8,16 +8,19 @@ import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
+import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.BuilderV.regularInvoke;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.builderConstructor;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalType;
 import static net.zerobuilder.compiler.generate.GeneratorBU.goalToUpdaterB;
@@ -26,6 +29,7 @@ import static net.zerobuilder.compiler.generate.UpdaterB.fieldsB;
 import static net.zerobuilder.compiler.generate.UpdaterB.updateMethodsB;
 import static net.zerobuilder.compiler.generate.UpdaterV.fieldsV;
 import static net.zerobuilder.compiler.generate.UpdaterV.updateMethodsV;
+import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 public final class Updater extends DtoModule.SimpleModule {
@@ -56,6 +60,19 @@ public final class Updater extends DtoModule.SimpleModule {
         .addMethod(builderConstructor.apply(goal))
         .build();
   }
+
+  private static final Function<AbstractGoalContext, MethodSpec> builderConstructor =
+      goalCases(
+          DtoRegularGoal.builderConstructor,
+          bGoal -> constructorBuilder()
+              .addModifiers(PRIVATE)
+              .addExceptions(bGoal.context.lifecycle == REUSE_INSTANCES
+                  ? Collections.emptyList()
+                  : bGoal.goal.thrownTypes)
+              .addCode(bGoal.context.lifecycle == REUSE_INSTANCES
+                  ? emptyCodeBlock
+                  : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))
+              .build());
 
   private static final Function<BeanGoalContext, CodeBlock> returnBean
       = goal -> statement("return this.$N", goal.bean());

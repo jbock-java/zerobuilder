@@ -52,7 +52,7 @@ final class GeneratorVU {
             .addCode(initUpdater(goal, updater))
             .addCode(copyBlock(goal))
             .addStatement("return $N", updater)
-            .addModifiers(details.goalOptions.access.modifiers(STATIC))
+            .addModifiers(details.goalOption.access.modifiers(STATIC))
             .build();
         return new BuilderMethod(details.name, method);
       };

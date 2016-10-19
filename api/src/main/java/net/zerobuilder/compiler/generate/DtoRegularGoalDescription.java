@@ -15,7 +15,7 @@ import static java.util.Collections.unmodifiableList;
 
 public final class DtoRegularGoalDescription {
 
-  public static abstract class RegularGoalDescription implements GoalDescription {
+  public static abstract class RegularGoalDescription extends GoalDescription {
     final RegularGoalDetails details;
     final List<TypeName> thrownTypes;
     final List<AbstractRegularParameter> parameters() {

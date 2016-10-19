@@ -19,6 +19,7 @@ import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
+import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoal;
@@ -33,7 +34,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static net.zerobuilder.compiler.generate.DtoGoalContext.contractName;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalDescriptionCases;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalName;
@@ -83,7 +83,7 @@ final class GoalContextFactory {
       ClassName generatedType,
       List<P> parameters,
       Function<P, StepFactory<S>> factoryFactory) {
-    ClassName contractName = contractName(goalName(goal), generatedType);
+    ClassName contractName = contractName(goalName(goal), generatedType, goal.details().module());
     AbstractGoalDetails details = goalDetails.apply(goal);
     Optional<? extends AbstractStep> nextStep = Optional.empty();
     List<TypeName> thrownTypes = GoalContextFactory.thrownTypes.apply(goal);
@@ -161,18 +161,23 @@ final class GoalContextFactory {
         }
       };
 
-  static Function<GoalDescription, AbstractGoalContext> prepare(GeneratorInput goals) {
+  static Function<GoalDescription, AbstractGoalContext> prepare(BuildersContext context) {
     return goalDescriptionCases(
         goal -> GoalContextFactory.regularGoal(
-            goals.context, goals.context.generatedType, goal)
-            .withContext(goals.context),
+            context, context.generatedType, goal)
+            .withContext(context),
         goal -> GoalContextFactory.beanGoal(
-            goals.context, goal, goals.context.generatedType)
-            .withContext(goals.context));
+            context, goal, context.generatedType)
+            .withContext(context));
   }
 
   private static final Function<GoalDescription, List<TypeName>> thrownTypes =
       goalDescriptionCases(
           regularGoal -> regularGoal.thrownTypes,
           beanGoal -> Collections.emptyList());
+
+  private static ClassName contractName(String goalName, ClassName generatedType, Module module) {
+    return generatedType.nestedClass(upcase(goalName + upcase(module.name())));
+  }
+
 }

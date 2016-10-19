@@ -37,7 +37,7 @@ final class GeneratorVB {
     List<RegularStep> steps = regularSteps.apply(goal);
     MethodSpec.Builder method = methodBuilder(goal.methodName())
         .returns(goal.contractType().nestedClass(steps.get(0).thisType))
-        .addModifiers(regularGoalDetails.goalOptions.access.modifiers(STATIC));
+        .addModifiers(regularGoalDetails.goalOption.access.modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
     BuildersContext context = DtoRegularGoal.buildersContext.apply(goal);
     ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));

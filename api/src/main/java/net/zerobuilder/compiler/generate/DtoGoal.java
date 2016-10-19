@@ -29,7 +29,7 @@ public final class DtoGoal {
 
   static abstract class AbstractGoalDetails {
     final String name;
-    final GoalOption goalOptions;
+    final GoalOption goalOption;
 
     /**
      * Returns the goal name.
@@ -40,11 +40,15 @@ public final class DtoGoal {
       return name;
     }
 
+    public final Module module() {
+      return goalOption.module;
+    }
+
     abstract TypeName type();
 
-    AbstractGoalDetails(String name, GoalOption goalOptions) {
+    AbstractGoalDetails(String name, GoalOption goalOption) {
       this.name = name;
-      this.goalOptions = goalOptions;
+      this.goalOption = goalOption;
     }
     public abstract <R> R acceptAbstract(AbstractGoalCases<R> cases);
   }

@@ -20,7 +20,7 @@ public final class DtoBeanGoalDescription {
   /**
    * Describes the task of creating and / or updating a JavaBean.
    */
-  public static final class BeanGoalDescription implements GoalDescription {
+  public static final class BeanGoalDescription extends GoalDescription {
     final BeanGoalDetails details;
     final List<AbstractBeanParameter> parameters;
     final List<TypeName> thrownTypes;

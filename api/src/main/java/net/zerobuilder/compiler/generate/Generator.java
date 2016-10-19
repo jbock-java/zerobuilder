@@ -31,12 +31,12 @@ public final class Generator {
   /**
    * Entry point for code generation.
    *
-   * @param goals Goal descriptions
+   * @param generatorInput Goal descriptions
    * @return a GeneratorOutput
    */
-  public static GeneratorOutput generate(GeneratorInput goals) {
-    return generate(goals.context,
-        transform(goals.goals, prepare(goals)));
+  public static GeneratorOutput generate(GeneratorInput generatorInput) {
+    return generate(generatorInput.context,
+        transform(generatorInput.goals, prepare(generatorInput.context)));
   }
 
   private static GeneratorOutput generate(BuildersContext context, List<AbstractGoalContext> goals) {
@@ -50,7 +50,7 @@ public final class Generator {
   }
 
   private static final Function<AbstractGoalContext, ModuleOutput> process =
-      goal -> Generator.biProcess.apply(goal.goalOption().module, goal);
+      goal -> Generator.biProcess.apply(goal.module(), goal);
 
   private static List<FieldSpec> fields(BuildersContext context, List<AbstractGoalContext> goals) {
     return context.lifecycle == NEW_INSTANCE ?
