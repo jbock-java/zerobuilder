@@ -5,13 +5,13 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.GoalElementCases;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -112,27 +112,45 @@ final class ProjectionValidator {
 
   }
 
-  static final class TmpRegularParameter extends TmpValidParameter {
-    private final AbstractRegularParameter parameter;
-    private TmpRegularParameter(Element element, Optional<Step> annotation, AbstractRegularParameter parameter) {
+  static final class TmpSimpleParameter extends TmpValidParameter {
+    final SimpleParameter parameter;
+    private TmpSimpleParameter(Element element, Optional<Step> annotation, SimpleParameter parameter) {
       super(element, annotation);
       this.parameter = parameter;
     }
-
-    static final Function<TmpRegularParameter, AbstractRegularParameter> toValidParameter =
-        parameter -> parameter.parameter;
-
-    static TmpRegularParameter create(VariableElement parameter, Optional<ProjectionInfo> projectionInfo,
-                                      Goal goalAnnotation) {
+    static TmpSimpleParameter create(VariableElement parameter,
+                                     Goal goalAnnotation) {
       Step stepAnnotation = parameter.getAnnotation(Step.class);
       NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepAnnotation, goalAnnotation);
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
-      AbstractRegularParameter regularParameter =
-          projectionInfo.isPresent() ?
-              DtoRegularParameter.create(name, type, nullPolicy, projectionInfo.get()) :
-              DtoRegularParameter.create(name, type, nullPolicy);
-      return new TmpRegularParameter(parameter, ofNullable(stepAnnotation), regularParameter);
+      DtoRegularParameter.SimpleParameter regularParameter =
+          DtoRegularParameter.create(name, type, nullPolicy);
+      return new TmpSimpleParameter(parameter, ofNullable(stepAnnotation), regularParameter);
+    }
+  }
+
+  static final class TmpProjectedParameter extends TmpValidParameter {
+    private final ProjectedParameter parameter;
+    private TmpProjectedParameter(Element element, Optional<Step> annotation, ProjectedParameter parameter) {
+      super(element, annotation);
+      this.parameter = parameter;
+    }
+
+    static final Function<TmpProjectedParameter, ProjectedParameter> toValidParameter =
+        parameter -> parameter.parameter;
+
+    static TmpProjectedParameter create(VariableElement parameter, ProjectionInfo projectionInfo,
+                                        Goal goalAnnotation) {
+      Step stepAnnotation = parameter.getAnnotation(Step.class);
+      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepAnnotation, goalAnnotation);
+      String name = parameter.getSimpleName().toString();
+      TypeName type = TypeName.get(parameter.asType());
+      ProjectedParameter regularParameter =
+//          projectionInfo.isPresent() ?
+          DtoRegularParameter.create(name, type, nullPolicy, projectionInfo);
+//              DtoRegularParameter.create(name, type, nullPolicy);
+      return new TmpProjectedParameter(parameter, ofNullable(stepAnnotation), regularParameter);
     }
   }
 

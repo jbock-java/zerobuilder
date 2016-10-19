@@ -9,8 +9,8 @@ import java.util.function.Function;
 
 public final class DtoGoalDescription {
 
-  public static abstract class GoalDescription {
-    abstract <R> R accept(GoalDescriptionCases<R> cases);
+  public interface GoalDescription {
+    <R> R accept(GoalDescriptionCases<R> cases);
   }
 
   interface GoalDescriptionCases<R> {

@@ -63,7 +63,7 @@ final class GoalContextFactory {
         validGoal,
         context,
         generatedType,
-        validGoal.parameters,
+        validGoal.parameters(),
         regularFactory);
     return validGoal.details.accept(new RegularGoalCases<IGoal>() {
       @Override

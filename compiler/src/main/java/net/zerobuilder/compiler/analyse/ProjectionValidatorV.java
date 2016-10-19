@@ -2,12 +2,14 @@ package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpRegularParameter;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpSimpleParameter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.RegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -18,7 +20,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.ABSTRACT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
-import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpRegularParameter.toValidParameter;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.findKey;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
@@ -55,9 +56,9 @@ final class ProjectionValidatorV {
     validateType(goal, type);
     Map<String, ExecutableElement> methods = projectionCandidates(type);
     Map<String, VariableElement> fields = fields(type);
-    List<TmpRegularParameter> parameters = transform(goal.executableElement.getParameters(),
-        parameter -> TmpRegularParameter.create(parameter,
-            Optional.of(projectionInfo(methods, fields, parameter)),
+    List<TmpProjectedParameter> parameters = transform(goal.executableElement.getParameters(),
+        parameter -> TmpProjectedParameter.create(parameter,
+            projectionInfo(methods, fields, parameter),
             goal.goalAnnotation));
     return createGoalDescription(goal, parameters);
   };
@@ -102,22 +103,26 @@ final class ProjectionValidatorV {
 
   static final Function<RegularGoalElement, GoalDescription> validateValueIgnoreProjections
       = goal -> {
-    List<TmpRegularParameter> builder = goal.executableElement.getParameters()
+    List<TmpSimpleParameter> parameters = goal.executableElement.getParameters()
         .stream()
-        .map(parameter -> TmpRegularParameter.create(parameter, Optional.empty(), goal.goalAnnotation))
+        .map(parameter -> TmpSimpleParameter.create(parameter, goal.goalAnnotation))
         .collect(Collectors.toList());
-    return createGoalDescription(goal, builder);
+    List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
+    return SimpleRegularGoalDescription.create(
+        goal.details,
+        thrownTypes(goal.executableElement),
+        transform(shuffled, parameter -> parameter.parameter));
   };
 
   private static GoalDescription createGoalDescription(RegularGoalElement goal,
-                                                       List<TmpRegularParameter> parameters) {
-    List<TmpRegularParameter> shuffled = shuffledParameters(parameters);
+                                                       List<TmpProjectedParameter> parameters) {
+    List<TmpProjectedParameter> shuffled = shuffledParameters(parameters);
     return create(goal, transform(shuffled, toValidParameter));
   }
 
   private static RegularGoalDescription create(RegularGoalElement goal,
-                                                                         List<AbstractRegularParameter> parameters) {
-    return RegularGoalDescription.create(
+                                               List<ProjectedParameter> parameters) {
+    return ProjectedRegularGoalDescription.create(
         goal.details, thrownTypes(goal.executableElement),
         parameters);
   }

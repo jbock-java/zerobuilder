@@ -106,7 +106,7 @@ public final class DtoRegularParameter {
    * @param nullPolicy null policy
    * @return a parameter
    */
-  public static AbstractRegularParameter create(String name, TypeName type, NullPolicy nullPolicy) {
+  public static SimpleParameter create(String name, TypeName type, NullPolicy nullPolicy) {
     return new SimpleParameter(name, type, nullPolicy);
   }
 
