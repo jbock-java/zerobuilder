@@ -15,7 +15,7 @@ import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoCases;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
-import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
 
 import java.util.List;
 import java.util.Optional;

@@ -5,8 +5,8 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
-import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.ArrayList;
 import java.util.List;

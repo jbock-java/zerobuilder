@@ -9,8 +9,8 @@ import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalConte
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
+import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
-import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.ArrayList;
 import java.util.List;

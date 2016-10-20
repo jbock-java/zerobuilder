@@ -8,7 +8,6 @@ import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 import java.util.function.Function;
 
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
-import static net.zerobuilder.compiler.generate.DtoStep.abstractParameter;
 import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.DtoStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoStep.stepCases;
@@ -21,13 +20,13 @@ final class Step {
 
   static final Function<AbstractStep, CodeBlock> nullCheck
       = always(step -> {
-        AbstractParameter parameter = abstractParameter.apply(step);
-        if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
-          return emptyCodeBlock;
-        }
-        String name = parameterName.apply(parameter);
-        return nullCheck(name, name);
-      });
+    AbstractParameter parameter = step.abstractParameter();
+    if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
+      return emptyCodeBlock;
+    }
+    String name = parameterName.apply(parameter);
+    return nullCheck(name, name);
+  });
 
   static final Function<AbstractStep, TypeSpec> asStepInterface
       = asFunction(stepCases(regularStepInterface, beanStepInterface));

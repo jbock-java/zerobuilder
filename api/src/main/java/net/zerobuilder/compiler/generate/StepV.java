@@ -4,7 +4,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -15,7 +15,6 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
-import static net.zerobuilder.compiler.generate.DtoStep.abstractParameter;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 
@@ -29,7 +28,7 @@ final class StepV {
       .build();
 
   private static MethodSpec regularStepMethod(RegularStep step) {
-    AbstractParameter parameter = abstractParameter.apply(step);
+    AbstractParameter parameter = step.abstractParameter();
     String name = parameterName.apply(parameter);
     TypeName type = parameter.type;
     return methodBuilder(name)

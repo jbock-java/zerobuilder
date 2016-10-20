@@ -13,7 +13,7 @@ import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
-import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
 
 import java.util.List;
 import java.util.Optional;

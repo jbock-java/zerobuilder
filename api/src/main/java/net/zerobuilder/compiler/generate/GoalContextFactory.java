@@ -23,8 +23,8 @@ import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
-import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.ArrayList;
 import java.util.List;

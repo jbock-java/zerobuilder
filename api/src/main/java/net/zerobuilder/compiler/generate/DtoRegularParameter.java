@@ -4,6 +4,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoParameter.ParameterCases;
+import net.zerobuilder.compiler.generate.DtoProjectedParameter.AbstractProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
 import java.util.Optional;
@@ -72,7 +73,7 @@ public final class DtoRegularParameter {
     public abstract <R> R acceptRegularParameter(RegularParameterCases<R> cases);
   }
 
-  public static final class ProjectedParameter extends AbstractRegularParameter {
+  public static final class ProjectedParameter extends AbstractRegularParameter implements AbstractProjectedParameter {
 
     final ProjectionInfo projectionInfo;
 
@@ -84,6 +85,11 @@ public final class DtoRegularParameter {
     @Override
     public <R> R acceptRegularParameter(RegularParameterCases<R> cases) {
       return cases.projectedParameter(this);
+    }
+
+    @Override
+    public <R> R acceptProjected(DtoProjectedParameter.ProjectedParameterCases<R> cases) {
+      return cases.projectedRegular(this);
     }
   }
 

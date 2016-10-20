@@ -2,31 +2,25 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
 import net.zerobuilder.compiler.generate.Utilities.ClassNames;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.SET;
-import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
-import static net.zerobuilder.compiler.generate.Utilities.memoize;
 import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
@@ -103,11 +97,15 @@ final class DtoStep {
       this.context = context;
     }
     abstract <R> R accept(StepCases<R> cases);
+    
+    final AbstractParameter abstractParameter() {
+      return abstractParameter.apply(this);
+    }
   }
 
   interface StepCases<R> {
-    R regularStep(RegularStep step);
-    R beanStep(AbstractBeanStep step);
+    R regularStep(RegularStep regular);
+    R beanStep(AbstractBeanStep bean);
   }
 
   static <R> Function<AbstractStep, R> asFunction(final StepCases<R> cases) {
@@ -128,61 +126,7 @@ final class DtoStep {
     };
   }
 
-  static final class RegularStep extends AbstractStep {
-    final AbstractRegularParameter parameter;
-    final List<TypeName> declaredExceptions;
-
-    private final Supplier<FieldSpec> field;
-    private final Supplier<Optional<CollectionInfo>> collectionInfo;
-
-    private RegularStep(String thisType,
-                        Optional<? extends AbstractStep> nextType,
-                        AbstractGoalDetails goalDetails,
-                        BuildersContext context,
-                        AbstractRegularParameter parameter,
-                        List<TypeName> declaredExceptions) {
-      super(thisType, nextType, goalDetails, context);
-      this.declaredExceptions = declaredExceptions;
-      this.parameter = parameter;
-      this.field = memoizeField(parameter);
-      this.collectionInfo = memoizeCollectionInfo(parameter);
-    }
-
-    private static Supplier<Optional<CollectionInfo>> memoizeCollectionInfo(
-        AbstractRegularParameter parameter) {
-      return memoize(() ->
-          CollectionInfo.create(parameter.type, parameter.name));
-    }
-
-    private static Supplier<FieldSpec> memoizeField(AbstractRegularParameter parameter) {
-      return memoize(() ->
-          fieldSpec(parameter.type, parameter.name, PRIVATE));
-    }
-
-    static RegularStep create(String thisType,
-                              Optional<? extends AbstractStep> nextType,
-                              AbstractGoalDetails goalDetails,
-                              BuildersContext context,
-                              AbstractRegularParameter parameter,
-                              List<TypeName> declaredExceptions) {
-      return new RegularStep(thisType, nextType, goalDetails, context, parameter, declaredExceptions);
-    }
-
-    Optional<CollectionInfo> collectionInfo() {
-      return collectionInfo.get();
-    }
-
-    FieldSpec field() {
-      return field.get();
-    }
-
-    @Override
-    <R> R accept(StepCases<R> cases) {
-      return cases.regularStep(this);
-    }
-  }
-
-  static final Function<AbstractStep, AbstractParameter> abstractParameter
+  private static final Function<AbstractStep, AbstractParameter> abstractParameter
       = asFunction(new StepCases<AbstractParameter>() {
     @Override
     public AbstractParameter regularStep(RegularStep step) {
