@@ -58,10 +58,6 @@ public final class DtoGoalDescription {
           regularGoal -> regularGoal.thrownTypes,
           beanGoal -> Collections.emptyList());
 
-  private static String goalName(GoalDescription goal) {
-    return goalDetails.apply(goal).name;
-  }
-
   private DtoGoalDescription() {
     throw new UnsupportedOperationException("no instances");
   }

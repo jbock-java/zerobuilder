@@ -24,7 +24,6 @@ import static net.zerobuilder.compiler.generate.BuilderV.fieldsV;
 import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.stepInterfaceTypes;
 import static net.zerobuilder.compiler.generate.GeneratorBB.goalToBuilderB;
 import static net.zerobuilder.compiler.generate.GeneratorVB.goalToBuilderV;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
@@ -49,7 +48,7 @@ public final class Builder extends ContractModule {
 
   private static TypeSpec defineBuilderImpl(AbstractGoalContext goal) {
     return classBuilder(goal.implType())
-        .addSuperinterfaces(stepInterfaceTypes(goal))
+        .addSuperinterfaces(goal.stepInterfaceTypes())
         .addFields(fields.apply(goal))
         .addMethod(builderConstructor.apply(goal))
         .addMethods(steps.apply(goal))

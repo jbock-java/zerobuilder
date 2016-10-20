@@ -66,6 +66,14 @@ final class DtoGoalContext {
           .generatedType.nestedClass(implName);
     }
 
+    final List<ClassName> stepInterfaceTypes() {
+      return transform(steps(), step -> contractType().nestedClass(step.thisType));
+    }
+
+    final TypeName goalType() {
+      return goalType.apply(this);
+    }
+
     final ClassName contractType() {
       String contractName = Generator.contractName.apply(module(), this);
       return buildersContext.apply(this)
@@ -98,18 +106,12 @@ final class DtoGoalContext {
     });
   }
 
-  static List<ClassName> stepInterfaceTypes(AbstractGoalContext goal) {
-    return transform(
-        abstractSteps.apply(goal),
-        step -> goal.contractType().nestedClass(step.thisType));
-  }
-
   private static final Function<AbstractGoalContext, BuildersContext> buildersContext =
       goalCases(
           DtoRegularGoal.buildersContext,
           bean -> bean.context);
 
-  static final Function<AbstractGoalContext, TypeName> goalType =
+  private static final Function<AbstractGoalContext, TypeName> goalType =
       goalCases(
           regular -> DtoRegularGoal.goalDetails.apply(regular).goalType,
           bean -> bean.goal.details.goalType);

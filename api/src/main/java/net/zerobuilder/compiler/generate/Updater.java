@@ -22,7 +22,6 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.BuilderV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.goalType;
 import static net.zerobuilder.compiler.generate.GeneratorBU.goalToUpdaterB;
 import static net.zerobuilder.compiler.generate.GeneratorVU.goalToUpdaterV;
 import static net.zerobuilder.compiler.generate.UpdaterB.fieldsB;
@@ -46,7 +45,7 @@ public final class Updater extends DtoModule.SimpleModule {
   private static MethodSpec buildMethod(AbstractGoalContext goal) {
     return methodBuilder("done")
         .addModifiers(PUBLIC)
-        .returns(goalType.apply(goal))
+        .returns(goal.goalType())
         .addCode(invoke.apply(goal))
         .build();
   }
