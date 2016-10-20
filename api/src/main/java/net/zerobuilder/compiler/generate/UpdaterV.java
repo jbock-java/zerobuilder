@@ -4,7 +4,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
@@ -18,7 +18,6 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.generate.Utilities.flatList;
@@ -27,11 +26,11 @@ import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 
 final class UpdaterV {
 
-  static final Function<RegularGoalContext, List<FieldSpec>> fieldsV
+  static final Function<AbstractRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
     List<FieldSpec> builder = new ArrayList<>();
-    builder.addAll(presentInstances(DtoRegularGoal.fields.apply(goal)));
-    for (RegularStep step : regularSteps.apply(goal)) {
+    builder.addAll(presentInstances(goal.fields()));
+    for (RegularStep step : goal.regularSteps()) {
       String name = step.parameter.name;
       TypeName type = step.parameter.type;
       builder.add(fieldSpec(type, name, PRIVATE));
@@ -39,20 +38,20 @@ final class UpdaterV {
     return builder;
   };
 
-  static final Function<RegularGoalContext, List<MethodSpec>> updateMethodsV
+  static final Function<AbstractRegularGoalContext, List<MethodSpec>> updateMethodsV
       = goal ->
-      regularSteps.apply(goal).stream()
+      goal.regularSteps().stream()
           .map(updateMethods(goal))
           .collect(flatList());
 
-  private static Function<RegularStep, List<MethodSpec>> updateMethods(RegularGoalContext goal) {
+  private static Function<RegularStep, List<MethodSpec>> updateMethods(AbstractRegularGoalContext goal) {
     return step -> Stream.concat(
         Stream.of(normalUpdate(goal, step)),
         presentInstances(emptyCollection(goal, step)).stream())
         .collect(toList());
   }
 
-  private static Optional<MethodSpec> emptyCollection(RegularGoalContext goal, RegularStep step) {
+  private static Optional<MethodSpec> emptyCollection(AbstractRegularGoalContext goal, RegularStep step) {
     Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
@@ -67,7 +66,7 @@ final class UpdaterV {
         .build());
   }
 
-  private static MethodSpec normalUpdate(RegularGoalContext goal, RegularStep step) {
+  private static MethodSpec normalUpdate(AbstractRegularGoalContext goal, RegularStep step) {
     String name = step.parameter.name;
     TypeName type = step.parameter.type;
     ParameterSpec parameter = parameterSpec(type, name);

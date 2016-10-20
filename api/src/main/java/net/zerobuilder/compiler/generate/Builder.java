@@ -7,6 +7,7 @@ import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 
 import java.util.Collections;
 import java.util.List;
@@ -69,7 +70,7 @@ public final class Builder extends ContractModule {
 
   private static final Function<AbstractGoalContext, MethodSpec> builderConstructor =
       goalCases(
-          DtoRegularGoal.builderConstructor,
+          AbstractRegularGoalContext::builderConstructor,
           bGoal -> constructorBuilder()
               .addModifiers(PRIVATE)
               .addExceptions(bGoal.context.lifecycle == REUSE_INSTANCES

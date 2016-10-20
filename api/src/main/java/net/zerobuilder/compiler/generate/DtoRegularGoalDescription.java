@@ -15,14 +15,14 @@ import static java.util.Collections.unmodifiableList;
 
 public final class DtoRegularGoalDescription {
 
-  public static abstract class RegularGoalDescription extends GoalDescription {
+  public static abstract class AbstractRegularGoalDescription extends GoalDescription {
     final AbstractRegularGoalDetails details;
     final List<TypeName> thrownTypes;
     final List<AbstractRegularParameter> parameters() {
       return abstractParameters.apply(this);
     }
 
-    protected RegularGoalDescription(AbstractRegularGoalDetails details, List<TypeName> thrownTypes) {
+    protected AbstractRegularGoalDescription(AbstractRegularGoalDetails details, List<TypeName> thrownTypes) {
       this.details = details;
       this.thrownTypes = thrownTypes;
     }
@@ -35,11 +35,11 @@ public final class DtoRegularGoalDescription {
     R acceptProjected(ProjectedRegularGoalDescription projected);
   }
 
-  static <R> Function<RegularGoalDescription, R> asFunction(AbstractRegularGoalDescriptionCases<R> cases) {
+  static <R> Function<AbstractRegularGoalDescription, R> asFunction(AbstractRegularGoalDescriptionCases<R> cases) {
     return description -> description.acceptRegularGoalDescription(cases);
   }
 
-  static <R> Function<RegularGoalDescription, R> regularGoalDescriptionCases(
+  static <R> Function<AbstractRegularGoalDescription, R> regularGoalDescriptionCases(
       Function<SimpleRegularGoalDescription, R> simpleFunction,
       Function<ProjectedRegularGoalDescription, R> projectedFunction) {
     return asFunction(new AbstractRegularGoalDescriptionCases<R>() {
@@ -54,7 +54,7 @@ public final class DtoRegularGoalDescription {
     });
   }
 
-  private static final Function<RegularGoalDescription, List<AbstractRegularParameter>> abstractParameters =
+  private static final Function<AbstractRegularGoalDescription, List<AbstractRegularParameter>> abstractParameters =
       regularGoalDescriptionCases(
           simple -> unmodifiableList(simple.parameters),
           projected -> unmodifiableList(projected.parameters));
@@ -63,7 +63,7 @@ public final class DtoRegularGoalDescription {
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
-  public static final class SimpleRegularGoalDescription extends RegularGoalDescription {
+  public static final class SimpleRegularGoalDescription extends AbstractRegularGoalDescription {
 
     final List<SimpleParameter> parameters;
 
@@ -95,7 +95,7 @@ public final class DtoRegularGoalDescription {
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
-  public static final class ProjectedRegularGoalDescription extends RegularGoalDescription {
+  public static final class ProjectedRegularGoalDescription extends AbstractRegularGoalDescription {
     final List<ProjectedParameter> parameters;
 
     private ProjectedRegularGoalDescription(AbstractRegularGoalDetails details,

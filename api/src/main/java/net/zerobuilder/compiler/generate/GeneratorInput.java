@@ -17,7 +17,7 @@ public final class GeneratorInput {
     this.context = context;
   }
 
-  public static GeneratorInput create(BuildersContext buildersContext, List<? extends GoalDescription> goals) {
-    return new GeneratorInput(buildersContext, unmodifiableList(goals));
+  public static GeneratorInput create(BuildersContext context, List<? extends GoalDescription> goals) {
+    return new GeneratorInput(context, unmodifiableList(goals));
   }
 }

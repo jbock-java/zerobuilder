@@ -6,8 +6,8 @@ import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParamete
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpSimpleParameter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 
@@ -120,8 +120,8 @@ final class ProjectionValidatorV {
     return create(goal, transform(shuffled, toValidParameter));
   }
 
-  private static RegularGoalDescription create(RegularGoalElement goal,
-                                               List<ProjectedParameter> parameters) {
+  private static AbstractRegularGoalDescription create(RegularGoalElement goal,
+                                                                                                        List<ProjectedParameter> parameters) {
     return ProjectedRegularGoalDescription.create(
         goal.details, thrownTypes(goal.executableElement),
         parameters);

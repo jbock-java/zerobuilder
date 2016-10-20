@@ -7,6 +7,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 
 import java.util.Collections;
 import java.util.List;
@@ -62,7 +63,7 @@ public final class Updater extends DtoModule.SimpleModule {
 
   private static final Function<AbstractGoalContext, MethodSpec> builderConstructor =
       goalCases(
-          DtoRegularGoal.builderConstructor,
+          AbstractRegularGoalContext::builderConstructor,
           bGoal -> constructorBuilder()
               .addModifiers(PRIVATE)
               .addExceptions(bGoal.context.lifecycle == REUSE_INSTANCES

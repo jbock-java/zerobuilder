@@ -5,9 +5,9 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
@@ -23,9 +23,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.fields;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
@@ -35,20 +33,20 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class BuilderV {
 
-  static final Function<RegularGoalContext, List<FieldSpec>> fieldsV
+  static final Function<AbstractRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
-    List<RegularStep> steps = regularSteps.apply(goal);
+    List<RegularStep> steps = goal.regularSteps();
     return Stream.concat(
-        presentInstances(fields.apply(goal)).stream(),
+        presentInstances(goal.fields()).stream(),
         steps.stream()
             .limit(steps.size() - 1)
             .map(RegularStep::field))
         .collect(Collectors.toList());
   };
 
-  static final Function<RegularGoalContext, List<MethodSpec>> stepsV
+  static final Function<AbstractRegularGoalContext, List<MethodSpec>> stepsV
       = goal -> {
-    List<RegularStep> steps = regularSteps.apply(goal);
+    List<RegularStep> steps = goal.regularSteps();
     List<MethodSpec> builder = new ArrayList<>();
     for (RegularStep step : steps.subList(0, steps.size() - 1)) {
       builder.addAll(regularMethods(step, goal, false));
@@ -58,14 +56,14 @@ final class BuilderV {
   };
 
   private static List<MethodSpec> regularMethods(
-      RegularStep step, RegularGoalContext goal, boolean isLast) {
+      RegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     List<MethodSpec> builder = new ArrayList<>();
     builder.add(stepMethod(step, goal, isLast));
     builder.addAll(presentInstances(maybeEmptyCollection(step, goal, isLast)));
     return builder;
   }
 
-  private static MethodSpec stepMethod(RegularStep step, RegularGoalContext goal, boolean isLast) {
+  private static MethodSpec stepMethod(RegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     TypeName type = step.parameter.type;
     String name = step.parameter.name;
     ParameterSpec parameter = parameterSpec(type, name);
@@ -81,7 +79,7 @@ final class BuilderV {
   }
 
   private static Optional<MethodSpec> maybeEmptyCollection(
-      RegularStep step, RegularGoalContext goal, boolean isLast) {
+      RegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
@@ -95,7 +93,7 @@ final class BuilderV {
         .build());
   }
 
-  private static CodeBlock normalAssignment(RegularStep step, RegularGoalContext goal, boolean isLast) {
+  private static CodeBlock normalAssignment(RegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     TypeName type = step.parameter.type;
     String name = step.parameter.name;
     ParameterSpec parameter = parameterSpec(type, name);
@@ -109,7 +107,7 @@ final class BuilderV {
     }
   }
 
-  private static CodeBlock emptyCollectionAssignment(RegularStep step, RegularGoalContext goal,
+  private static CodeBlock emptyCollectionAssignment(RegularStep step, AbstractRegularGoalContext goal,
                                                      CollectionInfo collInfo, boolean isLast) {
     if (isLast) {
       return goal.acceptRegular(emptyCollectionInvoke(step, collInfo));
@@ -121,7 +119,7 @@ final class BuilderV {
     }
   }
 
-  static final Function<RegularGoalContext, CodeBlock> regularInvoke =
+  static final Function<AbstractRegularGoalContext, CodeBlock> regularInvoke =
       regularGoalContextCases(
           goal -> statement("return new $T($L)", goal.type(),
               invocationParameters(goal.parameterNames())),

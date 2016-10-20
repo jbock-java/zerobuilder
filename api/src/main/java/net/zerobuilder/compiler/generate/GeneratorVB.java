@@ -9,9 +9,9 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.RegularStep;
 
 import java.util.List;
@@ -21,35 +21,32 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.goalDetails;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.isInstance;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class GeneratorVB {
 
-  static final Function<RegularGoalContext, BuilderMethod> goalToBuilderV
+  static final Function<AbstractRegularGoalContext, BuilderMethod> goalToBuilderV
       = goal -> {
-    AbstractRegularGoalDetails abstractRegularGoalDetails = goalDetails.apply(goal);
-    List<RegularStep> steps = regularSteps.apply(goal);
+    AbstractRegularGoalDetails abstractRegularGoalDetails = goal.regularDetails();
+    List<RegularStep> steps = goal.regularSteps();
     MethodSpec.Builder method = methodBuilder(goal.methodName())
         .returns(goal.contractType().nestedClass(steps.get(0).thisType))
         .addModifiers(abstractRegularGoalDetails.option.access.modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
-    BuildersContext context = DtoRegularGoal.buildersContext.apply(goal);
+    BuildersContext context = goal.context();
     ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));
     method.addCode(initBuilder(builder, instance).apply(goal));
-    if (isInstance.test(goal)) {
+    if (goal.isInstance()) {
       method.addParameter(instance);
     }
     MethodSpec methodSpec = method.addStatement("return $N", builder).build();
     return new BuilderMethod(goal.name(), methodSpec);
   };
 
-  private static Function<RegularGoalContext, CodeBlock> initBuilder(
+  private static Function<AbstractRegularGoalContext, CodeBlock> initBuilder(
       ParameterSpec builder, ParameterSpec instance) {
     return regularGoalContextCases(
         initConstructorBuilder(builder),
@@ -98,7 +95,7 @@ final class GeneratorVB {
         statement("$T $N = new $T()", type, builder, type);
   }
 
-  private static ParameterSpec builderInstance(RegularGoalContext goal) {
+  private static ParameterSpec builderInstance(AbstractRegularGoalContext goal) {
     ClassName type = goal.implType();
     return parameterSpec(type, downcase(type.simpleName()));
   }

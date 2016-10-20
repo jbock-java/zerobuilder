@@ -6,10 +6,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
@@ -36,23 +36,91 @@ import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 
 final class DtoRegularGoal {
 
-  static abstract class RegularGoalContext extends AbstractGoalContext {
+  static abstract class AbstractRegularGoalContext extends AbstractGoalContext {
 
     abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
     abstract List<String> parameterNames();
     abstract TypeName type();
+
+    final AbstractRegularGoalDetails regularDetails() {
+      return goalDetails.apply(this);
+    }
+
+    final boolean isInstance() {
+      return isInstance.test(this);
+    }
+
+    final BuildersContext context() {
+      return context.apply(this);
+    }
+
+    final List<RegularStep> regularSteps() {
+      return regularSteps.apply(this);
+    }
+
+    final Optional<FieldSpec> fields() {
+      return fields.apply(this);
+    }
+
+    final MethodSpec builderConstructor() {
+      return builderConstructor.apply(this);
+    }
   }
+
+  private static final Function<AbstractRegularGoalContext, AbstractRegularGoalDetails> goalDetails =
+      regularGoalContextCases(
+          constructor -> constructor.goal.details,
+          method -> method.goal.details);
+
+  private static final Predicate<AbstractRegularGoalContext> isInstance =
+      asPredicate(regularGoalContextCases(
+          constructor -> false,
+          method -> method.goal.details.methodType == INSTANCE_METHOD));
+
+  private static final Function<AbstractRegularGoalContext, BuildersContext> context =
+      regularGoalContextCases(
+          constructor -> constructor.context,
+          method -> method.context);
+
+  private static final Function<AbstractRegularGoalContext, List<RegularStep>> regularSteps =
+      regularGoalContextCases(
+          constructor -> constructor.goal.steps,
+          method -> method.goal.steps);
+
+  private static final Function<AbstractRegularGoalContext, Optional<FieldSpec>> fields =
+      regularGoalContextCases(
+          constructor -> empty(),
+          method -> isInstance.test(method) ?
+              Optional.of(method.field()) :
+              empty());
+
+  private static final Function<AbstractRegularGoalContext, MethodSpec> builderConstructor =
+      regularGoalContextCases(
+          cGoal -> constructor(PRIVATE),
+          mGoal -> {
+            if (!isInstance.test(mGoal)
+                || mGoal.context.lifecycle == REUSE_INSTANCES) {
+              return constructor(PRIVATE);
+            }
+            ClassName type = mGoal.context.type;
+            ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
+            return constructorBuilder()
+                .addParameter(parameter)
+                .addStatement("this.$N = $N", mGoal.field(), parameter)
+                .addModifiers(PRIVATE)
+                .build();
+          });
 
   interface RegularGoalContextCases<R> {
     R constructorGoal(ConstructorGoalContext goal);
     R methodGoal(MethodGoalContext goal);
   }
 
-  static <R> Function<RegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
+  static <R> Function<AbstractRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegular(cases);
   }
 
-  static <R> Function<RegularGoalContext, R> regularGoalContextCases(
+  static <R> Function<AbstractRegularGoalContext, R> regularGoalContextCases(
       Function<ConstructorGoalContext, R> constructor,
       Function<MethodGoalContext, R> method) {
     return asFunction(new RegularGoalContextCases<R>() {
@@ -94,7 +162,7 @@ final class DtoRegularGoal {
   }
 
   static final class ConstructorGoalContext
-      extends RegularGoalContext {
+      extends AbstractRegularGoalContext {
 
     final ConstructorGoal goal;
     final BuildersContext context;
@@ -153,7 +221,7 @@ final class DtoRegularGoal {
   }
 
   static final class MethodGoalContext
-      extends RegularGoalContext {
+      extends AbstractRegularGoalContext {
 
     final BuildersContext context;
     final MethodGoal goal;
@@ -208,50 +276,6 @@ final class DtoRegularGoal {
       return goal.details.goalType;
     }
   }
-
-  static final Function<RegularGoalContext, AbstractRegularGoalDetails> goalDetails =
-      regularGoalContextCases(
-          cGoal -> cGoal.goal.details,
-          mGoal -> mGoal.goal.details);
-
-  static final Predicate<RegularGoalContext> isInstance =
-      asPredicate(regularGoalContextCases(
-          cGoal -> false,
-          mGoal -> mGoal.goal.details.methodType == INSTANCE_METHOD));
-
-  static final Function<RegularGoalContext, BuildersContext> buildersContext =
-      regularGoalContextCases(
-          cGoal -> cGoal.context,
-          mGoal -> mGoal.context);
-
-  static final Function<RegularGoalContext, List<RegularStep>> regularSteps =
-      regularGoalContextCases(
-          cGoal -> cGoal.goal.steps,
-          mGoal -> mGoal.goal.steps);
-
-  static final Function<RegularGoalContext, Optional<FieldSpec>> fields =
-      regularGoalContextCases(
-          cGoal -> empty(),
-          mGoal -> isInstance.test(mGoal) ?
-              Optional.of(mGoal.field()) :
-              empty());
-
-  static final Function<RegularGoalContext, MethodSpec> builderConstructor =
-      regularGoalContextCases(
-          cGoal -> constructor(PRIVATE),
-          mGoal -> {
-            if (!isInstance.test(mGoal)
-                || mGoal.context.lifecycle == REUSE_INSTANCES) {
-              return constructor(PRIVATE);
-            }
-            ClassName type = mGoal.context.type;
-            ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
-            return constructorBuilder()
-                .addParameter(parameter)
-                .addStatement("this.$N = $N", mGoal.field(), parameter)
-                .addModifiers(PRIVATE)
-                .build();
-          });
 
   private DtoRegularGoal() {
     throw new UnsupportedOperationException("no instances");

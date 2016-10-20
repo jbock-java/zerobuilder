@@ -8,7 +8,7 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.List;
@@ -17,7 +17,6 @@ import java.util.function.Function;
 import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularSteps;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
@@ -62,7 +61,7 @@ final class DtoGoalContext {
 
     final ClassName implType() {
       String implName = Generator.implName.apply(module(), this);
-      return buildersContext.apply(this)
+      return context.apply(this)
           .generatedType.nestedClass(implName);
     }
 
@@ -76,14 +75,14 @@ final class DtoGoalContext {
 
     final ClassName contractType() {
       String contractName = Generator.contractName.apply(module(), this);
-      return buildersContext.apply(this)
+      return context.apply(this)
           .generatedType.nestedClass(contractName);
     }
 
   }
 
   interface GoalCases<R> {
-    R regularGoal(RegularGoalContext goal);
+    R regularGoal(AbstractRegularGoalContext goal);
     R beanGoal(BeanGoalContext goal);
   }
 
@@ -92,11 +91,11 @@ final class DtoGoalContext {
   }
 
   static <R> Function<AbstractGoalContext, R> goalCases(
-      Function<? super RegularGoalContext, ? extends R> regularFunction,
+      Function<? super AbstractRegularGoalContext, ? extends R> regularFunction,
       Function<? super BeanGoalContext, ? extends R> beanFunction) {
     return asFunction(new GoalCases<R>() {
       @Override
-      public R regularGoal(RegularGoalContext goal) {
+      public R regularGoal(AbstractRegularGoalContext goal) {
         return regularFunction.apply(goal);
       }
       @Override
@@ -106,30 +105,30 @@ final class DtoGoalContext {
     });
   }
 
-  private static final Function<AbstractGoalContext, BuildersContext> buildersContext =
+  private static final Function<AbstractGoalContext, BuildersContext> context =
       goalCases(
-          DtoRegularGoal.buildersContext,
+          AbstractRegularGoalContext::context,
           bean -> bean.context);
 
   private static final Function<AbstractGoalContext, TypeName> goalType =
       goalCases(
-          regular -> DtoRegularGoal.goalDetails.apply(regular).goalType,
+          regular -> regular.regularDetails().goalType,
           bean -> bean.goal.details.goalType);
 
 
   private static final Function<AbstractGoalContext, String> goalName =
       goalCases(
-          regular -> DtoRegularGoal.goalDetails.apply(regular).name,
+          regular -> regular.regularDetails().name,
           bean -> bean.goal.details.name);
 
   private static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails =
       goalCases(
-          DtoRegularGoal.goalDetails,
+          AbstractRegularGoalContext::regularDetails,
           bGoal -> bGoal.goal.details);
 
   private static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps =
       goalCases(
-          regular -> unmodifiableList(regularSteps.apply(regular)),
+          regular -> unmodifiableList(regular.regularSteps()),
           bean -> unmodifiableList(bean.goal.steps));
 
   private static final Function<AbstractGoalContext, GoalOption> goalOption
