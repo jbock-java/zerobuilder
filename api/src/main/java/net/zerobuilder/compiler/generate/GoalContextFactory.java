@@ -23,7 +23,12 @@ import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
-import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.RegularParameterCases;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.ArrayList;
@@ -39,10 +44,10 @@ import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class GoalContextFactory {
 
-  private static IGoal beanGoal(
+  private static IGoal prepareBean(
       BuildersContext context,
       BeanGoalDescription goal) {
-    List<? extends AbstractBeanStep> steps = steps(
+    List<AbstractBeanStep> steps = steps(
         goal,
         context,
         goal.parameters,
@@ -50,10 +55,10 @@ final class GoalContextFactory {
     return BeanGoal.create(goal.details, steps, goal.thrownTypes);
   }
 
-  private static IGoal regularGoal(
+  private static IGoal prepareRegular(
       BuildersContext context,
       AbstractRegularGoalDescription validGoal) {
-    List<RegularStep> steps = steps(
+    List<AbstractRegularStep> steps = steps(
         validGoal,
         context,
         validGoal.parameters(),
@@ -76,7 +81,7 @@ final class GoalContextFactory {
       List<P> parameters,
       Function<P, StepFactory<S>> factoryFactory) {
     AbstractGoalDetails details = goal.details();
-    Optional<? extends AbstractStep> nextStep = Optional.empty();
+    Optional<S> nextStep = Optional.empty();
     List<TypeName> thrownTypes = goal.thrownTypes();
     List<S> builder = new ArrayList<>(parameters.size());
     for (P parameter : reverse(parameters)) {
@@ -95,23 +100,23 @@ final class GoalContextFactory {
     return reverse(builder);
   }
 
-  private static abstract class StepFactory<R extends AbstractStep> {
-    abstract R create(String thisType,
-                      Optional<? extends AbstractStep> nextType,
+  private static abstract class StepFactory<S extends AbstractStep> {
+    abstract S create(String thisType,
+                      Optional<S> nextType,
                       AbstractGoalDetails goalDetails,
                       BuildersContext context,
                       List<TypeName> thrownTypes);
   }
 
   private static final Function<AbstractBeanParameter, StepFactory<AbstractBeanStep>> beanFactory =
-      regularParameter -> new StepFactory<AbstractBeanStep>() {
+      beanParameter -> new StepFactory<AbstractBeanStep>() {
         @Override
         AbstractBeanStep create(String thisType,
-                                Optional<? extends AbstractStep> nextType,
+                                Optional<AbstractBeanStep> nextType,
                                 AbstractGoalDetails goalDetails,
                                 BuildersContext context,
                                 List<TypeName> declaredExceptions) {
-          return regularParameter.accept(new BeanParameterCases<AbstractBeanStep>() {
+          return beanParameter.accept(new BeanParameterCases<AbstractBeanStep>() {
             @Override
             public AbstractBeanStep accessorPair(AccessorPair pair) {
               return AccessorPairStep.create(
@@ -134,30 +139,44 @@ final class GoalContextFactory {
         }
       };
 
-  private static final Function<AbstractRegularParameter, StepFactory<RegularStep>> regularFactory =
-      regularParameter -> new StepFactory<RegularStep>() {
+  private static final Function<AbstractRegularParameter, StepFactory<AbstractRegularStep>> regularFactory =
+      regularParameter -> new StepFactory<AbstractRegularStep>() {
         @Override
-        RegularStep create(String thisType,
-                           Optional<? extends AbstractStep> nextType,
-                           AbstractGoalDetails goalDetails,
-                           BuildersContext context,
-                           List<TypeName> declaredExceptions) {
-          return RegularStep.create(
-              thisType,
-              nextType,
-              goalDetails,
-              context,
-              regularParameter,
-              declaredExceptions);
+        AbstractRegularStep create(String thisType,
+                                   Optional<AbstractRegularStep> nextType,
+                                   AbstractGoalDetails goalDetails,
+                                   BuildersContext context,
+                                   List<TypeName> declaredExceptions) {
+          return regularParameter.acceptRegularParameter(new RegularParameterCases<AbstractRegularStep>() {
+            @Override
+            public AbstractRegularStep simpleParameter(SimpleParameter parameter) {
+              return SimpleRegularStep.create(
+                  thisType,
+                  nextType,
+                  goalDetails,
+                  context,
+                  parameter);
+            }
+            @Override
+            public AbstractRegularStep projectedParameter(ProjectedParameter parameter) {
+              return ProjectedRegularStep.create(
+                  thisType,
+                  nextType,
+                  goalDetails,
+                  context,
+                  parameter,
+                  declaredExceptions);
+            }
+          });
         }
       };
 
   static Function<GoalDescription, AbstractGoalContext> prepare(BuildersContext context) {
     return goalDescriptionCases(
-        goal -> GoalContextFactory.regularGoal(
+        goal -> GoalContextFactory.prepareRegular(
             context, goal)
             .withContext(context),
-        goal -> GoalContextFactory.beanGoal(
+        goal -> GoalContextFactory.prepareBean(
             context, goal)
             .withContext(context));
   }

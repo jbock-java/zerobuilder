@@ -4,7 +4,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -20,26 +20,26 @@ import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 
 final class StepV {
 
-  static final Function<RegularStep, TypeSpec> regularStepInterface
+  static final Function<AbstractRegularStep, TypeSpec> regularStepInterface
       = step -> interfaceBuilder(step.thisType)
       .addMethod(regularStepMethod(step))
       .addMethods(presentInstances(emptyCollection(step)))
       .addModifiers(PUBLIC)
       .build();
 
-  private static MethodSpec regularStepMethod(RegularStep step) {
+  private static MethodSpec regularStepMethod(AbstractRegularStep step) {
     AbstractParameter parameter = step.abstractParameter();
     String name = parameterName.apply(parameter);
     TypeName type = parameter.type;
     return methodBuilder(name)
         .returns(nextType(step))
         .addParameter(parameterSpec(type, name))
-        .addExceptions(step.declaredExceptions)
+        .addExceptions(step.declaredExceptions())
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
   }
 
-  private static Optional<MethodSpec> emptyCollection(RegularStep step) {
+  private static Optional<MethodSpec> emptyCollection(AbstractRegularStep step) {
     Optional<DtoStep.CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();

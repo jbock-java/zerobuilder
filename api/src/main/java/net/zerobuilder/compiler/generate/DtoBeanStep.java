@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
@@ -56,6 +55,19 @@ final class DtoBeanStep {
       return cases.beanStep(this);
     }
     abstract <R> R acceptBean(BeanStepCases<R> cases);
+
+    final List<TypeName> getterThrownTypes() {
+      return getterThrownTypes.apply(this);
+    }
+
+    final List<TypeName> setterThrownTypes() {
+      return setterThrownTypes.apply(this);
+    }
+
+    final AbstractBeanParameter beanParameter() {
+      return validBeanParameter.apply(this);
+    }
+
   }
 
   static final class AccessorPairStep extends AbstractBeanStep {
@@ -82,6 +94,7 @@ final class DtoBeanStep {
       String name = accessorPair.name();
       return CollectionInfo.create(accessorPair.type, name);
     }
+
 
     ParameterSpec parameter() {
       return parameterSpec(accessorPair.type, accessorPair.name());
@@ -123,41 +136,18 @@ final class DtoBeanStep {
     }
   }
 
-  static final BeanStepCases<AbstractBeanParameter> validBeanParameter
-      = new BeanStepCases<AbstractBeanParameter>() {
-    @Override
-    public AbstractBeanParameter accessorPair(AccessorPairStep step) {
-      return step.accessorPair;
-    }
-    @Override
-    public AbstractBeanParameter loneGetter(LoneGetterStep step) {
-      return step.loneGetter;
-    }
-  };
+  private static final Function<AbstractBeanStep, AbstractBeanParameter> validBeanParameter
+      = beanStepCases(
+      step -> step.accessorPair,
+      step -> step.loneGetter);
 
-  static final Function<AbstractBeanStep, List<TypeName>> getterThrownTypes
-      = asFunction(new BeanStepCases<List<TypeName>>() {
-    @Override
-    public List<TypeName> accessorPair(AccessorPairStep step) {
-      return step.accessorPair.getterThrownTypes;
-    }
-    @Override
-    public List<TypeName> loneGetter(LoneGetterStep step) {
-      return step.loneGetter.getterThrownTypes;
-    }
-  });
+  private static final Function<AbstractBeanStep, List<TypeName>> getterThrownTypes
+      = beanStepCases(step -> step.accessorPair.getterThrownTypes,
+      step -> step.loneGetter.getterThrownTypes);
 
-  static final Function<AbstractBeanStep, List<TypeName>> setterThrownTypes
-      = asFunction(new BeanStepCases<List<TypeName>>() {
-    @Override
-    public List<TypeName> accessorPair(AccessorPairStep step) {
-      return step.accessorPair.setterThrownTypes;
-    }
-    @Override
-    public List<TypeName> loneGetter(LoneGetterStep step) {
-      return Collections.emptyList();
-    }
-  });
+  private static final Function<AbstractBeanStep, List<TypeName>> setterThrownTypes
+      = beanStepCases(step -> step.accessorPair.setterThrownTypes,
+      step -> Collections.emptyList());
 
   private DtoBeanStep() {
     throw new UnsupportedOperationException("no instances");

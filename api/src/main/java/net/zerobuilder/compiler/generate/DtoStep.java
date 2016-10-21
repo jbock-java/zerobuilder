@@ -7,7 +7,7 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.Utilities.ClassNames;
 
 import java.util.Arrays;
@@ -17,7 +17,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import static net.zerobuilder.compiler.generate.DtoBeanStep.validBeanParameter;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.Utilities.ClassNames.SET;
@@ -97,14 +96,14 @@ final class DtoStep {
       this.context = context;
     }
     abstract <R> R accept(StepCases<R> cases);
-    
+
     final AbstractParameter abstractParameter() {
       return abstractParameter.apply(this);
     }
   }
 
   interface StepCases<R> {
-    R regularStep(RegularStep regular);
+    R regularStep(AbstractRegularStep regular);
     R beanStep(AbstractBeanStep bean);
   }
 
@@ -112,11 +111,11 @@ final class DtoStep {
     return abstractStep -> abstractStep.accept(cases);
   }
 
-  static <R> StepCases<R> stepCases(final Function<? super RegularStep, R> regularFunction,
+  static <R> StepCases<R> stepCases(final Function<? super AbstractRegularStep, R> regularFunction,
                                     final Function<? super AbstractBeanStep, R> beanFunction) {
     return new StepCases<R>() {
       @Override
-      public R regularStep(RegularStep step) {
+      public R regularStep(AbstractRegularStep step) {
         return regularFunction.apply(step);
       }
       @Override
@@ -129,19 +128,19 @@ final class DtoStep {
   private static final Function<AbstractStep, AbstractParameter> abstractParameter
       = asFunction(new StepCases<AbstractParameter>() {
     @Override
-    public AbstractParameter regularStep(RegularStep step) {
-      return step.parameter;
+    public AbstractParameter regularStep(AbstractRegularStep step) {
+      return step.regularParameter();
     }
     @Override
     public AbstractParameter beanStep(AbstractBeanStep step) {
-      return step.acceptBean(validBeanParameter);
+      return step.beanParameter();
     }
   });
 
   static <R> Function<AbstractStep, R> always(final Function<AbstractStep, R> parameterFunction) {
     return asFunction(new StepCases<R>() {
       @Override
-      public R regularStep(RegularStep step) {
+      public R regularStep(AbstractRegularStep step) {
         return parameterFunction.apply(step);
       }
       @Override

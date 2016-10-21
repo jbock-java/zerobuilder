@@ -13,7 +13,7 @@ import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
-import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
 import java.util.List;
 import java.util.Optional;
@@ -54,7 +54,7 @@ final class DtoRegularGoal {
       return context.apply(this);
     }
 
-    final List<RegularStep> regularSteps() {
+    final List<AbstractRegularStep> regularSteps() {
       return regularSteps.apply(this);
     }
 
@@ -82,7 +82,7 @@ final class DtoRegularGoal {
           constructor -> constructor.context,
           method -> method.context);
 
-  private static final Function<AbstractRegularGoalContext, List<RegularStep>> regularSteps =
+  private static final Function<AbstractRegularGoalContext, List<AbstractRegularStep>> regularSteps =
       regularGoalContextCases(
           constructor -> constructor.goal.steps,
           method -> method.goal.steps);
@@ -138,11 +138,11 @@ final class DtoRegularGoal {
   static final class ConstructorGoal implements IGoal {
     final ConstructorGoalDetails details;
 
-    final List<RegularStep> steps;
+    final List<AbstractRegularStep> steps;
     final List<TypeName> thrownTypes;
 
     private ConstructorGoal(ConstructorGoalDetails details,
-                            List<RegularStep> steps,
+                            List<AbstractRegularStep> steps,
                             List<TypeName> thrownTypes) {
       this.steps = steps;
       this.thrownTypes = thrownTypes;
@@ -150,7 +150,7 @@ final class DtoRegularGoal {
     }
 
     static ConstructorGoal create(ConstructorGoalDetails details,
-                                  List<RegularStep> steps,
+                                  List<AbstractRegularStep> steps,
                                   List<TypeName> thrownTypes) {
       return new ConstructorGoal(details, steps, thrownTypes);
     }
@@ -197,11 +197,11 @@ final class DtoRegularGoal {
   static final class MethodGoal implements IGoal {
     final MethodGoalDetails details;
 
-    final List<RegularStep> steps;
+    final List<AbstractRegularStep> steps;
     final List<TypeName> thrownTypes;
 
     private MethodGoal(MethodGoalDetails details,
-                       List<RegularStep> steps,
+                       List<AbstractRegularStep> steps,
                        List<TypeName> thrownTypes) {
       this.steps = steps;
       this.thrownTypes = thrownTypes;
@@ -209,7 +209,7 @@ final class DtoRegularGoal {
     }
 
     static MethodGoal create(MethodGoalDetails details,
-                             List<RegularStep> steps,
+                             List<AbstractRegularStep> steps,
                              List<TypeName> thrownTypes) {
       return new MethodGoal(details, steps, thrownTypes);
     }

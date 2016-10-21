@@ -5,7 +5,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
 import java.util.ArrayList;
@@ -30,9 +30,9 @@ final class UpdaterV {
       = goal -> {
     List<FieldSpec> builder = new ArrayList<>();
     builder.addAll(presentInstances(goal.fields()));
-    for (RegularStep step : goal.regularSteps()) {
-      String name = step.parameter.name;
-      TypeName type = step.parameter.type;
+    for (AbstractRegularStep step : goal.regularSteps()) {
+      String name = step.regularParameter().name;
+      TypeName type = step.regularParameter().type;
       builder.add(fieldSpec(type, name, PRIVATE));
     }
     return builder;
@@ -44,14 +44,14 @@ final class UpdaterV {
           .map(updateMethods(goal))
           .collect(flatList());
 
-  private static Function<RegularStep, List<MethodSpec>> updateMethods(AbstractRegularGoalContext goal) {
+  private static Function<AbstractRegularStep, List<MethodSpec>> updateMethods(AbstractRegularGoalContext goal) {
     return step -> Stream.concat(
         Stream.of(normalUpdate(goal, step)),
         presentInstances(emptyCollection(goal, step)).stream())
         .collect(toList());
   }
 
-  private static Optional<MethodSpec> emptyCollection(AbstractRegularGoalContext goal, RegularStep step) {
+  private static Optional<MethodSpec> emptyCollection(AbstractRegularGoalContext goal, AbstractRegularStep step) {
     Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
@@ -66,9 +66,9 @@ final class UpdaterV {
         .build());
   }
 
-  private static MethodSpec normalUpdate(AbstractRegularGoalContext goal, RegularStep step) {
-    String name = step.parameter.name;
-    TypeName type = step.parameter.type;
+  private static MethodSpec normalUpdate(AbstractRegularGoalContext goal, AbstractRegularStep step) {
+    String name = step.regularParameter().name;
+    TypeName type = step.regularParameter().type;
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
         .returns(goal.implType())

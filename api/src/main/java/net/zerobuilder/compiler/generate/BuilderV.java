@@ -9,7 +9,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalConte
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
-import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
 import java.util.ArrayList;
@@ -35,20 +35,20 @@ final class BuilderV {
 
   static final Function<AbstractRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
-    List<RegularStep> steps = goal.regularSteps();
+    List<AbstractRegularStep> steps = goal.regularSteps();
     return Stream.concat(
         presentInstances(goal.fields()).stream(),
         steps.stream()
             .limit(steps.size() - 1)
-            .map(RegularStep::field))
+            .map(AbstractRegularStep::field))
         .collect(Collectors.toList());
   };
 
   static final Function<AbstractRegularGoalContext, List<MethodSpec>> stepsV
       = goal -> {
-    List<RegularStep> steps = goal.regularSteps();
+    List<AbstractRegularStep> steps = goal.regularSteps();
     List<MethodSpec> builder = new ArrayList<>();
-    for (RegularStep step : steps.subList(0, steps.size() - 1)) {
+    for (AbstractRegularStep step : steps.subList(0, steps.size() - 1)) {
       builder.addAll(regularMethods(step, goal, false));
     }
     builder.addAll(regularMethods(steps.get(steps.size() - 1), goal, true));
@@ -56,30 +56,30 @@ final class BuilderV {
   };
 
   private static List<MethodSpec> regularMethods(
-      RegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
+      AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     List<MethodSpec> builder = new ArrayList<>();
     builder.add(stepMethod(step, goal, isLast));
     builder.addAll(presentInstances(maybeEmptyCollection(step, goal, isLast)));
     return builder;
   }
 
-  private static MethodSpec stepMethod(RegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
-    TypeName type = step.parameter.type;
-    String name = step.parameter.name;
+  private static MethodSpec stepMethod(AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
+    TypeName type = step.regularParameter().type;
+    String name = step.regularParameter().name;
     ParameterSpec parameter = parameterSpec(type, name);
-    return methodBuilder(step.parameter.name)
+    return methodBuilder(step.regularParameter().name)
         .addAnnotation(Override.class)
         .addParameter(parameter)
         .returns(nextType(step))
         .addCode(nullCheck.apply(step))
         .addCode(normalAssignment(step, goal, isLast))
         .addModifiers(PUBLIC)
-        .addExceptions(step.declaredExceptions)
+        .addExceptions(step.declaredExceptions())
         .build();
   }
 
   private static Optional<MethodSpec> maybeEmptyCollection(
-      RegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
+      AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
@@ -93,9 +93,9 @@ final class BuilderV {
         .build());
   }
 
-  private static CodeBlock normalAssignment(RegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
-    TypeName type = step.parameter.type;
-    String name = step.parameter.name;
+  private static CodeBlock normalAssignment(AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
+    TypeName type = step.regularParameter().type;
+    String name = step.regularParameter().name;
     ParameterSpec parameter = parameterSpec(type, name);
     if (isLast) {
       return regularInvoke.apply(goal);
@@ -107,7 +107,7 @@ final class BuilderV {
     }
   }
 
-  private static CodeBlock emptyCollectionAssignment(RegularStep step, AbstractRegularGoalContext goal,
+  private static CodeBlock emptyCollectionAssignment(AbstractRegularStep step, AbstractRegularGoalContext goal,
                                                      CollectionInfo collInfo, boolean isLast) {
     if (isLast) {
       return goal.acceptRegular(emptyCollectionInvoke(step, collInfo));
@@ -127,14 +127,14 @@ final class BuilderV {
               methodGoalInvocation(goal,
                   invocationParameters(goal.parameterNames())));
 
-  private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final RegularStep step,
+  private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final AbstractRegularStep step,
                                                                           final CollectionInfo collectionInfo) {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
       public CodeBlock constructorGoal(ConstructorGoalContext goal) {
         CodeBlock parameters = invocationParameters(goal.parameterNames());
-        TypeName type = step.parameter.type;
-        String name = step.parameter.name;
+        TypeName type = step.regularParameter().type;
+        String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
             .addStatement("return new $T($L)", goal.type(), parameters)
@@ -143,8 +143,8 @@ final class BuilderV {
       @Override
       public CodeBlock methodGoal(MethodGoalContext goal) {
         CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
-        TypeName type = step.parameter.type;
-        String name = step.parameter.name;
+        TypeName type = step.regularParameter().type;
+        String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
             .add(methodGoalInvocation(goal, parameters))

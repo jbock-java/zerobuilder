@@ -24,8 +24,6 @@ import static java.util.Arrays.asList;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
-import static net.zerobuilder.compiler.generate.DtoBeanStep.getterThrownTypes;
-import static net.zerobuilder.compiler.generate.DtoBeanStep.setterThrownTypes;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
@@ -47,7 +45,7 @@ final class GeneratorBU {
     MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
         .returns(goal.implType())
-        .addExceptions(thrownTypes(goal, asList(getterThrownTypes, setterThrownTypes)))
+        .addExceptions(thrownTypes(goal, asList(AbstractBeanStep::getterThrownTypes, AbstractBeanStep::setterThrownTypes)))
         .addCode(goal.goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
         .addCode(initializeUpdater(goal, updater))
         .addCode(goal.goal.steps.stream().map(copy(goal)).collect(joinCodeBlocks))

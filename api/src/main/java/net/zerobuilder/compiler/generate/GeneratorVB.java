@@ -12,7 +12,7 @@ import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularStep.RegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
 import java.util.List;
 import java.util.function.Function;
@@ -31,7 +31,7 @@ final class GeneratorVB {
   static final Function<AbstractRegularGoalContext, BuilderMethod> goalToBuilderV
       = goal -> {
     AbstractRegularGoalDetails abstractRegularGoalDetails = goal.regularDetails();
-    List<RegularStep> steps = goal.regularSteps();
+    List<AbstractRegularStep> steps = goal.regularSteps();
     MethodSpec.Builder method = methodBuilder(goal.methodName())
         .returns(goal.contractType().nestedClass(steps.get(0).thisType))
         .addModifiers(abstractRegularGoalDetails.option.access.modifiers(STATIC));
