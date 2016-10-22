@@ -3,6 +3,9 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -16,33 +19,38 @@ import static net.zerobuilder.compiler.generate.Utilities.memoize;
 
 public class DtoMethodGoal {
 
-  static final class MethodGoalContext
-      extends DtoRegularGoal.AbstractRegularGoalContext {
+  static final class MethodGoalContext extends AbstractRegularGoalContext implements DtoGoalContext.IGoal {
 
-    final DtoContext.BuildersContext context;
-    final DtoIMethodGoal.MethodGoal goal;
+    final BuildersContext context;
+    final MethodGoalDetails details;
+    final List<DtoRegularStep.AbstractRegularStep> steps;
+    final List<TypeName> thrownTypes;
 
     DtoGoal.GoalMethodType methodType() {
-      return goal.details.methodType;
+      return details.methodType;
     }
 
     private final Supplier<FieldSpec> field;
 
     /**
-     * @return An instance of type {@link DtoContext.BuildersContext#type}.
+     * @return An instance of type {@link BuildersContext#type}.
      */
     FieldSpec field() {
       return field.get();
     }
 
-    MethodGoalContext(DtoIMethodGoal.MethodGoal goal,
-                      DtoContext.BuildersContext context) {
-      this.goal = goal;
+    MethodGoalContext(BuildersContext context,
+                      MethodGoalDetails details,
+                      List<DtoRegularStep.AbstractRegularStep> steps,
+                      List<TypeName> thrownTypes) {
+      this.details = details;
+      this.steps = steps;
+      this.thrownTypes = thrownTypes;
       this.context = context;
       this.field = memoizeField(context);
     }
 
-    private static Supplier<FieldSpec> memoizeField(DtoContext.BuildersContext context) {
+    private static Supplier<FieldSpec> memoizeField(BuildersContext context) {
       return memoize(() -> {
         ClassName type = context.type;
         String name = '_' + downcase(type.simpleName());
@@ -64,12 +72,17 @@ public class DtoMethodGoal {
 
     @Override
     public List<String> parameterNames() {
-      return goal.details.parameterNames;
+      return details.parameterNames;
     }
 
     @Override
     public TypeName type() {
-      return goal.details.goalType;
+      return details.goalType;
+    }
+
+    @Override
+    public DtoGoalContext.AbstractGoalContext withContext(BuildersContext context) {
+      return this;
     }
   }
 

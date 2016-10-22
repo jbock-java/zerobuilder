@@ -19,7 +19,7 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoIConstructorGoal.ConstructorGoal;
-import net.zerobuilder.compiler.generate.DtoIMethodGoal.MethodGoal;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
@@ -66,7 +66,7 @@ final class GoalContextFactory {
     return validGoal.details.accept(new RegularGoalCases<IGoal>() {
       @Override
       public IGoal method(MethodGoalDetails goal) {
-        return MethodGoal.create(goal, steps, validGoal.thrownTypes);
+        return new MethodGoalContext(context, goal, steps, validGoal.thrownTypes);
       }
       @Override
       public IGoal constructor(ConstructorGoalDetails goal) {

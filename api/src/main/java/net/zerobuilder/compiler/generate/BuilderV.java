@@ -142,7 +142,7 @@ final class BuilderV {
       }
       @Override
       public CodeBlock methodGoal(MethodGoalContext goal) {
-        CodeBlock parameters = invocationParameters(goal.goal.details.parameterNames);
+        CodeBlock parameters = invocationParameters(goal.details.parameterNames);
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
         return CodeBlock.builder()
@@ -156,8 +156,8 @@ final class BuilderV {
   private static CodeBlock methodGoalInvocation(MethodGoalContext goal, CodeBlock parameters) {
     CodeBlock.Builder builder = CodeBlock.builder();
     TypeName type = goal.type();
-    String method = goal.goal.details.methodName;
-    builder.add(goal.goal.details.methodType == INSTANCE_METHOD ?
+    String method = goal.details.methodName;
+    builder.add(goal.details.methodType == INSTANCE_METHOD ?
         statement("return this.$N.$N($L)", goal.field(), method, parameters) :
         CodeBlock.builder()
             .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
