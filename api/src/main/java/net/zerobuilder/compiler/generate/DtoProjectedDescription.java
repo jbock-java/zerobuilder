@@ -12,8 +12,8 @@ public final class DtoProjectedDescription {
   }
 
   interface ProjectedDescriptionCases<R> {
-    R bean(BeanGoalDescription bean);
     R regular(ProjectedRegularGoalDescription regular);
+    R bean(BeanGoalDescription bean);
   }
 
   static <R> Function<ProjectedDescription, R> asFunction(ProjectedDescriptionCases<R> cases) {
@@ -21,16 +21,16 @@ public final class DtoProjectedDescription {
   }
 
   static <R> Function<ProjectedDescription, R> projectedDescriptionCases(
-    Function<BeanGoalDescription, R> beanFunction,
-    Function<ProjectedRegularGoalDescription, R> regularFunction) {
+      Function<ProjectedRegularGoalDescription, R> regularFunction,
+      Function<BeanGoalDescription, R> beanFunction) {
     return asFunction(new ProjectedDescriptionCases<R>() {
-      @Override
-      public R bean(BeanGoalDescription bean) {
-        return beanFunction.apply(bean);
-      }
       @Override
       public R regular(ProjectedRegularGoalDescription regular) {
         return regularFunction.apply(regular);
+      }
+      @Override
+      public R bean(BeanGoalDescription bean) {
+        return beanFunction.apply(bean);
       }
     });
   }

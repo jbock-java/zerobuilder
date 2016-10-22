@@ -22,8 +22,11 @@ import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
+import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
@@ -56,43 +59,63 @@ final class GoalContextFactory {
 
   private static AbstractRegularGoalContext prepareRegular(
       BuildersContext context,
-      AbstractRegularGoalDescription validGoal) {
+      AbstractRegularGoalDescription description) {
     return DtoRegularGoalDescription.regularGoalDescriptionCases(
         simple -> {
           List<SimpleRegularStep> steps = steps(
-              validGoal,
+              description,
               context,
               simple.parameters,
               simpleRegularFactory);
-          return validGoal.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
+          return description.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
             @Override
             public AbstractRegularGoalContext method(MethodGoalDetails details) {
-              return new SimpleMethodGoalContext(context, details, steps, validGoal.thrownTypes);
+              return new SimpleMethodGoalContext(context, details, steps, description.thrownTypes);
             }
             @Override
             public AbstractRegularGoalContext constructor(ConstructorGoalDetails details) {
-              return new SimpleConstructorGoalContext(context, details, steps, validGoal.thrownTypes);
+              return new SimpleConstructorGoalContext(context, details, steps, description.thrownTypes);
             }
           });
         },
         projected -> {
           List<ProjectedRegularStep> steps = steps(
-              validGoal,
+              description,
               context,
               projected.parameters,
               projectedRegularFactory);
-          return validGoal.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
+          return description.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
             @Override
             public AbstractRegularGoalContext method(MethodGoalDetails details) {
-              return new ProjectedMethodGoalContext(context, details, steps, validGoal.thrownTypes);
+              return new ProjectedMethodGoalContext(context, details, steps, description.thrownTypes);
             }
             @Override
             public AbstractRegularGoalContext constructor(ConstructorGoalDetails details) {
-              return new ProjectedConstructorGoalContext(context, details, steps, validGoal.thrownTypes);
+              return new ProjectedConstructorGoalContext(context, details, steps, description.thrownTypes);
             }
           });
         }
-    ).apply(validGoal);
+    ).apply(description);
+  }
+
+  private static ProjectedGoal prepareProjectedRegular(
+      BuildersContext context,
+      ProjectedRegularGoalDescription description) {
+    List<ProjectedRegularStep> steps = steps(
+        description,
+        context,
+        description.parameters,
+        projectedRegularFactory);
+    return description.details.accept(new RegularGoalCases<ProjectedGoal>() {
+      @Override
+      public ProjectedGoal method(MethodGoalDetails details) {
+        return new ProjectedMethodGoalContext(context, details, steps, description.thrownTypes);
+      }
+      @Override
+      public ProjectedGoal constructor(ConstructorGoalDetails details) {
+        return new ProjectedConstructorGoalContext(context, details, steps, description.thrownTypes);
+      }
+    });
   }
 
   private static <P extends AbstractParameter, S extends AbstractStep> List<S> steps(
@@ -189,6 +212,14 @@ final class GoalContextFactory {
   static Function<GoalDescription, AbstractGoalContext> prepare(BuildersContext context) {
     return goalDescriptionCases(
         goal -> GoalContextFactory.prepareRegular(
+            context, goal),
+        goal -> GoalContextFactory.prepareBean(
+            context, goal));
+  }
+
+  static Function<ProjectedDescription, ProjectedGoal> prepareProjected(BuildersContext context) {
+    return DtoProjectedDescription.projectedDescriptionCases(
+        goal -> GoalContextFactory.prepareProjectedRegular(
             context, goal),
         goal -> GoalContextFactory.prepareBean(
             context, goal));

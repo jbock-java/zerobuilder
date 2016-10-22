@@ -13,9 +13,9 @@ public final class DtoProjectedGoal {
   }
 
   interface ProjectedGoalCases<R> {
-    R bean(BeanGoalContext bean);
     R method(ProjectedMethodGoalContext method);
     R constructor(ProjectedConstructorGoalContext constructor);
+    R bean(BeanGoalContext bean);
   }
 
   static <R> Function<ProjectedGoal, R> asFunction(ProjectedGoalCases<R> cases) {
@@ -23,14 +23,10 @@ public final class DtoProjectedGoal {
   }
 
   static <R> Function<ProjectedGoal, R> projectedGoalCases(
-      Function<BeanGoalContext, R> beanFunction,
       Function<ProjectedMethodGoalContext, R> methodFunction,
-      Function<ProjectedConstructorGoalContext, R> constructorFunction) {
+      Function<ProjectedConstructorGoalContext, R> constructorFunction,
+      Function<BeanGoalContext, R> beanFunction) {
     return asFunction(new ProjectedGoalCases<R>() {
-      @Override
-      public R bean(BeanGoalContext bean) {
-        return beanFunction.apply(bean);
-      }
       @Override
       public R method(ProjectedMethodGoalContext method) {
         return methodFunction.apply(method);
@@ -38,6 +34,10 @@ public final class DtoProjectedGoal {
       @Override
       public R constructor(ProjectedConstructorGoalContext constructor) {
         return constructorFunction.apply(constructor);
+      }
+      @Override
+      public R bean(BeanGoalContext bean) {
+        return beanFunction.apply(bean);
       }
     });
   }
