@@ -5,7 +5,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoConstructorGoal.ConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
@@ -77,7 +77,7 @@ final class DtoRegularGoal {
 
   private static final Function<AbstractRegularGoalContext, List<AbstractRegularStep>> regularSteps =
       regularGoalContextCases(
-          constructor -> constructor.steps,
+          constructor -> constructor.constructorSteps(),
           method -> method.steps);
 
   private static final Function<AbstractRegularGoalContext, Optional<FieldSpec>> fields =
@@ -105,7 +105,7 @@ final class DtoRegularGoal {
           });
 
   interface RegularGoalContextCases<R> {
-    R constructorGoal(ConstructorGoalContext goal);
+    R constructorGoal(AbstractConstructorGoalContext goal);
     R methodGoal(MethodGoalContext goal);
   }
 
@@ -114,11 +114,11 @@ final class DtoRegularGoal {
   }
 
   static <R> Function<AbstractRegularGoalContext, R> regularGoalContextCases(
-      Function<ConstructorGoalContext, R> constructor,
+      Function<AbstractConstructorGoalContext, R> constructor,
       Function<MethodGoalContext, R> method) {
     return asFunction(new RegularGoalContextCases<R>() {
       @Override
-      public R constructorGoal(ConstructorGoalContext goal) {
+      public R constructorGoal(AbstractConstructorGoalContext goal) {
         return constructor.apply(goal);
       }
       @Override

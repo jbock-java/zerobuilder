@@ -62,12 +62,12 @@ public final class DtoRegularStep {
     }
 
     static ProjectedRegularStep create(String thisType,
-                                       Optional<AbstractRegularStep> nextType,
+                                       Optional<? extends AbstractRegularStep> nextType,
                                        AbstractGoalDetails goalDetails,
                                        BuildersContext context,
                                        ProjectedParameter parameter,
                                        List<TypeName> declaredExceptions) {
-      return new ProjectedRegularStep(thisType, nextType, goalDetails, context, parameter, declaredExceptions,
+      return new ProjectedRegularStep(thisType, Optional.ofNullable(nextType.orElse(null)), goalDetails, context, parameter, declaredExceptions,
           memoizeField(parameter), memoizeCollectionInfo(parameter));
     }
 
@@ -112,11 +112,11 @@ public final class DtoRegularStep {
     }
 
     static SimpleRegularStep create(String thisType,
-                                    Optional<AbstractRegularStep> nextType,
+                                    Optional<? extends AbstractRegularStep> nextType,
                                     AbstractGoalDetails goalDetails,
                                     BuildersContext context,
                                     SimpleParameter parameter) {
-      return new SimpleRegularStep(thisType, nextType, goalDetails, context, parameter,
+      return new SimpleRegularStep(thisType, Optional.ofNullable(nextType.orElse(null)), goalDetails, context, parameter,
           memoizeField(parameter), memoizeCollectionInfo(parameter));
     }
 

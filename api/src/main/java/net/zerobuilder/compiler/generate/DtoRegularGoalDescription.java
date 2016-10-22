@@ -15,6 +15,30 @@ import static java.util.Collections.unmodifiableList;
 
 public final class DtoRegularGoalDescription {
 
+  interface AbstractRegularGoalDescriptionCases<R> {
+    R acceptSimple(SimpleRegularGoalDescription simple);
+    R acceptProjected(ProjectedRegularGoalDescription projected);
+  }
+
+  static <R> Function<AbstractRegularGoalDescription, R> asFunction(AbstractRegularGoalDescriptionCases<R> cases) {
+    return description -> description.acceptRegularGoalDescription(cases);
+  }
+
+  static <R> Function<AbstractRegularGoalDescription, R> regularGoalDescriptionCases(
+      Function<SimpleRegularGoalDescription, ? extends R> simpleFunction,
+      Function<ProjectedRegularGoalDescription, ? extends R> projectedFunction) {
+    return asFunction(new AbstractRegularGoalDescriptionCases<R>() {
+      @Override
+      public R acceptSimple(SimpleRegularGoalDescription simple) {
+        return simpleFunction.apply(simple);
+      }
+      @Override
+      public R acceptProjected(ProjectedRegularGoalDescription projected) {
+        return projectedFunction.apply(projected);
+      }
+    });
+  }
+
   public static abstract class AbstractRegularGoalDescription extends GoalDescription {
     final AbstractRegularGoalDetails details;
     final List<TypeName> thrownTypes;
@@ -30,29 +54,6 @@ public final class DtoRegularGoalDescription {
     abstract <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases);
   }
 
-  interface AbstractRegularGoalDescriptionCases<R> {
-    R acceptSimple(SimpleRegularGoalDescription simple);
-    R acceptProjected(ProjectedRegularGoalDescription projected);
-  }
-
-  static <R> Function<AbstractRegularGoalDescription, R> asFunction(AbstractRegularGoalDescriptionCases<R> cases) {
-    return description -> description.acceptRegularGoalDescription(cases);
-  }
-
-  static <R> Function<AbstractRegularGoalDescription, R> regularGoalDescriptionCases(
-      Function<SimpleRegularGoalDescription, R> simpleFunction,
-      Function<ProjectedRegularGoalDescription, R> projectedFunction) {
-    return asFunction(new AbstractRegularGoalDescriptionCases<R>() {
-      @Override
-      public R acceptSimple(SimpleRegularGoalDescription simple) {
-        return simpleFunction.apply(simple);
-      }
-      @Override
-      public R acceptProjected(ProjectedRegularGoalDescription projected) {
-        return projectedFunction.apply(projected);
-      }
-    });
-  }
 
   private static final Function<AbstractRegularGoalDescription, List<AbstractRegularParameter>> abstractParameters =
       regularGoalDescriptionCases(

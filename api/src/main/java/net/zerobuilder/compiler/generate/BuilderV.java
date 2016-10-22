@@ -5,7 +5,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoConstructorGoal.ConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
@@ -131,7 +131,7 @@ final class BuilderV {
                                                                           final CollectionInfo collectionInfo) {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
-      public CodeBlock constructorGoal(ConstructorGoalContext goal) {
+      public CodeBlock constructorGoal(AbstractConstructorGoalContext goal) {
         CodeBlock parameters = invocationParameters(goal.parameterNames());
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;

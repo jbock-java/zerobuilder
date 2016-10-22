@@ -6,10 +6,13 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
@@ -23,7 +26,7 @@ public class DtoMethodGoal {
 
     final BuildersContext context;
     final MethodGoalDetails details;
-    final List<DtoRegularStep.AbstractRegularStep> steps;
+    final List<AbstractRegularStep> steps;
     final List<TypeName> thrownTypes;
 
     DtoGoal.GoalMethodType methodType() {
@@ -41,10 +44,10 @@ public class DtoMethodGoal {
 
     MethodGoalContext(BuildersContext context,
                       MethodGoalDetails details,
-                      List<DtoRegularStep.AbstractRegularStep> steps,
+                      List<? extends AbstractRegularStep> steps,
                       List<TypeName> thrownTypes) {
       this.details = details;
-      this.steps = steps;
+      this.steps = unmodifiableList(steps);
       this.thrownTypes = thrownTypes;
       this.context = context;
       this.field = memoizeField(context);

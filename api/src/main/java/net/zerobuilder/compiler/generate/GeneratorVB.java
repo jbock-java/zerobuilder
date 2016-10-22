@@ -6,7 +6,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoConstructorGoal.ConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
@@ -53,7 +53,7 @@ final class GeneratorVB {
         initMethodBuilder(builder, instance));
   }
 
-  private static Function<ConstructorGoalContext, CodeBlock> initConstructorBuilder(
+  private static Function<AbstractConstructorGoalContext, CodeBlock> initConstructorBuilder(
       ParameterSpec builder) {
     return cGoal -> {
       BuildersContext context = cGoal.context;
