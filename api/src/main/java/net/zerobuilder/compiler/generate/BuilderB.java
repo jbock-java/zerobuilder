@@ -34,10 +34,16 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class BuilderB {
 
-  static final Function<BeanGoalContext, List<FieldSpec>> fieldsB
+  private final Builder builder;
+
+  BuilderB(Builder builder) {
+    this.builder = builder;
+  }
+
+  final Function<BeanGoalContext, List<FieldSpec>> fieldsB
       = goal -> singletonList(goal.bean());
 
-  static final Function<BeanGoalContext, List<MethodSpec>> stepsB
+  final Function<BeanGoalContext, List<MethodSpec>> stepsB
       = goal ->
       Stream.concat(
           goal.steps.stream()
@@ -47,21 +53,21 @@ final class BuilderB {
               .map(stepToMethods(goal, true)))
           .collect(flatList());
 
-  private static Function<AbstractBeanStep, List<MethodSpec>> stepToMethods(
+  private Function<AbstractBeanStep, List<MethodSpec>> stepToMethods(
       BeanGoalContext goal, boolean isLast) {
     return beanStepCases(
         step -> regularMethods(step, goal, isLast),
         step -> collectionMethods(step, goal, isLast));
   }
 
-  private static List<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
+  private List<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
     List<MethodSpec> builder = new ArrayList<>();
     builder.add(regularStep(step, goal, isLast));
     builder.addAll(presentInstances(regularEmptyCollection(step, goal, isLast)));
     return builder;
   }
 
-  private static Optional<MethodSpec> regularEmptyCollection(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
+  private Optional<MethodSpec> regularEmptyCollection(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
     Optional<DtoStep.CollectionInfo> maybeEmptyOption = step.emptyOption();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
@@ -81,13 +87,13 @@ final class BuilderB {
         .build());
   }
 
-  private static List<MethodSpec> collectionMethods(LoneGetterStep step, BeanGoalContext goal, boolean isLast) {
+  private List<MethodSpec> collectionMethods(LoneGetterStep step, BeanGoalContext goal, boolean isLast) {
     return Arrays.asList(
         iterateCollection(step, goal, isLast),
         loneGetterEmptyCollection(step, goal, isLast));
   }
 
-  private static MethodSpec loneGetterEmptyCollection(LoneGetterStep step, BeanGoalContext goal, boolean isLast) {
+  private MethodSpec loneGetterEmptyCollection(LoneGetterStep step, BeanGoalContext goal, boolean isLast) {
     return methodBuilder(step.emptyMethod)
         .addAnnotation(Override.class)
         .returns(nextType(step))
@@ -96,13 +102,13 @@ final class BuilderB {
         .build();
   }
 
-  private static CodeBlock regularFinalBlock(BeanGoalContext goal, boolean isLast) {
+  private CodeBlock regularFinalBlock(BeanGoalContext goal, boolean isLast) {
     return isLast
         ? statement("return this.$N", goal.bean())
         : statement("return this");
   }
 
-  private static MethodSpec iterateCollection(LoneGetterStep step,
+  private MethodSpec iterateCollection(LoneGetterStep step,
                                               BeanGoalContext goal,
                                               boolean isLast) {
     String name = step.loneGetter.name();
@@ -126,7 +132,7 @@ final class BuilderB {
         .build();
   }
 
-  private static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
+  private MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal, boolean isLast) {
     ParameterSpec parameter = step.parameter();
     return methodBuilder(step.accessorPair.name())
         .addAnnotation(Override.class)
@@ -137,9 +143,5 @@ final class BuilderB {
         .addCode(nullCheck.apply(step))
         .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), parameter)
         .addCode(regularFinalBlock(goal, isLast)).build();
-  }
-
-  private BuilderB() {
-    throw new UnsupportedOperationException("no instances");
   }
 }
