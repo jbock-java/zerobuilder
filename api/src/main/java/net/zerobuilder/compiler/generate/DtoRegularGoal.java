@@ -1,12 +1,12 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.AbstractMethodGoalContext;
@@ -53,6 +53,10 @@ final class DtoRegularGoal {
 
     final MethodSpec builderConstructor() {
       return builderConstructor.apply(this);
+    }
+
+    final CodeBlock invocationParameters() {
+      return CodeBlock.of(String.join(", ", parameterNames()));
     }
   }
 

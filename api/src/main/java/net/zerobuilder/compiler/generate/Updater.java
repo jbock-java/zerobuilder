@@ -22,9 +22,9 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.BuilderV.regularInvoke;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.GeneratorBU.goalToUpdaterB;
 import static net.zerobuilder.compiler.generate.GeneratorVU.goalToUpdaterV;
 import static net.zerobuilder.compiler.generate.UpdaterB.fieldsB;
@@ -76,12 +76,19 @@ public final class Updater extends DtoModule.SimpleModule {
                   : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))
               .build());
 
+  private static final Function<AbstractRegularGoalContext, CodeBlock> regularInvoke =
+      regularGoalContextCases(
+          goal -> statement("return new $T($L)", goal.type(),
+              goal.invocationParameters()),
+          goal -> goal.methodGoalInvocation());
+
+
   private static final Function<BeanGoalContext, CodeBlock> returnBean
       = goal -> statement("return this.$N", goal.bean());
 
   private static final Function<AbstractGoalContext, CodeBlock> invoke
       = goalCases(regularInvoke, returnBean);
-
+  
   @Override
   public String name() {
     return "updater";

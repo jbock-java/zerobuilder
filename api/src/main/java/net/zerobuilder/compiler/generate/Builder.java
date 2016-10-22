@@ -20,8 +20,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.BuilderV.fieldsV;
-import static net.zerobuilder.compiler.generate.BuilderV.stepsV;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.GeneratorBB.goalToBuilderB;
@@ -37,23 +35,23 @@ public final class Builder extends ContractModule {
     return transform(goal.steps(), asStepInterface);
   }
 
-  private final Function<AbstractGoalContext, List<MethodSpec>> steps(BuilderB builderB) {
-    return goalCases(stepsV, builderB.stepsB);
+  private final Function<AbstractGoalContext, List<MethodSpec>> steps(BuilderB builderB, BuilderV builderV) {
+    return goalCases(builderV.stepsV, builderB.stepsB);
   }
 
-  private final Function<AbstractGoalContext, List<FieldSpec>> fields(BuilderB builderB) {
-    return goalCases(fieldsV, builderB.fieldsB);
+  private final Function<AbstractGoalContext, List<FieldSpec>> fields(BuilderB builderB, BuilderV builderV) {
+    return goalCases(builderV.fieldsV, builderB.fieldsB);
   }
 
   private final Function<AbstractGoalContext, BuilderMethod> goalToBuilder =
       goalCases(goalToBuilderV, goalToBuilderB);
 
-  private TypeSpec defineBuilderImpl(AbstractGoalContext goal, BuilderB builderB) {
+  private TypeSpec defineBuilderImpl(AbstractGoalContext goal, BuilderB builderB, BuilderV builderV) {
     return classBuilder(goal.implType())
         .addSuperinterfaces(goal.stepInterfaceTypes())
-        .addFields(fields(builderB).apply(goal))
+        .addFields(fields(builderB, builderV).apply(goal))
         .addMethod(builderConstructor.apply(goal))
-        .addMethods(steps(builderB).apply(goal))
+        .addMethods(steps(builderB, builderV).apply(goal))
         .addModifiers(STATIC, FINAL)
         .build();
   }
@@ -85,18 +83,20 @@ public final class Builder extends ContractModule {
   @Override
   protected ContractModuleOutput process(AbstractGoalContext goal) {
     BuilderB builderB = new BuilderB(this);
+    BuilderV builderV = new BuilderV(this);
     return new ContractModuleOutput(
         goalToBuilder.apply(goal),
-        defineBuilderImpl(goal, builderB),
+        defineBuilderImpl(goal, builderB, builderV),
         defineContract(goal));
   }
 
   @Override
   protected DtoGeneratorOutput.SingleModuleOutput processSingle(AbstractGoalContext goal) {
     BuilderB builderB = new BuilderB(this);
+    BuilderV builderV = new BuilderV(this);
     return new DtoGeneratorOutput.SingleModuleOutput(
         goalToBuilder.apply(goal),
-        asList(defineBuilderImpl(goal, builderB), defineContract(goal)));
+        asList(defineBuilderImpl(goal, builderB, builderV), defineContract(goal)));
   }
 
   @Override

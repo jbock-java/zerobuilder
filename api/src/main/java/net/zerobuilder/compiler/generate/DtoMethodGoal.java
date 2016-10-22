@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
@@ -15,15 +16,19 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static com.squareup.javapoet.TypeName.VOID;
 import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.generate.Utilities.memoize;
+import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 public final class DtoMethodGoal {
 
@@ -91,6 +96,17 @@ public final class DtoMethodGoal {
             ? fieldSpec(type, name, PRIVATE)
             : fieldSpec(type, name, PRIVATE, FINAL);
       });
+    }
+
+    final CodeBlock methodGoalInvocation() {
+      TypeName type = type();
+      String method = details.methodName;
+      return details.methodType == INSTANCE_METHOD ?
+          statement("return this.$N.$N($L)", field(), method, invocationParameters()) :
+          CodeBlock.builder()
+              .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
+              .addStatement("$T.$N($L)", context.type, method, invocationParameters())
+              .build();
     }
 
     @Override

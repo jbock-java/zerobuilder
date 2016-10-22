@@ -20,20 +20,23 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class BuilderV {
 
-  static final Function<AbstractRegularGoalContext, List<FieldSpec>> fieldsV
+  private final Builder builder;
+
+  BuilderV(Builder builder) {
+    this.builder = builder;
+  }
+
+  final Function<AbstractRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
     List<AbstractRegularStep> steps = goal.regularSteps();
     return Stream.concat(
@@ -44,7 +47,7 @@ final class BuilderV {
         .collect(Collectors.toList());
   };
 
-  static final Function<AbstractRegularGoalContext, List<MethodSpec>> stepsV
+  final Function<AbstractRegularGoalContext, List<MethodSpec>> stepsV
       = goal -> {
     List<AbstractRegularStep> steps = goal.regularSteps();
     List<MethodSpec> builder = new ArrayList<>();
@@ -55,7 +58,7 @@ final class BuilderV {
     return builder;
   };
 
-  private static List<MethodSpec> regularMethods(
+  private List<MethodSpec> regularMethods(
       AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     List<MethodSpec> builder = new ArrayList<>();
     builder.add(stepMethod(step, goal, isLast));
@@ -63,7 +66,7 @@ final class BuilderV {
     return builder;
   }
 
-  private static MethodSpec stepMethod(AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
+  private MethodSpec stepMethod(AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     TypeName type = step.regularParameter().type;
     String name = step.regularParameter().name;
     ParameterSpec parameter = parameterSpec(type, name);
@@ -78,7 +81,7 @@ final class BuilderV {
         .build();
   }
 
-  private static Optional<MethodSpec> maybeEmptyCollection(
+  private Optional<MethodSpec> maybeEmptyCollection(
       AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
@@ -93,7 +96,7 @@ final class BuilderV {
         .build());
   }
 
-  private static CodeBlock normalAssignment(AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
+  private CodeBlock normalAssignment(AbstractRegularStep step, AbstractRegularGoalContext goal, boolean isLast) {
     TypeName type = step.regularParameter().type;
     String name = step.regularParameter().name;
     ParameterSpec parameter = parameterSpec(type, name);
@@ -107,8 +110,8 @@ final class BuilderV {
     }
   }
 
-  private static CodeBlock emptyCollectionAssignment(AbstractRegularStep step, AbstractRegularGoalContext goal,
-                                                     CollectionInfo collInfo, boolean isLast) {
+  private CodeBlock emptyCollectionAssignment(AbstractRegularStep step, AbstractRegularGoalContext goal,
+                                              CollectionInfo collInfo, boolean isLast) {
     if (isLast) {
       return goal.acceptRegular(emptyCollectionInvoke(step, collInfo));
     } else {
@@ -119,20 +122,18 @@ final class BuilderV {
     }
   }
 
-  static final Function<AbstractRegularGoalContext, CodeBlock> regularInvoke =
+  private final Function<AbstractRegularGoalContext, CodeBlock> regularInvoke =
       regularGoalContextCases(
           goal -> statement("return new $T($L)", goal.type(),
-              invocationParameters(goal.parameterNames())),
-          goal ->
-              methodGoalInvocation(goal,
-                  invocationParameters(goal.parameterNames())));
+              goal.invocationParameters()),
+          goal -> goal.methodGoalInvocation());
 
-  private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final AbstractRegularStep step,
-                                                                          final CollectionInfo collectionInfo) {
+  final RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final AbstractRegularStep step,
+                                                                 final CollectionInfo collectionInfo) {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
       public CodeBlock constructorGoal(AbstractConstructorGoalContext goal) {
-        CodeBlock parameters = invocationParameters(goal.parameterNames());
+        CodeBlock parameters = goal.invocationParameters();
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
         return CodeBlock.builder()
@@ -142,35 +143,13 @@ final class BuilderV {
       }
       @Override
       public CodeBlock methodGoal(AbstractMethodGoalContext goal) {
-        CodeBlock parameters = invocationParameters(goal.details.parameterNames);
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
-            .add(methodGoalInvocation(goal, parameters))
+            .add(goal.methodGoalInvocation())
             .build();
       }
     };
-  }
-
-  private static CodeBlock methodGoalInvocation(AbstractMethodGoalContext goal, CodeBlock parameters) {
-    CodeBlock.Builder builder = CodeBlock.builder();
-    TypeName type = goal.type();
-    String method = goal.details.methodName;
-    builder.add(goal.details.methodType == INSTANCE_METHOD ?
-        statement("return this.$N.$N($L)", goal.field(), method, parameters) :
-        CodeBlock.builder()
-            .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
-            .addStatement("$T.$N($L)", goal.context.type, method, parameters)
-            .build());
-    return builder.build();
-  }
-
-  private static CodeBlock invocationParameters(List<String> parameterNames) {
-    return CodeBlock.of(String.join(", ", parameterNames));
-  }
-
-  private BuilderV() {
-    throw new UnsupportedOperationException("no instances");
   }
 }
