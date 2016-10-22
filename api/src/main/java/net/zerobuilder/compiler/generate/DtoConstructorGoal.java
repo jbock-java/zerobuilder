@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableList;
 
-public class DtoConstructorGoal {
+public final class DtoConstructorGoal {
 
   interface ConstructorGoalCases<R> {
     R simple(SimpleConstructorGoalContext simple);

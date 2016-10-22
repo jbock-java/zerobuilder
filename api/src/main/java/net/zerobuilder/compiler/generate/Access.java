@@ -3,6 +3,8 @@ package net.zerobuilder.compiler.generate;
 import javax.lang.model.element.Modifier;
 import java.util.Arrays;
 
+import static java.util.Arrays.copyOf;
+
 public enum Access {
   PUBLIC {
     @Override
@@ -27,7 +29,7 @@ public enum Access {
         return modifiers;
       }
     }
-    modifiers = Arrays.copyOf(modifiers, modifiers.length + 1);
+    modifiers = copyOf(modifiers, modifiers.length + 1);
     modifiers[modifiers.length - 1] = modifier;
     return modifiers;
   }

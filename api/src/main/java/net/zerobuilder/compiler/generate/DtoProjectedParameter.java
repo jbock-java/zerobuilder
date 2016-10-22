@@ -7,11 +7,11 @@ import java.util.function.Function;
 
 public final class DtoProjectedParameter {
 
-  public interface AbstractProjectedParameter {
+  interface AbstractProjectedParameter {
     <R> R acceptProjected(ProjectedParameterCases<R> cases);
   }
 
-  public interface ProjectedParameterCases<R> {
+  interface ProjectedParameterCases<R> {
     R projectedRegular(ProjectedParameter regular);
     R projectedBean(AbstractBeanParameter bean);
   }

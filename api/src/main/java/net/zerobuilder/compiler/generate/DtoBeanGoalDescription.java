@@ -5,6 +5,8 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases;
+import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
+import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescriptionCases;
 
 import java.util.List;
 
@@ -13,7 +15,9 @@ public final class DtoBeanGoalDescription {
   /**
    * Describes the task of creating and / or updating a JavaBean.
    */
-  public static final class BeanGoalDescription extends GoalDescription {
+  public static final class BeanGoalDescription extends GoalDescription
+      implements ProjectedDescription {
+
     final BeanGoalDetails details;
     final List<AbstractBeanParameter> parameters;
     final List<TypeName> thrownTypes;
@@ -34,6 +38,11 @@ public final class DtoBeanGoalDescription {
     @Override
     public <R> R accept(GoalDescriptionCases<R> cases) {
       return cases.beanGoal(this);
+    }
+
+    @Override
+    public <R> R acceptProjected(ProjectedDescriptionCases<R> cases) {
+      return cases.bean(this);
     }
   }
 

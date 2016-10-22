@@ -4,6 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
@@ -22,7 +23,7 @@ import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.generate.Utilities.memoize;
 
-public class DtoMethodGoal {
+public final class DtoMethodGoal {
 
   interface MethodGoalCases<R> {
     R simple(SimpleMethodGoalContext simple);
@@ -54,7 +55,7 @@ public class DtoMethodGoal {
     final MethodGoalDetails details;
     final List<TypeName> thrownTypes;
 
-    DtoGoal.GoalMethodType methodType() {
+    GoalMethodType methodType() {
       return details.methodType;
     }
 

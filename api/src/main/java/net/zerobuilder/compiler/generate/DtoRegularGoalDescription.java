@@ -4,6 +4,8 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases;
+import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
+import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
@@ -96,7 +98,8 @@ public final class DtoRegularGoalDescription {
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
-  public static final class ProjectedRegularGoalDescription extends AbstractRegularGoalDescription {
+  public static final class ProjectedRegularGoalDescription extends AbstractRegularGoalDescription
+      implements ProjectedDescription {
     final List<ProjectedParameter> parameters;
 
     private ProjectedRegularGoalDescription(AbstractRegularGoalDetails details,
@@ -121,6 +124,11 @@ public final class DtoRegularGoalDescription {
     @Override
     <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases) {
       return cases.acceptProjected(this);
+    }
+
+    @Override
+    public <R> R acceptProjected(ProjectedDescriptionCases<R> cases) {
+      return cases.regular(this);
     }
   }
 
