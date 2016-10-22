@@ -68,7 +68,7 @@ public final class Updater extends DtoModule.SimpleModule {
               .addModifiers(PRIVATE)
               .addExceptions(bGoal.context.lifecycle == REUSE_INSTANCES
                   ? Collections.emptyList()
-                  : bGoal.goal.thrownTypes)
+                  : bGoal.thrownTypes)
               .addCode(bGoal.context.lifecycle == REUSE_INSTANCES
                   ? emptyCodeBlock
                   : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))

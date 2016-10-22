@@ -19,7 +19,7 @@ import static net.zerobuilder.compiler.generate.Utilities.memoize;
 
 public class DtoMethodGoal {
 
-  static final class MethodGoalContext extends AbstractRegularGoalContext implements DtoGoalContext.IGoal {
+  static final class MethodGoalContext extends AbstractRegularGoalContext {
 
     final BuildersContext context;
     final MethodGoalDetails details;
@@ -78,11 +78,6 @@ public class DtoMethodGoal {
     @Override
     public TypeName type() {
       return details.goalType;
-    }
-
-    @Override
-    public DtoGoalContext.AbstractGoalContext withContext(BuildersContext context) {
-      return this;
     }
   }
 

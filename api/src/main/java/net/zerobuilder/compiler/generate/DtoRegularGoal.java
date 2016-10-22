@@ -62,7 +62,7 @@ final class DtoRegularGoal {
 
   private static final Function<AbstractRegularGoalContext, AbstractRegularGoalDetails> goalDetails =
       regularGoalContextCases(
-          constructor -> constructor.goal.details,
+          constructor -> constructor.details,
           method -> method.details);
 
   private static final Predicate<AbstractRegularGoalContext> isInstance =
@@ -77,7 +77,7 @@ final class DtoRegularGoal {
 
   private static final Function<AbstractRegularGoalContext, List<AbstractRegularStep>> regularSteps =
       regularGoalContextCases(
-          constructor -> constructor.goal.steps,
+          constructor -> constructor.steps,
           method -> method.steps);
 
   private static final Function<AbstractRegularGoalContext, Optional<FieldSpec>> fields =

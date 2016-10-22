@@ -37,18 +37,18 @@ final class GeneratorBU {
 
   static final Function<BeanGoalContext, BuilderMethod> goalToUpdaterB
       = goal -> {
-    String name = goal.goal.details.name;
-    ClassName type = goal.goal.details.goalType;
+    String name = goal.details.name;
+    ClassName type = goal.details.goalType;
     ParameterSpec updater = updaterInstance(goal);
-    Modifier[] modifiers = goal.goal.details.option.access
+    Modifier[] modifiers = goal.details.option.access
         .modifiers(STATIC);
     MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
         .returns(goal.implType())
         .addExceptions(thrownTypes(goal, asList(AbstractBeanStep::getterThrownTypes, AbstractBeanStep::setterThrownTypes)))
-        .addCode(goal.goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
+        .addCode(goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
         .addCode(initializeUpdater(goal, updater))
-        .addCode(goal.goal.steps.stream().map(copy(goal)).collect(joinCodeBlocks))
+        .addCode(goal.steps.stream().map(copy(goal)).collect(joinCodeBlocks))
         .addStatement("return $N", updater)
         .addModifiers(modifiers)
         .build();
@@ -59,12 +59,12 @@ final class GeneratorBU {
                                            List<Function<AbstractBeanStep, List<TypeName>>> functions) {
     Set<TypeName> thrownTypes = new HashSet<>();
     for (Function<AbstractBeanStep, List<TypeName>> function : functions) {
-      thrownTypes.addAll(goal.goal.steps.stream()
+      thrownTypes.addAll(goal.steps.stream()
           .map(function)
           .collect(flatList()));
     }
     if (goal.context.lifecycle == NEW_INSTANCE) {
-      thrownTypes.addAll(goal.goal.thrownTypes);
+      thrownTypes.addAll(goal.thrownTypes);
     }
     return thrownTypes;
   }
@@ -84,7 +84,7 @@ final class GeneratorBU {
   }
 
   private static CodeBlock copyCollection(BeanGoalContext goal, LoneGetterStep step) {
-    ClassName type = goal.goal.details.goalType;
+    ClassName type = goal.details.goalType;
     ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return CodeBlock.builder()
@@ -100,7 +100,7 @@ final class GeneratorBU {
   }
 
   private static CodeBlock copyRegular(BeanGoalContext goal, AccessorPairStep step) {
-    ClassName type = goal.goal.details.goalType;
+    ClassName type = goal.details.goalType;
     ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
     ParameterSpec updater = updaterInstance(goal);
     return CodeBlock.builder()
@@ -113,7 +113,7 @@ final class GeneratorBU {
   }
 
   private static CodeBlock nullCheck(BeanGoalContext goal, AbstractBeanParameter beanParameter) {
-    ClassName type = goal.goal.details.goalType;
+    ClassName type = goal.details.goalType;
     ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
     return CodeBlock.builder()
         .beginControlFlow("if ($N.$N() == null)", parameter,
@@ -126,7 +126,7 @@ final class GeneratorBU {
   private static CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec updater) {
     CodeBlock.Builder builder = CodeBlock.builder();
     FieldSpec cache = goal.context.cache.get();
-    ClassName type = goal.goal.details.goalType;
+    ClassName type = goal.details.goalType;
     builder.add(goal.context.lifecycle == REUSE_INSTANCES
         ? statement("$T $N = $N.get().$N", updater.type, updater, cache, goal.cacheField())
         : statement("$T $N = new $T()", updater.type, updater, updater.type));

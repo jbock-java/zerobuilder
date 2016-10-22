@@ -23,11 +23,6 @@ import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class DtoGoalContext {
 
-  interface IGoal {
-
-    AbstractGoalContext withContext(BuildersContext context);
-  }
-
   static abstract class AbstractGoalContext {
 
     abstract <R> R accept(GoalCases<R> cases);
@@ -113,23 +108,23 @@ final class DtoGoalContext {
   private static final Function<AbstractGoalContext, TypeName> goalType =
       goalCases(
           regular -> regular.regularDetails().goalType,
-          bean -> bean.goal.details.goalType);
+          bean -> bean.details.goalType);
 
 
   private static final Function<AbstractGoalContext, String> goalName =
       goalCases(
           regular -> regular.regularDetails().name,
-          bean -> bean.goal.details.name);
+          bean -> bean.details.name);
 
   private static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails =
       goalCases(
           AbstractRegularGoalContext::regularDetails,
-          bGoal -> bGoal.goal.details);
+          bGoal -> bGoal.details);
 
   private static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps =
       goalCases(
           regular -> unmodifiableList(regular.regularSteps()),
-          bean -> unmodifiableList(bean.goal.steps));
+          bean -> unmodifiableList(bean.steps));
 
   private static final Function<AbstractGoalContext, GoalOption> goalOption
       = abstractGoalDetails.andThen(details -> details.option);

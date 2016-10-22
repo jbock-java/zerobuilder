@@ -21,16 +21,16 @@ final class GeneratorBB {
   static final Function<BeanGoalContext, BuilderMethod> goalToBuilderB
       = goal -> {
     ClassName builderType = goal.implType();
-    String name = goal.goal.details.name;
+    String name = goal.details.name;
     String builder = downcase(builderType.simpleName());
-    ClassName type = goal.goal.details.goalType;
+    ClassName type = goal.details.goalType;
     FieldSpec cache = goal.context.cache.get();
-    MethodSpec method = methodBuilder(name + "Builder")
+    MethodSpec method = methodBuilder(goal.methodName())
         .returns(goal.contractType().nestedClass(goal.steps().get(0).thisType))
-        .addModifiers(goal.goal.details.option.access.modifiers(STATIC))
+        .addModifiers(goal.details.option.access.modifiers(STATIC))
         .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
-            : goal.goal.thrownTypes)
+            : goal.thrownTypes)
         .addCode(goal.context.lifecycle == REUSE_INSTANCES
             ? statement("$T $N = $N.get().$N", builderType, builder, cache, goal.cacheField())
             : statement("$T $N = new $T()", builderType, builder, builderType))

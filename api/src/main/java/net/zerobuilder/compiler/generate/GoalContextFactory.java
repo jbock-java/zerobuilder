@@ -1,7 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoal;
+import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
@@ -10,17 +10,17 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.IGoal;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.DtoIConstructorGoal.ConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
@@ -44,7 +44,7 @@ import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 final class GoalContextFactory {
 
-  private static IGoal prepareBean(
+  private static BeanGoalContext prepareBean(
       BuildersContext context,
       BeanGoalDescription goal) {
     List<AbstractBeanStep> steps = steps(
@@ -52,10 +52,10 @@ final class GoalContextFactory {
         context,
         goal.parameters,
         beanFactory);
-    return BeanGoal.create(goal.details, steps, goal.thrownTypes);
+    return new BeanGoalContext(context, goal.details, steps, goal.thrownTypes);
   }
 
-  private static IGoal prepareRegular(
+  private static AbstractRegularGoalContext prepareRegular(
       BuildersContext context,
       AbstractRegularGoalDescription validGoal) {
     List<AbstractRegularStep> steps = steps(
@@ -63,14 +63,14 @@ final class GoalContextFactory {
         context,
         validGoal.parameters(),
         regularFactory);
-    return validGoal.details.accept(new RegularGoalCases<IGoal>() {
+    return validGoal.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
       @Override
-      public IGoal method(MethodGoalDetails goal) {
-        return new MethodGoalContext(context, goal, steps, validGoal.thrownTypes);
+      public AbstractRegularGoalContext method(MethodGoalDetails details) {
+        return new MethodGoalContext(context, details, steps, validGoal.thrownTypes);
       }
       @Override
-      public IGoal constructor(ConstructorGoalDetails goal) {
-        return ConstructorGoal.create(goal, steps, validGoal.thrownTypes);
+      public AbstractRegularGoalContext constructor(ConstructorGoalDetails details) {
+        return new ConstructorGoalContext(context, details, steps, validGoal.thrownTypes);
       }
     });
   }
@@ -174,10 +174,8 @@ final class GoalContextFactory {
   static Function<GoalDescription, AbstractGoalContext> prepare(BuildersContext context) {
     return goalDescriptionCases(
         goal -> GoalContextFactory.prepareRegular(
-            context, goal)
-            .withContext(context),
+            context, goal),
         goal -> GoalContextFactory.prepareBean(
-            context, goal)
-            .withContext(context));
+            context, goal));
   }
 }

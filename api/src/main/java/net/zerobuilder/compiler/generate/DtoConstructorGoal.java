@@ -9,13 +9,20 @@ public class DtoConstructorGoal {
   static final class ConstructorGoalContext
       extends DtoRegularGoal.AbstractRegularGoalContext {
 
-    final DtoIConstructorGoal.ConstructorGoal goal;
     final DtoContext.BuildersContext context;
+    final DtoGoal.ConstructorGoalDetails details;
 
-    ConstructorGoalContext(DtoIConstructorGoal.ConstructorGoal goal,
-                           DtoContext.BuildersContext context) {
-      this.goal = goal;
+    final List<DtoRegularStep.AbstractRegularStep> steps;
+    final List<TypeName> thrownTypes;
+
+    ConstructorGoalContext(DtoContext.BuildersContext context,
+                           DtoGoal.ConstructorGoalDetails details,
+                           List<DtoRegularStep.AbstractRegularStep> steps,
+                           List<TypeName> thrownTypes) {
       this.context = context;
+      this.details = details;
+      this.steps = steps;
+      this.thrownTypes = thrownTypes;
     }
 
     @Override
@@ -25,12 +32,12 @@ public class DtoConstructorGoal {
 
     @Override
     public List<String> parameterNames() {
-      return goal.details.parameterNames;
+      return details.parameterNames;
     }
 
     @Override
     public TypeName type() {
-      return goal.details.goalType;
+      return details.goalType;
     }
 
     @Override
