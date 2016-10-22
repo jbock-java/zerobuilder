@@ -6,12 +6,12 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.ConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.ConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.MethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
 import java.util.List;
