@@ -1,8 +1,10 @@
 package net.zerobuilder.compiler.generate;
 
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.SingleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 
 import java.util.function.BiFunction;
 
@@ -21,6 +23,7 @@ public final class DtoModule {
   public static abstract class SimpleModule implements Module {
 
     protected abstract SimpleModuleOutput process(AbstractGoalContext goal);
+    protected abstract SingleModuleOutput processSingle(AbstractGoalContext goal);
 
     @Override
     public final <R, P> R accept(ModuleCases<R, P> cases, P p) {
@@ -28,8 +31,14 @@ public final class DtoModule {
     }
   }
 
+  public static abstract class ProjectedModule implements Module {
+
+    protected abstract SingleModuleOutput process(ProjectedGoal goal);
+  }
+
   public static abstract class ContractModule implements Module {
     protected abstract ContractModuleOutput process(AbstractGoalContext goal);
+    protected abstract SingleModuleOutput processSingle(AbstractGoalContext goal);
 
     @Override
     public final <R, P> R accept(ModuleCases<R, P> cases, P p) {

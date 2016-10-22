@@ -15,6 +15,7 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Arrays.asList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -87,6 +88,13 @@ public final class Builder extends ContractModule {
         goalToBuilder.apply(goal),
         defineBuilderImpl(goal),
         defineContract(goal));
+  }
+
+  @Override
+  protected DtoGeneratorOutput.SingleModuleOutput processSingle(AbstractGoalContext goal) {
+    return new DtoGeneratorOutput.SingleModuleOutput(
+        goalToBuilder.apply(goal),
+        asList(defineBuilderImpl(goal), defineContract(goal)));
   }
 
   @Override

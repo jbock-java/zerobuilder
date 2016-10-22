@@ -169,6 +169,13 @@ final class Utilities {
     return builder;
   }
 
+  static <P> List<P> concat(List<P> left, List<P> right) {
+    ArrayList<P> builder = new ArrayList<>(left.size() + right.size());
+    builder.addAll(left);
+    builder.addAll(right);
+    return builder;
+  }
+
   static final Collector<CodeBlock, CodeBlock.Builder, CodeBlock> joinCodeBlocks
       = new Collector<CodeBlock, CodeBlock.Builder, CodeBlock>() {
     @Override

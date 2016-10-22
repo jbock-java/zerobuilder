@@ -43,10 +43,6 @@ final class DtoRegularGoal {
       return isInstance.test(this);
     }
 
-    final BuildersContext context() {
-      return context.apply(this);
-    }
-
     final List<AbstractRegularStep> regularSteps() {
       return regularSteps.apply(this);
     }
@@ -69,11 +65,6 @@ final class DtoRegularGoal {
       asPredicate(regularGoalContextCases(
           constructor -> false,
           method -> method.details.methodType == INSTANCE_METHOD));
-
-  private static final Function<AbstractRegularGoalContext, BuildersContext> context =
-      regularGoalContextCases(
-          constructor -> constructor.context,
-          method -> method.context);
 
   private static final Function<AbstractRegularGoalContext, List<AbstractRegularStep>> regularSteps =
       regularGoalContextCases(

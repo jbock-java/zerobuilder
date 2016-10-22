@@ -17,6 +17,7 @@ import java.util.function.Function;
 import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
@@ -52,6 +53,10 @@ final class DtoGoalContext {
 
     final AbstractGoalDetails details() {
       return abstractGoalDetails.apply(this);
+    }
+
+    final BuildersContext context() {
+      return context.apply(this);
     }
 
     final ClassName implType() {
@@ -100,9 +105,14 @@ final class DtoGoalContext {
     });
   }
 
+  static final Function<AbstractRegularGoalContext, BuildersContext> regularContext =
+      regularGoalContextCases(
+          constructor -> constructor.context,
+          method -> method.context);
+
   private static final Function<AbstractGoalContext, BuildersContext> context =
       goalCases(
-          AbstractRegularGoalContext::context,
+          regularContext,
           bean -> bean.context);
 
   private static final Function<AbstractGoalContext, TypeName> goalType =
@@ -126,7 +136,7 @@ final class DtoGoalContext {
           regular -> unmodifiableList(regular.regularSteps()),
           bean -> unmodifiableList(bean.steps));
 
-  private static final Function<AbstractGoalContext, GoalOption> goalOption
+  static final Function<AbstractGoalContext, GoalOption> goalOption
       = abstractGoalDetails.andThen(details -> details.option);
 
   private DtoGoalContext() {

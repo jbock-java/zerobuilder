@@ -5,17 +5,23 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.SingleModuleOutput;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.SingleModuleOutputWithField;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
+import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toList;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoModule.moduleCases;
@@ -39,6 +45,25 @@ public final class Generator {
         transform(generatorInput.goals, prepare(generatorInput.context)));
   }
 
+  static SingleModuleOutputWithField invoke(ProjectedModule module,
+                                            ProjectedGoal goal) {
+    SingleModuleOutput output = module.process(goal);
+    BuildersContext context = DtoProjectedGoal.context.apply(goal);
+    Optional<FieldSpec> field = context.lifecycle == NEW_INSTANCE ?
+        empty() :
+        Optional.of(DtoProjectedGoal.cacheField.apply(goal));
+    return new SingleModuleOutputWithField(output, field);
+  }
+
+  static SingleModuleOutputWithField invoke(AbstractGoalContext goal) {
+    SingleModuleOutput output = processSingle.apply(goal);
+    BuildersContext context = goal.context();
+    Optional<FieldSpec> field = context.lifecycle == NEW_INSTANCE ?
+        empty() :
+        Optional.of(goal.cacheField());
+    return new SingleModuleOutputWithField(output, field);
+  }
+
   private static GeneratorOutput generate(BuildersContext context, List<AbstractGoalContext> goals) {
     List<ModuleOutput> outputs = transform(goals, process);
     return new GeneratorOutput(
@@ -52,7 +77,10 @@ public final class Generator {
   private static final Function<AbstractGoalContext, ModuleOutput> process =
       goal -> Generator.biProcess.apply(goal.module(), goal);
 
-  private static List<FieldSpec> fields(BuildersContext context, List<AbstractGoalContext> goals) {
+  private static final Function<AbstractGoalContext, SingleModuleOutput> processSingle =
+      goal -> Generator.singleBiProcess.apply(goal.module(), goal);
+
+  private static List<FieldSpec> fields(BuildersContext context, List<? extends AbstractGoalContext> goals) {
     return context.lifecycle == NEW_INSTANCE ?
         emptyList() :
         concat(
@@ -66,6 +94,11 @@ public final class Generator {
       moduleCases(
           (simple, goal) -> simple.process(goal),
           (contract, goal) -> contract.process(goal));
+
+  private static final BiFunction<Module, AbstractGoalContext, SingleModuleOutput> singleBiProcess =
+      moduleCases(
+          (simple, goal) -> simple.processSingle(goal),
+          (contract, goal) -> contract.processSingle(goal));
 
   private static final Function<ModuleOutput, BuilderMethod> builderMethod =
       moduleOutputCases(

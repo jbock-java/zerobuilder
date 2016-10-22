@@ -5,6 +5,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.SingleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
@@ -16,6 +17,7 @@ import java.util.function.Function;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -90,5 +92,12 @@ public final class Updater extends DtoModule.SimpleModule {
     return new SimpleModuleOutput(
         goalToUpdater.apply(goal),
         defineUpdater(goal));
+  }
+
+  @Override
+  protected SingleModuleOutput processSingle(AbstractGoalContext goal) {
+    return new SingleModuleOutput(
+        goalToUpdater.apply(goal),
+        singletonList(defineUpdater(goal)));
   }
 }
