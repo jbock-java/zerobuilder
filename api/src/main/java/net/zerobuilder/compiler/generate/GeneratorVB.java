@@ -10,7 +10,7 @@ import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorG
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.MethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.AbstractMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
@@ -65,7 +65,7 @@ final class GeneratorVB {
     };
   }
 
-  private static Function<MethodGoalContext, CodeBlock> initMethodBuilder(
+  private static Function<AbstractMethodGoalContext, CodeBlock> initMethodBuilder(
       ParameterSpec builder, ParameterSpec instance) {
     return mGoal -> mGoal.methodType() == INSTANCE_METHOD ?
         initInstanceMethodBuilder(mGoal, builder, instance) :
@@ -73,7 +73,7 @@ final class GeneratorVB {
   }
 
   private static CodeBlock initInstanceMethodBuilder(
-      MethodGoalContext mGoal, ParameterSpec builder, ParameterSpec instance) {
+      AbstractMethodGoalContext mGoal, ParameterSpec builder, ParameterSpec instance) {
     BuildersContext context = mGoal.context;
     TypeName type = builder.type;
     FieldSpec cache = context.cache.get();
@@ -86,7 +86,7 @@ final class GeneratorVB {
   }
 
   private static CodeBlock initStaticMethodBuilder(
-      MethodGoalContext mGoal, ParameterSpec builder) {
+      AbstractMethodGoalContext mGoal, ParameterSpec builder) {
     BuildersContext context = mGoal.context;
     TypeName type = builder.type;
     FieldSpec cache = context.cache.get();

@@ -8,7 +8,6 @@ import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 

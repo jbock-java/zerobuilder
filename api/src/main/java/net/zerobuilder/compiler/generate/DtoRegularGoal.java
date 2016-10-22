@@ -9,7 +9,7 @@ import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorG
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.MethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.AbstractMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
 import java.util.List;
@@ -78,7 +78,7 @@ final class DtoRegularGoal {
   private static final Function<AbstractRegularGoalContext, List<AbstractRegularStep>> regularSteps =
       regularGoalContextCases(
           constructor -> constructor.constructorSteps(),
-          method -> method.steps);
+          method -> method.methodSteps());
 
   private static final Function<AbstractRegularGoalContext, Optional<FieldSpec>> fields =
       regularGoalContextCases(
@@ -106,7 +106,7 @@ final class DtoRegularGoal {
 
   interface RegularGoalContextCases<R> {
     R constructorGoal(AbstractConstructorGoalContext goal);
-    R methodGoal(MethodGoalContext goal);
+    R methodGoal(AbstractMethodGoalContext goal);
   }
 
   static <R> Function<AbstractRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
@@ -115,14 +115,14 @@ final class DtoRegularGoal {
 
   static <R> Function<AbstractRegularGoalContext, R> regularGoalContextCases(
       Function<AbstractConstructorGoalContext, R> constructor,
-      Function<MethodGoalContext, R> method) {
+      Function<AbstractMethodGoalContext, R> method) {
     return asFunction(new RegularGoalContextCases<R>() {
       @Override
       public R constructorGoal(AbstractConstructorGoalContext goal) {
         return constructor.apply(goal);
       }
       @Override
-      public R methodGoal(MethodGoalContext goal) {
+      public R methodGoal(AbstractMethodGoalContext goal) {
         return method.apply(goal);
       }
     });

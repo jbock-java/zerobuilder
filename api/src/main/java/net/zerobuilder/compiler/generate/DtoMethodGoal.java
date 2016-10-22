@@ -8,25 +8,50 @@ import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
+import static net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
 import static net.zerobuilder.compiler.generate.Utilities.memoize;
 
 public class DtoMethodGoal {
 
-  static final class MethodGoalContext extends AbstractRegularGoalContext {
+  interface MethodGoalCases<R> {
+    R simple(SimpleMethodGoalContext simple);
+    R projected(ProjectedMethodGoalContext projected);
+  }
+
+  static <R> Function<AbstractMethodGoalContext, R> asFunction(MethodGoalCases<R> cases) {
+    return goal -> goal.acceptMethod(cases);
+  }
+
+  static <R> Function<AbstractMethodGoalContext, R> methodGoalCases(
+      Function<SimpleMethodGoalContext, R> simpleFunction,
+      Function<ProjectedMethodGoalContext, R> projectedFunction) {
+    return asFunction(new MethodGoalCases<R>() {
+      @Override
+      public R simple(SimpleMethodGoalContext simple) {
+        return simpleFunction.apply(simple);
+      }
+      @Override
+      public R projected(ProjectedMethodGoalContext projected) {
+        return projectedFunction.apply(projected);
+      }
+    });
+  }
+
+  static abstract class AbstractMethodGoalContext extends AbstractRegularGoalContext {
 
     final BuildersContext context;
     final MethodGoalDetails details;
-    final List<AbstractRegularStep> steps;
     final List<TypeName> thrownTypes;
 
     DtoGoal.GoalMethodType methodType() {
@@ -42,15 +67,17 @@ public class DtoMethodGoal {
       return field.get();
     }
 
-    MethodGoalContext(BuildersContext context,
-                      MethodGoalDetails details,
-                      List<? extends AbstractRegularStep> steps,
-                      List<TypeName> thrownTypes) {
+    AbstractMethodGoalContext(BuildersContext context,
+                              MethodGoalDetails details,
+                              List<TypeName> thrownTypes) {
       this.details = details;
-      this.steps = unmodifiableList(steps);
       this.thrownTypes = thrownTypes;
       this.context = context;
       this.field = memoizeField(context);
+    }
+
+    final List<AbstractRegularStep> methodSteps() {
+      return steps.apply(this);
     }
 
     private static Supplier<FieldSpec> memoizeField(BuildersContext context) {
@@ -64,23 +91,66 @@ public class DtoMethodGoal {
     }
 
     @Override
-    public <R> R acceptRegular(DtoRegularGoal.RegularGoalContextCases<R> cases) {
+    public final <R> R acceptRegular(DtoRegularGoal.RegularGoalContextCases<R> cases) {
       return cases.methodGoal(this);
     }
 
     @Override
-    public <R> R accept(DtoGoalContext.GoalCases<R> cases) {
+    public final <R> R accept(DtoGoalContext.GoalCases<R> cases) {
       return cases.regularGoal(this);
     }
 
     @Override
-    public List<String> parameterNames() {
+    public final List<String> parameterNames() {
       return details.parameterNames;
     }
 
     @Override
-    public TypeName type() {
+    public final TypeName type() {
       return details.goalType;
+    }
+
+    public abstract <R> R acceptMethod(MethodGoalCases<R> cases);
+  }
+
+  private static final Function<AbstractMethodGoalContext, List<AbstractRegularStep>> steps =
+      methodGoalCases(
+          simple -> unmodifiableList(simple.steps),
+          projected -> unmodifiableList(projected.steps));
+
+  static final class SimpleMethodGoalContext extends AbstractMethodGoalContext {
+    final List<SimpleRegularStep> steps;
+
+    SimpleMethodGoalContext(
+        BuildersContext context,
+        MethodGoalDetails details,
+        List<SimpleRegularStep> steps,
+        List<TypeName> thrownTypes) {
+      super(context, details, thrownTypes);
+      this.steps = steps;
+    }
+
+    @Override
+    public <R> R acceptMethod(MethodGoalCases<R> cases) {
+      return cases.simple(this);
+    }
+  }
+
+  static final class ProjectedMethodGoalContext extends AbstractMethodGoalContext {
+    final List<ProjectedRegularStep> steps;
+
+    ProjectedMethodGoalContext(
+        BuildersContext context,
+        MethodGoalDetails details,
+        List<ProjectedRegularStep> steps,
+        List<TypeName> thrownTypes) {
+      super(context, details, thrownTypes);
+      this.steps = steps;
+    }
+
+    @Override
+    public <R> R acceptMethod(MethodGoalCases<R> cases) {
+      return cases.projected(this);
     }
   }
 

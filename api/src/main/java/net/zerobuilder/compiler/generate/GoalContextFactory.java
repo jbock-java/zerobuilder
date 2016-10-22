@@ -10,7 +10,8 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
-import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.ProjectedConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
@@ -18,15 +19,13 @@ import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.MethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.ProjectedMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.RegularParameterCases;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
@@ -68,11 +67,11 @@ final class GoalContextFactory {
           return validGoal.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
             @Override
             public AbstractRegularGoalContext method(MethodGoalDetails details) {
-              return new MethodGoalContext(context, details, steps, validGoal.thrownTypes);
+              return new SimpleMethodGoalContext(context, details, steps, validGoal.thrownTypes);
             }
             @Override
             public AbstractRegularGoalContext constructor(ConstructorGoalDetails details) {
-              return new DtoConstructorGoal.SimpleConstructorGoalContext(context, details, steps, validGoal.thrownTypes);
+              return new SimpleConstructorGoalContext(context, details, steps, validGoal.thrownTypes);
             }
           });
         },
@@ -85,11 +84,11 @@ final class GoalContextFactory {
           return validGoal.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
             @Override
             public AbstractRegularGoalContext method(MethodGoalDetails details) {
-              return new MethodGoalContext(context, details, steps, validGoal.thrownTypes);
+              return new ProjectedMethodGoalContext(context, details, steps, validGoal.thrownTypes);
             }
             @Override
             public AbstractRegularGoalContext constructor(ConstructorGoalDetails details) {
-              return new DtoConstructorGoal.ProjectedConstructorGoalContext(context, details, steps, validGoal.thrownTypes);
+              return new ProjectedConstructorGoalContext(context, details, steps, validGoal.thrownTypes);
             }
           });
         }
@@ -184,38 +183,6 @@ final class GoalContextFactory {
               context,
               regularParameter,
               thrownTypes);
-        }
-      };
-
-  private static final Function<AbstractRegularParameter, StepFactory<AbstractRegularStep>> regularFactory =
-      regularParameter -> new StepFactory<AbstractRegularStep>() {
-        @Override
-        AbstractRegularStep create(String thisType,
-                                   Optional<AbstractRegularStep> nextType,
-                                   AbstractGoalDetails goalDetails,
-                                   BuildersContext context,
-                                   List<TypeName> declaredExceptions) {
-          return regularParameter.acceptRegularParameter(new RegularParameterCases<AbstractRegularStep>() {
-            @Override
-            public AbstractRegularStep simpleParameter(SimpleParameter parameter) {
-              return SimpleRegularStep.create(
-                  thisType,
-                  nextType,
-                  goalDetails,
-                  context,
-                  parameter);
-            }
-            @Override
-            public AbstractRegularStep projectedParameter(ProjectedParameter parameter) {
-              return ProjectedRegularStep.create(
-                  thisType,
-                  nextType,
-                  goalDetails,
-                  context,
-                  parameter,
-                  declaredExceptions);
-            }
-          });
         }
       };
 
