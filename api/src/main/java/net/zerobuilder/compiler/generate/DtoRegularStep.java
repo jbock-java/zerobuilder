@@ -51,23 +51,14 @@ public final class DtoRegularStep {
                                  AbstractGoalDetails goalDetails,
                                  BuildersContext context,
                                  ProjectedParameter parameter,
-                                 List<TypeName> declaredExceptions) {
+                                 List<TypeName> declaredExceptions,
+                                 Supplier<FieldSpec> field,
+                                 Supplier<Optional<DtoStep.CollectionInfo>> collectionInfo) {
       super(thisType, nextType, goalDetails, context);
       this.declaredExceptions = declaredExceptions;
       this.parameter = parameter;
-      this.field = memoizeField(parameter);
-      this.collectionInfo = memoizeCollectionInfo(parameter);
-    }
-
-    private static Supplier<Optional<DtoStep.CollectionInfo>> memoizeCollectionInfo(
-        AbstractRegularParameter parameter) {
-      return memoize(() ->
-          DtoStep.CollectionInfo.create(parameter.type, parameter.name));
-    }
-
-    private static Supplier<FieldSpec> memoizeField(AbstractRegularParameter parameter) {
-      return memoize(() ->
-          fieldSpec(parameter.type, parameter.name, PRIVATE));
+      this.field = field;
+      this.collectionInfo = collectionInfo;
     }
 
     static ProjectedRegularStep create(String thisType,
@@ -76,7 +67,8 @@ public final class DtoRegularStep {
                                        BuildersContext context,
                                        ProjectedParameter parameter,
                                        List<TypeName> declaredExceptions) {
-      return new ProjectedRegularStep(thisType, nextType, goalDetails, context, parameter, declaredExceptions);
+      return new ProjectedRegularStep(thisType, nextType, goalDetails, context, parameter, declaredExceptions,
+          memoizeField(parameter), memoizeCollectionInfo(parameter));
     }
 
     @Override
@@ -110,22 +102,13 @@ public final class DtoRegularStep {
                               Optional<AbstractRegularStep> nextType,
                               AbstractGoalDetails goalDetails,
                               BuildersContext context,
-                              SimpleParameter parameter) {
+                              SimpleParameter parameter,
+                              Supplier<FieldSpec> field,
+                              Supplier<Optional<DtoStep.CollectionInfo>> collectionInfo) {
       super(thisType, nextType, goalDetails, context);
       this.parameter = parameter;
-      this.field = memoizeField(parameter);
-      this.collectionInfo = memoizeCollectionInfo(parameter);
-    }
-
-    private static Supplier<Optional<DtoStep.CollectionInfo>> memoizeCollectionInfo(
-        AbstractRegularParameter parameter) {
-      return memoize(() ->
-          DtoStep.CollectionInfo.create(parameter.type, parameter.name));
-    }
-
-    private static Supplier<FieldSpec> memoizeField(AbstractRegularParameter parameter) {
-      return memoize(() ->
-          fieldSpec(parameter.type, parameter.name, PRIVATE));
+      this.field = field;
+      this.collectionInfo = collectionInfo;
     }
 
     static SimpleRegularStep create(String thisType,
@@ -133,7 +116,8 @@ public final class DtoRegularStep {
                                     AbstractGoalDetails goalDetails,
                                     BuildersContext context,
                                     SimpleParameter parameter) {
-      return new SimpleRegularStep(thisType, nextType, goalDetails, context, parameter);
+      return new SimpleRegularStep(thisType, nextType, goalDetails, context, parameter,
+          memoizeField(parameter), memoizeCollectionInfo(parameter));
     }
 
     @Override
@@ -157,6 +141,16 @@ public final class DtoRegularStep {
     }
   }
 
+  private static Supplier<Optional<DtoStep.CollectionInfo>> memoizeCollectionInfo(
+      AbstractRegularParameter parameter) {
+    return memoize(() ->
+        DtoStep.CollectionInfo.create(parameter.type, parameter.name));
+  }
+
+  private static Supplier<FieldSpec> memoizeField(AbstractRegularParameter parameter) {
+    return memoize(() ->
+        fieldSpec(parameter.type, parameter.name, PRIVATE));
+  }
 
   private DtoRegularStep() {
     throw new UnsupportedOperationException("no instances");
