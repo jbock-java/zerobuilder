@@ -6,6 +6,8 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
@@ -137,7 +139,8 @@ public final class DtoMethodGoal {
     }
   }
 
-  static final class ProjectedMethodGoalContext extends AbstractMethodGoalContext {
+  static final class ProjectedMethodGoalContext extends AbstractMethodGoalContext
+      implements ProjectedGoal {
     final List<ProjectedRegularStep> steps;
 
     ProjectedMethodGoalContext(
@@ -152,6 +155,11 @@ public final class DtoMethodGoal {
     @Override
     public <R> R acceptMethod(MethodGoalCases<R> cases) {
       return cases.projected(this);
+    }
+
+    @Override
+    public <R> R acceptProjected(ProjectedGoalCases<R> cases) {
+      return cases.method(this);
     }
   }
 

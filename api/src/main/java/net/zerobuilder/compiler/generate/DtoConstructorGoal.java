@@ -3,6 +3,8 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
@@ -107,7 +109,8 @@ public final class DtoConstructorGoal {
   }
 
   static final class ProjectedConstructorGoalContext
-      extends AbstractConstructorGoalContext {
+      extends AbstractConstructorGoalContext
+  implements ProjectedGoal {
 
     final List<ProjectedRegularStep> steps;
 
@@ -122,6 +125,11 @@ public final class DtoConstructorGoal {
     @Override
     public <R> R acceptConstructor(ConstructorGoalCases<R> cases) {
       return cases.projected(this);
+    }
+
+    @Override
+    public <R> R acceptProjected(ProjectedGoalCases<R> cases) {
+      return cases.constructor(this);
     }
   }
 
