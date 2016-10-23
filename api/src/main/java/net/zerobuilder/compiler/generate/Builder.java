@@ -22,8 +22,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
-import static net.zerobuilder.compiler.generate.GeneratorBB.goalToBuilderB;
-import static net.zerobuilder.compiler.generate.GeneratorVB.goalToBuilderV;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
@@ -43,8 +41,9 @@ public final class Builder extends ContractModule {
     return goalCases(builderV.fieldsV, builderB.fieldsB);
   }
 
-  private final Function<AbstractGoalContext, BuilderMethod> goalToBuilder =
-      goalCases(goalToBuilderV, goalToBuilderB);
+  private final Function<AbstractGoalContext, BuilderMethod> goalToBuilder(GeneratorBB generatorBB, GeneratorVB generatorVB) {
+    return goalCases(generatorVB.goalToBuilderV, generatorBB.goalToBuilderB);
+  }
 
   private TypeSpec defineBuilderImpl(AbstractGoalContext goal, BuilderB builderB, BuilderV builderV) {
     return classBuilder(goal.implType())
@@ -84,8 +83,10 @@ public final class Builder extends ContractModule {
   protected ContractModuleOutput process(AbstractGoalContext goal) {
     BuilderB builderB = new BuilderB(this);
     BuilderV builderV = new BuilderV(this);
+    GeneratorBB generatorBB = new GeneratorBB(this);
+    GeneratorVB generatorVB = new GeneratorVB(this);
     return new ContractModuleOutput(
-        goalToBuilder.apply(goal),
+        goalToBuilder(generatorBB, generatorVB).apply(goal),
         defineBuilderImpl(goal, builderB, builderV),
         defineContract(goal));
   }
@@ -94,8 +95,10 @@ public final class Builder extends ContractModule {
   protected DtoGeneratorOutput.SingleModuleOutput processSingle(AbstractGoalContext goal) {
     BuilderB builderB = new BuilderB(this);
     BuilderV builderV = new BuilderV(this);
+    GeneratorBB generatorBB = new GeneratorBB(this);
+    GeneratorVB generatorVB = new GeneratorVB(this);
     return new DtoGeneratorOutput.SingleModuleOutput(
-        goalToBuilder.apply(goal),
+        goalToBuilder(generatorBB, generatorVB).apply(goal),
         asList(defineBuilderImpl(goal, builderB, builderV), defineContract(goal)));
   }
 

@@ -25,27 +25,25 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.GeneratorBU.goalToUpdaterB;
-import static net.zerobuilder.compiler.generate.GeneratorVU.goalToUpdaterV;
-import static net.zerobuilder.compiler.generate.UpdaterB.fieldsB;
-import static net.zerobuilder.compiler.generate.UpdaterB.updateMethodsB;
-import static net.zerobuilder.compiler.generate.UpdaterV.fieldsV;
-import static net.zerobuilder.compiler.generate.UpdaterV.updateMethodsV;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 public final class Updater extends DtoModule.SimpleModule {
 
-  private static final Function<AbstractGoalContext, List<FieldSpec>> fields
-      = goalCases(fieldsV, fieldsB);
+  private Function<AbstractGoalContext, List<FieldSpec>> fields(UpdaterB updaterB, UpdaterV updaterV) {
+    return goalCases(updaterV.fieldsV, updaterB.fieldsB);
+  }
 
-  private static final Function<AbstractGoalContext, List<MethodSpec>> updateMethods
-      = goalCases(updateMethodsV, updateMethodsB);
+  private Function<AbstractGoalContext, List<MethodSpec>> updateMethods(UpdaterB updaterB, UpdaterV updaterV) {
+    return goalCases(updaterV.updateMethodsV, updaterB.updateMethodsB);
+  }
 
-  private static final Function<AbstractGoalContext, DtoGeneratorOutput.BuilderMethod> goalToUpdater
-      = goalCases(goalToUpdaterV, goalToUpdaterB);
+  private Function<AbstractGoalContext, DtoGeneratorOutput.BuilderMethod> goalToUpdater(
+      GeneratorBU generatorBU, GeneratorVU generatorVU) {
+    return goalCases(generatorVU.goalToUpdaterV, generatorBU.goalToUpdaterB);
+  }
 
-  private static MethodSpec buildMethod(AbstractGoalContext goal) {
+  private MethodSpec buildMethod(AbstractGoalContext goal) {
     return methodBuilder("done")
         .addModifiers(PUBLIC)
         .returns(goal.goalType())
@@ -53,10 +51,12 @@ public final class Updater extends DtoModule.SimpleModule {
         .build();
   }
 
-  private static TypeSpec defineUpdater(AbstractGoalContext goal) {
+  private TypeSpec defineUpdater(AbstractGoalContext goal) {
+    UpdaterB updaterB = new UpdaterB(this);
+    UpdaterV updaterV = new UpdaterV(this);
     return classBuilder(goal.implType())
-        .addFields(fields.apply(goal))
-        .addMethods(updateMethods.apply(goal))
+        .addFields(fields(updaterB, updaterV).apply(goal))
+        .addMethods(updateMethods(updaterB, updaterV).apply(goal))
         .addMethod(buildMethod(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(builderConstructor.apply(goal))
@@ -88,7 +88,7 @@ public final class Updater extends DtoModule.SimpleModule {
 
   private static final Function<AbstractGoalContext, CodeBlock> invoke
       = goalCases(regularInvoke, returnBean);
-  
+
   @Override
   public String name() {
     return "updater";
@@ -96,15 +96,19 @@ public final class Updater extends DtoModule.SimpleModule {
 
   @Override
   protected SimpleModuleOutput process(AbstractGoalContext goal) {
+    GeneratorBU generatorBU = new GeneratorBU(this);
+    GeneratorVU generatorVU = new GeneratorVU(this);
     return new SimpleModuleOutput(
-        goalToUpdater.apply(goal),
+        goalToUpdater(generatorBU, generatorVU).apply(goal),
         defineUpdater(goal));
   }
 
   @Override
   protected SingleModuleOutput processSingle(AbstractGoalContext goal) {
+    GeneratorBU generatorBU = new GeneratorBU(this);
+    GeneratorVU generatorVU = new GeneratorVU(this);
     return new SingleModuleOutput(
-        goalToUpdater.apply(goal),
+        goalToUpdater(generatorBU, generatorVU).apply(goal),
         singletonList(defineUpdater(goal)));
   }
 }

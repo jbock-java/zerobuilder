@@ -38,7 +38,13 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class GeneratorVU {
 
-  static final Function<AbstractRegularGoalContext, BuilderMethod> goalToUpdaterV =
+  private final Updater updater;
+
+  GeneratorVU(Updater updater) {
+    this.updater = updater;
+  }
+
+  final Function<AbstractRegularGoalContext, BuilderMethod> goalToUpdaterV =
       goal -> {
         AbstractRegularGoalDetails details = goal.regularDetails();
         ParameterSpec updater = varUpdater(goal);
@@ -55,13 +61,13 @@ final class GeneratorVU {
         return new BuilderMethod(details.name, method);
       };
 
-  private static CodeBlock copyBlock(AbstractRegularGoalContext goal) {
+  private CodeBlock copyBlock(AbstractRegularGoalContext goal) {
     return goal.regularSteps().stream()
         .map(copyField(goal))
         .collect(Utilities.joinCodeBlocks);
   }
 
-  private static CodeBlock nullCheckingBlock(AbstractRegularGoalContext goal) {
+  private CodeBlock nullCheckingBlock(AbstractRegularGoalContext goal) {
     ProjectionInfoCases<CodeBlock, AbstractRegularStep> nullChecks = nullChecks(goal);
     CodeBlock.Builder builder = CodeBlock.builder();
     for (AbstractRegularStep step : goal.regularSteps()) {
@@ -71,14 +77,14 @@ final class GeneratorVU {
     return builder.build();
   }
 
-  private static Function<AbstractRegularStep, CodeBlock> copyField(AbstractRegularGoalContext goal) {
+  private Function<AbstractRegularStep, CodeBlock> copyField(AbstractRegularGoalContext goal) {
     BiFunction<ProjectionInfo, AbstractRegularStep, CodeBlock> copy = projectionInfoCases(
         copyFromMethod(goal),
         copyFromField(goal));
     return step -> copy.apply(step.regularParameter().projectionInfo().get(), step);
   }
 
-  private static BiFunction<FieldAccess, AbstractRegularStep, CodeBlock> copyFromField(AbstractRegularGoalContext goal) {
+  private BiFunction<FieldAccess, AbstractRegularStep, CodeBlock> copyFromField(AbstractRegularGoalContext goal) {
     return (FieldAccess projection, AbstractRegularStep step) -> {
       String field = projection.fieldName;
       ParameterSpec parameter = toBuilderParameter(goal);
@@ -88,7 +94,7 @@ final class GeneratorVU {
     };
   }
 
-  private static BiFunction<ProjectionMethod, AbstractRegularStep, CodeBlock> copyFromMethod(AbstractRegularGoalContext goal) {
+  private BiFunction<ProjectionMethod, AbstractRegularStep, CodeBlock> copyFromMethod(AbstractRegularGoalContext goal) {
     return (ProjectionMethod projection, AbstractRegularStep step) -> {
       ParameterSpec parameter = toBuilderParameter(goal);
       ParameterSpec updater = varUpdater(goal);
@@ -98,7 +104,7 @@ final class GeneratorVU {
     };
   }
 
-  private static ProjectionInfoCases<CodeBlock, AbstractRegularStep> nullChecks(AbstractRegularGoalContext goal) {
+  private ProjectionInfoCases<CodeBlock, AbstractRegularStep> nullChecks(AbstractRegularGoalContext goal) {
     return new ProjectionInfoCases<CodeBlock, AbstractRegularStep>() {
       @Override
       public CodeBlock projectionMethod(ProjectionMethod projection, AbstractRegularStep step) {
@@ -127,13 +133,13 @@ final class GeneratorVU {
     };
   }
 
-  private static ParameterSpec toBuilderParameter(AbstractRegularGoalContext goal) {
+  private ParameterSpec toBuilderParameter(AbstractRegularGoalContext goal) {
     AbstractRegularGoalDetails details = goal.regularDetails();
     TypeName goalType = details.goalType;
     return parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
   }
 
-  private static CodeBlock initUpdater(AbstractRegularGoalContext goal, ParameterSpec updater) {
+  private CodeBlock initUpdater(AbstractRegularGoalContext goal, ParameterSpec updater) {
     BuildersContext context = goal.context();
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
@@ -146,14 +152,14 @@ final class GeneratorVU {
     }
   }
 
-  private static ParameterSpec varUpdater(AbstractRegularGoalContext goal) {
+  private ParameterSpec varUpdater(AbstractRegularGoalContext goal) {
     ClassName updaterType = goal.implType();
     return parameterSpec(updaterType, "updater");
   }
 
-  private static Set<TypeName> thrownByProjections(AbstractRegularGoalContext goal) {
+  private Set<TypeName> thrownByProjections(AbstractRegularGoalContext goal) {
     return goal.regularSteps().stream()
-        .map(step -> step.regularParameter())
+        .map(AbstractRegularStep::regularParameter)
         .map(AbstractRegularParameter::projectionInfo)
         .filter(Optional::isPresent)
         .map(Optional::get)
@@ -161,9 +167,5 @@ final class GeneratorVU {
         .map(List::stream)
         .flatMap(identity())
         .collect(toSet());
-  }
-
-  private GeneratorVU() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

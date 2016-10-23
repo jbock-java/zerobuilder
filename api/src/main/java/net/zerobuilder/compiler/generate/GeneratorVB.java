@@ -28,7 +28,13 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class GeneratorVB {
 
-  static final Function<AbstractRegularGoalContext, BuilderMethod> goalToBuilderV
+  private final Builder builder;
+
+  GeneratorVB(Builder builder) {
+    this.builder = builder;
+  }
+
+  final Function<AbstractRegularGoalContext, BuilderMethod> goalToBuilderV
       = goal -> {
     AbstractRegularGoalDetails abstractRegularGoalDetails = goal.regularDetails();
     List<AbstractRegularStep> steps = goal.regularSteps();
@@ -46,14 +52,14 @@ final class GeneratorVB {
     return new BuilderMethod(goal.name(), methodSpec);
   };
 
-  private static Function<AbstractRegularGoalContext, CodeBlock> initBuilder(
+  private Function<AbstractRegularGoalContext, CodeBlock> initBuilder(
       ParameterSpec builder, ParameterSpec instance) {
     return regularGoalContextCases(
         initConstructorBuilder(builder),
         initMethodBuilder(builder, instance));
   }
 
-  private static Function<AbstractConstructorGoalContext, CodeBlock> initConstructorBuilder(
+  private Function<AbstractConstructorGoalContext, CodeBlock> initConstructorBuilder(
       ParameterSpec builder) {
     return cGoal -> {
       BuildersContext context = cGoal.context;
@@ -65,14 +71,14 @@ final class GeneratorVB {
     };
   }
 
-  private static Function<AbstractMethodGoalContext, CodeBlock> initMethodBuilder(
+  private Function<AbstractMethodGoalContext, CodeBlock> initMethodBuilder(
       ParameterSpec builder, ParameterSpec instance) {
     return mGoal -> mGoal.methodType() == INSTANCE_METHOD ?
         initInstanceMethodBuilder(mGoal, builder, instance) :
         initStaticMethodBuilder(mGoal, builder);
   }
 
-  private static CodeBlock initInstanceMethodBuilder(
+  private CodeBlock initInstanceMethodBuilder(
       AbstractMethodGoalContext mGoal, ParameterSpec builder, ParameterSpec instance) {
     BuildersContext context = mGoal.context;
     TypeName type = builder.type;
@@ -85,7 +91,7 @@ final class GeneratorVB {
         statement("$T $N = new $T($N)", type, builder, type, instance);
   }
 
-  private static CodeBlock initStaticMethodBuilder(
+  private CodeBlock initStaticMethodBuilder(
       AbstractMethodGoalContext mGoal, ParameterSpec builder) {
     BuildersContext context = mGoal.context;
     TypeName type = builder.type;
@@ -95,12 +101,8 @@ final class GeneratorVB {
         statement("$T $N = new $T()", type, builder, type);
   }
 
-  private static ParameterSpec builderInstance(AbstractRegularGoalContext goal) {
+  private ParameterSpec builderInstance(AbstractRegularGoalContext goal) {
     ClassName type = goal.implType();
     return parameterSpec(type, downcase(type.simpleName()));
-  }
-
-  private GeneratorVB() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

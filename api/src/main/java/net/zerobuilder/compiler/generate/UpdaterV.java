@@ -26,7 +26,13 @@ import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 
 final class UpdaterV {
 
-  static final Function<AbstractRegularGoalContext, List<FieldSpec>> fieldsV
+  private final Updater updater;
+
+  UpdaterV(Updater updater) {
+    this.updater = updater;
+  }
+
+  final Function<AbstractRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
     List<FieldSpec> builder = new ArrayList<>();
     builder.addAll(presentInstances(goal.fields()));
@@ -38,20 +44,21 @@ final class UpdaterV {
     return builder;
   };
 
-  static final Function<AbstractRegularGoalContext, List<MethodSpec>> updateMethodsV
+  final Function<AbstractRegularGoalContext, List<MethodSpec>> updateMethodsV
       = goal ->
       goal.regularSteps().stream()
           .map(updateMethods(goal))
           .collect(flatList());
 
-  private static Function<AbstractRegularStep, List<MethodSpec>> updateMethods(AbstractRegularGoalContext goal) {
+
+  private Function<AbstractRegularStep, List<MethodSpec>> updateMethods(AbstractRegularGoalContext goal) {
     return step -> Stream.concat(
         Stream.of(normalUpdate(goal, step)),
         presentInstances(emptyCollection(goal, step)).stream())
         .collect(toList());
   }
 
-  private static Optional<MethodSpec> emptyCollection(AbstractRegularGoalContext goal, AbstractRegularStep step) {
+  private Optional<MethodSpec> emptyCollection(AbstractRegularGoalContext goal, AbstractRegularStep step) {
     Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
@@ -66,7 +73,7 @@ final class UpdaterV {
         .build());
   }
 
-  private static MethodSpec normalUpdate(AbstractRegularGoalContext goal, AbstractRegularStep step) {
+  private MethodSpec normalUpdate(AbstractRegularGoalContext goal, AbstractRegularStep step) {
     String name = step.regularParameter().name;
     TypeName type = step.regularParameter().type;
     ParameterSpec parameter = parameterSpec(type, name);
@@ -78,9 +85,5 @@ final class UpdaterV {
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
-  }
-
-  private UpdaterV() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

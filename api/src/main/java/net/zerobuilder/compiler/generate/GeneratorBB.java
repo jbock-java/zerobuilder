@@ -18,7 +18,13 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 final class GeneratorBB {
 
-  static final Function<BeanGoalContext, BuilderMethod> goalToBuilderB
+  private final Builder builder;
+
+  GeneratorBB(Builder builder) {
+    this.builder = builder;
+  }
+
+  final Function<BeanGoalContext, BuilderMethod> goalToBuilderB
       = goal -> {
     ClassName builderType = goal.implType();
     String name = goal.details.name;
@@ -41,8 +47,4 @@ final class GeneratorBB {
         .build();
     return new BuilderMethod(name, method);
   };
-
-  private GeneratorBB() {
-    throw new UnsupportedOperationException("no instances");
-  }
 }
