@@ -14,23 +14,9 @@ public final class DtoGoal {
     STATIC_METHOD, INSTANCE_METHOD
   }
 
-  public static final class GoalOption {
-    final Access access;
-    final Module module;
-
-    private GoalOption(Access access, Module module) {
-      this.access = access;
-      this.module = module;
-    }
-
-    public static GoalOption create(Access access, Module module) {
-      return new GoalOption(access, module);
-    }
-  }
-
   static abstract class AbstractGoalDetails {
     final String name;
-    private final GoalOption option;
+    private final Access access;
 
     /**
      * Returns the goal name.
@@ -42,14 +28,14 @@ public final class DtoGoal {
     }
 
     public final Modifier[] access(Modifier... modifiers) {
-      return option.access.modifiers(modifiers);
+      return access.modifiers(modifiers);
     }
 
     abstract TypeName type();
 
-    AbstractGoalDetails(String name, GoalOption option) {
+    AbstractGoalDetails(String name, Access access) {
       this.name = name;
-      this.option = option;
+      this.access = access;
     }
     public abstract <R> R acceptAbstract(AbstractGoalCases<R> cases);
   }
@@ -93,11 +79,11 @@ public final class DtoGoal {
      * @param goalType       goal type
      * @param name           goal name
      * @param parameterNames parameter names in original order
-     * @param goalOptions    goal options
+     * @param access         goal options
      */
     AbstractRegularGoalDetails(TypeName goalType, String name, List<String> parameterNames,
-                               GoalOption goalOptions) {
-      super(name, goalOptions);
+                               Access access) {
+      super(name, access);
       this.goalType = goalType;
       this.parameterNames = parameterNames;
     }
@@ -113,13 +99,13 @@ public final class DtoGoal {
   public static final class ConstructorGoalDetails extends AbstractRegularGoalDetails {
 
     private ConstructorGoalDetails(TypeName goalType, String name, List<String> parameterNames,
-                                   GoalOption goalOptions) {
-      super(goalType, name, parameterNames, goalOptions);
+                                   Access access) {
+      super(goalType, name, parameterNames, access);
     }
 
     public static ConstructorGoalDetails create(TypeName goalType, String name, List<String> parameterNames,
-                                                GoalOption goalOptions) {
-      return new ConstructorGoalDetails(goalType, name, parameterNames, goalOptions);
+                                                Access access) {
+      return new ConstructorGoalDetails(goalType, name, parameterNames, access);
     }
 
     @Override
@@ -133,8 +119,8 @@ public final class DtoGoal {
     final GoalMethodType methodType;
 
     private MethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
-                              GoalMethodType methodType, GoalOption goalOptions) {
-      super(goalType, name, parameterNames, goalOptions);
+                              GoalMethodType methodType, Access access) {
+      super(goalType, name, parameterNames, access);
       this.methodName = methodName;
       this.methodType = methodType;
     }
@@ -144,9 +130,9 @@ public final class DtoGoal {
                                            List<String> parameterNames,
                                            String methodName,
                                            GoalMethodType goalMethodType,
-                                           GoalOption goalOptions) {
+                                           Access access) {
       return new MethodGoalDetails(goalType, name, parameterNames, methodName,
-          goalMethodType, goalOptions);
+          goalMethodType, access);
     }
 
     @Override
@@ -157,8 +143,8 @@ public final class DtoGoal {
 
   public static final class BeanGoalDetails extends AbstractGoalDetails {
     public final ClassName goalType;
-    public BeanGoalDetails(ClassName goalType, String name, GoalOption goalOptions) {
-      super(name, goalOptions);
+    public BeanGoalDetails(ClassName goalType, String name, Access access) {
+      super(name, access);
       this.goalType = goalType;
     }
 

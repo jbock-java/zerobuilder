@@ -10,7 +10,6 @@ import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.Updater;
@@ -102,8 +101,8 @@ final class DtoGoalElement {
           .map(goalOption ->
               new RegularGoalElement(modules, element,
                   element.getKind() == CONSTRUCTOR
-                      ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption.option)
-                      : MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOption.option),
+                      ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption.access)
+                      : MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOption.access),
                   goalOption.module))
           .collect(toList());
     }
@@ -126,9 +125,9 @@ final class DtoGoalElement {
     final TypeElement beanType;
 
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
-                            Goal goalAnnotation, GoalOption goalOptions, Module module) {
+                            Goal goalAnnotation, Access access, Module module) {
       super(goalAnnotation, module);
-      this.details = new BeanGoalDetails(goalType, name, goalOptions);
+      this.details = new BeanGoalDetails(goalType, name, access);
       this.beanType = beanType;
     }
 
@@ -139,7 +138,7 @@ final class DtoGoalElement {
       List<ModuledOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
       return goalOptions.stream()
           .map(goalOption ->
-              new BeanGoalElement(goalType, name, beanType, goalAnnotation, goalOption.option, goalOption.module))
+              new BeanGoalElement(goalType, name, beanType, goalAnnotation, goalOption.access, goalOption.module))
           .collect(toList());
     }
     <R> R accept(GoalElementCases<R> goalElementCases) {
@@ -163,14 +162,14 @@ final class DtoGoalElement {
   }
 
   static final class ModuledOption {
-    final GoalOption option;
+    final Access access;
     final Module module;
-    ModuledOption(GoalOption option, Module module) {
-      this.option = option;
+    ModuledOption(Access access, Module module) {
+      this.access = access;
       this.module = module;
     }
-    static ModuledOption create(Access accessLevel, Module module) {
-      return new ModuledOption(GoalOption.create(accessLevel, module), module);
+    static ModuledOption create(Access access, Module module) {
+      return new ModuledOption(access, module);
     }
   }
 
