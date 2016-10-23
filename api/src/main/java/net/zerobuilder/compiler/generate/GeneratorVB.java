@@ -34,12 +34,11 @@ final class GeneratorVB {
     this.builder = builder;
   }
 
-  final Function<AbstractRegularGoalContext, BuilderMethod> goalToBuilderV
-      = goal -> {
+  BuilderMethod goalToBuilderV(AbstractRegularGoalContext goal) {
     AbstractRegularGoalDetails abstractRegularGoalDetails = goal.regularDetails();
     List<AbstractRegularStep> steps = goal.regularSteps();
-    MethodSpec.Builder method = methodBuilder(goal.methodName())
-        .returns(goal.contractType().nestedClass(steps.get(0).thisType))
+    MethodSpec.Builder method = methodBuilder(builder.methodName(goal))
+        .returns(builder.contractType(goal).nestedClass(steps.get(0).thisType))
         .addModifiers(abstractRegularGoalDetails.option.access.modifiers(STATIC));
     ParameterSpec builder = builderInstance(goal);
     BuildersContext context = goal.context();
@@ -50,7 +49,7 @@ final class GeneratorVB {
     }
     MethodSpec methodSpec = method.addStatement("return $N", builder).build();
     return new BuilderMethod(goal.name(), methodSpec);
-  };
+  }
 
   private Function<AbstractRegularGoalContext, CodeBlock> initBuilder(
       ParameterSpec builder, ParameterSpec instance) {
@@ -61,12 +60,12 @@ final class GeneratorVB {
 
   private Function<AbstractConstructorGoalContext, CodeBlock> initConstructorBuilder(
       ParameterSpec builder) {
-    return cGoal -> {
-      BuildersContext context = cGoal.context;
+    return constructor -> {
+      BuildersContext context = constructor.context;
       TypeName type = builder.type;
       FieldSpec cache = context.cache.get();
       return context.lifecycle == REUSE_INSTANCES ?
-          statement("$T $N = $N.get().$N", type, builder, cache, cGoal.cacheField()) :
+          statement("$T $N = $N.get().$N", type, builder, cache, this.builder.cacheField(constructor)) :
           statement("$T $N = new $T()", type, builder, type);
     };
   }
@@ -79,30 +78,30 @@ final class GeneratorVB {
   }
 
   private CodeBlock initInstanceMethodBuilder(
-      AbstractMethodGoalContext mGoal, ParameterSpec builder, ParameterSpec instance) {
-    BuildersContext context = mGoal.context;
+      AbstractMethodGoalContext method, ParameterSpec builder, ParameterSpec instance) {
+    BuildersContext context = method.context;
     TypeName type = builder.type;
     FieldSpec cache = context.cache.get();
     return context.lifecycle == REUSE_INSTANCES ?
         CodeBlock.builder()
-            .addStatement("$T $N = $N.get().$N", type, builder, cache, mGoal.cacheField())
-            .addStatement("$N.$N = $N", builder, mGoal.field(), instance)
+            .addStatement("$T $N = $N.get().$N", type, builder, cache, this.builder.cacheField(method))
+            .addStatement("$N.$N = $N", builder, method.field(), instance)
             .build() :
         statement("$T $N = new $T($N)", type, builder, type, instance);
   }
 
   private CodeBlock initStaticMethodBuilder(
-      AbstractMethodGoalContext mGoal, ParameterSpec builder) {
-    BuildersContext context = mGoal.context;
+      AbstractMethodGoalContext method, ParameterSpec builder) {
+    BuildersContext context = method.context;
     TypeName type = builder.type;
     FieldSpec cache = context.cache.get();
     return context.lifecycle == REUSE_INSTANCES ?
-        statement("$T $N = $N.get().$N", type, builder, cache, mGoal.cacheField()) :
+        statement("$T $N = $N.get().$N", type, builder, cache, this.builder.cacheField(method)) :
         statement("$T $N = new $T()", type, builder, type);
   }
 
   private ParameterSpec builderInstance(AbstractRegularGoalContext goal) {
-    ClassName type = goal.implType();
+    ClassName type = builder.implType(goal);
     return parameterSpec(type, downcase(type.simpleName()));
   }
 }

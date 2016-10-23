@@ -41,8 +41,7 @@ final class GeneratorBU {
     this.updater = updater;
   }
 
-  final Function<BeanGoalContext, BuilderMethod> goalToUpdaterB
-      = goal -> {
+  BuilderMethod goalToUpdaterB(BeanGoalContext goal) {
     String name = goal.details.name;
     ClassName type = goal.details.goalType;
     ParameterSpec updater = updaterInstance(goal);
@@ -50,7 +49,7 @@ final class GeneratorBU {
         .modifiers(STATIC);
     MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
-        .returns(goal.implType())
+        .returns(this.updater.implType(goal))
         .addExceptions(thrownTypes(goal, asList(AbstractBeanStep::getterThrownTypes, AbstractBeanStep::setterThrownTypes)))
         .addCode(goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
         .addCode(initializeUpdater(goal, updater))
@@ -59,10 +58,10 @@ final class GeneratorBU {
         .addModifiers(modifiers)
         .build();
     return new BuilderMethod(name, method);
-  };
+  }
 
   private Set<TypeName> thrownTypes(BeanGoalContext goal,
-                                           List<Function<AbstractBeanStep, List<TypeName>>> functions) {
+                                    List<Function<AbstractBeanStep, List<TypeName>>> functions) {
     Set<TypeName> thrownTypes = new HashSet<>();
     for (Function<AbstractBeanStep, List<TypeName>> function : functions) {
       thrownTypes.addAll(goal.steps.stream()
@@ -134,7 +133,7 @@ final class GeneratorBU {
     FieldSpec cache = goal.context.cache.get();
     ClassName type = goal.details.goalType;
     builder.add(goal.context.lifecycle == REUSE_INSTANCES
-        ? statement("$T $N = $N.get().$N", updater.type, updater, cache, goal.cacheField())
+        ? statement("$T $N = $N.get().$N", updater.type, updater, cache, this.updater.cacheField(goal))
         : statement("$T $N = new $T()", updater.type, updater, updater.type));
     builder.add(goal.context.lifecycle == REUSE_INSTANCES
         ? statement("$N.$N = new $T()", updater, goal.bean(), type)
@@ -143,7 +142,7 @@ final class GeneratorBU {
   }
 
   private ParameterSpec updaterInstance(BeanGoalContext goal) {
-    ClassName updaterType = goal.implType();
+    ClassName updaterType = this.updater.implType(goal);
     return parameterSpec(updaterType, "updater");
   }
 }

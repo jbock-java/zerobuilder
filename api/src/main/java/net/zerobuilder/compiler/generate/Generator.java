@@ -49,6 +49,7 @@ public final class Generator {
     return generate(generatorInput.context, transform);
   }
 
+/*
   static SingleModuleOutputWithField invoke(ProjectedModule module,
                                             ProjectedGoal goal) {
     SingleModuleOutput output = module.process(goal);
@@ -58,6 +59,7 @@ public final class Generator {
         Optional.of(DtoProjectedGoal.cacheField.apply(goal));
     return new SingleModuleOutputWithField(output, field);
   }
+*/
 
 /*
   static SingleModuleOutputWithField invoke(AbstractGoalContext goal) {
@@ -94,8 +96,7 @@ public final class Generator {
         concat(
             context.cache.get(),
             goals.stream()
-                .map(input -> input.goal)
-                .map(AbstractGoalContext::cacheField)
+                .map(input -> input.module.cacheField(input.goal))
                 .collect(toList()));
   }
 

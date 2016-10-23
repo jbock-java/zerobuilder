@@ -42,12 +42,12 @@ public final class Builder extends ContractModule {
   }
 
   private final Function<AbstractGoalContext, BuilderMethod> goalToBuilder(GeneratorBB generatorBB, GeneratorVB generatorVB) {
-    return goalCases(generatorVB.goalToBuilderV, generatorBB.goalToBuilderB);
+    return goalCases(generatorVB::goalToBuilderV, generatorBB::goalToBuilderB);
   }
 
   private TypeSpec defineBuilderImpl(AbstractGoalContext goal, BuilderB builderB, BuilderV builderV) {
-    return classBuilder(goal.implType())
-        .addSuperinterfaces(goal.stepInterfaceTypes())
+    return classBuilder(implType(goal))
+        .addSuperinterfaces(stepInterfaceTypes(goal))
         .addFields(fields(builderB, builderV).apply(goal))
         .addMethod(builderConstructor.apply(goal))
         .addMethods(steps(builderB, builderV).apply(goal))
@@ -56,7 +56,7 @@ public final class Builder extends ContractModule {
   }
 
   private TypeSpec defineContract(AbstractGoalContext goal) {
-    return classBuilder(goal.contractType())
+    return classBuilder(contractType(goal))
         .addTypes(stepInterfaces(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder()

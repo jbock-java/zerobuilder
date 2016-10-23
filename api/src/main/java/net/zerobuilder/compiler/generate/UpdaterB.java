@@ -67,7 +67,7 @@ final class UpdaterB {
     String name = step.accessorPair.name();
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(collectionInfo.name)
-        .returns(goal.implType())
+        .returns(updater.implType(goal))
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)",
@@ -81,7 +81,7 @@ final class UpdaterB {
     String name = step.accessorPair.name();
     ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
-        .returns(goal.implType())
+        .returns(updater.implType(goal))
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
@@ -105,7 +105,7 @@ final class UpdaterB {
     ParameterSpec parameter = parameterSpec(iterable, name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
-        .returns(goal.implType())
+        .returns(updater.implType(goal))
         .addParameter(parameter)
         .addExceptions(step.loneGetter.getterThrownTypes)
         .addCode(nullCheck(name, name))
@@ -121,7 +121,7 @@ final class UpdaterB {
 
   private MethodSpec loneGetterEmptyCollection(BeanGoalContext goal, LoneGetterStep step) {
     return methodBuilder(step.emptyMethod)
-        .returns(goal.implType())
+        .returns(updater.implType(goal))
         .addExceptions(step.loneGetter.getterThrownTypes)
         .addCode(clearCollection(goal, step))
         .addStatement("return this")

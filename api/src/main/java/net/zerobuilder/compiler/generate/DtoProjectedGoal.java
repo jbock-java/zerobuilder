@@ -62,8 +62,10 @@ public final class DtoProjectedGoal {
   static final Function<ProjectedGoal, AbstractGoalContext> abstractGoal =
       restrict(identity());
 
+/*
   static final Function<ProjectedGoal, FieldSpec> cacheField =
       restrict(AbstractGoalContext::cacheField);
+*/
 
   static final Function<ProjectedGoal, DtoContext.BuildersContext> context =
       restrict(AbstractGoalContext::context);

@@ -24,21 +24,20 @@ final class GeneratorBB {
     this.builder = builder;
   }
 
-  final Function<BeanGoalContext, BuilderMethod> goalToBuilderB
-      = goal -> {
-    ClassName builderType = goal.implType();
+  BuilderMethod goalToBuilderB(BeanGoalContext goal) {
+    ClassName builderType = builder.implType(goal);
     String name = goal.details.name;
     String builder = downcase(builderType.simpleName());
     ClassName type = goal.details.goalType;
     FieldSpec cache = goal.context.cache.get();
-    MethodSpec method = methodBuilder(goal.methodName())
-        .returns(goal.contractType().nestedClass(goal.steps().get(0).thisType))
+    MethodSpec method = methodBuilder(this.builder.methodName(goal))
+        .returns(this.builder.contractType(goal).nestedClass(goal.steps().get(0).thisType))
         .addModifiers(goal.details.option.access.modifiers(STATIC))
         .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
             : goal.thrownTypes)
         .addCode(goal.context.lifecycle == REUSE_INSTANCES
-            ? statement("$T $N = $N.get().$N", builderType, builder, cache, goal.cacheField())
+            ? statement("$T $N = $N.get().$N", builderType, builder, cache, this.builder.cacheField(goal))
             : statement("$T $N = new $T()", builderType, builder, builderType))
         .addCode(goal.context.lifecycle == REUSE_INSTANCES
             ? statement("$N.$N = new $T()", builder, goal.bean(), type)
@@ -46,5 +45,5 @@ final class GeneratorBB {
         .addStatement("return $N", builder)
         .build();
     return new BuilderMethod(name, method);
-  };
+  }
 }

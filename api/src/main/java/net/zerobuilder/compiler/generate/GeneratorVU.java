@@ -44,22 +44,22 @@ final class GeneratorVU {
     this.updater = updater;
   }
 
-  final Function<AbstractRegularGoalContext, BuilderMethod> goalToUpdaterV =
-      goal -> {
-        AbstractRegularGoalDetails details = goal.regularDetails();
-        ParameterSpec updater = varUpdater(goal);
-        MethodSpec method = methodBuilder(goal.methodName())
-            .addExceptions(thrownByProjections(goal))
-            .addParameter(toBuilderParameter(goal))
-            .returns(updater.type)
-            .addCode(nullCheckingBlock(goal))
-            .addCode(initUpdater(goal, updater))
-            .addCode(copyBlock(goal))
-            .addStatement("return $N", updater)
-            .addModifiers(details.option.access.modifiers(STATIC))
-            .build();
-        return new BuilderMethod(details.name, method);
-      };
+  BuilderMethod goalToUpdaterV(AbstractRegularGoalContext goal) {
+    AbstractRegularGoalDetails details = goal.regularDetails();
+    ParameterSpec updater = varUpdater(goal);
+    MethodSpec method = methodBuilder(this.updater.methodName(goal))
+        .addExceptions(thrownByProjections(goal))
+        .addParameter(toBuilderParameter(goal))
+        .returns(updater.type)
+        .addCode(nullCheckingBlock(goal))
+        .addCode(initUpdater(goal, updater))
+        .addCode(copyBlock(goal))
+        .addStatement("return $N", updater)
+        .addModifiers(details.option.access.modifiers(STATIC))
+        .build();
+    return new BuilderMethod(details.name, method);
+  }
+  ;
 
   private CodeBlock copyBlock(AbstractRegularGoalContext goal) {
     return goal.regularSteps().stream()
@@ -143,7 +143,7 @@ final class GeneratorVU {
     BuildersContext context = goal.context();
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
-      FieldSpec updaterField = goal.cacheField();
+      FieldSpec updaterField = this.updater.cacheField(goal);
       return statement("$T $N = $N.get().$N",
           updater.type, updater, cache, updaterField);
     } else {
@@ -153,7 +153,7 @@ final class GeneratorVU {
   }
 
   private ParameterSpec varUpdater(AbstractRegularGoalContext goal) {
-    ClassName updaterType = goal.implType();
+    ClassName updaterType = updater.implType(goal);
     return parameterSpec(updaterType, "updater");
   }
 

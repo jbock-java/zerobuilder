@@ -40,7 +40,7 @@ public final class Updater extends DtoModule.SimpleModule {
 
   private Function<AbstractGoalContext, DtoGeneratorOutput.BuilderMethod> goalToUpdater(
       GeneratorBU generatorBU, GeneratorVU generatorVU) {
-    return goalCases(generatorVU.goalToUpdaterV, generatorBU.goalToUpdaterB);
+    return goalCases(generatorVU::goalToUpdaterV, generatorBU::goalToUpdaterB);
   }
 
   private MethodSpec buildMethod(AbstractGoalContext goal) {
@@ -54,7 +54,7 @@ public final class Updater extends DtoModule.SimpleModule {
   private TypeSpec defineUpdater(AbstractGoalContext goal) {
     UpdaterB updaterB = new UpdaterB(this);
     UpdaterV updaterV = new UpdaterV(this);
-    return classBuilder(goal.implType())
+    return classBuilder(implType(goal))
         .addFields(fields(updaterB, updaterV).apply(goal))
         .addMethods(updateMethods(updaterB, updaterV).apply(goal))
         .addMethod(buildMethod(goal))
