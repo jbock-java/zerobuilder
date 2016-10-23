@@ -5,14 +5,13 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
+import net.zerobuilder.compiler.generate.GeneratorInput.DescriptionInput;
 import org.junit.Test;
 
 import javax.lang.model.element.Modifier;
@@ -40,6 +39,7 @@ public class BuilderTest {
   // the type we wish to generate; in this case, a nested type
   private static final ClassName GENERATED_TYPE = ClassName.get(BuilderTest.class)
       .nestedClass("MyTypeBuilders");
+  public static final Builder MODULE_BUILDER = new Builder();
 
   /**
    * <p>We want to generate a builder for {@code MyType#create(String, Integer)}
@@ -65,8 +65,7 @@ public class BuilderTest {
 
     // create goal details
     String goalName = "myGoal"; // free choice, but should be a valid java identifier
-    GoalOption builderOption = GoalOption.create(PRIVATE, new Builder()); // create a builder
-    RegularGoalDetails details = MethodGoalDetails.create(
+    MethodGoalDetails details = MethodGoalDetails.create(
         TYPE, // return type of the goal method
         // names of generated classes and methods are based on this
         goalName,
@@ -74,12 +73,12 @@ public class BuilderTest {
         asList("foo", "bar"),
         "create", // correct goal method name
         STATIC_METHOD, // goal method is static
-        builderOption);
+        PRIVATE);
 
-    // create parameter representations
-    AbstractRegularParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW);
-    AbstractRegularParameter barParameter = DtoRegularParameter.create("bar", INTEGER, ALLOW);
-    RegularGoalDescription goalDescription = RegularGoalDescription.create(
+    // use SimpleParameter because the builder module doesn't need projections
+    SimpleParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW);
+    SimpleParameter barParameter = DtoRegularParameter.create("bar", INTEGER, ALLOW);
+    SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
         details,
         Collections.emptyList(), // the goal method declares no exceptions
         // step order; not necessarily the order of the goal parameters
@@ -87,7 +86,7 @@ public class BuilderTest {
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(
-        buildersContext, singletonList(goalDescription));
+        buildersContext, singletonList(new DescriptionInput(MODULE_BUILDER, description)));
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);

@@ -5,14 +5,13 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.RegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.compiler.generate.GeneratorInput;
+import net.zerobuilder.compiler.generate.GeneratorInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.Updater;
 import org.junit.Test;
 
@@ -40,6 +39,7 @@ public class UpdaterTest {
   // the type we wish to generate; in this case, a nested type
   private static final ClassName GENERATED_TYPE = ClassName.get(UpdaterTest.class)
       .nestedClass("MyTypeBuilders");
+  public static final Updater UPDATER_MODULE = new Updater();
 
   /**
    * <p>We want to generate updater for the following
@@ -59,21 +59,22 @@ public class UpdaterTest {
     BuildersContext buildersContext = createBuildersContext(TYPE, GENERATED_TYPE, NEW_INSTANCE);
 
     String goalName = "myGoal";
-    GoalOption updaterOption = GoalOption.create(PUBLIC, new Updater()); // create an updater
-    RegularGoalDetails details = ConstructorGoalDetails.create(
+//    GoalOption updaterOption = GoalOption.create(PUBLIC, UPDATER_MODULE); // create an updater
+    ConstructorGoalDetails details = ConstructorGoalDetails.create(
         TYPE, goalName, singletonList("foo"),
-        updaterOption);
+        PUBLIC);
 
-    AbstractRegularParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW,
+    // use ProjectedParameter because the updater module requires projections
+    ProjectedParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW,
         DtoProjectionInfo.method("getFoo", singletonList(IO_EXCEPTION)));
-    RegularGoalDescription goalDescription = RegularGoalDescription.create(
+    ProjectedRegularGoalDescription description = ProjectedRegularGoalDescription.create(
         details,
         Collections.emptyList(),
         singletonList(fooParameter));
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(
-        buildersContext, singletonList(goalDescription));
+        buildersContext, singletonList(new DescriptionInput(UPDATER_MODULE, description)));
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);

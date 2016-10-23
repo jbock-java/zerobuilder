@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -203,7 +204,7 @@ final class Utilities {
     }
   };
 
-  static final <E> Collector<List<E>, List<E>, List<E>> flatList() {
+  static <E> Collector<List<E>, List<E>, List<E>> flatList() {
     return new Collector<List<E>, List<E>, List<E>>() {
       @Override
       public Supplier<List<E>> supplier() {
@@ -224,6 +225,39 @@ final class Utilities {
       public Function<List<E>, List<E>> finisher() {
         return Function.identity();
       }
+      @Override
+      public Set<Characteristics> characteristics() {
+        return emptySet();
+      }
+    };
+  }
+
+  static <E, R> Collector<E, List<E>, R> listCollector(Function<List<E>, R> finisher) {
+    return new Collector<E, List<E>, R>() {
+
+      @Override
+      public Supplier<List<E>> supplier() {
+        return ArrayList::new;
+      }
+
+      @Override
+      public BiConsumer<List<E>, E> accumulator() {
+        return (left, right) -> left.add(right);
+      }
+
+      @Override
+      public BinaryOperator<List<E>> combiner() {
+        return (left, right) -> {
+          left.addAll(right);
+          return left;
+        };
+      }
+
+      @Override
+      public Function<List<E>, R> finisher() {
+        return finisher;
+      }
+
       @Override
       public Set<Characteristics> characteristics() {
         return emptySet();
