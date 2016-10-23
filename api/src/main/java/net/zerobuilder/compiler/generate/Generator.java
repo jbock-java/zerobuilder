@@ -12,6 +12,8 @@ import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
+import net.zerobuilder.compiler.generate.GeneratorInput.AbstractGoalInput;
+import net.zerobuilder.compiler.generate.GeneratorInput.DescriptionInput;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +43,10 @@ public final class Generator {
    * @return a GeneratorOutput
    */
   public static GeneratorOutput generate(GeneratorInput generatorInput) {
-    return generate(generatorInput.context,
-        transform(generatorInput.goals, prepare(generatorInput.context)));
+    List<DescriptionInput> goals = generatorInput.goals;
+    Function<DescriptionInput, AbstractGoalInput> prepare = prepare(generatorInput.context);
+    List<AbstractGoalInput> transform = transform(goals, prepare);
+    return generate(generatorInput.context, transform);
   }
 
   static SingleModuleOutputWithField invoke(ProjectedModule module,
@@ -55,6 +59,7 @@ public final class Generator {
     return new SingleModuleOutputWithField(output, field);
   }
 
+/*
   static SingleModuleOutputWithField invoke(AbstractGoalContext goal) {
     SingleModuleOutput output = processSingle.apply(goal);
     BuildersContext context = goal.context();
@@ -63,8 +68,9 @@ public final class Generator {
         Optional.of(goal.cacheField());
     return new SingleModuleOutputWithField(output, field);
   }
+*/
 
-  private static GeneratorOutput generate(BuildersContext context, List<AbstractGoalContext> goals) {
+  private static GeneratorOutput generate(BuildersContext context, List<AbstractGoalInput> goals) {
     List<ModuleOutput> outputs = transform(goals, process);
     return new GeneratorOutput(
         methods(outputs),
@@ -74,18 +80,21 @@ public final class Generator {
         context.lifecycle);
   }
 
-  private static final Function<AbstractGoalContext, ModuleOutput> process =
-      goal -> Generator.biProcess.apply(goal.module(), goal);
+  private static Function<AbstractGoalInput, ModuleOutput> process =
+      input -> Generator.biProcess.apply(input.module, input.goal);
 
-  private static final Function<AbstractGoalContext, SingleModuleOutput> processSingle =
-      goal -> Generator.singleBiProcess.apply(goal.module(), goal);
 
-  private static List<FieldSpec> fields(BuildersContext context, List<? extends AbstractGoalContext> goals) {
+  private static Function<AbstractGoalContext, SingleModuleOutput> processSingle(Module module) {
+    return goal -> Generator.singleBiProcess.apply(module, goal);
+  }
+
+  private static List<FieldSpec> fields(BuildersContext context, List<AbstractGoalInput> goals) {
     return context.lifecycle == NEW_INSTANCE ?
         emptyList() :
         concat(
             context.cache.get(),
             goals.stream()
+                .map(input -> input.goal)
                 .map(AbstractGoalContext::cacheField)
                 .collect(toList()));
   }

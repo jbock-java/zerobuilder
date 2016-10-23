@@ -15,7 +15,6 @@ import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.Updater;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -42,8 +41,10 @@ final class DtoGoalElement {
 
   static abstract class AbstractGoalElement {
     final Goal goalAnnotation;
-    AbstractGoalElement(Goal goalAnnotation) {
+    final Module module;
+    AbstractGoalElement(Goal goalAnnotation, Module module) {
       this.goalAnnotation = goalAnnotation;
+      this.module = module;
     }
     abstract <R> R accept(GoalElementCases<R> goalElementCases);
   }
@@ -80,7 +81,7 @@ final class DtoGoalElement {
     final ExecutableElement executableElement;
 
     private RegularGoalElement(List<? extends Module> modules, ExecutableElement element, AbstractRegularGoalDetails details) {
-      super(element.getAnnotation(Goal.class));
+      super(element.getAnnotation(Goal.class), details.module());
       this.modules = modules;
       this.details = details;
       this.executableElement = element;
@@ -90,7 +91,7 @@ final class DtoGoalElement {
       TypeName goalType = goalType(element);
       Goal goalAnnotation = element.getAnnotation(Goal.class);
       String name = goalName(goalAnnotation, goalType);
-      List<GoalOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
+      List<ModuledOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
       String methodName = element.getSimpleName().toString();
       GoalMethodType goalMethodType = element.getModifiers().contains(STATIC)
           ? GoalMethodType.STATIC_METHOD
@@ -100,8 +101,8 @@ final class DtoGoalElement {
       return goalOptions.stream()
           .map(goalOption ->
               element.getKind() == CONSTRUCTOR
-                  ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption)
-                  : MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOption))
+                  ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption.option)
+                  : MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOption.option))
           .map(goal -> new RegularGoalElement(modules, element, goal))
           .collect(toList());
     }
@@ -124,8 +125,8 @@ final class DtoGoalElement {
     final TypeElement beanType;
 
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
-                            Goal goalAnnotation, GoalOption goalOptions) {
-      super(goalAnnotation);
+                            Goal goalAnnotation, GoalOption goalOptions, Module module) {
+      super(goalAnnotation, module);
       this.details = new BeanGoalDetails(goalType, name, goalOptions);
       this.beanType = beanType;
     }
@@ -134,27 +135,16 @@ final class DtoGoalElement {
       ClassName goalType = ClassName.get(beanType);
       Goal goalAnnotation = beanType.getAnnotation(Goal.class);
       String name = goalName(goalAnnotation, goalType);
-      List<GoalOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
+      List<ModuledOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
       return goalOptions.stream()
           .map(goalOption ->
-              new BeanGoalElement(goalType, name, beanType, goalAnnotation, goalOption))
+              new BeanGoalElement(goalType, name, beanType, goalAnnotation, goalOption.option, goalOption.module))
           .collect(toList());
     }
     <R> R accept(GoalElementCases<R> goalElementCases) {
       return goalElementCases.beanGoal(this);
     }
   }
-
-  static final GoalElementCases<Element> getElement = new GoalElementCases<Element>() {
-    @Override
-    public Element regularGoal(RegularGoalElement executableGoal) {
-      return executableGoal.executableElement;
-    }
-    @Override
-    public Element beanGoal(BeanGoalElement beanGoal) {
-      return beanGoal.beanType;
-    }
-  };
 
   static String goalName(Goal goalAnnotation, TypeName goalType) {
     return goalAnnotation.name().isEmpty()
@@ -171,14 +161,26 @@ final class DtoGoalElement {
         : override.access();
   }
 
-  private static List<GoalOption> goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
-    List<GoalOption> options = new ArrayList<>(2);
+  static final class ModuledOption {
+    final GoalOption option;
+    final Module module;
+    ModuledOption(GoalOption option, Module module) {
+      this.option = option;
+      this.module = module;
+    }
+    static ModuledOption create(Access accessLevel, Module module) {
+      return new ModuledOption(GoalOption.create(accessLevel, module), module);
+    }
+  }
+
+  private static List<ModuledOption> goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
+    List<ModuledOption> options = new ArrayList<>(2);
     if (goalAnnotation.updater()) {
-      options.add(GoalOption.create(
+      options.add(ModuledOption.create(
           accessLevelOverride(goalAnnotation.updaterAccess(), defaultAccess), new Updater()));
     }
     if (goalAnnotation.builder()) {
-      options.add(GoalOption.create(
+      options.add(ModuledOption.create(
           accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess), new Builder()));
     }
     return options;

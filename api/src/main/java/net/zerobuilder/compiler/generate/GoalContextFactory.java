@@ -32,6 +32,8 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
+import net.zerobuilder.compiler.generate.GeneratorInput.AbstractGoalInput;
+import net.zerobuilder.compiler.generate.GeneratorInput.DescriptionInput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -209,12 +211,14 @@ final class GoalContextFactory {
         }
       };
 
-  static Function<GoalDescription, AbstractGoalContext> prepare(BuildersContext context) {
-    return goalDescriptionCases(
-        goal -> GoalContextFactory.prepareRegular(
-            context, goal),
-        goal -> GoalContextFactory.prepareBean(
-            context, goal));
+  static Function<DescriptionInput, AbstractGoalInput> prepare(BuildersContext context) {
+    return input -> new AbstractGoalInput(
+        input.module,
+        goalDescriptionCases(
+            goal -> GoalContextFactory.prepareRegular(
+                context, goal),
+            goal -> GoalContextFactory.prepareBean(
+                context, goal)).apply(input.description));
   }
 
   static Function<ProjectedDescription, ProjectedGoal> prepareProjected(BuildersContext context) {

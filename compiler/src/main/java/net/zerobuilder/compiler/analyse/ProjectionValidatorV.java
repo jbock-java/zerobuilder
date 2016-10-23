@@ -24,6 +24,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -106,7 +107,7 @@ final class ProjectionValidatorV {
     List<TmpSimpleParameter> parameters = goal.executableElement.getParameters()
         .stream()
         .map(parameter -> TmpSimpleParameter.create(parameter, goal.goalAnnotation))
-        .collect(Collectors.toList());
+        .collect(toList());
     List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
     return SimpleRegularGoalDescription.create(
         goal.details,
@@ -121,7 +122,7 @@ final class ProjectionValidatorV {
   }
 
   private static AbstractRegularGoalDescription create(RegularGoalElement goal,
-                                                                                                        List<ProjectedParameter> parameters) {
+                                                       List<ProjectedParameter> parameters) {
     return ProjectedRegularGoalDescription.create(
         goal.details, thrownTypes(goal.executableElement),
         parameters);

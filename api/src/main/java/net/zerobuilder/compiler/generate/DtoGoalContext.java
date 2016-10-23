@@ -47,7 +47,7 @@ final class DtoGoalContext {
       return name() + upcase(module().name());
     }
 
-    final Module module() {
+    private final Module module() {
       return goalOption.apply(this).module;
     }
 

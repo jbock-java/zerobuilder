@@ -67,11 +67,13 @@ public final class Analyser {
     List<AbstractGoalElement> goalElements = goals(buildersAnnotatedClass);
     checkNameConflict(names(buildersAnnotatedClass));
     validateBuildersClass(buildersAnnotatedClass);
-    List<GoalDescription> descriptions = new ArrayList<>(goalElements.size());
+    List<GeneratorInput.DescriptionInput> descriptions = new ArrayList<>(goalElements.size());
     for (AbstractGoalElement goalElement : goalElements) {
-      descriptions.add(goalElement.goalAnnotation.updater() ?
-          validate.apply(goalElement) :
-          skip.apply(goalElement));
+      descriptions.add(new GeneratorInput.DescriptionInput(
+          goalElement.module,
+          goalElement.goalAnnotation.updater() ?
+              validate.apply(goalElement) :
+              skip.apply(goalElement)));
     }
     return GeneratorInput.create(context, descriptions);
   }
