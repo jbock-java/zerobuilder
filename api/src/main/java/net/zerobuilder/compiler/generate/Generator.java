@@ -17,12 +17,15 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoModule.goalInputCases;
 import static net.zerobuilder.compiler.generate.DtoModuleOutput.moduleOutputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
+import static net.zerobuilder.compiler.generate.Utilities.flatList;
 import static net.zerobuilder.compiler.generate.Utilities.listCollector;
+import static net.zerobuilder.compiler.generate.Utilities.transform;
 
 public final class Generator {
 
@@ -42,23 +45,35 @@ public final class Generator {
   }
 
   private static Collector<TmpOutput, List<TmpOutput>, GeneratorOutput> collectOutput(BuildersContext context) {
-    return listCollector(tmpOutputs -> {
-      List<BuilderMethod> methods = new ArrayList<>(tmpOutputs.size());
-      List<TypeSpec> types = new ArrayList<>();
-      List<FieldSpec> fields = new ArrayList<>();
-      if (context.lifecycle == REUSE_INSTANCES) {
-        fields.add(context.cache.get());
-      }
-      for (TmpOutput tmp : tmpOutputs) {
-        methods.add(tmp.output.method);
-        if (tmp.goal.context().lifecycle == REUSE_INSTANCES) {
-          fields.add(tmp.module.cacheField(tmp.goal));
-        }
-        types.addAll(nestedTypes.apply(tmp.output));
-      }
-      return new GeneratorOutput(methods, types, fields,
-          context.generatedType, context.lifecycle);
-    });
+    return listCollector(tmpOutputs ->
+        new GeneratorOutput(
+            methods(tmpOutputs),
+            types(tmpOutputs),
+            fields(context, tmpOutputs),
+            context.generatedType,
+            context.lifecycle));
+  }
+
+  private static List<BuilderMethod> methods(List<TmpOutput> tmpOutputs) {
+    return transform(tmpOutputs, tmp -> tmp.output.method);
+  }
+
+  private static List<TypeSpec> types(List<TmpOutput> tmpOutputs) {
+    return tmpOutputs.stream()
+        .map(tmp -> nestedTypes.apply(tmp.output))
+        .collect(flatList());
+  }
+
+  private static List<FieldSpec> fields(BuildersContext context, List<TmpOutput> tmpOutputs) {
+    if (context.lifecycle == NEW_INSTANCE) {
+      return emptyList();
+    }
+    List<FieldSpec> fields = new ArrayList<>(tmpOutputs.size() + 1);
+    fields.add(context.cache.get());
+    for (TmpOutput tmp : tmpOutputs) {
+      fields.add(tmp.module.cacheField(tmp.goal));
+    }
+    return fields;
   }
 
   private static final Function<AbstractGoalInput, TmpOutput> process =
