@@ -92,17 +92,6 @@ public final class Builder extends ContractModule {
   }
 
   @Override
-  protected DtoGeneratorOutput.SingleModuleOutput processSingle(AbstractGoalContext goal) {
-    BuilderB builderB = new BuilderB(this);
-    BuilderV builderV = new BuilderV(this);
-    GeneratorBB generatorBB = new GeneratorBB(this);
-    GeneratorVB generatorVB = new GeneratorVB(this);
-    return new DtoGeneratorOutput.SingleModuleOutput(
-        goalToBuilder(generatorBB, generatorVB).apply(goal),
-        asList(defineBuilderImpl(goal, builderB, builderV), defineContract(goal)));
-  }
-
-  @Override
   public String name() {
     return "builder";
   }

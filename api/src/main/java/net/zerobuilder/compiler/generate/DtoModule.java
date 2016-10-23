@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.SingleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
@@ -65,7 +64,6 @@ public final class DtoModule {
   public static abstract class SimpleModule extends Module {
 
     protected abstract SimpleModuleOutput process(AbstractGoalContext goal);
-    protected abstract SingleModuleOutput processSingle(AbstractGoalContext goal);
 
     @Override
     public final <R, P> R accept(ModuleCases<R, P> cases, P p) {
@@ -73,14 +71,13 @@ public final class DtoModule {
     }
   }
 
-  public static abstract class ProjectedModule extends Module {
+  public static abstract class ProjectedSimpleModule extends Module {
 
-    protected abstract SingleModuleOutput process(ProjectedGoal goal);
+    protected abstract DtoGeneratorOutput.ProjectedSimpleModuleOutput process(ProjectedGoal goal);
   }
 
   public static abstract class ContractModule extends Module {
     protected abstract ContractModuleOutput process(AbstractGoalContext goal);
-    protected abstract SingleModuleOutput processSingle(AbstractGoalContext goal);
 
     @Override
     public final <R, P> R accept(ModuleCases<R, P> cases, P p) {

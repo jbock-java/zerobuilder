@@ -5,7 +5,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.SingleModuleOutput;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.ProjectedSimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
@@ -101,14 +101,5 @@ public final class Updater extends DtoModule.SimpleModule {
     return new SimpleModuleOutput(
         goalToUpdater(generatorBU, generatorVU).apply(goal),
         defineUpdater(goal));
-  }
-
-  @Override
-  protected SingleModuleOutput processSingle(AbstractGoalContext goal) {
-    GeneratorBU generatorBU = new GeneratorBU(this);
-    GeneratorVU generatorVU = new GeneratorVU(this);
-    return new SingleModuleOutput(
-        goalToUpdater(generatorBU, generatorVU).apply(goal),
-        singletonList(defineUpdater(goal)));
   }
 }

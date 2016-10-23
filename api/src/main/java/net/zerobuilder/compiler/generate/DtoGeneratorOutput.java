@@ -7,7 +7,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,12 +21,9 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
-import static java.util.Optional.empty;
-import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod.getMethod;
 import static net.zerobuilder.compiler.generate.Utilities.concat;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
@@ -188,21 +184,21 @@ public final class DtoGeneratorOutput {
     };
   }
 
-  public static final class SingleModuleOutput {
+  public static final class ProjectedSimpleModuleOutput {
     final BuilderMethod method;
     final List<TypeSpec> nestedTypes;
 
-    public SingleModuleOutput(BuilderMethod method, List<TypeSpec> nestedTypes) {
+    public ProjectedSimpleModuleOutput(BuilderMethod method, List<TypeSpec> nestedTypes) {
       this.method = method;
       this.nestedTypes = nestedTypes;
     }
   }
 
   static final class SingleModuleOutputWithField {
-    final SingleModuleOutput output;
+    final ProjectedSimpleModuleOutput output;
     final Optional<FieldSpec> field;
 
-    SingleModuleOutputWithField(SingleModuleOutput output, Optional<FieldSpec> field) {
+    SingleModuleOutputWithField(ProjectedSimpleModuleOutput output, Optional<FieldSpec> field) {
       this.output = output;
       this.field = field;
     }
