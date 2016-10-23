@@ -4,7 +4,6 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalOption;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
@@ -138,9 +137,6 @@ final class DtoGoalContext {
       goalCases(
           regular -> unmodifiableList(regular.regularSteps()),
           bean -> unmodifiableList(bean.steps));
-
-  static final Function<AbstractGoalContext, GoalOption> goalOption
-      = abstractGoalDetails.andThen(details -> details.option);
 
   private DtoGoalContext() {
     throw new UnsupportedOperationException("no instances");

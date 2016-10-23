@@ -80,8 +80,8 @@ final class DtoGoalElement {
     final AbstractRegularGoalDetails details;
     final ExecutableElement executableElement;
 
-    private RegularGoalElement(List<? extends Module> modules, ExecutableElement element, AbstractRegularGoalDetails details) {
-      super(element.getAnnotation(Goal.class), details.module());
+    private RegularGoalElement(List<? extends Module> modules, ExecutableElement element, AbstractRegularGoalDetails details, Module module) {
+      super(element.getAnnotation(Goal.class), module);
       this.modules = modules;
       this.details = details;
       this.executableElement = element;
@@ -100,10 +100,11 @@ final class DtoGoalElement {
       List<String> parameterNames = parameterNames(element);
       return goalOptions.stream()
           .map(goalOption ->
-              element.getKind() == CONSTRUCTOR
-                  ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption.option)
-                  : MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOption.option))
-          .map(goal -> new RegularGoalElement(modules, element, goal))
+              new RegularGoalElement(modules, element,
+                  element.getKind() == CONSTRUCTOR
+                      ? ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption.option)
+                      : MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOption.option),
+                  goalOption.module))
           .collect(toList());
     }
 

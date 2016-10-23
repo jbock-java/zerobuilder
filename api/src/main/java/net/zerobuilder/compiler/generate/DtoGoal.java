@@ -4,6 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 
+import javax.lang.model.element.Modifier;
 import java.util.List;
 import java.util.function.Function;
 
@@ -29,7 +30,7 @@ public final class DtoGoal {
 
   static abstract class AbstractGoalDetails {
     final String name;
-    final GoalOption option;
+    private final GoalOption option;
 
     /**
      * Returns the goal name.
@@ -40,8 +41,8 @@ public final class DtoGoal {
       return name;
     }
 
-    public final Module module() {
-      return option.module;
+    public final Modifier[] access(Modifier... modifiers) {
+      return option.access.modifiers(modifiers);
     }
 
     abstract TypeName type();

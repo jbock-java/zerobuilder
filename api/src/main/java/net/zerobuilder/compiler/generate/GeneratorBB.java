@@ -7,7 +7,6 @@ import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
 import java.util.Collections;
-import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -32,7 +31,7 @@ final class GeneratorBB {
     FieldSpec cache = goal.context.cache.get();
     MethodSpec method = methodBuilder(this.builder.methodName(goal))
         .returns(this.builder.contractType(goal).nestedClass(goal.steps().get(0).thisType))
-        .addModifiers(goal.details.option.access.modifiers(STATIC))
+        .addModifiers(goal.details.access(STATIC))
         .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
             : goal.thrownTypes)

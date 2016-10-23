@@ -1,16 +1,13 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.FieldSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.ProjectedMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoModule.Module;
 
 import java.util.function.Function;
 
 import static java.util.function.Function.identity;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.goalOption;
 
 public final class DtoProjectedGoal {
 
@@ -56,8 +53,10 @@ public final class DtoProjectedGoal {
     );
   }
 
+/*
   static final Function<ProjectedGoal, Module> module =
       restrict(goalOption).andThen(option -> option.module);
+*/
 
   static final Function<ProjectedGoal, AbstractGoalContext> abstractGoal =
       restrict(identity());
