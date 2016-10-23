@@ -13,6 +13,8 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
@@ -32,8 +34,6 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
-import net.zerobuilder.compiler.generate.GeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.GeneratorInput.DescriptionInput;
 
 import java.util.ArrayList;
 import java.util.List;

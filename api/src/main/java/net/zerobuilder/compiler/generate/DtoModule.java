@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
@@ -105,16 +106,16 @@ public final class DtoModule {
     });
   }
 
-  static <R> Function<GeneratorInput.AbstractGoalInput, R> goalInputCases(
-      BiFunction<SimpleModule, DtoGoalContext.AbstractGoalContext, R> simple,
-      BiFunction<ContractModule, DtoGoalContext.AbstractGoalContext, R> contract) {
-    return input -> asFunction(new ModuleCases<R, DtoGoalContext.AbstractGoalContext>() {
+  static <R> Function<AbstractGoalInput, R> goalInputCases(
+      BiFunction<SimpleModule, AbstractGoalContext, R> simple,
+      BiFunction<ContractModule, AbstractGoalContext, R> contract) {
+    return input -> asFunction(new ModuleCases<R, AbstractGoalContext>() {
       @Override
-      public R simple(SimpleModule module, DtoGoalContext.AbstractGoalContext p) {
+      public R simple(SimpleModule module, AbstractGoalContext p) {
         return simple.apply(module, p);
       }
       @Override
-      public R contract(ContractModule module, DtoGoalContext.AbstractGoalContext p) {
+      public R contract(ContractModule module, AbstractGoalContext p) {
         return contract.apply(module, p);
       }
     }).apply(input.module, input.goal);

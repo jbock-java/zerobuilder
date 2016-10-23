@@ -3,6 +3,9 @@ package net.zerobuilder.api.test;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.DescriptionInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
@@ -10,8 +13,6 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegu
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.Generator;
-import net.zerobuilder.compiler.generate.GeneratorInput;
-import net.zerobuilder.compiler.generate.GeneratorInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.Updater;
 import org.junit.Test;
 

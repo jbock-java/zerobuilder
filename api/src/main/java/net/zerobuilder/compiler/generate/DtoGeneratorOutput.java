@@ -68,14 +68,20 @@ public final class DtoGeneratorOutput {
     final ClassName generatedType;
     final BuilderLifecycle lifecycle;
 
-    public GeneratorOutput(List<BuilderMethod> methods, List<TypeSpec> nestedTypes, List<FieldSpec> fields,
-                           ClassName generatedType, BuilderLifecycle lifecycle) {
+    private GeneratorOutput(List<BuilderMethod> methods, List<TypeSpec> nestedTypes, List<FieldSpec> fields,
+                            ClassName generatedType, BuilderLifecycle lifecycle) {
       this.methods = methods;
       this.nestedTypes = nestedTypes;
       this.fields = fields;
       this.generatedType = generatedType;
       this.lifecycle = lifecycle;
     }
+
+    static GeneratorOutput create(List<BuilderMethod> methods, List<TypeSpec> nestedTypes, List<FieldSpec> fields,
+                                  DtoContext.BuildersContext context) {
+      return new GeneratorOutput(methods, nestedTypes, fields, context.generatedType, context.lifecycle);
+    }
+
 
     /**
      * Create the definition of the generated class.

@@ -3,13 +3,14 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.DescriptionInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
-import net.zerobuilder.compiler.generate.GeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.GeneratorInput.DescriptionInput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,53 +45,52 @@ public final class Generator {
         .collect(collectOutput(context));
   }
 
-  private static Collector<TmpOutput, List<TmpOutput>, GeneratorOutput> collectOutput(BuildersContext context) {
+  private static Collector<InputOutput, List<InputOutput>, GeneratorOutput> collectOutput(BuildersContext context) {
     return listCollector(tmpOutputs ->
-        new GeneratorOutput(
+        GeneratorOutput.create(
             methods(tmpOutputs),
             types(tmpOutputs),
             fields(context, tmpOutputs),
-            context.generatedType,
-            context.lifecycle));
+            context));
   }
 
-  private static List<BuilderMethod> methods(List<TmpOutput> tmpOutputs) {
-    return transform(tmpOutputs, tmp -> tmp.output.method);
+  private static List<BuilderMethod> methods(List<InputOutput> inputOutputs) {
+    return transform(inputOutputs, tmp -> tmp.output.method);
   }
 
-  private static List<TypeSpec> types(List<TmpOutput> tmpOutputs) {
-    return tmpOutputs.stream()
+  private static List<TypeSpec> types(List<InputOutput> inputOutputs) {
+    return inputOutputs.stream()
         .map(tmp -> nestedTypes.apply(tmp.output))
         .collect(flatList());
   }
 
-  private static List<FieldSpec> fields(BuildersContext context, List<TmpOutput> tmpOutputs) {
+  private static List<FieldSpec> fields(BuildersContext context, List<InputOutput> inputOutputs) {
     if (context.lifecycle == NEW_INSTANCE) {
       return emptyList();
     }
-    List<FieldSpec> fields = new ArrayList<>(tmpOutputs.size() + 1);
+    List<FieldSpec> fields = new ArrayList<>(inputOutputs.size() + 1);
     fields.add(context.cache.get());
-    for (TmpOutput tmp : tmpOutputs) {
-      fields.add(tmp.module.cacheField(tmp.goal));
-    }
+    inputOutputs.forEach(tmp ->
+        fields.add(tmp.module.cacheField(tmp.goal)));
     return fields;
   }
 
-  private static final Function<AbstractGoalInput, TmpOutput> process =
+  private static final Function<AbstractGoalInput, InputOutput> process =
       goalInputCases(
-          (simple, goal) -> new TmpOutput(simple, goal, simple.process(goal)),
-          (contract, goal) -> new TmpOutput(contract, goal, contract.process(goal)));
+          (simple, goal) -> new InputOutput(simple, goal, simple.process(goal)),
+          (contract, goal) -> new InputOutput(contract, goal, contract.process(goal)));
 
   private static final Function<AbstractModuleOutput, List<TypeSpec>> nestedTypes =
       moduleOutputCases(
           simple -> singletonList(simple.impl),
           contract -> asList(contract.impl, contract.contract));
 
-  private static final class TmpOutput {
+  private static final class InputOutput {
     private final Module module;
     private final AbstractGoalContext goal;
     private final AbstractModuleOutput output;
-    private TmpOutput(Module module, AbstractGoalContext goal, AbstractModuleOutput output) {
+
+    private InputOutput(Module module, AbstractGoalContext goal, AbstractModuleOutput output) {
       this.module = module;
       this.goal = goal;
       this.output = output;

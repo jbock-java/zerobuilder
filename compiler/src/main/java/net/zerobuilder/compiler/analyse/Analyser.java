@@ -10,10 +10,10 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.DtoModule;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.DescriptionInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
-import net.zerobuilder.compiler.generate.GeneratorInput;
 import net.zerobuilder.compiler.generate.Updater;
 
 import javax.lang.model.element.Element;
@@ -22,7 +22,9 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -37,6 +39,7 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidator.skip;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersClass;
 import static net.zerobuilder.compiler.analyse.Utilities.appendSuffix;
+import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.common.LessElements.asExecutable;
 import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext;
 
@@ -67,14 +70,12 @@ public final class Analyser {
     List<AbstractGoalElement> goalElements = goals(buildersAnnotatedClass);
     checkNameConflict(names(buildersAnnotatedClass));
     validateBuildersClass(buildersAnnotatedClass);
-    List<GeneratorInput.DescriptionInput> descriptions = new ArrayList<>(goalElements.size());
-    for (AbstractGoalElement goalElement : goalElements) {
-      descriptions.add(new GeneratorInput.DescriptionInput(
-          goalElement.module,
-          goalElement.goalAnnotation.updater() ?
-              validate.apply(goalElement) :
-              skip.apply(goalElement)));
-    }
+    List<DescriptionInput> descriptions = transform(goalElements, goalElement ->
+        new DescriptionInput(
+            goalElement.module,
+            goalElement.goalAnnotation.updater() ?
+                validate.apply(goalElement) :
+                skip.apply(goalElement)));
     return GeneratorInput.create(context, descriptions);
   }
 
