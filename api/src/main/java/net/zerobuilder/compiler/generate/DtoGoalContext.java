@@ -110,7 +110,7 @@ final class DtoGoalContext {
           constructor -> constructor.context,
           method -> method.context);
 
-  private static final Function<AbstractGoalContext, BuildersContext> context =
+  static final Function<AbstractGoalContext, BuildersContext> context =
       goalCases(
           regularContext,
           bean -> bean.context);
@@ -131,7 +131,7 @@ final class DtoGoalContext {
           AbstractRegularGoalContext::regularDetails,
           bGoal -> bGoal.details);
 
-  private static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps =
+  static final Function<AbstractGoalContext, List<AbstractStep>> abstractSteps =
       goalCases(
           regular -> unmodifiableList(regular.regularSteps()),
           bean -> unmodifiableList(bean.steps));
