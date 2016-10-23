@@ -21,6 +21,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoModule.moduleCases;
+import static net.zerobuilder.compiler.generate.DtoModule.simpleModuleCases;
 import static net.zerobuilder.compiler.generate.DtoModuleOutput.moduleOutputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
 import static net.zerobuilder.compiler.generate.Utilities.concat;
@@ -77,7 +78,9 @@ public final class Generator {
   }
 
   private static Function<AbstractGoalInput, AbstractModuleOutput> process =
-      input -> Generator.biProcess.apply(input.module, input.goal);
+      simpleModuleCases(
+          (simple, goal) -> simple.process(goal),
+          (contract, goal) -> contract.process(goal));
 
   private static List<FieldSpec> fields(BuildersContext context, List<AbstractGoalInput> goals) {
     return context.lifecycle == NEW_INSTANCE ?
@@ -88,11 +91,6 @@ public final class Generator {
                 .map(input -> input.module.cacheField(input.goal))
                 .collect(toList()));
   }
-
-  private static final BiFunction<Module, AbstractGoalContext, AbstractModuleOutput> biProcess =
-      moduleCases(
-          (simple, goal) -> simple.process(goal),
-          (contract, goal) -> contract.process(goal));
 
   private static final Function<AbstractModuleOutput, BuilderMethod> builderMethod =
       moduleOutputCases(

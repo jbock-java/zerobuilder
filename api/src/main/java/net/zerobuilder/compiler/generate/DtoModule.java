@@ -9,6 +9,7 @@ import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -102,6 +103,21 @@ public final class DtoModule {
         return contract.apply(module, p);
       }
     });
+  }
+
+  static <R> Function<GeneratorInput.AbstractGoalInput, R> simpleModuleCases(
+      BiFunction<SimpleModule, DtoGoalContext.AbstractGoalContext, R> simple,
+      BiFunction<ContractModule, DtoGoalContext.AbstractGoalContext, R> contract) {
+    return input -> asFunction(new ModuleCases<R, DtoGoalContext.AbstractGoalContext>() {
+      @Override
+      public R simple(SimpleModule module, DtoGoalContext.AbstractGoalContext p) {
+        return simple.apply(module, p);
+      }
+      @Override
+      public R contract(ContractModule module, DtoGoalContext.AbstractGoalContext p) {
+        return contract.apply(module, p);
+      }
+    }).apply(input.module, input.goal);
   }
 
   private DtoModule() {
