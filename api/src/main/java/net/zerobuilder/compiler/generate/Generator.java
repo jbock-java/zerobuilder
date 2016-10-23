@@ -11,23 +11,23 @@ import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
 import net.zerobuilder.compiler.generate.GeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.GeneratorInput.DescriptionInput;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
-import static net.zerobuilder.compiler.generate.DtoModule.moduleCases;
-import static net.zerobuilder.compiler.generate.DtoModule.simpleModuleCases;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoModule.goalInputCases;
 import static net.zerobuilder.compiler.generate.DtoModuleOutput.moduleOutputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
-import static net.zerobuilder.compiler.generate.Utilities.concat;
-import static net.zerobuilder.compiler.generate.Utilities.flatList;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
-import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class Generator {
 
@@ -44,85 +44,81 @@ public final class Generator {
     return generate(generatorInput.context, transform);
   }
 
-/*
-  static SingleModuleOutputWithField invoke(ProjectedSimpleModule module,
-                                            ProjectedGoal goal) {
-    ProjectedSimpleModuleOutput output = module.process(goal);
-    BuildersContext context = DtoProjectedGoal.context.apply(goal);
-    Optional<FieldSpec> field = context.lifecycle == NEW_INSTANCE ?
-        empty() :
-        Optional.of(DtoProjectedGoal.cacheField.apply(goal));
-    return new SingleModuleOutputWithField(output, field);
+  private static final class Output {
+    private final Module module;
+    private final AbstractGoalContext goal;
+    private final AbstractModuleOutput output;
+    private Output(Module module, AbstractGoalContext goal, AbstractModuleOutput output) {
+      this.module = module;
+      this.goal = goal;
+      this.output = output;
+    }
   }
-*/
-
-/*
-  static SingleModuleOutputWithField invoke(AbstractGoalContext goal) {
-    ProjectedSimpleModuleOutput output = processSingle.apply(goal);
-    BuildersContext context = goal.context();
-    Optional<FieldSpec> field = context.lifecycle == NEW_INSTANCE ?
-        empty() :
-        Optional.of(goal.cacheField());
-    return new SingleModuleOutputWithField(output, field);
-  }
-*/
 
   private static GeneratorOutput generate(BuildersContext context, List<AbstractGoalInput> goals) {
-    List<AbstractModuleOutput> outputs = transform(goals, process);
-    return new GeneratorOutput(
-        methods(outputs),
-        nestedTypes(outputs),
-        fields(context, goals),
-        context.generatedType,
-        context.lifecycle);
+    return goals.stream()
+        .map(process)
+        .collect(collectOutput(context));
   }
 
-  private static Function<AbstractGoalInput, AbstractModuleOutput> process =
-      simpleModuleCases(
-          (simple, goal) -> simple.process(goal),
-          (contract, goal) -> contract.process(goal));
+  static Collector<Output, List<Output>, GeneratorOutput> collectOutput(
+      DtoContext.BuildersContext context) {
+    return new Collector<Output, List<Output>, GeneratorOutput>() {
 
-  private static List<FieldSpec> fields(BuildersContext context, List<AbstractGoalInput> goals) {
-    return context.lifecycle == NEW_INSTANCE ?
-        emptyList() :
-        concat(
-            context.cache.get(),
-            goals.stream()
-                .map(input -> input.module.cacheField(input.goal))
-                .collect(toList()));
+      @Override
+      public Supplier<List<Output>> supplier() {
+        return ArrayList::new;
+      }
+
+      @Override
+      public BiConsumer<List<Output>, Output> accumulator() {
+        return (left, right) -> left.add(right);
+      }
+
+      @Override
+      public BinaryOperator<List<Output>> combiner() {
+        return (left, right) -> {
+          left.addAll(right);
+          return left;
+        };
+      }
+
+      @Override
+      public Function<List<Output>, GeneratorOutput> finisher() {
+        return outputs -> {
+          List<BuilderMethod> methods = new ArrayList<>(outputs.size());
+          List<TypeSpec> types = new ArrayList<>();
+          List<FieldSpec> fields = new ArrayList<>();
+          if (context.lifecycle == REUSE_INSTANCES) {
+            fields.add(context.cache.get());
+          }
+          for (Output output : outputs) {
+            methods.add(output.output.method);
+            if (output.goal.context().lifecycle == REUSE_INSTANCES) {
+              fields.add(output.module.cacheField(output.goal));
+            }
+            types.addAll(nestedTypes.apply(output.output));
+          }
+          return new GeneratorOutput(methods, types, fields, context.generatedType, context.lifecycle);
+        };
+      }
+
+      @Override
+      public Set<Characteristics> characteristics() {
+        return emptySet();
+      }
+    };
   }
 
-  private static final Function<AbstractModuleOutput, BuilderMethod> builderMethod =
-      moduleOutputCases(
-          simple -> simple.method,
-          contract -> contract.method);
+  private static final Function<AbstractGoalInput, Output> process =
+      goalInputCases(
+          (simple, goal) -> new Output(simple, goal, simple.process(goal)),
+          (contract, goal) -> new Output(contract, goal, contract.process(goal)));
 
   private static final Function<AbstractModuleOutput, List<TypeSpec>> nestedTypes =
       moduleOutputCases(
           simple -> singletonList(simple.impl),
           contract -> asList(contract.impl, contract.contract));
-
-  private static List<BuilderMethod> methods(List<AbstractModuleOutput> goals) {
-    return transform(goals, builderMethod);
-  }
-
-  private static List<TypeSpec> nestedTypes(List<AbstractModuleOutput> goals) {
-    return goals.stream()
-        .map(nestedTypes)
-        .collect(flatList());
-  }
-
-  static final BiFunction<Module, AbstractGoalContext, String> implName =
-      moduleCases(
-          (simple, goal) -> upcase(goal.name()) + upcase(simple.name()),
-          (contract, goal) -> upcase(goal.name()) + upcase(contract.name()) + "Impl");
-
-  static final BiFunction<Module, AbstractGoalContext, String> contractName =
-      moduleCases(
-          (simple, goal) -> {
-            throw new IllegalStateException("contractName");
-          },
-          (contract, goal) -> upcase(goal.name()) + upcase(contract.name()));
 
   private Generator() {
     throw new UnsupportedOperationException("no instances");

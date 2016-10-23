@@ -26,7 +26,7 @@ public final class DtoModule {
     public abstract <R, P> R accept(ModuleCases<R, P> cases, P p);
 
     final ClassName implType(AbstractGoalContext goal) {
-      String implName = Generator.implName.apply(this, goal);
+      String implName = DtoModule.implName.apply(this, goal);
       return context.apply(goal)
           .generatedType.nestedClass(implName);
     }
@@ -36,7 +36,7 @@ public final class DtoModule {
     }
 
     final ClassName contractType(AbstractGoalContext goal) {
-      String contractName = Generator.contractName.apply(this, goal);
+      String contractName = DtoModule.contractName.apply(this, goal);
       return context.apply(goal)
           .generatedType.nestedClass(contractName);
     }
@@ -105,7 +105,7 @@ public final class DtoModule {
     });
   }
 
-  static <R> Function<GeneratorInput.AbstractGoalInput, R> simpleModuleCases(
+  static <R> Function<GeneratorInput.AbstractGoalInput, R> goalInputCases(
       BiFunction<SimpleModule, DtoGoalContext.AbstractGoalContext, R> simple,
       BiFunction<ContractModule, DtoGoalContext.AbstractGoalContext, R> contract) {
     return input -> asFunction(new ModuleCases<R, DtoGoalContext.AbstractGoalContext>() {
@@ -119,6 +119,18 @@ public final class DtoModule {
       }
     }).apply(input.module, input.goal);
   }
+
+  private static final BiFunction<Module, AbstractGoalContext, String> implName =
+      moduleCases(
+          (simple, goal) -> upcase(goal.name()) + upcase(simple.name()),
+          (contract, goal) -> upcase(goal.name()) + upcase(contract.name()) + "Impl");
+
+  private static final BiFunction<Module, AbstractGoalContext, String> contractName =
+      moduleCases(
+          (simple, goal) -> {
+            throw new IllegalStateException("contractName");
+          },
+          (contract, goal) -> upcase(goal.name()) + upcase(contract.name()));
 
   private DtoModule() {
     throw new UnsupportedOperationException("no instances");
