@@ -129,7 +129,7 @@ public final class DtoModule {
   private static final BiFunction<Module, AbstractGoalContext, String> contractName =
       moduleCases(
           (simple, goal) -> {
-            throw new IllegalStateException("contractName");
+            throw new IllegalStateException("simple modules do not have a contract");
           },
           (contract, goal) -> upcase(goal.name()) + upcase(contract.name()));
 

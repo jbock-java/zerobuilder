@@ -19,15 +19,6 @@ final class DtoGoalContext {
 
     abstract <R> R accept(GoalCases<R> cases);
 
-/*
-    final FieldSpec cacheField() {
-      ClassName type = implType();
-      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
-          .initializer("new $T()", type)
-          .build();
-    }
-*/
-
     final List<AbstractStep> steps() {
       return abstractSteps.apply(this);
     }
@@ -35,18 +26,6 @@ final class DtoGoalContext {
     final String name() {
       return goalName.apply(this);
     }
-
-/*
-    final String methodName() {
-      return name() + upcase(module().name());
-    }
-*/
-
-/*
-    private final Module module() {
-      return goalOption.apply(this).module;
-    }
-*/
 
     final AbstractGoalDetails details() {
       return abstractGoalDetails.apply(this);
@@ -56,31 +35,9 @@ final class DtoGoalContext {
       return context.apply(this);
     }
 
-/*
-    final ClassName implType() {
-      String implName = Generator.implName.apply(module(), this);
-      return context.apply(this)
-          .generatedType.nestedClass(implName);
-    }
-*/
-
-/*
-    final List<ClassName> stepInterfaceTypes() {
-      return transform(steps(), step -> contractType().nestedClass(step.thisType));
-    }
-*/
-
     final TypeName goalType() {
       return goalType.apply(this);
     }
-
-/*
-    final ClassName contractType() {
-      String contractName = Generator.contractName.apply(module(), this);
-      return context.apply(this)
-          .generatedType.nestedClass(contractName);
-    }
-*/
   }
 
   interface GoalCases<R> {

@@ -5,11 +5,8 @@ import com.squareup.javapoet.TypeName;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
-import static net.zerobuilder.compiler.generate.Utilities.asPredicate;
 
 public final class DtoProjectionInfo {
 
@@ -32,8 +29,7 @@ public final class DtoProjectionInfo {
 
   static <R> Function<ProjectionInfo, R> projectionInfoCases(
       Function<ProjectionMethod, R> projectionMethod,
-      Function<FieldAccess, R> fieldAccess,
-      Supplier<R> none) {
+      Function<FieldAccess, R> fieldAccess) {
     return asFunction(new ProjectionInfoCases<R, Void>() {
       @Override
       public R projectionMethod(ProjectionMethod projection, Void aVoid) {
@@ -97,21 +93,10 @@ public final class DtoProjectionInfo {
     return new ProjectionMethod(methodName, emptyList());
   }
 
-  public static ProjectionInfo fieldAccess(String fieldName) {
-    return new FieldAccess(fieldName);
-  }
-
-  static final Predicate<ProjectionInfo> isPresent =
-      asPredicate(projectionInfoCases(
-          projection -> true,
-          projection -> true,
-          () -> false));
-
   static final Function<ProjectionInfo, List<TypeName>> thrownTypes =
       projectionInfoCases(
           projection -> projection.thrownTypes,
-          projection -> emptyList(),
-          () -> emptyList());
+          projection -> emptyList());
 
   private DtoProjectionInfo() {
     throw new UnsupportedOperationException("no instances");
