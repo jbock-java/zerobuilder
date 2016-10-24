@@ -3,12 +3,11 @@ package net.zerobuilder.api.test;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.DescriptionInput;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
@@ -67,7 +66,7 @@ public class UpdaterTest {
 
     // use ProjectedParameter because the updater module requires projections
     ProjectedParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW,
-        DtoProjectionInfo.method("getFoo", singletonList(IO_EXCEPTION)));
+        ProjectionMethod.create("getFoo", singletonList(IO_EXCEPTION)));
     ProjectedRegularGoalDescription description = ProjectedRegularGoalDescription.create(
         details,
         Collections.emptyList(),
@@ -75,7 +74,7 @@ public class UpdaterTest {
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(
-        buildersContext, singletonList(new DescriptionInput(UPDATER_MODULE, description)));
+        buildersContext, singletonList(new SimpleDescriptionInput(UPDATER_MODULE, description)));
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);

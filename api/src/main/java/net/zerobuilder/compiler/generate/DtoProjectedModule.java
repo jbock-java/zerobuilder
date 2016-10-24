@@ -1,7 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.ProjectedSimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
@@ -25,7 +25,7 @@ public final class DtoProjectedModule {
 
   public static abstract class SimpleModule extends ProjectedModule {
 
-    protected abstract DtoGeneratorOutput.ProjectedSimpleModuleOutput process(ProjectedGoal goal);
+    protected abstract ProjectedSimpleModuleOutput process(ProjectedGoal goal);
 
     @Override
     public final <R, P> R accept(ProjectedModuleCases<R, P> cases, P p) {

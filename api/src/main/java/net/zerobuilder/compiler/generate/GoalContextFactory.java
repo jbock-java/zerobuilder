@@ -13,18 +13,16 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractRegularGoalDescription;
@@ -41,6 +39,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
+import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionInputCases;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalDescriptionCases;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.Utilities.reverse;
@@ -212,20 +211,16 @@ final class GoalContextFactory {
       };
 
   static Function<DescriptionInput, AbstractGoalInput> prepare(BuildersContext context) {
-    return input -> new AbstractGoalInput(
-        input.module,
-        goalDescriptionCases(
-            goal -> GoalContextFactory.prepareRegular(
-                context, goal),
-            goal -> GoalContextFactory.prepareBean(
-                context, goal)).apply(input.description));
-  }
-
-  static Function<ProjectedDescription, ProjectedGoal> prepareProjected(BuildersContext context) {
-    return DtoProjectedDescription.projectedDescriptionCases(
-        goal -> GoalContextFactory.prepareProjectedRegular(
-            context, goal),
-        goal -> GoalContextFactory.prepareBean(
-            context, goal));
+    return descriptionInputCases(
+        (module, description) -> new AbstractGoalInput(
+            module,
+            goalDescriptionCases(
+                goal -> GoalContextFactory.prepareRegular(
+                    context, goal),
+                goal -> GoalContextFactory.prepareBean(
+                    context, goal)).apply(description)),
+        (module, description) -> {
+          throw new UnsupportedOperationException();
+        });
   }
 }

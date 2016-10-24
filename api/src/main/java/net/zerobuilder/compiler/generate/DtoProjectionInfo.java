@@ -57,7 +57,7 @@ public final class DtoProjectionInfo {
     });
   }
 
-  static final class ProjectionMethod implements ProjectionInfo {
+  public static final class ProjectionMethod implements ProjectionInfo {
     final String methodName;
     final List<TypeName> thrownTypes;
 
@@ -66,31 +66,35 @@ public final class DtoProjectionInfo {
       this.thrownTypes = thrownTypes;
     }
 
+    public static ProjectionMethod create(String methodName, List<TypeName> thrownTypes) {
+      return new ProjectionMethod(methodName, thrownTypes);
+    }
+
+    public static ProjectionMethod create(String methodName) {
+      return new ProjectionMethod(methodName, emptyList());
+    }
+
     @Override
     public <R, P> R accept(ProjectionInfoCases<R, P> cases, P p) {
       return cases.projectionMethod(this, p);
     }
   }
 
-  static final class FieldAccess implements ProjectionInfo {
+  public static final class FieldAccess implements ProjectionInfo {
     final String fieldName;
 
     private FieldAccess(String fieldName) {
       this.fieldName = fieldName;
     }
 
+    public static FieldAccess create(String fieldName) {
+      return new FieldAccess(fieldName);
+    }
+
     @Override
     public <R, P> R accept(ProjectionInfoCases<R, P> cases, P p) {
       return cases.fieldAccess(this, p);
     }
-  }
-
-  public static ProjectionInfo method(String methodName, List<TypeName> thrownTypes) {
-    return new ProjectionMethod(methodName, thrownTypes);
-  }
-
-  public static ProjectionInfo method(String methodName) {
-    return new ProjectionMethod(methodName, emptyList());
   }
 
   static final Function<ProjectionInfo, List<TypeName>> thrownTypes =

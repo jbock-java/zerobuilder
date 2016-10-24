@@ -3,16 +3,14 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoModule.Module;
+import net.zerobuilder.compiler.generate.DtoInputOutput.AbstractInputOutput;
+import net.zerobuilder.compiler.generate.DtoInputOutput.InputOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
-import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,47 +84,6 @@ public final class Generator {
       moduleOutputCases(
           simple -> singletonList(simple.impl),
           contract -> asList(contract.impl, contract.contract));
-
-  static abstract class AbstractInputOutput {
-    private final AbstractModuleOutput output;
-    abstract FieldSpec cacheField();
-
-    AbstractInputOutput(AbstractModuleOutput output) {
-      this.output = output;
-    }
-  }
-
-  static final class InputOutput extends AbstractInputOutput {
-    private final Module module;
-    private final AbstractGoalContext goal;
-
-    InputOutput(Module module, AbstractGoalContext goal, AbstractModuleOutput output) {
-      super(output);
-      this.module = module;
-      this.goal = goal;
-    }
-
-    @Override
-    FieldSpec cacheField() {
-      return module.cacheField(goal);
-    }
-  }
-
-  private static final class ProjectedInputOutput extends AbstractInputOutput {
-    private final ProjectedModule module;
-    private final ProjectedGoal goal;
-
-    private ProjectedInputOutput(ProjectedModule module, ProjectedGoal goal, AbstractModuleOutput output) {
-      super(output);
-      this.module = module;
-      this.goal = goal;
-    }
-
-    @Override
-    FieldSpec cacheField() {
-      throw new UnsupportedOperationException("not yet implemented");
-    }
-  }
 
   private Generator() {
     throw new UnsupportedOperationException("no instances");

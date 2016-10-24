@@ -4,7 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.DescriptionInput;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
@@ -86,7 +86,7 @@ public class BuilderTest {
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(
-        buildersContext, singletonList(new DescriptionInput(MODULE_BUILDER, description)));
+        buildersContext, singletonList(new SimpleDescriptionInput(MODULE_BUILDER, description)));
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);

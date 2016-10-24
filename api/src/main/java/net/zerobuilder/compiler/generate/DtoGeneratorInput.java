@@ -1,8 +1,8 @@
 package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
@@ -10,15 +10,6 @@ import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
 import java.util.List;
 
 public final class DtoGeneratorInput {
-
-  public static final class DescriptionInput {
-    final Module module;
-    final GoalDescription description;
-    public DescriptionInput(Module module, GoalDescription description) {
-      this.module = module;
-      this.description = description;
-    }
-  }
 
   static final class AbstractGoalInput {
     final Module module;

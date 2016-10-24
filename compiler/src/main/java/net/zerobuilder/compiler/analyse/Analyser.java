@@ -10,8 +10,9 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.DescriptionInput;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.Updater;
@@ -71,7 +72,7 @@ public final class Analyser {
     checkNameConflict(names(buildersAnnotatedClass));
     validateBuildersClass(buildersAnnotatedClass);
     List<DescriptionInput> descriptions = transform(goalElements, goalElement ->
-        new DescriptionInput(
+        new SimpleDescriptionInput(
             goalElement.module,
             goalElement.goalAnnotation.updater() ?
                 validate.apply(goalElement) :
