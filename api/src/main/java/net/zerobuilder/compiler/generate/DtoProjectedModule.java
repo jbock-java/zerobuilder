@@ -1,29 +1,65 @@
 package net.zerobuilder.compiler.generate;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.ProjectedSimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractSteps;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.context;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
+import static net.zerobuilder.compiler.generate.Utilities.transform;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class DtoProjectedModule {
 
-  public static abstract class ProjectedModule {
-    public abstract String name();
-    public abstract <R, P> R accept(ProjectedModuleCases<R, P> cases, P p);
-  }
-
   interface ProjectedModuleCases<R, P> {
-    R simple(SimpleModule module, P p);
-    R contract(ContractModule module, P p);
+    R simple(ProjectedSimpleModule module, P p);
+    R contract(ProjectedContractModule module, P p);
   }
 
-  public static abstract class SimpleModule extends ProjectedModule {
+  static abstract class ProjectedModule {
+    abstract String name();
+
+    protected final AbstractGoalContext goalContext(ProjectedGoal goal) {
+      return DtoProjectedGoal.goalContext.apply(goal);
+    }
+
+    protected final ClassName implType(ProjectedGoal goal) {
+      String implName = DtoProjectedModule.implName.apply(this, goalContext(goal));
+      return context.apply(goalContext(goal))
+          .generatedType.nestedClass(implName);
+    }
+
+    protected final String methodName(ProjectedGoal goal) {
+      return goalContext(goal).name() + upcase(name());
+    }
+
+    protected final FieldSpec cacheField(ProjectedGoal goal) {
+      ClassName type = implType(goal);
+      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
+          .initializer("new $T()", type)
+          .build();
+    }
+
+    protected final List<DtoStep.AbstractStep> steps(ProjectedGoal goal) {
+      return abstractSteps.apply(goalContext(goal));
+    }
+
+
+    abstract <R, P> R accept(ProjectedModuleCases<R, P> cases, P p);
+  }
+
+  public static abstract class ProjectedSimpleModule extends ProjectedModule {
 
     protected abstract ProjectedSimpleModuleOutput process(ProjectedGoal goal);
 
@@ -33,8 +69,19 @@ public final class DtoProjectedModule {
     }
   }
 
-  public static abstract class ContractModule extends ProjectedModule {
+  public static abstract class ProjectedContractModule extends ProjectedModule {
+
     protected abstract ContractModuleOutput process(AbstractGoalContext goal);
+
+    protected final ClassName contractType(ProjectedGoal goal) {
+      String contractName = upcase(goalContext(goal).name()) + upcase(name());
+      return context.apply(goalContext(goal))
+          .generatedType.nestedClass(contractName);
+    }
+
+    protected final List<ClassName> stepInterfaceTypes(ProjectedGoal goal) {
+      return transform(steps(goal), step -> contractType(goal).nestedClass(step.thisType));
+    }
 
     @Override
     public final <R, P> R accept(ProjectedModuleCases<R, P> cases, P p) {
@@ -47,30 +94,30 @@ public final class DtoProjectedModule {
   }
 
   static <R, P> BiFunction<ProjectedModule, P, R> moduleCases(
-      BiFunction<SimpleModule, P, R> simple,
-      BiFunction<ContractModule, P, R> contract) {
+      BiFunction<ProjectedSimpleModule, P, R> simple,
+      BiFunction<ProjectedContractModule, P, R> contract) {
     return asFunction(new ProjectedModuleCases<R, P>() {
       @Override
-      public R simple(SimpleModule module, P p) {
+      public R simple(ProjectedSimpleModule module, P p) {
         return simple.apply(module, p);
       }
       @Override
-      public R contract(ContractModule module, P p) {
+      public R contract(ProjectedContractModule module, P p) {
         return contract.apply(module, p);
       }
     });
   }
 
   static <R> Function<ProjectedGoalInput, R> goalInputCases(
-      BiFunction<SimpleModule, ProjectedGoal, R> simple,
-      BiFunction<ContractModule, ProjectedGoal, R> contract) {
+      BiFunction<ProjectedSimpleModule, ProjectedGoal, R> simple,
+      BiFunction<ProjectedContractModule, ProjectedGoal, R> contract) {
     return input -> asFunction(new ProjectedModuleCases<R, ProjectedGoal>() {
       @Override
-      public R simple(SimpleModule module, ProjectedGoal p) {
+      public R simple(ProjectedSimpleModule module, ProjectedGoal p) {
         return simple.apply(module, p);
       }
       @Override
-      public R contract(ContractModule module, ProjectedGoal p) {
+      public R contract(ProjectedContractModule module, ProjectedGoal p) {
         return contract.apply(module, p);
       }
     }).apply(input.module, input.goal);
@@ -80,13 +127,6 @@ public final class DtoProjectedModule {
       moduleCases(
           (simple, goal) -> upcase(goal.name()) + upcase(simple.name()),
           (contract, goal) -> upcase(goal.name()) + upcase(contract.name()) + "Impl");
-
-  private static final BiFunction<ProjectedModule, AbstractGoalContext, String> contractName =
-      moduleCases(
-          (simple, goal) -> {
-            throw new IllegalStateException("simple modules do not have a contract");
-          },
-          (contract, goal) -> upcase(goal.name()) + upcase(contract.name()));
 
   private DtoProjectedModule() {
     throw new UnsupportedOperationException("no instances");

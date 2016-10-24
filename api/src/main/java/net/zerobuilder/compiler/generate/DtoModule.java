@@ -6,7 +6,6 @@ import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -22,38 +21,28 @@ import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class DtoModule {
 
-  public static abstract class Module {
-    public abstract String name();
-    public abstract <R, P> R accept(ModuleCases<R, P> cases, P p);
+  static abstract class Module {
+    protected abstract String name();
+    abstract <R, P> R accept(ModuleCases<R, P> cases, P p);
 
-    final ClassName implType(AbstractGoalContext goal) {
+    protected final ClassName implType(AbstractGoalContext goal) {
       String implName = DtoModule.implName.apply(this, goal);
       return context.apply(goal)
           .generatedType.nestedClass(implName);
     }
 
-    final String methodName(AbstractGoalContext goal) {
+    protected final String methodName(AbstractGoalContext goal) {
       return goal.name() + upcase(name());
     }
 
-    final ClassName contractType(AbstractGoalContext goal) {
-      String contractName = DtoModule.contractName.apply(this, goal);
-      return context.apply(goal)
-          .generatedType.nestedClass(contractName);
-    }
-
-    final FieldSpec cacheField(AbstractGoalContext goal) {
+    protected final FieldSpec cacheField(AbstractGoalContext goal) {
       ClassName type = implType(goal);
       return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
           .initializer("new $T()", type)
           .build();
     }
 
-    final List<ClassName> stepInterfaceTypes(AbstractGoalContext goal) {
-      return transform(steps(goal), step -> contractType(goal).nestedClass(step.thisType));
-    }
-
-    final List<DtoStep.AbstractStep> steps(AbstractGoalContext goal) {
+    protected final List<DtoStep.AbstractStep> steps(AbstractGoalContext goal) {
       return abstractSteps.apply(goal);
     }
   }
@@ -75,6 +64,16 @@ public final class DtoModule {
 
   public static abstract class ContractModule extends Module {
     protected abstract ContractModuleOutput process(AbstractGoalContext goal);
+
+    protected final List<ClassName> stepInterfaceTypes(AbstractGoalContext goal) {
+      return transform(steps(goal), step -> contractType(goal).nestedClass(step.thisType));
+    }
+
+    protected final ClassName contractType(AbstractGoalContext goal) {
+      String contractName = upcase(goal.name()) + upcase(name());
+      return context.apply(goal)
+          .generatedType.nestedClass(contractName);
+    }
 
     @Override
     public final <R, P> R accept(ModuleCases<R, P> cases, P p) {
@@ -120,13 +119,6 @@ public final class DtoModule {
       moduleCases(
           (simple, goal) -> upcase(goal.name()) + upcase(simple.name()),
           (contract, goal) -> upcase(goal.name()) + upcase(contract.name()) + "Impl");
-
-  private static final BiFunction<Module, AbstractGoalContext, String> contractName =
-      moduleCases(
-          (simple, goal) -> {
-            throw new IllegalStateException("simple modules do not have a contract");
-          },
-          (contract, goal) -> upcase(goal.name()) + upcase(contract.name()));
 
   private DtoModule() {
     throw new UnsupportedOperationException("no instances");

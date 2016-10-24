@@ -53,18 +53,8 @@ public final class DtoProjectedGoal {
     );
   }
 
-/*
-  static final Function<ProjectedGoal, Module> module =
-      restrict(goalOption).andThen(option -> option.module);
-*/
-
-  static final Function<ProjectedGoal, AbstractGoalContext> abstractGoal =
+  static final Function<ProjectedGoal, AbstractGoalContext> goalContext =
       restrict(identity());
-
-/*
-  static final Function<ProjectedGoal, FieldSpec> cacheField =
-      restrict(AbstractGoalContext::cacheField);
-*/
 
   static final Function<ProjectedGoal, DtoContext.BuildersContext> context =
       restrict(AbstractGoalContext::context);
