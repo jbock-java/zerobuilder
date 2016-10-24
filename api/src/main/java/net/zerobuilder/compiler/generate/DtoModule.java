@@ -73,11 +73,6 @@ public final class DtoModule {
     }
   }
 
-  public static abstract class ProjectedSimpleModule extends Module {
-
-    protected abstract DtoGeneratorOutput.ProjectedSimpleModuleOutput process(ProjectedGoal goal);
-  }
-
   public static abstract class ContractModule extends Module {
     protected abstract ContractModuleOutput process(AbstractGoalContext goal);
 

@@ -11,6 +11,8 @@ import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
+import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +47,7 @@ public final class Generator {
         .collect(collectOutput(context));
   }
 
-  private static Collector<InputOutput, List<InputOutput>, GeneratorOutput> collectOutput(BuildersContext context) {
+  private static Collector<AbstractInputOutput, List<AbstractInputOutput>, GeneratorOutput> collectOutput(BuildersContext context) {
     return listCollector(tmpOutputs ->
         GeneratorOutput.create(
             methods(tmpOutputs),
@@ -54,28 +56,28 @@ public final class Generator {
             context));
   }
 
-  private static List<BuilderMethod> methods(List<InputOutput> inputOutputs) {
+  private static List<BuilderMethod> methods(List<AbstractInputOutput> inputOutputs) {
     return transform(inputOutputs, tmp -> tmp.output.method);
   }
 
-  private static List<TypeSpec> types(List<InputOutput> inputOutputs) {
+  private static List<TypeSpec> types(List<AbstractInputOutput> inputOutputs) {
     return inputOutputs.stream()
         .map(tmp -> nestedTypes.apply(tmp.output))
         .collect(flatList());
   }
 
-  private static List<FieldSpec> fields(BuildersContext context, List<InputOutput> inputOutputs) {
+  private static List<FieldSpec> fields(BuildersContext context, List<AbstractInputOutput> inputOutputs) {
     if (context.lifecycle == NEW_INSTANCE) {
       return emptyList();
     }
     List<FieldSpec> fields = new ArrayList<>(inputOutputs.size() + 1);
     fields.add(context.cache.get());
     inputOutputs.forEach(tmp ->
-        fields.add(tmp.module.cacheField(tmp.goal)));
+        fields.add(tmp.cacheField()));
     return fields;
   }
 
-  private static final Function<AbstractGoalInput, InputOutput> process =
+  private static final Function<AbstractGoalInput, AbstractInputOutput> process =
       goalInputCases(
           (simple, goal) -> new InputOutput(simple, goal, simple.process(goal)),
           (contract, goal) -> new InputOutput(contract, goal, contract.process(goal)));
@@ -85,15 +87,44 @@ public final class Generator {
           simple -> singletonList(simple.impl),
           contract -> asList(contract.impl, contract.contract));
 
-  private static final class InputOutput {
+  static abstract class AbstractInputOutput {
+    private final AbstractModuleOutput output;
+    abstract FieldSpec cacheField();
+
+    AbstractInputOutput(AbstractModuleOutput output) {
+      this.output = output;
+    }
+  }
+
+  static final class InputOutput extends AbstractInputOutput {
     private final Module module;
     private final AbstractGoalContext goal;
-    private final AbstractModuleOutput output;
 
-    private InputOutput(Module module, AbstractGoalContext goal, AbstractModuleOutput output) {
+    InputOutput(Module module, AbstractGoalContext goal, AbstractModuleOutput output) {
+      super(output);
       this.module = module;
       this.goal = goal;
-      this.output = output;
+    }
+
+    @Override
+    FieldSpec cacheField() {
+      return module.cacheField(goal);
+    }
+  }
+
+  private static final class ProjectedInputOutput extends AbstractInputOutput {
+    private final ProjectedModule module;
+    private final ProjectedGoal goal;
+
+    private ProjectedInputOutput(ProjectedModule module, ProjectedGoal goal, AbstractModuleOutput output) {
+      super(output);
+      this.module = module;
+      this.goal = goal;
+    }
+
+    @Override
+    FieldSpec cacheField() {
+      throw new UnsupportedOperationException("not yet implemented");
     }
   }
 

@@ -1,10 +1,8 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 public final class DtoModuleOutput {
@@ -12,15 +10,6 @@ public final class DtoModuleOutput {
   public interface ModuleOutputCases<R> {
     R simple(SimpleModuleOutput simple);
     R contract(ContractModuleOutput contract);
-  }
-
-  public static class CoupledModuleOutput {
-    final AbstractModuleOutput output;
-    final DtoGoalContext.AbstractGoalContext input;
-    public CoupledModuleOutput(AbstractModuleOutput output, DtoGoalContext.AbstractGoalContext input) {
-      this.output = output;
-      this.input = input;
-    }
   }
 
   public static abstract class AbstractModuleOutput {
