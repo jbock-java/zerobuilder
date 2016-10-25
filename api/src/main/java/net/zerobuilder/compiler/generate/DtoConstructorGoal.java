@@ -3,11 +3,9 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
-import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 
 import java.util.List;
@@ -105,31 +103,6 @@ public final class DtoConstructorGoal {
     @Override
     public <R> R acceptConstructor(ConstructorGoalCases<R> cases) {
       return cases.simple(this);
-    }
-  }
-
-  static final class ProjectedConstructorGoalContext
-      extends AbstractConstructorGoalContext
-  implements ProjectedGoal {
-
-    final List<ProjectedRegularStep> steps;
-
-    ProjectedConstructorGoalContext(BuildersContext context,
-                                    ConstructorGoalDetails details,
-                                    List<ProjectedRegularStep> steps,
-                                    List<TypeName> thrownTypes) {
-      super(context, details, thrownTypes);
-      this.steps = steps;
-    }
-
-    @Override
-    public <R> R acceptConstructor(ConstructorGoalCases<R> cases) {
-      return cases.projected(this);
-    }
-
-    @Override
-    public <R> R acceptProjected(ProjectedGoalCases<R> cases) {
-      return cases.constructor(this);
     }
   }
 

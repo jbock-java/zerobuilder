@@ -7,8 +7,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
@@ -22,7 +21,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
-import static net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
@@ -152,30 +150,6 @@ public final class DtoMethodGoal {
     @Override
     public <R> R acceptMethod(MethodGoalCases<R> cases) {
       return cases.simple(this);
-    }
-  }
-
-  static final class ProjectedMethodGoalContext extends AbstractMethodGoalContext
-      implements ProjectedGoal {
-    final List<ProjectedRegularStep> steps;
-
-    ProjectedMethodGoalContext(
-        BuildersContext context,
-        MethodGoalDetails details,
-        List<ProjectedRegularStep> steps,
-        List<TypeName> thrownTypes) {
-      super(context, details, thrownTypes);
-      this.steps = steps;
-    }
-
-    @Override
-    public <R> R acceptMethod(MethodGoalCases<R> cases) {
-      return cases.projected(this);
-    }
-
-    @Override
-    public <R> R acceptProjected(ProjectedGoalCases<R> cases) {
-      return cases.method(this);
     }
   }
 
