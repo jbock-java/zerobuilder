@@ -10,7 +10,11 @@ import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoInputOutput.AbstractInputOutput;
 import net.zerobuilder.compiler.generate.DtoInputOutput.InputOutput;
+import net.zerobuilder.compiler.generate.DtoInputOutput.ProjectedInputOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
+import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedContractModule;
+import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModuleCases;
+import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +25,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
-import static net.zerobuilder.compiler.generate.DtoModule.goalInputCases;
+import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
 import static net.zerobuilder.compiler.generate.DtoModuleOutput.moduleOutputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
 import static net.zerobuilder.compiler.generate.Utilities.flatList;
@@ -77,8 +81,28 @@ public final class Generator {
 
   private static final Function<AbstractGoalInput, AbstractInputOutput> process =
       goalInputCases(
-          (simple, goal) -> new InputOutput(simple, goal, simple.process(goal)),
-          (contract, goal) -> new InputOutput(contract, goal, contract.process(goal)));
+          simpleInput -> new InputOutput(simpleInput.module, simpleInput.goal,
+              simpleInput.module.accept(new DtoModule.ModuleCases<AbstractModuleOutput, Void>() {
+                @Override
+                public AbstractModuleOutput simple(DtoModule.SimpleModule module, Void o) {
+                  return module.process(simpleInput.goal);
+                }
+                @Override
+                public AbstractModuleOutput contract(DtoModule.ContractModule module, Void o) {
+                  return module.process(simpleInput.goal);
+                }
+              }, null)),
+          projectedInput -> new ProjectedInputOutput(projectedInput.module, projectedInput.goal,
+              projectedInput.module.accept(new ProjectedModuleCases<AbstractModuleOutput, Void>() {
+                @Override
+                public AbstractModuleOutput simple(ProjectedSimpleModule module, Void aVoid) {
+                  return module.process(projectedInput.goal);
+                }
+                @Override
+                public AbstractModuleOutput contract(ProjectedContractModule module, Void aVoid) {
+                  return module.process(projectedInput.goal);
+                }
+              }, null)));
 
   private static final Function<AbstractModuleOutput, List<TypeSpec>> nestedTypes =
       moduleOutputCases(

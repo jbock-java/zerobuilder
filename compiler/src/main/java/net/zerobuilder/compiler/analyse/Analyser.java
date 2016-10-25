@@ -6,12 +6,14 @@ import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.ProjectedDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
@@ -23,6 +25,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -45,9 +48,6 @@ import static net.zerobuilder.compiler.common.LessElements.asExecutable;
 import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext;
 
 public final class Analyser {
-
-  private static final Builder MODULE_BUILDER = new Builder();
-  private static final Updater MODULE_UPDATER = new Updater();
 
   // only for validation
   static final class NameElement {
@@ -72,21 +72,19 @@ public final class Analyser {
     checkNameConflict(names(buildersAnnotatedClass));
     validateBuildersClass(buildersAnnotatedClass);
     List<DescriptionInput> descriptions = transform(goalElements, goalElement ->
-        new SimpleDescriptionInput(
-            goalElement.module,
-            goalElement.goalAnnotation.updater() ?
-                validate.apply(goalElement) :
-                skip.apply(goalElement)));
+        goalElement.module == ModuleChoice.BUILDER ?
+            new SimpleDescriptionInput(new Builder(), skip.apply(goalElement)) :
+            new ProjectedDescriptionInput(new Updater(), validate.apply(goalElement)));
     return GeneratorInput.create(context, descriptions);
   }
 
-  static List<? extends Module> modules(Goal goalAnnotation) {
-    ArrayList<Module> modules = new ArrayList<>(2);
+  static List<ModuleChoice> modules(Goal goalAnnotation) {
+    ArrayList<ModuleChoice> modules = new ArrayList<>(2);
     if (goalAnnotation.builder()) {
-      modules.add(MODULE_BUILDER);
+      modules.add(ModuleChoice.BUILDER);
     }
     if (goalAnnotation.updater()) {
-      modules.add(MODULE_UPDATER);
+      modules.add(ModuleChoice.UPDATER);
     }
     return modules;
   }

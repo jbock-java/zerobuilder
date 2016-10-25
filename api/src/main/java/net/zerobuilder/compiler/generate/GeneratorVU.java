@@ -47,7 +47,7 @@ final class GeneratorVU {
   BuilderMethod goalToUpdaterV(AbstractRegularGoalContext goal) {
     AbstractRegularGoalDetails details = goal.regularDetails();
     ParameterSpec updater = varUpdater(goal);
-    MethodSpec method = methodBuilder(this.updater.methodName(goal))
+    MethodSpec method = methodBuilder(this.updater.legacyMethodName(goal))
         .addExceptions(thrownByProjections(goal))
         .addParameter(toBuilderParameter(goal))
         .returns(updater.type)
@@ -143,7 +143,7 @@ final class GeneratorVU {
     BuildersContext context = goal.context();
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
-      FieldSpec updaterField = this.updater.cacheField(goal);
+      FieldSpec updaterField = this.updater.legacyCacheField(goal);
       return statement("$T $N = $N.get().$N",
           updater.type, updater, cache, updaterField);
     } else {
@@ -153,7 +153,7 @@ final class GeneratorVU {
   }
 
   private ParameterSpec varUpdater(AbstractRegularGoalContext goal) {
-    ClassName updaterType = updater.implType(goal);
+    ClassName updaterType = updater.legacyImplType(goal);
     return parameterSpec(updaterType, "updater");
   }
 

@@ -8,24 +8,61 @@ import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
 
 import java.util.List;
+import java.util.function.Function;
 
 public final class DtoGeneratorInput {
 
-  static final class AbstractGoalInput {
+  interface GoalInputCases<R> {
+    R simple(GoalInput simple);
+    R projected(ProjectedGoalInput projected);
+  }
+
+  static abstract class AbstractGoalInput {
+    abstract <R> R accept(GoalInputCases<R> cases);
+  }
+
+  static <R> Function<AbstractGoalInput, R> asFunction(GoalInputCases<R> cases) {
+    return input -> input.accept(cases);
+  }
+
+  static <R> Function<AbstractGoalInput, R> goalInputCases(
+      Function<GoalInput, R> simpleFunction,
+      Function<ProjectedGoalInput, R> projectedFunction) {
+    return asFunction(new GoalInputCases<R>() {
+      @Override
+      public R simple(GoalInput simple) {
+        return simpleFunction.apply(simple);
+      }
+      @Override
+      public R projected(ProjectedGoalInput projected) {
+        return projectedFunction.apply(projected);
+      }
+    });
+  }
+
+  static final class GoalInput extends AbstractGoalInput {
     final Module module;
     final AbstractGoalContext goal;
-    AbstractGoalInput(Module module, AbstractGoalContext goal) {
+    GoalInput(Module module, AbstractGoalContext goal) {
       this.module = module;
       this.goal = goal;
     }
+    @Override
+    <R> R accept(GoalInputCases<R> cases) {
+      return cases.simple(this);
+    }
   }
 
-  static final class ProjectedGoalInput {
+  static final class ProjectedGoalInput extends AbstractGoalInput {
     final ProjectedModule module;
     final ProjectedGoal goal;
     ProjectedGoalInput(ProjectedModule module, ProjectedGoal goal) {
       this.module = module;
       this.goal = goal;
+    }
+    @Override
+    <R> R accept(GoalInputCases<R> cases) {
+      return cases.projected(this);
     }
   }
 

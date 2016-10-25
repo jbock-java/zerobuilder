@@ -3,9 +3,9 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.ProjectedSimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 
 import java.util.List;
@@ -35,17 +35,32 @@ public final class DtoProjectedModule {
     }
 
     protected final ClassName implType(ProjectedGoal goal) {
-      String implName = DtoProjectedModule.implName.apply(this, goalContext(goal));
-      return context.apply(goalContext(goal))
+      return legacyImplType(goalContext(goal));
+    }
+
+    @Deprecated
+    protected final ClassName legacyImplType(AbstractGoalContext goal) {
+      String implName = DtoProjectedModule.implName.apply(this, goal);
+      return context.apply(goal)
           .generatedType.nestedClass(implName);
     }
 
     protected final String methodName(ProjectedGoal goal) {
-      return goalContext(goal).name() + upcase(name());
+      return legacyMethodName(goalContext(goal));
+    }
+
+    @Deprecated
+    protected final String legacyMethodName(AbstractGoalContext goal) {
+      return goal.name() + upcase(name());
     }
 
     protected final FieldSpec cacheField(ProjectedGoal goal) {
-      ClassName type = implType(goal);
+      return legacyCacheField(goalContext(goal));
+    }
+
+    @Deprecated
+    protected final FieldSpec legacyCacheField(AbstractGoalContext goal) {
+      ClassName type = legacyImplType(goal);
       return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
           .initializer("new $T()", type)
           .build();
@@ -61,7 +76,7 @@ public final class DtoProjectedModule {
 
   public static abstract class ProjectedSimpleModule extends ProjectedModule {
 
-    protected abstract ProjectedSimpleModuleOutput process(ProjectedGoal goal);
+    protected abstract SimpleModuleOutput process(ProjectedGoal goal);
 
     @Override
     public final <R, P> R accept(ProjectedModuleCases<R, P> cases, P p) {
@@ -71,7 +86,7 @@ public final class DtoProjectedModule {
 
   public static abstract class ProjectedContractModule extends ProjectedModule {
 
-    protected abstract ContractModuleOutput process(AbstractGoalContext goal);
+    protected abstract ContractModuleOutput process(ProjectedGoal goal);
 
     protected final ClassName contractType(ProjectedGoal goal) {
       String contractName = upcase(goalContext(goal).name()) + upcase(name());
@@ -108,7 +123,7 @@ public final class DtoProjectedModule {
     });
   }
 
-  static <R> Function<ProjectedGoalInput, R> goalInputCases(
+  static <R> Function<ProjectedGoalInput, R> projectedGoalInputCases(
       BiFunction<ProjectedSimpleModule, ProjectedGoal, R> simple,
       BiFunction<ProjectedContractModule, ProjectedGoal, R> contract) {
     return input -> asFunction(new ProjectedModuleCases<R, ProjectedGoal>() {

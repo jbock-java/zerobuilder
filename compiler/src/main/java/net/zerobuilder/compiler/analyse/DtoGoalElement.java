@@ -25,6 +25,7 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
+import static net.zerobuilder.compiler.analyse.Analyser.modules;
 import static net.zerobuilder.compiler.analyse.Utilities.downcase;
 
 final class DtoGoalElement {
@@ -40,8 +41,8 @@ final class DtoGoalElement {
 
   static abstract class AbstractGoalElement {
     final Goal goalAnnotation;
-    final Module module;
-    AbstractGoalElement(Goal goalAnnotation, Module module) {
+    final ModuleChoice module;
+    AbstractGoalElement(Goal goalAnnotation, ModuleChoice module) {
       this.goalAnnotation = goalAnnotation;
       this.module = module;
     }
@@ -49,8 +50,8 @@ final class DtoGoalElement {
   }
 
   static <R> Function<AbstractGoalElement, R> goalElementCases(
-      final Function<RegularGoalElement, R> regularGoalFunction,
-      final Function<BeanGoalElement, R> beanGoalFunction) {
+      final Function<RegularGoalElement, ? extends R> regularGoalFunction,
+      final Function<BeanGoalElement, ? extends R> beanGoalFunction) {
     return asFunction(new GoalElementCases<R>() {
       @Override
       public R regularGoal(RegularGoalElement executableGoal) {
@@ -75,11 +76,11 @@ final class DtoGoalElement {
   });
 
   static final class RegularGoalElement extends AbstractGoalElement {
-    final List<? extends Module> modules;
+    final List<ModuleChoice> modules;
     final AbstractRegularGoalDetails details;
     final ExecutableElement executableElement;
 
-    private RegularGoalElement(List<? extends Module> modules, ExecutableElement element, AbstractRegularGoalDetails details, Module module) {
+    private RegularGoalElement(List<ModuleChoice> modules, ExecutableElement element, AbstractRegularGoalDetails details, ModuleChoice module) {
       super(element.getAnnotation(Goal.class), module);
       this.modules = modules;
       this.details = details;
@@ -95,7 +96,7 @@ final class DtoGoalElement {
       GoalMethodType goalMethodType = element.getModifiers().contains(STATIC)
           ? GoalMethodType.STATIC_METHOD
           : GoalMethodType.INSTANCE_METHOD;
-      List<? extends Module> modules = Analyser.modules(goalAnnotation);
+      List<ModuleChoice> modules = modules(goalAnnotation);
       List<String> parameterNames = parameterNames(element);
       return goalOptions.stream()
           .map(goalOption ->
@@ -125,7 +126,7 @@ final class DtoGoalElement {
     final TypeElement beanType;
 
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
-                            Goal goalAnnotation, Access access, Module module) {
+                            Goal goalAnnotation, Access access, ModuleChoice module) {
       super(goalAnnotation, module);
       this.details = new BeanGoalDetails(goalType, name, access);
       this.beanType = beanType;
@@ -161,14 +162,18 @@ final class DtoGoalElement {
         : override.access();
   }
 
+  enum ModuleChoice {
+    UPDATER, BUILDER
+  }
+
   static final class ModuledOption {
     final Access access;
-    final Module module;
-    ModuledOption(Access access, Module module) {
+    final ModuleChoice module;
+    ModuledOption(Access access, ModuleChoice module) {
       this.access = access;
       this.module = module;
     }
-    static ModuledOption create(Access access, Module module) {
+    static ModuledOption create(Access access, ModuleChoice module) {
       return new ModuledOption(access, module);
     }
   }
@@ -177,11 +182,11 @@ final class DtoGoalElement {
     List<ModuledOption> options = new ArrayList<>(2);
     if (goalAnnotation.updater()) {
       options.add(ModuledOption.create(
-          accessLevelOverride(goalAnnotation.updaterAccess(), defaultAccess), new Updater()));
+          accessLevelOverride(goalAnnotation.updaterAccess(), defaultAccess), ModuleChoice.UPDATER));
     }
     if (goalAnnotation.builder()) {
       options.add(ModuledOption.create(
-          accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess), new Builder()));
+          accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess), ModuleChoice.BUILDER));
     }
     return options;
   }

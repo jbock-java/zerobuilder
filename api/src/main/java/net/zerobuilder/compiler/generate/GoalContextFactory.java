@@ -15,6 +15,8 @@ import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoa
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.GoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
@@ -42,6 +44,7 @@ import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionInputCases;
 import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalDescriptionCases;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
+import static net.zerobuilder.compiler.generate.DtoProjectedDescription.projectedDescriptionCases;
 import static net.zerobuilder.compiler.generate.Utilities.reverse;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
@@ -212,15 +215,19 @@ final class GoalContextFactory {
 
   static Function<DescriptionInput, AbstractGoalInput> prepare(BuildersContext context) {
     return descriptionInputCases(
-        (module, description) -> new AbstractGoalInput(
+        (module, description) -> new GoalInput(
             module,
             goalDescriptionCases(
-                goal -> GoalContextFactory.prepareRegular(
-                    context, goal),
-                goal -> GoalContextFactory.prepareBean(
-                    context, goal)).apply(description)),
-        (module, description) -> {
-          throw new UnsupportedOperationException();
-        });
+                regular -> GoalContextFactory.prepareRegular(
+                    context, regular),
+                bean -> GoalContextFactory.prepareBean(
+                    context, bean)).apply(description)),
+        (module, description) -> new ProjectedGoalInput(
+            module,
+            projectedDescriptionCases(
+                regular -> prepareProjectedRegular(
+                    context, regular),
+                bean -> GoalContextFactory.prepareBean(
+                    context, bean)).apply(description)));
   }
 }

@@ -7,7 +7,7 @@ import java.util.function.Function;
 
 public final class DtoProjectedDescription {
 
-  interface ProjectedDescription {
+  public interface ProjectedDescription {
     <R> R acceptProjected(ProjectedDescriptionCases<R> cases);
   }
 

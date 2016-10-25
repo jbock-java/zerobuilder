@@ -3,7 +3,7 @@ package net.zerobuilder.api.test;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.ProjectedDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
@@ -74,7 +74,7 @@ public class UpdaterTest {
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(
-        buildersContext, singletonList(new SimpleDescriptionInput(UPDATER_MODULE, description)));
+        buildersContext, singletonList(new ProjectedDescriptionInput(UPDATER_MODULE, description)));
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);

@@ -65,7 +65,7 @@ final class UpdaterV {
     }
     CollectionInfo collectionInfo = maybeEmptyOption.get();
     return Optional.of(methodBuilder(collectionInfo.name)
-        .returns(updater.implType(goal))
+        .returns(updater.legacyImplType(goal))
         .addStatement("this.$N = $L",
             step.field(), collectionInfo.initializer)
         .addStatement("return this")
@@ -78,7 +78,7 @@ final class UpdaterV {
     TypeName type = step.regularParameter().type;
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
-        .returns(updater.implType(goal))
+        .returns(updater.legacyImplType(goal))
         .addParameter(parameter)
         .addCode(nullCheck.apply(step))
         .addStatement("this.$N = $N", step.field(), parameter)

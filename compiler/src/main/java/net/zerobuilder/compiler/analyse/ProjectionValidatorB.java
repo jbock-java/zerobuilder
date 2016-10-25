@@ -83,7 +83,7 @@ final class ProjectionValidatorB {
           && !method.getReturnType().getKind().equals(TypeKind.VOID)
           && IS_GETTER_NAME.test(method.getSimpleName().toString());
 
-  static final Function<BeanGoalElement, GoalDescription> validateBean
+  static final Function<BeanGoalElement, BeanGoalDescription> validateBean
       = goal -> {
     validateBeanType(goal.beanType);
     Collection<ExecutableElement> getters = getters(goal);
@@ -220,7 +220,7 @@ final class ProjectionValidatorB {
     return false;
   }
 
-  private static GoalDescription createResult(BeanGoalElement goal, List<TmpAccessorPair> tmpAccessorPairs) {
+  private static BeanGoalDescription createResult(BeanGoalElement goal, List<TmpAccessorPair> tmpAccessorPairs) {
     List<TmpAccessorPair> sorted = sortedCopy(tmpAccessorPairs, ALPHABETIC_SORT);
     List<AbstractBeanParameter> validBeanParameters
         = transform(shuffledParameters(sorted), toValidParameter);

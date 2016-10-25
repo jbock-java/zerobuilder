@@ -62,11 +62,11 @@ class DtoInputOutput {
     }
   }
 
-  private static final class ProjectedInputOutput extends AbstractInputOutput {
-    private final ProjectedModule module;
-    private final ProjectedGoal goal;
+  static final class ProjectedInputOutput extends AbstractInputOutput {
+    final ProjectedModule module;
+    final ProjectedGoal goal;
 
-    private ProjectedInputOutput(ProjectedModule module, ProjectedGoal goal, AbstractModuleOutput output) {
+    ProjectedInputOutput(ProjectedModule module, ProjectedGoal goal, AbstractModuleOutput output) {
       super(output);
       this.module = module;
       this.goal = goal;
@@ -81,9 +81,7 @@ class DtoInputOutput {
   private static Function<AbstractInputOutput, FieldSpec> cacheField =
       inputOutputCases(
           simple -> simple.module.cacheField(simple.goal),
-          projected -> {
-            throw new UnsupportedOperationException("not yet implemented");
-          });
+          projected -> projected.module.cacheField(projected.goal));
 
   private DtoInputOutput() {
     throw new UnsupportedOperationException("no instances");

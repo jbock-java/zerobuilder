@@ -21,7 +21,7 @@ import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
 public final class DtoModule {
 
-  static abstract class Module {
+  public static abstract class Module {
     protected abstract String name();
     abstract <R, P> R accept(ModuleCases<R, P> cases, P p);
 
@@ -98,21 +98,6 @@ public final class DtoModule {
         return contract.apply(module, p);
       }
     });
-  }
-
-  static <R> Function<AbstractGoalInput, R> goalInputCases(
-      BiFunction<SimpleModule, AbstractGoalContext, R> simple,
-      BiFunction<ContractModule, AbstractGoalContext, R> contract) {
-    return input -> asFunction(new ModuleCases<R, AbstractGoalContext>() {
-      @Override
-      public R simple(SimpleModule module, AbstractGoalContext p) {
-        return simple.apply(module, p);
-      }
-      @Override
-      public R contract(ContractModule module, AbstractGoalContext p) {
-        return contract.apply(module, p);
-      }
-    }).apply(input.module, input.goal);
   }
 
   private static final BiFunction<Module, AbstractGoalContext, String> implName =

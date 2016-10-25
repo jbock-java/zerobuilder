@@ -6,26 +6,19 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod.getMethod;
-import static net.zerobuilder.compiler.generate.Utilities.concat;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 
 public final class DtoGeneratorOutput {
@@ -148,63 +141,11 @@ public final class DtoGeneratorOutput {
     }
   }
 
-  static Collector<SingleModuleOutputWithField, List<SingleModuleOutputWithField>, GeneratorOutput> collectOutput(
-      DtoContext.BuildersContext context) {
-    return new Collector<SingleModuleOutputWithField, List<SingleModuleOutputWithField>, GeneratorOutput>() {
-      @Override
-      public Supplier<List<SingleModuleOutputWithField>> supplier() {
-        return ArrayList::new;
-      }
-      @Override
-      public BiConsumer<List<SingleModuleOutputWithField>, SingleModuleOutputWithField> accumulator() {
-        return (left, right) -> left.add(right);
-      }
-      @Override
-      public BinaryOperator<List<SingleModuleOutputWithField>> combiner() {
-        return (left, right) -> {
-          left.addAll(right);
-          return left;
-        };
-      }
-      @Override
-      public Function<List<SingleModuleOutputWithField>, GeneratorOutput> finisher() {
-        return outputs -> {
-          List<BuilderMethod> methods = new ArrayList<>(outputs.size());
-          List<TypeSpec> nestedTypes = new ArrayList<>();
-          List<FieldSpec> fields = new ArrayList<>();
-          if (context.lifecycle == BuilderLifecycle.REUSE_INSTANCES) {
-            fields.add(context.cache.get());
-          }
-          for (SingleModuleOutputWithField output : outputs) {
-            methods.add(output.output.method);
-            output.field.ifPresent(fields::add);
-            output.output.nestedTypes.forEach(nestedTypes::add);
-          }
-          return new GeneratorOutput(methods, nestedTypes, fields, context.generatedType, context.lifecycle);
-        };
-      }
-      @Override
-      public Set<Characteristics> characteristics() {
-        return emptySet();
-      }
-    };
-  }
-
-  public static final class ProjectedSimpleModuleOutput {
-    final BuilderMethod method;
-    final List<TypeSpec> nestedTypes;
-
-    public ProjectedSimpleModuleOutput(BuilderMethod method, List<TypeSpec> nestedTypes) {
-      this.method = method;
-      this.nestedTypes = nestedTypes;
-    }
-  }
-
   static final class SingleModuleOutputWithField {
-    final ProjectedSimpleModuleOutput output;
+    final SimpleModuleOutput output;
     final Optional<FieldSpec> field;
 
-    SingleModuleOutputWithField(ProjectedSimpleModuleOutput output, Optional<FieldSpec> field) {
+    SingleModuleOutputWithField(SimpleModuleOutput output, Optional<FieldSpec> field) {
       this.output = output;
       this.field = field;
     }

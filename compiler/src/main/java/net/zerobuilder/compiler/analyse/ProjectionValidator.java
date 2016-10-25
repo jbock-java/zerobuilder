@@ -8,6 +8,8 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
+import net.zerobuilder.compiler.generate.DtoProjectedDescription;
+import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
@@ -35,7 +37,7 @@ import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 
 final class ProjectionValidator {
 
-  static final Function<AbstractGoalElement, GoalDescription> validate =
+  static final Function<AbstractGoalElement, ProjectedDescription> validate =
       goalElementCases(validateValue, validateBean);
 
   static final Function<AbstractGoalElement, GoalDescription> skip =

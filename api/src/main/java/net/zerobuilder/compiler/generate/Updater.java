@@ -7,6 +7,8 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
+import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 
 import java.util.Collections;
@@ -26,7 +28,7 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContex
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
-public final class Updater extends DtoModule.SimpleModule {
+public final class Updater extends ProjectedSimpleModule {
 
   private Function<AbstractGoalContext, List<FieldSpec>> fields(UpdaterB updaterB, UpdaterV updaterV) {
     return goalCases(updaterV.fieldsV, updaterB.fieldsB);
@@ -49,10 +51,11 @@ public final class Updater extends DtoModule.SimpleModule {
         .build();
   }
 
-  private TypeSpec defineUpdater(AbstractGoalContext goal) {
+  private TypeSpec defineUpdater(ProjectedGoal projectedGoal) {
     UpdaterB updaterB = new UpdaterB(this);
     UpdaterV updaterV = new UpdaterV(this);
-    return classBuilder(implType(goal))
+    AbstractGoalContext goal = goalContext(projectedGoal);
+    return classBuilder(implType(projectedGoal))
         .addFields(fields(updaterB, updaterV).apply(goal))
         .addMethods(updateMethods(updaterB, updaterV).apply(goal))
         .addMethod(buildMethod(goal))
@@ -64,14 +67,14 @@ public final class Updater extends DtoModule.SimpleModule {
   private static final Function<AbstractGoalContext, MethodSpec> builderConstructor =
       goalCases(
           AbstractRegularGoalContext::builderConstructor,
-          bGoal -> constructorBuilder()
+          bean -> constructorBuilder()
               .addModifiers(PRIVATE)
-              .addExceptions(bGoal.context.lifecycle == REUSE_INSTANCES
+              .addExceptions(bean.context.lifecycle == REUSE_INSTANCES
                   ? Collections.emptyList()
-                  : bGoal.thrownTypes)
-              .addCode(bGoal.context.lifecycle == REUSE_INSTANCES
+                  : bean.thrownTypes)
+              .addCode(bean.context.lifecycle == REUSE_INSTANCES
                   ? emptyCodeBlock
-                  : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))
+                  : statement("this.$N = new $T()", bean.bean(), bean.type()))
               .build());
 
   private static final Function<AbstractRegularGoalContext, CodeBlock> regularInvoke =
@@ -93,11 +96,11 @@ public final class Updater extends DtoModule.SimpleModule {
   }
 
   @Override
-  protected SimpleModuleOutput process(AbstractGoalContext goal) {
+  protected SimpleModuleOutput process(ProjectedGoal goal) {
     GeneratorBU generatorBU = new GeneratorBU(this);
     GeneratorVU generatorVU = new GeneratorVU(this);
     return new SimpleModuleOutput(
-        goalToUpdater(generatorBU, generatorVU).apply(goal),
+        goalToUpdater(generatorBU, generatorVU).apply(goalContext(goal)),
         defineUpdater(goal));
   }
 }
