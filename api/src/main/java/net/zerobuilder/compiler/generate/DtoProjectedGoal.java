@@ -1,9 +1,9 @@
 package net.zerobuilder.compiler.generate;
 
+import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 
 import java.util.function.Function;
 
@@ -16,8 +16,7 @@ public final class DtoProjectedGoal {
   }
 
   interface ProjectedGoalCases<R> {
-    R method(ProjectedMethodGoalContext method);
-    R constructor(ProjectedConstructorGoalContext constructor);
+    R regular(ProjectedRegularGoalContext regular);
     R bean(BeanGoalContext bean);
   }
 
@@ -26,17 +25,12 @@ public final class DtoProjectedGoal {
   }
 
   static <R> Function<ProjectedGoal, R> projectedGoalCases(
-      Function<ProjectedMethodGoalContext, R> methodFunction,
-      Function<ProjectedConstructorGoalContext, R> constructorFunction,
+      Function<ProjectedRegularGoalContext, R> regularFunction,
       Function<BeanGoalContext, R> beanFunction) {
     return asFunction(new ProjectedGoalCases<R>() {
       @Override
-      public R method(ProjectedMethodGoalContext method) {
-        return methodFunction.apply(method);
-      }
-      @Override
-      public R constructor(ProjectedConstructorGoalContext constructor) {
-        return constructorFunction.apply(constructor);
+      public R regular(ProjectedRegularGoalContext regular) {
+        return regularFunction.apply(regular);
       }
       @Override
       public R bean(BeanGoalContext bean) {
@@ -47,14 +41,16 @@ public final class DtoProjectedGoal {
 
   static <R> Function<ProjectedGoal, R> restrict(Function<AbstractGoalContext, R> function) {
     return projectedGoalCases(
-        method -> function.apply(method),
-        constructor -> function.apply(constructor),
+        regular -> function.apply(regular),
         bean -> function.apply(bean)
     );
   }
 
   static final Function<ProjectedGoal, AbstractGoalContext> goalContext =
       restrict(identity());
+
+  static final Function<ProjectedGoal, TypeName> goalType =
+      restrict(AbstractGoalContext::goalType);
 
   static final Function<ProjectedGoal, DtoContext.BuildersContext> context =
       restrict(AbstractGoalContext::context);

@@ -10,6 +10,7 @@ import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
+import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -24,7 +25,7 @@ import static net.zerobuilder.compiler.generate.Utilities.memoize;
 final class DtoBeanGoal {
 
   static final class BeanGoalContext extends AbstractGoalContext
-      implements ProjectedGoal {
+      implements ProjectedGoal, SimpleGoal {
 
     final BuildersContext context;
     final List<AbstractBeanStep> steps;
@@ -66,12 +67,17 @@ final class DtoBeanGoal {
       return details.goalType;
     }
 
-    public <R> R accept(GoalCases<R> cases) {
+    <R> R accept(GoalCases<R> cases) {
       return cases.beanGoal(this);
     }
 
     @Override
     public <R> R acceptProjected(ProjectedGoalCases<R> cases) {
+      return cases.bean(this);
+    }
+
+    @Override
+    public <R> R acceptSimple(DtoSimpleGoal.SimpleGoalCases<R> cases) {
       return cases.bean(this);
     }
   }

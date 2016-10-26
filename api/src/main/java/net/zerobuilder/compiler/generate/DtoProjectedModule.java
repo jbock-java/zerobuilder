@@ -66,7 +66,7 @@ public final class DtoProjectedModule {
           .build();
     }
 
-    protected final List<DtoStep.AbstractStep> steps(ProjectedGoal goal) {
+    protected final List<? extends DtoStep.AbstractStep> steps(ProjectedGoal goal) {
       return abstractSteps.apply(goalContext(goal));
     }
 

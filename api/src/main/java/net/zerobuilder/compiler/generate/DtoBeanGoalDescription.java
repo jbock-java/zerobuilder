@@ -3,10 +3,9 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescriptionCases;
+import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
 import java.util.List;
 
@@ -15,8 +14,8 @@ public final class DtoBeanGoalDescription {
   /**
    * Describes the task of creating and / or updating a JavaBean.
    */
-  public static final class BeanGoalDescription extends GoalDescription
-      implements ProjectedDescription {
+  public static final class BeanGoalDescription
+      implements ProjectedDescription, SimpleDescription {
 
     final BeanGoalDetails details;
     final List<AbstractBeanParameter> parameters;
@@ -36,12 +35,12 @@ public final class DtoBeanGoalDescription {
     }
 
     @Override
-    public <R> R accept(GoalDescriptionCases<R> cases) {
-      return cases.beanGoal(this);
+    public <R> R acceptProjected(ProjectedDescriptionCases<R> cases) {
+      return cases.bean(this);
     }
 
     @Override
-    public <R> R acceptProjected(ProjectedDescriptionCases<R> cases) {
+    public <R> R acceptSimple(DtoSimpleDescription.SimpleDescriptionCases<R> cases) {
       return cases.bean(this);
     }
   }

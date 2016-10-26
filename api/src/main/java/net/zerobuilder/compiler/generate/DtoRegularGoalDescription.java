@@ -2,13 +2,12 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
 import java.util.List;
 import java.util.function.Function;
@@ -41,7 +40,7 @@ public final class DtoRegularGoalDescription {
     });
   }
 
-  public static abstract class AbstractRegularGoalDescription extends GoalDescription {
+  public static abstract class AbstractRegularGoalDescription {
     final AbstractRegularGoalDetails details;
     final List<TypeName> thrownTypes;
     final List<AbstractRegularParameter> parameters() {
@@ -66,7 +65,8 @@ public final class DtoRegularGoalDescription {
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
-  public static final class SimpleRegularGoalDescription extends AbstractRegularGoalDescription {
+  public static final class SimpleRegularGoalDescription extends AbstractRegularGoalDescription
+      implements SimpleDescription {
 
     final List<SimpleParameter> parameters;
 
@@ -85,27 +85,31 @@ public final class DtoRegularGoalDescription {
     }
 
     @Override
-    public <R> R accept(GoalDescriptionCases<R> cases) {
-
-      return cases.regularGoal(this);
-    }
-    @Override
     <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases) {
       return cases.acceptSimple(this);
+    }
+
+    @Override
+    public <R> R acceptSimple(DtoSimpleDescription.SimpleDescriptionCases<R> cases) {
+      return cases.regular(this);
     }
   }
 
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
-  public static final class ProjectedRegularGoalDescription extends AbstractRegularGoalDescription
+  public static final class ProjectedRegularGoalDescription
       implements ProjectedDescription {
     final List<ProjectedParameter> parameters;
+    final AbstractRegularGoalDetails details;
+    final List<TypeName> thrownTypes;
+
 
     private ProjectedRegularGoalDescription(AbstractRegularGoalDetails details,
                                             List<TypeName> thrownTypes,
                                             List<ProjectedParameter> parameters) {
-      super(details, thrownTypes);
+      this.details = details;
+      this.thrownTypes = thrownTypes;
       this.parameters = parameters;
     }
 
@@ -114,16 +118,6 @@ public final class DtoRegularGoalDescription {
                                                          List<ProjectedParameter> parameters) {
       checkParameterNames(details.parameterNames, parameters);
       return new ProjectedRegularGoalDescription(details, thrownTypes, parameters);
-    }
-
-    @Override
-    public <R> R accept(GoalDescriptionCases<R> cases) {
-      return cases.regularGoal(this);
-    }
-
-    @Override
-    <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases) {
-      return cases.acceptProjected(this);
     }
 
     @Override

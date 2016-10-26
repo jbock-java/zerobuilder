@@ -6,11 +6,11 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.AbstractMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
@@ -36,7 +36,7 @@ final class GeneratorVB {
 
   BuilderMethod goalToBuilderV(AbstractRegularGoalContext goal) {
     AbstractRegularGoalDetails abstractRegularGoalDetails = goal.regularDetails();
-    List<AbstractRegularStep> steps = goal.regularSteps();
+    List<? extends AbstractRegularStep> steps = goal.regularSteps();
     MethodSpec.Builder method = methodBuilder(builder.methodName(goal))
         .returns(builder.contractType(goal).nestedClass(steps.get(0).thisType))
         .addModifiers(abstractRegularGoalDetails.access(STATIC));
@@ -58,7 +58,7 @@ final class GeneratorVB {
         initMethodBuilder(builder, instance));
   }
 
-  private Function<AbstractConstructorGoalContext, CodeBlock> initConstructorBuilder(
+  private Function<SimpleConstructorGoalContext, CodeBlock> initConstructorBuilder(
       ParameterSpec builder) {
     return constructor -> {
       BuildersContext context = constructor.context;
@@ -70,15 +70,15 @@ final class GeneratorVB {
     };
   }
 
-  private Function<AbstractMethodGoalContext, CodeBlock> initMethodBuilder(
+  private Function<SimpleMethodGoalContext, CodeBlock> initMethodBuilder(
       ParameterSpec builder, ParameterSpec instance) {
-    return mGoal -> mGoal.methodType() == INSTANCE_METHOD ?
-        initInstanceMethodBuilder(mGoal, builder, instance) :
-        initStaticMethodBuilder(mGoal, builder);
+    return method -> method.methodType() == INSTANCE_METHOD ?
+        initInstanceMethodBuilder(method, builder, instance) :
+        initStaticMethodBuilder(method, builder);
   }
 
   private CodeBlock initInstanceMethodBuilder(
-      AbstractMethodGoalContext method, ParameterSpec builder, ParameterSpec instance) {
+      SimpleMethodGoalContext method, ParameterSpec builder, ParameterSpec instance) {
     BuildersContext context = method.context;
     TypeName type = builder.type;
     FieldSpec cache = context.cache.get();
@@ -91,7 +91,7 @@ final class GeneratorVB {
   }
 
   private CodeBlock initStaticMethodBuilder(
-      AbstractMethodGoalContext method, ParameterSpec builder) {
+      SimpleMethodGoalContext method, ParameterSpec builder) {
     BuildersContext context = method.context;
     TypeName type = builder.type;
     FieldSpec cache = context.cache.get();

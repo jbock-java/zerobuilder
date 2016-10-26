@@ -1,9 +1,9 @@
 package net.zerobuilder.compiler.generate;
 
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
+import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -24,7 +24,7 @@ public final class DtoDescriptionInput {
   }
 
   static <R> Function<DescriptionInput, R> descriptionInputCases(
-      BiFunction<Module, GoalDescription, R> simpleFunction,
+      BiFunction<Module, SimpleDescription, R> simpleFunction,
       BiFunction<ProjectedModule, ProjectedDescription, R> projectedFunction) {
     return asFunction(new DescriptionInputCases<R>() {
       @Override
@@ -40,8 +40,8 @@ public final class DtoDescriptionInput {
 
   public static final class SimpleDescriptionInput implements DescriptionInput {
     final Module module;
-    final GoalDescription description;
-    public SimpleDescriptionInput(Module module, GoalDescription description) {
+    final SimpleDescription description;
+    public SimpleDescriptionInput(Module module, SimpleDescription description) {
       this.module = module;
       this.description = description;
     }

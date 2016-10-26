@@ -145,7 +145,7 @@ final class Utilities {
     }
   }
 
-  static <X, E> List<E> transform(Collection<X> input, Function<X, E> function) {
+  static <X, E> List<E> transform(Collection<? extends X> input, Function<X, E> function) {
     return input.stream().map(function).collect(toList());
   }
 

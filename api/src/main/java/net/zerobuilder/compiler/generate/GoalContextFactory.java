@@ -20,19 +20,19 @@ import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
+import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.ArrayList;
@@ -42,9 +42,9 @@ import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionInputCases;
-import static net.zerobuilder.compiler.generate.DtoGoalDescription.goalDescriptionCases;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoProjectedDescription.projectedDescriptionCases;
+import static net.zerobuilder.compiler.generate.DtoSimpleDescription.simpleDescriptionCases;
 import static net.zerobuilder.compiler.generate.Utilities.reverse;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
 
@@ -54,59 +54,42 @@ final class GoalContextFactory {
       BuildersContext context,
       BeanGoalDescription goal) {
     List<AbstractBeanStep> steps = steps(
-        goal,
+        goal.details,
+        goal.thrownTypes,
         context,
         goal.parameters,
         beanFactory);
     return new BeanGoalContext(context, goal.details, steps, goal.thrownTypes);
   }
 
-  private static AbstractRegularGoalContext prepareRegular(
+  private static SimpleGoal prepareRegular(
       BuildersContext context,
-      AbstractRegularGoalDescription description) {
-    return DtoRegularGoalDescription.regularGoalDescriptionCases(
-        simple -> {
-          List<SimpleRegularStep> steps = steps(
-              description,
-              context,
-              simple.parameters,
-              simpleRegularFactory);
-          return description.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
-            @Override
-            public AbstractRegularGoalContext method(MethodGoalDetails details) {
-              return new SimpleMethodGoalContext(context, details, steps, description.thrownTypes);
-            }
-            @Override
-            public AbstractRegularGoalContext constructor(ConstructorGoalDetails details) {
-              return new SimpleConstructorGoalContext(context, details, steps, description.thrownTypes);
-            }
-          });
-        },
-        projected -> {
-          List<ProjectedRegularStep> steps = steps(
-              description,
-              context,
-              projected.parameters,
-              projectedRegularFactory);
-          return description.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
-            @Override
-            public AbstractRegularGoalContext method(MethodGoalDetails details) {
-              return new ProjectedMethodGoalContext(context, details, steps, description.thrownTypes);
-            }
-            @Override
-            public AbstractRegularGoalContext constructor(ConstructorGoalDetails details) {
-              return new ProjectedConstructorGoalContext(context, details, steps, description.thrownTypes);
-            }
-          });
-        }
-    ).apply(description);
+      SimpleRegularGoalDescription simple) {
+    List<SimpleRegularStep> steps = steps(
+        simple.details,
+        simple.thrownTypes,
+        context,
+        simple.parameters,
+        simpleRegularFactory);
+    return simple.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
+      @Override
+      public AbstractRegularGoalContext method(MethodGoalDetails details) {
+        return new SimpleMethodGoalContext(context, details, steps, simple.thrownTypes);
+      }
+      @Override
+      public AbstractRegularGoalContext constructor(ConstructorGoalDetails details) {
+        return new SimpleConstructorGoalContext(context, details, steps, simple.thrownTypes);
+      }
+    });
   }
+
 
   private static ProjectedGoal prepareProjectedRegular(
       BuildersContext context,
       ProjectedRegularGoalDescription description) {
     List<ProjectedRegularStep> steps = steps(
-        description,
+        description.details,
+        description.thrownTypes,
         context,
         description.parameters,
         projectedRegularFactory);
@@ -123,13 +106,12 @@ final class GoalContextFactory {
   }
 
   private static <P extends AbstractParameter, S extends AbstractStep> List<S> steps(
-      GoalDescription goal,
+      AbstractGoalDetails details,
+      List<TypeName> thrownTypes,
       BuildersContext context,
       List<P> parameters,
       Function<P, StepFactory<S>> factoryFactory) {
-    AbstractGoalDetails details = goal.details();
     Optional<S> nextStep = Optional.empty();
-    List<TypeName> thrownTypes = goal.thrownTypes();
     List<S> builder = new ArrayList<>(parameters.size());
     for (P parameter : reverse(parameters)) {
       String thisType = upcase(parameterName.apply(parameter));
@@ -217,7 +199,7 @@ final class GoalContextFactory {
     return descriptionInputCases(
         (module, description) -> new GoalInput(
             module,
-            goalDescriptionCases(
+            simpleDescriptionCases(
                 regular -> GoalContextFactory.prepareRegular(
                     context, regular),
                 bean -> GoalContextFactory.prepareBean(

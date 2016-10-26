@@ -4,10 +4,10 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,13 +15,13 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
-import static java.util.Arrays.asList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.goalCases;
+import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
+import static net.zerobuilder.compiler.generate.DtoSimpleGoal.simpleGoalCases;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
@@ -29,23 +29,23 @@ import static net.zerobuilder.compiler.generate.Utilities.transform;
 
 public final class Builder extends ContractModule {
 
-  private List<TypeSpec> stepInterfaces(AbstractGoalContext goal) {
-    return transform(goal.steps(), asStepInterface);
+  private List<TypeSpec> stepInterfaces(SimpleGoal goal) {
+    return transform(abstractSteps.apply(goal), asStepInterface);
   }
 
-  private final Function<AbstractGoalContext, List<MethodSpec>> steps(BuilderB builderB, BuilderV builderV) {
-    return goalCases(builderV.stepsV, builderB.stepsB);
+  private final Function<SimpleGoal, List<MethodSpec>> steps(BuilderB builderB, BuilderV builderV) {
+    return simpleGoalCases(builderV.stepsV, builderB.stepsB);
   }
 
-  private final Function<AbstractGoalContext, List<FieldSpec>> fields(BuilderB builderB, BuilderV builderV) {
-    return goalCases(builderV.fieldsV, builderB.fieldsB);
+  private final Function<SimpleGoal, List<FieldSpec>> fields(BuilderB builderB, BuilderV builderV) {
+    return simpleGoalCases(builderV.fieldsV, builderB.fieldsB);
   }
 
-  private final Function<AbstractGoalContext, BuilderMethod> goalToBuilder(GeneratorBB generatorBB, GeneratorVB generatorVB) {
-    return goalCases(generatorVB::goalToBuilderV, generatorBB::goalToBuilderB);
+  private final Function<SimpleGoal, BuilderMethod> goalToBuilder(GeneratorBB generatorBB, GeneratorVB generatorVB) {
+    return simpleGoalCases(generatorVB::goalToBuilderV, generatorBB::goalToBuilderB);
   }
 
-  private TypeSpec defineBuilderImpl(AbstractGoalContext goal, BuilderB builderB, BuilderV builderV) {
+  private TypeSpec defineBuilderImpl(SimpleGoal goal, BuilderB builderB, BuilderV builderV) {
     return classBuilder(implType(goal))
         .addSuperinterfaces(stepInterfaceTypes(goal))
         .addFields(fields(builderB, builderV).apply(goal))
@@ -55,7 +55,7 @@ public final class Builder extends ContractModule {
         .build();
   }
 
-  private TypeSpec defineContract(AbstractGoalContext goal) {
+  private TypeSpec defineContract(SimpleGoal goal) {
     return classBuilder(contractType(goal))
         .addTypes(stepInterfaces(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
@@ -66,21 +66,23 @@ public final class Builder extends ContractModule {
         .build();
   }
 
-  private final Function<AbstractGoalContext, MethodSpec> builderConstructor =
-      goalCases(
-          AbstractRegularGoalContext::builderConstructor,
-          bGoal -> constructorBuilder()
+  private final Function<SimpleGoal, MethodSpec> builderConstructor =
+      simpleGoalCases(
+          DtoRegularGoalContext.regularGoalContextCases(
+              AbstractRegularGoalContext::builderConstructor,
+              DtoProjectedRegularGoalContext.builderConstructor),
+          bean -> constructorBuilder()
               .addModifiers(PRIVATE)
-              .addExceptions(bGoal.context.lifecycle == REUSE_INSTANCES
+              .addExceptions(bean.context.lifecycle == REUSE_INSTANCES
                   ? Collections.emptyList()
-                  : bGoal.thrownTypes)
-              .addCode(bGoal.context.lifecycle == REUSE_INSTANCES
+                  : bean.thrownTypes)
+              .addCode(bean.context.lifecycle == REUSE_INSTANCES
                   ? emptyCodeBlock
-                  : statement("this.$N = new $T()", bGoal.bean(), bGoal.type()))
+                  : statement("this.$N = new $T()", bean.bean(), bean.type()))
               .build());
 
   @Override
-  protected ContractModuleOutput process(AbstractGoalContext goal) {
+  protected ContractModuleOutput process(SimpleGoal goal) {
     BuilderB builderB = new BuilderB(this);
     BuilderV builderV = new BuilderV(this);
     GeneratorBB generatorBB = new GeneratorBB(this);

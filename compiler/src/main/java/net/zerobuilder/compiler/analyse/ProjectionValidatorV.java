@@ -4,13 +4,13 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpSimpleParameter;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
+import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -100,7 +100,7 @@ final class ProjectionValidatorV {
     return getLocalAndInheritedMethods(type, LOOKS_LIKE_PROJECTION);
   }
 
-  static final Function<RegularGoalElement, GoalDescription> validateValueIgnoreProjections
+  static final Function<RegularGoalElement, SimpleDescription> validateValueIgnoreProjections
       = goal -> {
     List<TmpSimpleParameter> parameters = goal.executableElement.getParameters()
         .stream()

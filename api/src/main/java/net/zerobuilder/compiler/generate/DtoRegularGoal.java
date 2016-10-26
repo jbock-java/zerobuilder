@@ -6,11 +6,12 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.AbstractMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
+import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +30,8 @@ import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 
 final class DtoRegularGoal {
 
-  static abstract class AbstractRegularGoalContext extends AbstractGoalContext {
+  static abstract class AbstractRegularGoalContext
+      extends RegularGoalContext implements SimpleGoal {
 
     abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
     abstract List<String> parameterNames();
@@ -43,7 +45,7 @@ final class DtoRegularGoal {
       return isInstance.test(this);
     }
 
-    final List<AbstractRegularStep> regularSteps() {
+    final List<? extends AbstractRegularStep> regularSteps() {
       return regularSteps.apply(this);
     }
 
@@ -55,12 +57,22 @@ final class DtoRegularGoal {
       return builderConstructor.apply(this);
     }
 
+    @Override
+    final <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {
+      return cases.simple(this);
+    }
+
+    @Override
+    public final <R> R acceptSimple(DtoSimpleGoal.SimpleGoalCases<R> cases) {
+      return cases.regular(this);
+    }
+
     final CodeBlock invocationParameters() {
       return CodeBlock.of(String.join(", ", parameterNames()));
     }
   }
 
-  private static final Function<AbstractRegularGoalContext, AbstractRegularGoalDetails> goalDetails =
+  static final Function<AbstractRegularGoalContext, AbstractRegularGoalDetails> goalDetails =
       regularGoalContextCases(
           constructor -> constructor.details,
           method -> method.details);
@@ -70,9 +82,9 @@ final class DtoRegularGoal {
           constructor -> false,
           method -> method.details.methodType == INSTANCE_METHOD));
 
-  private static final Function<AbstractRegularGoalContext, List<AbstractRegularStep>> regularSteps =
+  private static final Function<AbstractRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
       regularGoalContextCases(
-          constructor -> constructor.constructorSteps(),
+          constructor -> constructor.steps,
           method -> method.methodSteps());
 
   private static final Function<AbstractRegularGoalContext, Optional<FieldSpec>> fields =
@@ -84,24 +96,24 @@ final class DtoRegularGoal {
 
   private static final Function<AbstractRegularGoalContext, MethodSpec> builderConstructor =
       regularGoalContextCases(
-          cGoal -> constructor(PRIVATE),
-          mGoal -> {
-            if (!isInstance.test(mGoal)
-                || mGoal.context.lifecycle == REUSE_INSTANCES) {
+          constructor -> constructor(PRIVATE),
+          method -> {
+            if (!isInstance.test(method)
+                || method.context.lifecycle == REUSE_INSTANCES) {
               return constructor(PRIVATE);
             }
-            ClassName type = mGoal.context.type;
+            ClassName type = method.context.type;
             ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
             return constructorBuilder()
                 .addParameter(parameter)
-                .addStatement("this.$N = $N", mGoal.field(), parameter)
+                .addStatement("this.$N = $N", method.field(), parameter)
                 .addModifiers(PRIVATE)
                 .build();
           });
 
   interface RegularGoalContextCases<R> {
-    R constructorGoal(AbstractConstructorGoalContext goal);
-    R methodGoal(AbstractMethodGoalContext goal);
+    R constructorGoal(SimpleConstructorGoalContext goal);
+    R methodGoal(SimpleMethodGoalContext goal);
   }
 
   static <R> Function<AbstractRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
@@ -109,15 +121,15 @@ final class DtoRegularGoal {
   }
 
   static <R> Function<AbstractRegularGoalContext, R> regularGoalContextCases(
-      Function<AbstractConstructorGoalContext, R> constructor,
-      Function<AbstractMethodGoalContext, R> method) {
+      Function<SimpleConstructorGoalContext, R> constructor,
+      Function<SimpleMethodGoalContext, R> method) {
     return asFunction(new RegularGoalContextCases<R>() {
       @Override
-      public R constructorGoal(AbstractConstructorGoalContext goal) {
+      public R constructorGoal(SimpleConstructorGoalContext goal) {
         return constructor.apply(goal);
       }
       @Override
-      public R methodGoal(AbstractMethodGoalContext goal) {
+      public R methodGoal(SimpleMethodGoalContext goal) {
         return method.apply(goal);
       }
     });

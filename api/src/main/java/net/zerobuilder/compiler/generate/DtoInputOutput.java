@@ -4,6 +4,7 @@ import com.squareup.javapoet.FieldSpec;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
+import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.function.Function;
 
@@ -48,9 +49,9 @@ class DtoInputOutput {
 
   static final class InputOutput extends AbstractInputOutput {
     private final DtoModule.Module module;
-    private final DtoGoalContext.AbstractGoalContext goal;
+    private final SimpleGoal goal;
 
-    InputOutput(DtoModule.Module module, DtoGoalContext.AbstractGoalContext goal, AbstractModuleOutput output) {
+    InputOutput(DtoModule.Module module, SimpleGoal goal, AbstractModuleOutput output) {
       super(output);
       this.module = module;
       this.goal = goal;

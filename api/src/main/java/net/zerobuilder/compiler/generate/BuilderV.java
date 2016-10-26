@@ -5,8 +5,8 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoConstructorGoal.AbstractConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.AbstractMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
@@ -38,7 +38,7 @@ final class BuilderV {
 
   final Function<AbstractRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
-    List<AbstractRegularStep> steps = goal.regularSteps();
+    List<? extends AbstractRegularStep> steps = goal.regularSteps();
     return Stream.concat(
         presentInstances(goal.fields()).stream(),
         steps.stream()
@@ -49,7 +49,7 @@ final class BuilderV {
 
   final Function<AbstractRegularGoalContext, List<MethodSpec>> stepsV
       = goal -> {
-    List<AbstractRegularStep> steps = goal.regularSteps();
+    List<? extends AbstractRegularStep> steps = goal.regularSteps();
     List<MethodSpec> builder = new ArrayList<>();
     for (AbstractRegularStep step : steps.subList(0, steps.size() - 1)) {
       builder.addAll(regularMethods(step, goal, false));
@@ -132,7 +132,7 @@ final class BuilderV {
                                                                  final CollectionInfo collectionInfo) {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
-      public CodeBlock constructorGoal(AbstractConstructorGoalContext goal) {
+      public CodeBlock constructorGoal(SimpleConstructorGoalContext goal) {
         CodeBlock parameters = goal.invocationParameters();
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
@@ -142,7 +142,7 @@ final class BuilderV {
             .build();
       }
       @Override
-      public CodeBlock methodGoal(AbstractMethodGoalContext goal) {
+      public CodeBlock methodGoal(SimpleMethodGoalContext goal) {
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
         return CodeBlock.builder()

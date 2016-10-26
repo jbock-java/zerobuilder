@@ -11,6 +11,9 @@ import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoInputOutput.AbstractInputOutput;
 import net.zerobuilder.compiler.generate.DtoInputOutput.InputOutput;
 import net.zerobuilder.compiler.generate.DtoInputOutput.ProjectedInputOutput;
+import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
+import net.zerobuilder.compiler.generate.DtoModule.ModuleCases;
+import net.zerobuilder.compiler.generate.DtoModule.SimpleModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedContractModule;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModuleCases;
@@ -82,13 +85,13 @@ public final class Generator {
   private static final Function<AbstractGoalInput, AbstractInputOutput> process =
       goalInputCases(
           simpleInput -> new InputOutput(simpleInput.module, simpleInput.goal,
-              simpleInput.module.accept(new DtoModule.ModuleCases<AbstractModuleOutput, Void>() {
+              simpleInput.module.accept(new ModuleCases<AbstractModuleOutput, Void>() {
                 @Override
-                public AbstractModuleOutput simple(DtoModule.SimpleModule module, Void o) {
+                public AbstractModuleOutput simple(SimpleModule module, Void o) {
                   return module.process(simpleInput.goal);
                 }
                 @Override
-                public AbstractModuleOutput contract(DtoModule.ContractModule module, Void o) {
+                public AbstractModuleOutput contract(ContractModule module, Void o) {
                   return module.process(simpleInput.goal);
                 }
               }, null)),

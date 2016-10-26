@@ -2,19 +2,19 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
+import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
+import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractSteps;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.context;
+import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
+import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
+import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 import static net.zerobuilder.compiler.generate.Utilities.upcase;
@@ -25,24 +25,24 @@ public final class DtoModule {
     protected abstract String name();
     abstract <R, P> R accept(ModuleCases<R, P> cases, P p);
 
-    protected final ClassName implType(AbstractGoalContext goal) {
+    protected final ClassName implType(SimpleGoal goal) {
       String implName = DtoModule.implName.apply(this, goal);
       return context.apply(goal)
           .generatedType.nestedClass(implName);
     }
 
-    protected final String methodName(AbstractGoalContext goal) {
-      return goal.name() + upcase(name());
+    protected final String methodName(SimpleGoal goal) {
+      return name.apply(goal) + upcase(name());
     }
 
-    protected final FieldSpec cacheField(AbstractGoalContext goal) {
+    protected final FieldSpec cacheField(SimpleGoal goal) {
       ClassName type = implType(goal);
       return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
           .initializer("new $T()", type)
           .build();
     }
 
-    protected final List<DtoStep.AbstractStep> steps(AbstractGoalContext goal) {
+    protected final List<? extends AbstractStep> steps(SimpleGoal goal) {
       return abstractSteps.apply(goal);
     }
   }
@@ -54,7 +54,7 @@ public final class DtoModule {
 
   public static abstract class SimpleModule extends Module {
 
-    protected abstract SimpleModuleOutput process(AbstractGoalContext goal);
+    protected abstract SimpleModuleOutput process(SimpleGoal goal);
 
     @Override
     public final <R, P> R accept(ModuleCases<R, P> cases, P p) {
@@ -63,14 +63,14 @@ public final class DtoModule {
   }
 
   public static abstract class ContractModule extends Module {
-    protected abstract ContractModuleOutput process(AbstractGoalContext goal);
+    protected abstract ContractModuleOutput process(SimpleGoal goal);
 
-    protected final List<ClassName> stepInterfaceTypes(AbstractGoalContext goal) {
+    protected final List<ClassName> stepInterfaceTypes(SimpleGoal goal) {
       return transform(steps(goal), step -> contractType(goal).nestedClass(step.thisType));
     }
 
-    protected final ClassName contractType(AbstractGoalContext goal) {
-      String contractName = upcase(goal.name()) + upcase(name());
+    protected final ClassName contractType(SimpleGoal goal) {
+      String contractName = upcase(name.apply(goal)) + upcase(name());
       return context.apply(goal)
           .generatedType.nestedClass(contractName);
     }
@@ -100,10 +100,10 @@ public final class DtoModule {
     });
   }
 
-  private static final BiFunction<Module, AbstractGoalContext, String> implName =
+  private static final BiFunction<Module, SimpleGoal, String> implName =
       moduleCases(
-          (simple, goal) -> upcase(goal.name()) + upcase(simple.name()),
-          (contract, goal) -> upcase(goal.name()) + upcase(contract.name()) + "Impl");
+          (simple, goal) -> upcase(name.apply(goal)) + upcase(simple.name()),
+          (contract, goal) -> upcase(name.apply(goal)) + upcase(contract.name()) + "Impl");
 
   private DtoModule() {
     throw new UnsupportedOperationException("no instances");

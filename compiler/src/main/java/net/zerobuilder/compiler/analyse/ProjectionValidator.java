@@ -7,13 +7,12 @@ import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.generate.DtoGoalDescription.GoalDescription;
-import net.zerobuilder.compiler.generate.DtoProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -40,7 +39,7 @@ final class ProjectionValidator {
   static final Function<AbstractGoalElement, ProjectedDescription> validate =
       goalElementCases(validateValue, validateBean);
 
-  static final Function<AbstractGoalElement, GoalDescription> skip =
+  static final Function<AbstractGoalElement, SimpleDescription> skip =
       goalElementCases(validateValueIgnoreProjections, validateBean);
 
   /**
