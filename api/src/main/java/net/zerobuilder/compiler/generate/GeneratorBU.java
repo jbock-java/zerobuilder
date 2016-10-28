@@ -22,7 +22,7 @@ import java.util.function.Function;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.Arrays.asList;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.NullPolicy.ALLOW;
+import static net.zerobuilder.NullPolicy.ALLOW_NULL;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
@@ -81,7 +81,7 @@ final class GeneratorBU {
 
   private Function<AbstractBeanStep, CodeBlock> nullChecks(BeanGoalContext goal) {
     return beanStepCases(
-        step -> step.accessorPair.nullPolicy == ALLOW
+        step -> step.accessorPair.nullPolicy == ALLOW_NULL
             ? emptyCodeBlock
             : nullCheck(goal, step.accessorPair),
         step -> nullCheck(goal, step.loneGetter));

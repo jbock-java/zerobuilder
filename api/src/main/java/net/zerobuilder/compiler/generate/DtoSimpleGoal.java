@@ -3,8 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 
 import java.util.List;
 import java.util.function.Function;
@@ -18,7 +17,7 @@ public final class DtoSimpleGoal {
   }
 
   interface SimpleGoalCases<R> {
-    R regular(AbstractRegularGoalContext regular);
+    R regular(SimpleRegularGoalContext regular);
     R bean(BeanGoalContext bean);
   }
 
@@ -27,11 +26,11 @@ public final class DtoSimpleGoal {
   }
 
   static <R> Function<SimpleGoal, R> simpleGoalCases(
-      Function<? super AbstractRegularGoalContext, ? extends R> regularFunction,
+      Function<? super SimpleRegularGoalContext, ? extends R> regularFunction,
       Function<? super BeanGoalContext, ? extends R> beanFunction) {
     return asFunction(new SimpleGoalCases<R>() {
       @Override
-      public R regular(AbstractRegularGoalContext regular) {
+      public R regular(SimpleRegularGoalContext regular) {
         return regularFunction.apply(regular);
       }
       @Override

@@ -2,7 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 
 import java.util.function.Function;
 
@@ -17,7 +17,7 @@ final class DtoRegularGoalContext {
   }
 
   interface RegularGoalContextCases<R> {
-    R simple(AbstractRegularGoalContext simple);
+    R simple(SimpleRegularGoalContext simple);
     R projected(ProjectedRegularGoalContext projected);
   }
 
@@ -26,11 +26,11 @@ final class DtoRegularGoalContext {
   }
 
   static <R> Function<RegularGoalContext, R> regularGoalContextCases(
-      Function<AbstractRegularGoalContext, R> simpleFunction,
+      Function<SimpleRegularGoalContext, R> simpleFunction,
       Function<ProjectedRegularGoalContext, R> projectedFunction) {
     return asFunction(new RegularGoalContextCases<R>() {
       @Override
-      public R simple(AbstractRegularGoalContext simple) {
+      public R simple(SimpleRegularGoalContext simple) {
         return simpleFunction.apply(simple);
       }
       @Override

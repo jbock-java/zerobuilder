@@ -2,14 +2,14 @@ package net.zerobuilder;
 
 public enum NullPolicy {
 
-  ALLOW {
+  ALLOW_NULL {
     @Override
     public boolean check() {
       return false;
     }
   },
 
-  REJECT {
+  REJECT_NULL {
     @Override
     public boolean check() {
       return true;
@@ -17,7 +17,7 @@ public enum NullPolicy {
   },
 
   /**
-   * Use inherited, or {@link #ALLOW}
+   * Use inherited, or {@link #ALLOW_NULL}
    * if nothing is inherited or inherited is also {@link #DEFAULT}
    */
   DEFAULT {

@@ -30,7 +30,7 @@ import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 
 final class DtoRegularGoal {
 
-  static abstract class AbstractRegularGoalContext
+  static abstract class SimpleRegularGoalContext
       extends RegularGoalContext implements SimpleGoal {
 
     abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
@@ -72,29 +72,29 @@ final class DtoRegularGoal {
     }
   }
 
-  static final Function<AbstractRegularGoalContext, AbstractRegularGoalDetails> goalDetails =
+  static final Function<SimpleRegularGoalContext, AbstractRegularGoalDetails> goalDetails =
       regularGoalContextCases(
           constructor -> constructor.details,
           method -> method.details);
 
-  private static final Predicate<AbstractRegularGoalContext> isInstance =
+  private static final Predicate<SimpleRegularGoalContext> isInstance =
       asPredicate(regularGoalContextCases(
           constructor -> false,
           method -> method.details.methodType == INSTANCE_METHOD));
 
-  private static final Function<AbstractRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
+  private static final Function<SimpleRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
       regularGoalContextCases(
           constructor -> constructor.steps,
           method -> method.methodSteps());
 
-  private static final Function<AbstractRegularGoalContext, Optional<FieldSpec>> fields =
+  private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> fields =
       regularGoalContextCases(
           constructor -> empty(),
           method -> isInstance.test(method) ?
               Optional.of(method.field()) :
               empty());
 
-  private static final Function<AbstractRegularGoalContext, MethodSpec> builderConstructor =
+  private static final Function<SimpleRegularGoalContext, MethodSpec> builderConstructor =
       regularGoalContextCases(
           constructor -> constructor(PRIVATE),
           method -> {
@@ -116,11 +116,11 @@ final class DtoRegularGoal {
     R methodGoal(SimpleMethodGoalContext goal);
   }
 
-  static <R> Function<AbstractRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
+  static <R> Function<SimpleRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegular(cases);
   }
 
-  static <R> Function<AbstractRegularGoalContext, R> regularGoalContextCases(
+  static <R> Function<SimpleRegularGoalContext, R> regularGoalContextCases(
       Function<SimpleConstructorGoalContext, R> constructor,
       Function<SimpleMethodGoalContext, R> method) {
     return asFunction(new RegularGoalContextCases<R>() {

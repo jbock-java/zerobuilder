@@ -7,16 +7,12 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.squareup.javapoet.TypeName.VOID;
-import static java.util.Collections.unmodifiableList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
@@ -30,7 +26,7 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 public final class DtoMethodGoal {
 
-  static final class SimpleMethodGoalContext extends AbstractRegularGoalContext {
+  static final class SimpleMethodGoalContext extends SimpleRegularGoalContext {
     final List<SimpleRegularStep> steps;
 
     SimpleMethodGoalContext(

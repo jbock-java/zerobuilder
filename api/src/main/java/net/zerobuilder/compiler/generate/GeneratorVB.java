@@ -11,7 +11,7 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
 import java.util.List;
@@ -34,7 +34,7 @@ final class GeneratorVB {
     this.builder = builder;
   }
 
-  BuilderMethod goalToBuilderV(AbstractRegularGoalContext goal) {
+  BuilderMethod goalToBuilderV(SimpleRegularGoalContext goal) {
     AbstractRegularGoalDetails abstractRegularGoalDetails = goal.regularDetails();
     List<? extends AbstractRegularStep> steps = goal.regularSteps();
     MethodSpec.Builder method = methodBuilder(builder.methodName(goal))
@@ -51,7 +51,7 @@ final class GeneratorVB {
     return new BuilderMethod(goal.name(), methodSpec);
   }
 
-  private Function<AbstractRegularGoalContext, CodeBlock> initBuilder(
+  private Function<SimpleRegularGoalContext, CodeBlock> initBuilder(
       ParameterSpec builder, ParameterSpec instance) {
     return regularGoalContextCases(
         initConstructorBuilder(builder),
@@ -100,7 +100,7 @@ final class GeneratorVB {
         statement("$T $N = new $T()", type, builder, type);
   }
 
-  private ParameterSpec builderInstance(AbstractRegularGoalContext goal) {
+  private ParameterSpec builderInstance(SimpleRegularGoalContext goal) {
     ClassName type = builder.implType(goal);
     return parameterSpec(type, downcase(type.simpleName()));
   }

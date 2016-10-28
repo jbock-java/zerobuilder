@@ -28,7 +28,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.NullPolicy.ALLOW;
+import static net.zerobuilder.NullPolicy.ALLOW_NULL;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.steps;
@@ -111,7 +111,7 @@ final class GeneratorVU {
     return new ProjectionInfoCases<CodeBlock, AbstractRegularStep>() {
       @Override
       public CodeBlock projectionMethod(ProjectionMethod projection, AbstractRegularStep step) {
-        if (step.regularParameter().nullPolicy == ALLOW) {
+        if (step.regularParameter().nullPolicy == ALLOW_NULL) {
           return emptyCodeBlock;
         }
         ParameterSpec parameter = toBuilderParameter(goal);
@@ -123,7 +123,7 @@ final class GeneratorVU {
       }
       @Override
       public CodeBlock fieldAccess(FieldAccess projection, AbstractRegularStep step) {
-        if (step.regularParameter().nullPolicy == ALLOW) {
+        if (step.regularParameter().nullPolicy == ALLOW_NULL) {
           return emptyCodeBlock;
         }
         ParameterSpec parameter = toBuilderParameter(goal);

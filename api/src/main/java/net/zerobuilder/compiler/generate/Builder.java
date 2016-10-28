@@ -6,7 +6,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.Collections;
@@ -69,7 +69,7 @@ public final class Builder extends ContractModule {
   private final Function<SimpleGoal, MethodSpec> builderConstructor =
       simpleGoalCases(
           DtoRegularGoalContext.regularGoalContextCases(
-              AbstractRegularGoalContext::builderConstructor,
+              SimpleRegularGoalContext::builderConstructor,
               DtoProjectedRegularGoalContext.builderConstructor),
           bean -> constructorBuilder()
               .addModifiers(PRIVATE)

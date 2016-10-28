@@ -25,7 +25,7 @@ import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.AbstractRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
@@ -71,13 +71,13 @@ final class GoalContextFactory {
         context,
         simple.parameters,
         simpleRegularFactory);
-    return simple.details.accept(new RegularGoalCases<AbstractRegularGoalContext>() {
+    return simple.details.accept(new RegularGoalCases<SimpleRegularGoalContext>() {
       @Override
-      public AbstractRegularGoalContext method(MethodGoalDetails details) {
+      public SimpleRegularGoalContext method(MethodGoalDetails details) {
         return new SimpleMethodGoalContext(context, details, steps, simple.thrownTypes);
       }
       @Override
-      public AbstractRegularGoalContext constructor(ConstructorGoalDetails details) {
+      public SimpleRegularGoalContext constructor(ConstructorGoalDetails details) {
         return new SimpleConstructorGoalContext(context, details, steps, simple.thrownTypes);
       }
     });
