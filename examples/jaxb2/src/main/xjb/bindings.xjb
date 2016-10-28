@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<jaxb:bindings
+    xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:annox="http://annox.dev.java.net"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/jaxb http://java.sun.com/xml/ns/jaxb/bindingschema_2_0.xsd"
+    version="2.1">
+
+  <jaxb:globalBindings>
+    <xjc:simple/>
+  </jaxb:globalBindings>
+
+  <jaxb:bindings schemaLocation="../xsd/paperclips.xsd">
+    <jaxb:bindings node="xs:complexType[@name='PaperclipFactory']">
+      <annox:annotateClass>@net.zerobuilder.Goal(updater = true)</annox:annotateClass>
+      <annox:annotateClass>@net.zerobuilder.Builders</annox:annotateClass>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:element[@name = 'employees']/xs:complexType">
+      <annox:annotateClass>@net.zerobuilder.Goal</annox:annotateClass>
+      <annox:annotateClass>@net.zerobuilder.Builders</annox:annotateClass>
+    </jaxb:bindings>
+    <jaxb:bindings node="xs:complexType[@name='Employee']">
+      <annox:annotateClass>@net.zerobuilder.Goal</annox:annotateClass>
+      <annox:annotateClass>@net.zerobuilder.Builders</annox:annotateClass>
+    </jaxb:bindings>
+    <jaxb:schemaBindings>
+      <jaxb:package name="net.zerobuilder.paperclips"/>
+    </jaxb:schemaBindings>
+  </jaxb:bindings>
+
+</jaxb:bindings>

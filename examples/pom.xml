@@ -19,6 +19,7 @@
         <module>autovalue</module>
         <module>basic</module>
         <module>derive4j</module>
+        <module>jaxb2</module>
     </modules>
 
 </project>

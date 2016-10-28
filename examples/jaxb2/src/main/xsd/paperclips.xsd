@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           attributeFormDefault="unqualified" elementFormDefault="qualified"
+           xmlns:example="https://zerobuilder.net/examples/jaxb"
+           targetNamespace="https://zerobuilder.net/examples/jaxb">
+
+  <xs:complexType name="PaperclipFactory">
+    <xs:sequence>
+      <xs:element name="type" type="xs:string"/>
+      <xs:element name="size" type="xs:int"/>
+      <xs:element name="employees">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="employee"
+                        type="example:Employee"
+                        minOccurs="0"
+                        maxOccurs="unbounded">
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Employee">
+    <xs:sequence>
+      <xs:element name="handle" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

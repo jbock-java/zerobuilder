@@ -1,0 +1,80 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>de.github.h908714124</groupId>
+  <artifactId>zerobuilder-examples-jaxb2</artifactId>
+  <version>${revision}</version>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <revision>0-SNAPSHOT</revision>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <version>2.3</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <id>xjc</id>
+            <configuration>
+              <xjbSources>
+                <xjbSource>${basedir}/src/main/xjb/bindings.xjb</xjbSource>
+              </xjbSources>
+              <extension>true</extension>
+              <arguments>
+                <argument>-Xannotate</argument>
+              </arguments>
+            </configuration>
+            <goals>
+              <goal>xjc</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-basics-annotate</artifactId>
+            <version>1.0.2</version>
+          </dependency>
+          <dependency>
+            <groupId>com.github.h908714124</groupId>
+            <artifactId>zerobuilder</artifactId>
+            <version>${revision}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.5.1</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>com.github.h908714124</groupId>
+      <artifactId>zerobuilder</artifactId>
+      <version>${revision}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
