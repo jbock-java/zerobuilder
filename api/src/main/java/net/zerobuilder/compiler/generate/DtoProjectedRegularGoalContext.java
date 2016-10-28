@@ -43,6 +43,11 @@ public final class DtoProjectedRegularGoalContext {
 
   static abstract class ProjectedRegularGoalContext extends RegularGoalContext
       implements ProjectedGoal {
+
+    ProjectedRegularGoalContext(List<TypeName> thrownTypes) {
+      super(thrownTypes);
+    }
+
     abstract <R> R acceptRegularProjected(ProjectedRegularGoalContextCases<R> cases);
 
     @Override
@@ -83,7 +88,6 @@ public final class DtoProjectedRegularGoalContext {
     final List<ProjectedRegularStep> steps;
     final BuildersContext context;
     final MethodGoalDetails details;
-    final List<TypeName> thrownTypes;
 
     FieldSpec field() {
       ClassName type = context.type;
@@ -109,9 +113,9 @@ public final class DtoProjectedRegularGoalContext {
         MethodGoalDetails details,
         List<ProjectedRegularStep> steps,
         List<TypeName> thrownTypes) {
+      super(thrownTypes);
       this.context = context;
       this.details = details;
-      this.thrownTypes = thrownTypes;
       this.steps = steps;
     }
 
@@ -126,16 +130,15 @@ public final class DtoProjectedRegularGoalContext {
 
     final BuildersContext context;
     final DtoGoal.ConstructorGoalDetails details;
-    final List<TypeName> thrownTypes;
     final List<ProjectedRegularStep> steps;
 
     ProjectedConstructorGoalContext(BuildersContext context,
                                     DtoGoal.ConstructorGoalDetails details,
                                     List<ProjectedRegularStep> steps,
                                     List<TypeName> thrownTypes) {
+      super(thrownTypes);
       this.context = context;
       this.details = details;
-      this.thrownTypes = thrownTypes;
       this.steps = steps;
     }
 

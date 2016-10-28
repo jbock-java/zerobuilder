@@ -17,19 +17,17 @@ public final class DtoConstructorGoal {
       extends DtoRegularGoal.SimpleRegularGoalContext {
 
     final List<SimpleRegularStep> steps;
-
     final BuildersContext context;
     final ConstructorGoalDetails details;
-    final List<TypeName> thrownTypes;
 
     SimpleConstructorGoalContext(BuildersContext context,
                                  ConstructorGoalDetails details,
                                  List<SimpleRegularStep> steps,
                                  List<TypeName> thrownTypes) {
+      super(thrownTypes);
       this.context = context;
       this.details = details;
       this.steps = steps;
-      this.thrownTypes = thrownTypes;
     }
 
     final List<AbstractRegularStep> constructorSteps() {

@@ -93,8 +93,8 @@ public final class DtoRegularStep {
   }
 
   static final class SimpleRegularStep extends AbstractRegularStep {
-    final SimpleParameter parameter;
 
+    final SimpleParameter parameter;
     private final Supplier<FieldSpec> field;
     private final Supplier<Optional<DtoStep.CollectionInfo>> collectionInfo;
 

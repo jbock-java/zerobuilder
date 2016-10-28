@@ -33,6 +33,10 @@ final class DtoRegularGoal {
   static abstract class SimpleRegularGoalContext
       extends RegularGoalContext implements SimpleGoal {
 
+    SimpleRegularGoalContext(List<TypeName> thrownTypes) {
+      super(thrownTypes);
+    }
+
     abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
     abstract List<String> parameterNames();
     abstract TypeName type();

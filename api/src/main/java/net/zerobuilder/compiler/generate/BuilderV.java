@@ -7,8 +7,8 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
@@ -24,6 +24,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
+import static net.zerobuilder.compiler.generate.Utilities.concat;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
@@ -70,14 +71,19 @@ final class BuilderV {
     TypeName type = step.regularParameter().type;
     String name = step.regularParameter().name;
     ParameterSpec parameter = parameterSpec(type, name);
+    List<TypeName> thrownTypes = step.declaredExceptions();
+    if (isLast) {
+      thrownTypes = concat(thrownTypes, goal.thrownTypes);
+    }
+    TypeName nextType = nextType(step);
     return methodBuilder(step.regularParameter().name)
         .addAnnotation(Override.class)
         .addParameter(parameter)
-        .returns(nextType(step))
+        .returns(nextType)
         .addCode(nullCheck.apply(step))
         .addCode(normalAssignment(step, goal, isLast))
         .addModifiers(PUBLIC)
-        .addExceptions(step.declaredExceptions())
+        .addExceptions(thrownTypes)
         .build();
   }
 

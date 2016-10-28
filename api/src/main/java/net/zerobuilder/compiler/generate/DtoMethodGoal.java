@@ -34,8 +34,8 @@ public final class DtoMethodGoal {
         MethodGoalDetails details,
         List<SimpleRegularStep> steps,
         List<TypeName> thrownTypes) {
+      super(thrownTypes);
       this.details = details;
-      this.thrownTypes = thrownTypes;
       this.context = context;
       this.field = memoizeField(context);
       this.steps = steps;
@@ -43,7 +43,6 @@ public final class DtoMethodGoal {
 
     final BuildersContext context;
     final MethodGoalDetails details;
-    final List<TypeName> thrownTypes;
 
     GoalMethodType methodType() {
       return details.methodType;

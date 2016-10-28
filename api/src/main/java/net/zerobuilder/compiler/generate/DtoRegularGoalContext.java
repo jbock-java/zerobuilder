@@ -1,14 +1,23 @@
 package net.zerobuilder.compiler.generate;
 
+import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 
+import java.util.List;
 import java.util.function.Function;
 
 final class DtoRegularGoalContext {
 
   static abstract class RegularGoalContext extends AbstractGoalContext {
+
+    final List<TypeName> thrownTypes;
+
+    RegularGoalContext(List<TypeName> thrownTypes) {
+      this.thrownTypes = thrownTypes;
+    }
+
     abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
     @Override
     final <R> R accept(DtoGoalContext.GoalCases<R> cases) {
