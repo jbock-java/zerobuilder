@@ -96,7 +96,7 @@ final class Utilities {
   static List<TypeName> thrownTypes(ExecutableElement executableElement) {
     return executableElement.getThrownTypes().stream()
         .map(TypeName::get)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private Utilities() {

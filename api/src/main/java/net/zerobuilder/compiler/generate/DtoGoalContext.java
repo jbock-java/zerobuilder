@@ -113,12 +113,10 @@ final class DtoGoalContext {
           DtoRegularGoalContext.regularGoalContextCases(
               DtoRegularGoal.regularGoalContextCases(
                   constructor -> constructor.steps,
-                  method -> method.methodSteps()),
+                  method -> method.steps),
               DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
                   method -> method.steps,
-                  constructor -> constructor.steps
-              )
-          ),
+                  constructor -> constructor.steps)),
           bean -> unmodifiableList(bean.steps));
 
   private DtoGoalContext() {

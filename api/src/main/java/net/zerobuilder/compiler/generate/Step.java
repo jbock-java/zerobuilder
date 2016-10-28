@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
+import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.function.Function;
@@ -28,8 +29,11 @@ final class Step {
     return nullCheck(name, name);
   });
 
-  static final Function<AbstractStep, TypeSpec> asStepInterface
-      = asFunction(stepCases(regularStepInterface, beanStepInterface));
+  static Function<AbstractStep, TypeSpec> asStepInterface(SimpleGoal goal) {
+    return asFunction(stepCases(
+        regularStepInterface(goal),
+        beanStepInterface));
+  }
 
   private Step() {
     throw new UnsupportedOperationException("no instances");

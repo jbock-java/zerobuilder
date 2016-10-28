@@ -30,7 +30,7 @@ import static net.zerobuilder.compiler.generate.Utilities.transform;
 public final class Builder extends ContractModule {
 
   private List<TypeSpec> stepInterfaces(SimpleGoal goal) {
-    return transform(abstractSteps.apply(goal), asStepInterface);
+    return transform(abstractSteps.apply(goal), asStepInterface(goal));
   }
 
   private final Function<SimpleGoal, List<MethodSpec>> steps(BuilderB builderB, BuilderV builderV) {

@@ -107,9 +107,10 @@ final class ProjectionValidatorV {
         .map(parameter -> TmpSimpleParameter.create(parameter, goal.goalAnnotation))
         .collect(toList());
     List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
+    List<TypeName> thrownTypes = thrownTypes(goal.executableElement);
     return SimpleRegularGoalDescription.create(
         goal.details,
-        thrownTypes(goal.executableElement),
+        thrownTypes,
         transform(shuffled, parameter -> parameter.parameter));
   };
 
