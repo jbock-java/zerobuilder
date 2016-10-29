@@ -7,7 +7,6 @@ import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.generate.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
@@ -23,6 +22,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
@@ -31,11 +31,15 @@ import static javax.tools.Diagnostic.Kind.WARNING;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalElementCases;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalName;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalType;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.module;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.regularGoalElementCases;
 import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConflict;
-import static net.zerobuilder.compiler.analyse.ProjectionValidator.skip;
-import static net.zerobuilder.compiler.analyse.ProjectionValidator.validate;
+import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean;
+import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValue;
+import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValueIgnoreProjections;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersClass;
 import static net.zerobuilder.compiler.analyse.Utilities.appendSuffix;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
@@ -66,12 +70,18 @@ public final class Analyser {
     List<AbstractGoalElement> goalElements = goals(buildersAnnotatedClass);
     checkNameConflict(names(buildersAnnotatedClass));
     validateBuildersClass(buildersAnnotatedClass);
-    List<DescriptionInput> descriptions = transform(goalElements, goalElement ->
-        goalElement.module == ModuleChoice.BUILDER ?
-            new SimpleDescriptionInput(new Builder(), skip.apply(goalElement)) :
-            new ProjectedDescriptionInput(new Updater(), validate.apply(goalElement)));
+    List<DescriptionInput> descriptions = transform(goalElements, createDescription);
     return GeneratorInput.create(context, descriptions);
   }
+
+  private static final Function<AbstractGoalElement, DescriptionInput> createDescription =
+      goalElementCases(
+          regularGoalElementCases(
+              regular -> new SimpleDescriptionInput(new Builder(), validateValueIgnoreProjections.apply(regular)),
+              projectable -> new ProjectedDescriptionInput(new Updater(), validateValue.apply(projectable))),
+          bean -> module.apply(bean) == ModuleChoice.BUILDER ?
+              new SimpleDescriptionInput(new Builder(), validateBean.apply(bean)) :
+              new ProjectedDescriptionInput(new Updater(), validateBean.apply(bean)));
 
   static List<ModuleChoice> modules(Goal goalAnnotation) {
     ArrayList<ModuleChoice> modules = new ArrayList<>(2);
@@ -118,19 +128,15 @@ public final class Analyser {
     AccessLevel defaultAccess = buildersAnnotation.access();
     if (buildElement.getAnnotation(Goal.class) != null) {
       builder.addAll(BeanGoalElement.create(buildElement, defaultAccess));
-    }
-    for (Element element : buildElement.getEnclosedElements()) {
-      if (element.getAnnotation(Goal.class) != null) {
-        ElementKind kind = element.getKind();
-        if (kind == CONSTRUCTOR || kind == METHOD) {
-          ExecutableElement executableElement = asExecutable(element);
-          if (executableElement.getModifiers().contains(PRIVATE)) {
-            throw new ValidationException(PRIVATE_METHOD, buildElement);
+    } else {
+      for (Element element : buildElement.getEnclosedElements()) {
+        if (element.getAnnotation(Goal.class) != null) {
+          ElementKind kind = element.getKind();
+          if (kind == CONSTRUCTOR || kind == METHOD) {
+            ExecutableElement executableElement = asExecutable(element);
+            validateExecutable(buildElement, executableElement);
+            builder.addAll(DtoGoalElement.createRegular(executableElement, defaultAccess));
           }
-          if (executableElement.getParameters().isEmpty()) {
-            throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
-          }
-          builder.addAll(RegularGoalElement.create(executableElement, defaultAccess));
         }
       }
     }
@@ -138,6 +144,14 @@ public final class Analyser {
       throw new ValidationException(WARNING, NO_GOALS, buildElement);
     }
     return builder;
+  }
+  private static void validateExecutable(TypeElement buildElement, ExecutableElement executableElement) {
+    if (executableElement.getModifiers().contains(PRIVATE)) {
+      throw new ValidationException(PRIVATE_METHOD, buildElement);
+    }
+    if (executableElement.getParameters().isEmpty()) {
+      throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
+    }
   }
 
   private Analyser() {

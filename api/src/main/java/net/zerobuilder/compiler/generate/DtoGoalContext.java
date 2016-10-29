@@ -4,6 +4,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableList;
+import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularGoalContextCases;
 
 final class DtoGoalContext {
 
@@ -64,11 +67,12 @@ final class DtoGoalContext {
   }
 
   static final Function<RegularGoalContext, BuildersContext> regularContext =
-      DtoRegularGoalContext.regularGoalContextCases(
+      regularGoalContextCases(
           DtoRegularGoal.regularGoalContextCases(
               constructor -> constructor.context,
-              method -> method.context),
-          DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
+              method -> method.context,
+              staticMethod -> staticMethod.context),
+          projectedRegularGoalContextCases(
               method -> method.context,
               constructor -> constructor.context));
 
@@ -77,44 +81,52 @@ final class DtoGoalContext {
           regularContext,
           bean -> bean.context);
 
+  private static final Function<ProjectedRegularGoalContext, AbstractGoalDetails> PROJECTED_REGULAR_GOAL_CONTEXT_R_FUNCTION = projectedRegularGoalContextCases(
+      method -> method.details,
+      constructor -> constructor.details);
+
+  private static final Function<RegularGoalContext, AbstractGoalDetails> REGULAR_GOAL_CONTEXT_R_FUNCTION =
+      regularGoalContextCases(
+          DtoRegularGoal.goalDetails,
+          PROJECTED_REGULAR_GOAL_CONTEXT_R_FUNCTION);
+
   private static final Function<AbstractGoalContext, AbstractGoalDetails> abstractGoalDetails =
       goalCases(
-          DtoRegularGoalContext.regularGoalContextCases(
-              DtoRegularGoal.goalDetails,
-              DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
-                  method -> method.details,
-                  constructor -> constructor.details)),
+          REGULAR_GOAL_CONTEXT_R_FUNCTION,
           bean -> bean.details);
 
   private static final Function<AbstractGoalContext, TypeName> goalType =
       goalCases(
-          DtoRegularGoalContext.regularGoalContextCases(
+          regularGoalContextCases(
               DtoRegularGoal.regularGoalContextCases(
                   constructor -> constructor.details.goalType,
-                  method -> method.details.goalType),
-              DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
+                  method -> method.details.goalType,
+                  staticMethod -> staticMethod.details.goalType),
+              projectedRegularGoalContextCases(
                   method -> method.details.goalType,
                   constructor -> constructor.details.goalType)),
           bean -> bean.details.goalType);
 
   private static final Function<AbstractGoalContext, String> goalName =
       goalCases(
-          DtoRegularGoalContext.regularGoalContextCases(
+          regularGoalContextCases(
               DtoRegularGoal.regularGoalContextCases(
                   constructor -> constructor.details.name,
-                  method -> method.details.name),
-              DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
+                  method -> method.details.name,
+                  staticMethod -> staticMethod.details.name),
+              projectedRegularGoalContextCases(
                   method -> method.details.name,
                   constructor -> constructor.details.name)),
           bean -> bean.details.name);
 
   static final Function<AbstractGoalContext, List<? extends AbstractStep>> abstractSteps =
       goalCases(
-          DtoRegularGoalContext.regularGoalContextCases(
+          regularGoalContextCases(
               DtoRegularGoal.regularGoalContextCases(
                   constructor -> constructor.steps,
-                  method -> method.steps),
-              DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
+                  method -> method.steps,
+                  staticMethod -> staticMethod.steps),
+              projectedRegularGoalContextCases(
                   method -> method.steps,
                   constructor -> constructor.steps)),
           bean -> unmodifiableList(bean.steps));

@@ -19,7 +19,6 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.fields;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.steps;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
@@ -38,7 +37,6 @@ final class UpdaterV {
   final Function<ProjectedRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
     List<FieldSpec> builder = new ArrayList<>();
-    builder.addAll(presentInstances(fields.apply(goal)));
     for (ProjectedRegularStep step : steps.apply(goal)) {
       String name = step.regularParameter().name;
       TypeName type = step.regularParameter().type;

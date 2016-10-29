@@ -13,51 +13,76 @@ public final class DtoGoalDetails {
     STATIC_METHOD, INSTANCE_METHOD
   }
 
-  static abstract class AbstractGoalDetails {
-    final String name;
-    private final Access access;
+  public interface AbstractGoalDetails {
 
     /**
      * Returns the goal name.
      *
      * @return goal name
      */
-    public final String name() {
-      return name;
-    }
+    String name();
+    Modifier[] access(Modifier... modifiers);
+    TypeName type();
 
-    public final Modifier[] access(Modifier... modifiers) {
-      return access.modifiers(modifiers);
-    }
-
-    abstract TypeName type();
-
-    AbstractGoalDetails(String name, Access access) {
-      this.name = name;
-      this.access = access;
-    }
-    public abstract <R> R acceptAbstract(AbstractGoalDetailsCases<R> cases);
+    <R> R acceptAbstract(AbstractGoalDetailsCases<R> cases);
   }
 
   interface AbstractGoalDetailsCases<R> {
-    R regular(AbstractRegularDetails goal);
-    R bean(BeanGoalDetails goal);
+    R regular(AbstractRegularDetails details);
+    R bean(BeanGoalDetails details);
   }
 
   interface RegularGoalDetailsCases<R> {
-    R method(MethodGoalDetails goal);
-    R constructor(ConstructorGoalDetails goal);
+    R method(MethodGoalDetails details);
+    R staticMethod(StaticMethodGoalDetails details);
+    R constructor(ConstructorGoalDetails details);
   }
 
-  public static <R> Function<AbstractGoalDetails, R> asFunction(final AbstractGoalDetailsCases<R> cases) {
-    return goal -> goal.acceptAbstract(cases);
+  public static <R> Function<AbstractGoalDetails, R> asFunction(AbstractGoalDetailsCases<R> cases) {
+    return details -> details.acceptAbstract(cases);
   }
 
-  public static <R> Function<AbstractRegularDetails, R> asFunction(final RegularGoalDetailsCases<R> cases) {
-    return goal -> goal.accept(cases);
+  public static <R> Function<AbstractRegularDetails, R> asFunction(RegularGoalDetailsCases<R> cases) {
+    return details -> details.accept(cases);
   }
 
-  public static abstract class AbstractRegularDetails extends AbstractGoalDetails {
+  public interface ProjectableDetails extends AbstractGoalDetails {
+    <R> R accept(ProjectableDetailsCases<R> cases);
+  }
+
+  interface ProjectableDetailsCases<R> {
+    R constructor(ConstructorGoalDetails constructor);
+    R method(StaticMethodGoalDetails method);
+  }
+
+  static <R> Function<ProjectableDetails, R> asFunction(ProjectableDetailsCases<R> cases) {
+    return details -> details.accept(cases);
+  }
+
+  static <R> Function<ProjectableDetails, R> projectableDetailsCases(
+      Function<ConstructorGoalDetails, R> constructorFunction,
+      Function<StaticMethodGoalDetails, R> methodFunction) {
+    return asFunction(new ProjectableDetailsCases<R>() {
+      @Override
+      public R constructor(ConstructorGoalDetails constructor) {
+        return constructorFunction.apply(constructor);
+      }
+      @Override
+      public R method(StaticMethodGoalDetails method) {
+        return methodFunction.apply(method);
+      }
+    });
+  }
+
+  static final Function<ProjectableDetails, List<String>> parameterNames =
+      projectableDetailsCases(
+          constructor -> constructor.parameterNames,
+          method -> method.parameterNames);
+
+  public static abstract class AbstractRegularDetails implements AbstractGoalDetails {
+
+    final String name;
+    final Access access;
 
     /**
      * <p>method goal: return type</p>
@@ -70,10 +95,18 @@ public final class DtoGoalDetails {
      */
     final List<String> parameterNames;
 
-    @Override
-    final TypeName type() {
+    public final String name() {
+      return name;
+    }
+
+    public final Modifier[] access(Modifier... modifiers) {
+      return access.modifiers(modifiers);
+    }
+
+    public final TypeName type() {
       return goalType;
     }
+
     /**
      * @param goalType       goal type
      * @param name           goal name
@@ -82,20 +115,22 @@ public final class DtoGoalDetails {
      */
     AbstractRegularDetails(TypeName goalType, String name, List<String> parameterNames,
                            Access access) {
-      super(name, access);
+      this.name = name;
+      this.access = access;
       this.goalType = goalType;
       this.parameterNames = parameterNames;
     }
-
-    abstract <R> R accept(RegularGoalDetailsCases<R> cases);
 
     @Override
     public final <R> R acceptAbstract(AbstractGoalDetailsCases<R> cases) {
       return cases.regular(this);
     }
+
+    abstract <R> R accept(RegularGoalDetailsCases<R> cases);
   }
 
-  public static final class ConstructorGoalDetails extends AbstractRegularDetails {
+  public static final class ConstructorGoalDetails extends AbstractRegularDetails
+      implements ProjectableDetails, AbstractGoalDetails {
 
     private ConstructorGoalDetails(TypeName goalType, String name, List<String> parameterNames,
                                    Access access) {
@@ -109,6 +144,11 @@ public final class DtoGoalDetails {
 
     @Override
     <R> R accept(RegularGoalDetailsCases<R> cases) {
+      return cases.constructor(this);
+    }
+
+    @Override
+    public <R> R accept(ProjectableDetailsCases<R> cases) {
       return cases.constructor(this);
     }
   }
@@ -140,15 +180,57 @@ public final class DtoGoalDetails {
     }
   }
 
-  public static final class BeanGoalDetails extends AbstractGoalDetails {
+  public static final class StaticMethodGoalDetails extends AbstractRegularDetails
+      implements ProjectableDetails, AbstractGoalDetails {
+    final String methodName;
+
+    private StaticMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
+                                    Access access) {
+      super(goalType, name, parameterNames, access);
+      this.methodName = methodName;
+    }
+
+    public static StaticMethodGoalDetails create(TypeName goalType,
+                                                 String name,
+                                                 List<String> parameterNames,
+                                                 String methodName,
+                                                 Access access) {
+      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access);
+    }
+
+    @Override
+    <R> R accept(RegularGoalDetailsCases<R> cases) {
+      return cases.staticMethod(this);
+    }
+
+    @Override
+    public <R> R accept(ProjectableDetailsCases<R> cases) {
+      return cases.method(this);
+    }
+  }
+
+  public static final class BeanGoalDetails implements AbstractGoalDetails {
     public final ClassName goalType;
+    final String name;
+    private final Access access;
     public BeanGoalDetails(ClassName goalType, String name, Access access) {
-      super(name, access);
+      this.name = name;
+      this.access = access;
       this.goalType = goalType;
     }
 
     @Override
-    TypeName type() {
+    public String name() {
+      return name;
+    }
+
+    @Override
+    public Modifier[] access(Modifier... modifiers) {
+      return access.modifiers(modifiers);
+    }
+
+    @Override
+    public TypeName type() {
       return goalType;
     }
 

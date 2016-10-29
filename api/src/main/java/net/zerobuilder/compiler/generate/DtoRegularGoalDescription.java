@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableList;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.parameterNames;
 
 public final class DtoRegularGoalDescription {
 
@@ -101,11 +103,11 @@ public final class DtoRegularGoalDescription {
   public static final class ProjectedRegularGoalDescription
       implements ProjectedDescription {
     final List<ProjectedParameter> parameters;
-    final AbstractRegularDetails details;
+    final ProjectableDetails details;
     final List<TypeName> thrownTypes;
 
 
-    private ProjectedRegularGoalDescription(AbstractRegularDetails details,
+    private ProjectedRegularGoalDescription(ProjectableDetails details,
                                             List<TypeName> thrownTypes,
                                             List<ProjectedParameter> parameters) {
       this.details = details;
@@ -113,10 +115,10 @@ public final class DtoRegularGoalDescription {
       this.parameters = parameters;
     }
 
-    public static ProjectedRegularGoalDescription create(AbstractRegularDetails details,
+    public static ProjectedRegularGoalDescription create(ProjectableDetails details,
                                                          List<TypeName> thrownTypes,
                                                          List<ProjectedParameter> parameters) {
-      checkParameterNames(details.parameterNames, parameters);
+      checkParameterNames(parameterNames.apply(details), parameters);
       return new ProjectedRegularGoalDescription(details, thrownTypes, parameters);
     }
 

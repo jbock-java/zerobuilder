@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularProjectableGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpSimpleParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
@@ -31,6 +32,8 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.ABSTRACT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.executableElement;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalAnnotation;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.findKey;
@@ -42,25 +45,26 @@ import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 
 final class ProjectionValidatorV {
 
-  private static final Predicate<ExecutableElement> LOOKS_LIKE_PROJECTION = method -> method.getParameters().isEmpty()
-      && !method.getModifiers().contains(PRIVATE)
-      && !method.getModifiers().contains(STATIC)
-      && method.getReturnType().getKind() != TypeKind.VOID
-      && !"getClass".equals(method.getSimpleName().toString())
-      && !"clone".equals(method.getSimpleName().toString());
+  private static final Predicate<ExecutableElement> LOOKS_LIKE_PROJECTION =
+      method -> method.getParameters().isEmpty()
+          && !method.getModifiers().contains(PRIVATE)
+          && !method.getModifiers().contains(STATIC)
+          && method.getReturnType().getKind() != TypeKind.VOID
+          && !"getClass".equals(method.getSimpleName().toString())
+          && !"clone".equals(method.getSimpleName().toString());
 
-  static final Function<RegularGoalElement, ProjectedRegularGoalDescription> validateValue
-      = goal -> {
-    TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
-    validateType(goal, type);
-    Map<String, ExecutableElement> methods = projectionCandidates(type);
-    Map<String, VariableElement> fields = fields(type);
-    List<TmpProjectedParameter> parameters = transform(goal.executableElement.getParameters(),
-        parameter -> TmpProjectedParameter.create(parameter,
-            projectionInfo(methods, fields, parameter),
-            goal.goalAnnotation));
-    return createGoalDescription(goal, parameters);
-  };
+  static final Function<RegularProjectableGoalElement, ProjectedRegularGoalDescription> validateValue =
+      goal -> {
+        TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
+        validateType(goal, type);
+        Map<String, ExecutableElement> methods = projectionCandidates(type);
+        Map<String, VariableElement> fields = fields(type);
+        List<TmpProjectedParameter> parameters = transform(goal.executableElement.getParameters(),
+            parameter -> TmpProjectedParameter.create(parameter,
+                projectionInfo(methods, fields, parameter),
+                goal.goalAnnotation));
+        return createGoalDescription(goal, parameters);
+      };
 
   private static ProjectionInfo projectionInfo(Map<String, ExecutableElement> methods,
                                                Map<String, VariableElement> fields,
@@ -77,7 +81,7 @@ final class ProjectionValidatorV {
   }
 
 
-  private static void validateType(RegularGoalElement goal,
+  private static void validateType(RegularProjectableGoalElement goal,
                                    TypeElement type) {
     if (goal.executableElement.getKind() == ElementKind.CONSTRUCTOR
         && type.getModifiers().contains(ABSTRACT)) {
@@ -102,26 +106,26 @@ final class ProjectionValidatorV {
 
   static final Function<RegularGoalElement, SimpleDescription> validateValueIgnoreProjections
       = goal -> {
-    List<TmpSimpleParameter> parameters = goal.executableElement.getParameters()
+    List<TmpSimpleParameter> parameters = executableElement.apply(goal).getParameters()
         .stream()
-        .map(parameter -> TmpSimpleParameter.create(parameter, goal.goalAnnotation))
+        .map(parameter -> TmpSimpleParameter.create(parameter, goalAnnotation.apply(goal)))
         .collect(toList());
     List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
-    List<TypeName> thrownTypes = thrownTypes(goal.executableElement);
+    List<TypeName> thrownTypes = thrownTypes(executableElement.apply(goal));
     return SimpleRegularGoalDescription.create(
         goal.details,
         thrownTypes,
         transform(shuffled, parameter -> parameter.parameter));
   };
 
-  private static ProjectedRegularGoalDescription createGoalDescription(RegularGoalElement goal,
-                                                       List<TmpProjectedParameter> parameters) {
+  private static ProjectedRegularGoalDescription createGoalDescription(RegularProjectableGoalElement goal,
+                                                                       List<TmpProjectedParameter> parameters) {
     List<TmpProjectedParameter> shuffled = shuffledParameters(parameters);
     return create(goal, transform(shuffled, toValidParameter));
   }
 
-  private static ProjectedRegularGoalDescription create(RegularGoalElement goal,
-                                                       List<ProjectedParameter> parameters) {
+  private static ProjectedRegularGoalDescription create(RegularProjectableGoalElement goal,
+                                                        List<ProjectedParameter> parameters) {
     return ProjectedRegularGoalDescription.create(
         goal.details, thrownTypes(goal.executableElement),
         parameters);

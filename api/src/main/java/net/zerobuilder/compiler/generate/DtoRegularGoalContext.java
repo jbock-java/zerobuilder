@@ -35,8 +35,8 @@ final class DtoRegularGoalContext {
   }
 
   static <R> Function<RegularGoalContext, R> regularGoalContextCases(
-      Function<SimpleRegularGoalContext, R> simpleFunction,
-      Function<ProjectedRegularGoalContext, R> projectedFunction) {
+      Function<? super SimpleRegularGoalContext, ? extends R> simpleFunction,
+      Function<? super ProjectedRegularGoalContext, ? extends R> projectedFunction) {
     return asFunction(new RegularGoalContextCases<R>() {
       @Override
       public R simple(SimpleRegularGoalContext simple) {

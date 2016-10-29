@@ -9,6 +9,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
@@ -79,24 +80,28 @@ final class DtoRegularGoal {
   static final Function<SimpleRegularGoalContext, AbstractRegularDetails> goalDetails =
       regularGoalContextCases(
           constructor -> constructor.details,
-          method -> method.details);
+          method -> method.details,
+          staticMethod -> staticMethod.details);
 
   private static final Predicate<SimpleRegularGoalContext> isInstance =
       asPredicate(regularGoalContextCases(
           constructor -> false,
-          method -> method.details.methodType == INSTANCE_METHOD));
+          method -> method.details.methodType == INSTANCE_METHOD,
+          instanceMethod -> false));
 
   private static final Function<SimpleRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
       regularGoalContextCases(
           constructor -> constructor.steps,
-          method -> method.methodSteps());
+          method -> method.methodSteps(),
+          staticMethod -> staticMethod.methodSteps());
 
   private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
       regularGoalContextCases(
           constructor -> empty(),
           method -> isInstance.test(method) ?
               Optional.of(method.field()) :
-              empty());
+              empty(),
+          staticMethod -> empty());
 
   private static final Function<SimpleRegularGoalContext, MethodSpec> builderConstructor =
       regularGoalContextCases(
@@ -113,11 +118,13 @@ final class DtoRegularGoal {
                 .addStatement("this.$N = $N", method.field(), parameter)
                 .addModifiers(PRIVATE)
                 .build();
-          });
+          },
+          staticMethod -> constructor(PRIVATE));
 
   interface RegularGoalContextCases<R> {
     R constructorGoal(SimpleConstructorGoalContext goal);
     R methodGoal(SimpleMethodGoalContext goal);
+    R staticMethodGoal(SimpleStaticMethodGoalContext goal);
   }
 
   static <R> Function<SimpleRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
@@ -126,7 +133,8 @@ final class DtoRegularGoal {
 
   static <R> Function<SimpleRegularGoalContext, R> regularGoalContextCases(
       Function<SimpleConstructorGoalContext, R> constructor,
-      Function<SimpleMethodGoalContext, R> method) {
+      Function<SimpleMethodGoalContext, R> method,
+      Function<SimpleStaticMethodGoalContext, R> staticMethod) {
     return asFunction(new RegularGoalContextCases<R>() {
       @Override
       public R constructorGoal(SimpleConstructorGoalContext goal) {
@@ -135,6 +143,10 @@ final class DtoRegularGoal {
       @Override
       public R methodGoal(SimpleMethodGoalContext goal) {
         return method.apply(goal);
+      }
+      @Override
+      public R staticMethodGoal(SimpleStaticMethodGoalContext goal) {
+        return staticMethod.apply(goal);
       }
     });
   }

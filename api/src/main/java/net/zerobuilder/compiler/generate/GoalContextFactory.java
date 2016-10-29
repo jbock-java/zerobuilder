@@ -19,8 +19,11 @@ import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetailsCases;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.RegularGoalDetailsCases;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
@@ -77,6 +80,10 @@ final class GoalContextFactory {
         return new SimpleMethodGoalContext(context, details, steps, simple.thrownTypes);
       }
       @Override
+      public SimpleRegularGoalContext staticMethod(StaticMethodGoalDetails details) {
+        return new SimpleStaticMethodGoalContext(context, details, steps, simple.thrownTypes);
+      }
+      @Override
       public SimpleRegularGoalContext constructor(ConstructorGoalDetails details) {
         return new SimpleConstructorGoalContext(context, details, steps, simple.thrownTypes);
       }
@@ -93,14 +100,14 @@ final class GoalContextFactory {
         context,
         description.parameters,
         projectedRegularFactory);
-    return description.details.accept(new RegularGoalDetailsCases<ProjectedGoal>() {
+    return description.details.accept(new ProjectableDetailsCases<ProjectedGoal>() {
       @Override
-      public ProjectedGoal method(MethodGoalDetails details) {
-        return new ProjectedMethodGoalContext(context, details, steps, description.thrownTypes);
+      public ProjectedGoal constructor(ConstructorGoalDetails constructor) {
+        return new ProjectedConstructorGoalContext(context, constructor, steps, description.thrownTypes);
       }
       @Override
-      public ProjectedGoal constructor(ConstructorGoalDetails details) {
-        return new ProjectedConstructorGoalContext(context, details, steps, description.thrownTypes);
+      public ProjectedGoal method(StaticMethodGoalDetails method) {
+        return new ProjectedMethodGoalContext(context, method, steps, description.thrownTypes);
       }
     });
   }

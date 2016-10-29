@@ -4,15 +4,12 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.Goal;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -28,19 +25,9 @@ import static java.util.Optional.ofNullable;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_DUPLICATE;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_OUT_OF_BOUNDS;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalElementCases;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValue;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValueIgnoreProjections;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 
 final class ProjectionValidator {
-
-  static final Function<AbstractGoalElement, ProjectedDescription> validate =
-      goalElementCases(validateValue, validateBean);
-
-  static final Function<AbstractGoalElement, SimpleDescription> skip =
-      goalElementCases(validateValueIgnoreProjections, validateBean);
 
   /**
    * Modifies the parameter order, depending on {@link Step} annotations.

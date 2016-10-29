@@ -77,32 +77,36 @@ public final class Messages {
     public static final String GOALNAME_NN =
         "There is another goal with this goal name." + GOAL_NAME_HINT;
 
-    public static final String BEAN_NO_DEFAULT_CONSTRUCTOR
-        = "The default constructor may not be private or absent." + POJO_HINT;
+    public static final String BEAN_NO_DEFAULT_CONSTRUCTOR =
+        "The default constructor may not be private or absent." + POJO_HINT;
 
-    public static final String BEAN_PRIVATE_CLASS
-        = "The annotated class may not be private." + POJO_HINT;
+    public static final String BEAN_PRIVATE_CLASS =
+        "The annotated class may not be private." + POJO_HINT;
 
-    public static final String BEAN_ABSTRACT_CLASS
-        = "The annotated class may not be abstract." + POJO_HINT;
+    public static final String BEAN_ABSTRACT_CLASS =
+        "The annotated class may not be abstract." + POJO_HINT;
 
-    public static final String BEAN_COULD_NOT_FIND_SETTER
-        = "Could not find setter." + POJO_HINT;
+    public static final String BEAN_COULD_NOT_FIND_SETTER =
+        "Could not find setter." + POJO_HINT;
 
-    public static final String NO_PROJECTION
-        = "Could not find a projection (getter or field).";
+    public static final String NO_PROJECTION =
+        "Could not find a projection (getter or field).";
 
     public static final String BEAN_IGNORE_AND_STEP =
         "@Ignore and @Step don't make sense together." + POJO_HINT;
 
-    public static final String STEP_ON_SETTER
-        = "The @Step annotation goes on getters, not setters.";
+    public static final String STEP_ON_SETTER =
+        "The @Step annotation goes on getters, not setters.";
 
-    public static final String IGNORE_ON_SETTER
-        = "The @Ignore annotation goes on getters, not setters.";
+    public static final String IGNORE_ON_SETTER =
+        "The @Ignore annotation goes on getters, not setters.";
 
-    public static final String BEAN_NO_ACCESSOR_PAIRS
-        = "No accessor pairs found." + POJO_HINT;
+    public static final String BEAN_NO_ACCESSOR_PAIRS =
+        "No accessor pairs found." + POJO_HINT;
+
+    public static final String NON_STATIC_UPDATER =
+        "Method must be static if updater is true";
+
 
     private ErrorMessages() {
       throw new UnsupportedOperationException("no instances");

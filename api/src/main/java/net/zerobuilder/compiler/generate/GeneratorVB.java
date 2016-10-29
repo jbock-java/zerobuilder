@@ -11,6 +11,7 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
@@ -43,7 +44,8 @@ final class GeneratorVB {
     ParameterSpec builder = builderInstance(goal);
     BuildersContext context = goal.context();
     ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));
-    method.addCode(initBuilder(builder, instance).apply(goal));
+    CodeBlock initStatement = initBuilder(builder, instance).apply(goal);
+    method.addCode(initStatement);
     if (goal.isInstance()) {
       method.addParameter(instance);
     }
@@ -55,7 +57,8 @@ final class GeneratorVB {
       ParameterSpec builder, ParameterSpec instance) {
     return regularGoalContextCases(
         initConstructorBuilder(builder),
-        initMethodBuilder(builder, instance));
+        initMethodBuilder(builder, instance),
+        staticMethod -> initStaticMethodBuilder(staticMethod, builder));
   }
 
   private Function<SimpleConstructorGoalContext, CodeBlock> initConstructorBuilder(
@@ -92,6 +95,16 @@ final class GeneratorVB {
 
   private CodeBlock initStaticMethodBuilder(
       SimpleMethodGoalContext method, ParameterSpec builder) {
+    BuildersContext context = method.context;
+    TypeName type = builder.type;
+    FieldSpec cache = context.cache.get();
+    return context.lifecycle == REUSE_INSTANCES ?
+        statement("$T $N = $N.get().$N", type, builder, cache, this.builder.cacheField(method)) :
+        statement("$T $N = new $T()", type, builder, type);
+  }
+
+  private CodeBlock initStaticMethodBuilder(
+      SimpleStaticMethodGoalContext method, ParameterSpec builder) {
     BuildersContext context = method.context;
     TypeName type = builder.type;
     FieldSpec cache = context.cache.get();

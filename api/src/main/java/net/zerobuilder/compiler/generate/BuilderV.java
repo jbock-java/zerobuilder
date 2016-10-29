@@ -125,12 +125,13 @@ final class BuilderV {
 
   private final Function<SimpleRegularGoalContext, CodeBlock> regularInvoke =
       regularGoalContextCases(
-          goal -> statement("return new $T($L)", goal.type(),
-              goal.invocationParameters()),
-          goal -> goal.methodGoalInvocation());
+          constructor -> statement("return new $T($L)", constructor.type(),
+              constructor.invocationParameters()),
+          method -> method.methodGoalInvocation(),
+          staticMethod -> staticMethod.methodGoalInvocation());
 
-  final RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(final AbstractRegularStep step,
-                                                                 final CollectionInfo collectionInfo) {
+  final RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,
+                                                                 CollectionInfo collectionInfo) {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
       public CodeBlock constructorGoal(SimpleConstructorGoalContext goal) {
@@ -144,6 +145,15 @@ final class BuilderV {
       }
       @Override
       public CodeBlock methodGoal(SimpleMethodGoalContext goal) {
+        TypeName type = step.regularParameter().type;
+        String name = step.regularParameter().name;
+        return CodeBlock.builder()
+            .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
+            .add(goal.methodGoalInvocation())
+            .build();
+      }
+      @Override
+      public CodeBlock staticMethodGoal(DtoMethodGoal.SimpleStaticMethodGoalContext goal) {
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
         return CodeBlock.builder()

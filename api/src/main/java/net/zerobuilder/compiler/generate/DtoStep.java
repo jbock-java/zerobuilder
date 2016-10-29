@@ -84,7 +84,7 @@ final class DtoStep {
     static TypeName nextType(AbstractStep step) {
       if (step.nextStep.isPresent()) {
         return step.context.generatedType
-            .nestedClass(upcase(step.goalDetails.name + "Builder"))
+            .nestedClass(upcase(step.goalDetails.name() + "Builder"))
             .nestedClass(step.nextStep.get().thisType);
       }
       return step.goalDetails.type();

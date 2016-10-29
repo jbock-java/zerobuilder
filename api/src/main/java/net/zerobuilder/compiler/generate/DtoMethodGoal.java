@@ -7,6 +7,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 
 import java.util.List;
@@ -75,6 +76,62 @@ public final class DtoMethodGoal {
     @Override
     public final <R> R acceptRegular(DtoRegularGoal.RegularGoalContextCases<R> cases) {
       return cases.methodGoal(this);
+    }
+
+    @Override
+    public final List<String> parameterNames() {
+      return details.parameterNames;
+    }
+
+    @Override
+    public final TypeName type() {
+      return details.goalType;
+    }
+  }
+
+  static final class SimpleStaticMethodGoalContext extends SimpleRegularGoalContext {
+    final List<SimpleRegularStep> steps;
+
+    SimpleStaticMethodGoalContext(
+        BuildersContext context,
+        StaticMethodGoalDetails details,
+        List<SimpleRegularStep> steps,
+        List<TypeName> thrownTypes) {
+      super(thrownTypes);
+      this.details = details;
+      this.context = context;
+      this.field = memoizeField(context);
+      this.steps = steps;
+    }
+
+    final BuildersContext context;
+    final StaticMethodGoalDetails details;
+
+    private final Supplier<FieldSpec> field;
+
+    /**
+     * @return An instance of type {@link BuildersContext#type}.
+     */
+    FieldSpec field() {
+      return field.get();
+    }
+
+    List<SimpleRegularStep> methodSteps() {
+      return steps;
+    }
+
+    CodeBlock methodGoalInvocation() {
+      TypeName type = type();
+      String method = details.methodName;
+      return CodeBlock.builder()
+          .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
+          .addStatement("$T.$N($L)", context.type, method, invocationParameters())
+          .build();
+    }
+
+    @Override
+    public final <R> R acceptRegular(DtoRegularGoal.RegularGoalContextCases<R> cases) {
+      return cases.staticMethodGoal(this);
     }
 
     @Override
