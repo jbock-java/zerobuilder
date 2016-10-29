@@ -4,7 +4,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
@@ -39,7 +38,7 @@ final class StepV {
     String name = parameterName.apply(parameter);
     TypeName type = parameter.type;
     List<TypeName> thrownTypes = step.declaredExceptions();
-    if (!step.nextStep.isPresent()) {
+    if (step.isLast()) {
       thrownTypes = concat(StepV.thrownTypes.apply(goal), thrownTypes);
     }
     return methodBuilder(name)

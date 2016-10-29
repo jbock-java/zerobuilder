@@ -53,8 +53,8 @@ final class DtoRegularGoal {
       return regularSteps.apply(this);
     }
 
-    final Optional<FieldSpec> fields() {
-      return fields.apply(this);
+    final Optional<FieldSpec> maybeField() {
+      return maybeField.apply(this);
     }
 
     final MethodSpec builderConstructor() {
@@ -91,7 +91,7 @@ final class DtoRegularGoal {
           constructor -> constructor.steps,
           method -> method.methodSteps());
 
-  private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> fields =
+  private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
       regularGoalContextCases(
           constructor -> empty(),
           method -> isInstance.test(method) ?

@@ -75,7 +75,11 @@ final class DtoStep {
     public final AbstractGoalDetails goalDetails;
     public final BuildersContext context;
     public final String thisType;
-    public final Optional<? extends AbstractStep> nextStep;
+    private final Optional<? extends AbstractStep> nextStep;
+
+    public final boolean isLast() {
+      return !nextStep.isPresent();
+    }
 
     static TypeName nextType(AbstractStep step) {
       if (step.nextStep.isPresent()) {
