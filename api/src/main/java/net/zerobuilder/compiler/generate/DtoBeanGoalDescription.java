@@ -2,7 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;

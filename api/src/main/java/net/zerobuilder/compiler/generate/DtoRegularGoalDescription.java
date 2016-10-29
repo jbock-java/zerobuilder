@@ -1,7 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
@@ -41,13 +41,13 @@ public final class DtoRegularGoalDescription {
   }
 
   public static abstract class AbstractRegularGoalDescription {
-    final AbstractRegularGoalDetails details;
+    final AbstractRegularDetails details;
     final List<TypeName> thrownTypes;
     final List<AbstractRegularParameter> parameters() {
       return abstractParameters.apply(this);
     }
 
-    protected AbstractRegularGoalDescription(AbstractRegularGoalDetails details, List<TypeName> thrownTypes) {
+    protected AbstractRegularGoalDescription(AbstractRegularDetails details, List<TypeName> thrownTypes) {
       this.details = details;
       this.thrownTypes = thrownTypes;
     }
@@ -70,14 +70,14 @@ public final class DtoRegularGoalDescription {
 
     final List<SimpleParameter> parameters;
 
-    private SimpleRegularGoalDescription(AbstractRegularGoalDetails details,
+    private SimpleRegularGoalDescription(AbstractRegularDetails details,
                                          List<TypeName> thrownTypes,
                                          List<SimpleParameter> parameters) {
       super(details, thrownTypes);
       this.parameters = parameters;
     }
 
-    public static SimpleRegularGoalDescription create(AbstractRegularGoalDetails details,
+    public static SimpleRegularGoalDescription create(AbstractRegularDetails details,
                                                       List<TypeName> thrownTypes,
                                                       List<SimpleParameter> parameters) {
       checkParameterNames(details.parameterNames, parameters);
@@ -101,11 +101,11 @@ public final class DtoRegularGoalDescription {
   public static final class ProjectedRegularGoalDescription
       implements ProjectedDescription {
     final List<ProjectedParameter> parameters;
-    final AbstractRegularGoalDetails details;
+    final AbstractRegularDetails details;
     final List<TypeName> thrownTypes;
 
 
-    private ProjectedRegularGoalDescription(AbstractRegularGoalDetails details,
+    private ProjectedRegularGoalDescription(AbstractRegularDetails details,
                                             List<TypeName> thrownTypes,
                                             List<ProjectedParameter> parameters) {
       this.details = details;
@@ -113,7 +113,7 @@ public final class DtoRegularGoalDescription {
       this.parameters = parameters;
     }
 
-    public static ProjectedRegularGoalDescription create(AbstractRegularGoalDetails details,
+    public static ProjectedRegularGoalDescription create(AbstractRegularDetails details,
                                                          List<TypeName> thrownTypes,
                                                          List<ProjectedParameter> parameters) {
       checkParameterNames(details.parameterNames, parameters);

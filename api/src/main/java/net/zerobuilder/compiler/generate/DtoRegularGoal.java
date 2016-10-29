@@ -7,7 +7,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
@@ -22,7 +22,7 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.util.Optional.empty;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.Utilities.asPredicate;
 import static net.zerobuilder.compiler.generate.Utilities.constructor;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
@@ -41,7 +41,7 @@ final class DtoRegularGoal {
     abstract List<String> parameterNames();
     abstract TypeName type();
 
-    final AbstractRegularGoalDetails regularDetails() {
+    final AbstractRegularDetails regularDetails() {
       return goalDetails.apply(this);
     }
 
@@ -76,7 +76,7 @@ final class DtoRegularGoal {
     }
   }
 
-  static final Function<SimpleRegularGoalContext, AbstractRegularGoalDetails> goalDetails =
+  static final Function<SimpleRegularGoalContext, AbstractRegularDetails> goalDetails =
       regularGoalContextCases(
           constructor -> constructor.details,
           method -> method.details);

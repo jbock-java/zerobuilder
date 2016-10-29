@@ -7,7 +7,7 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
@@ -23,7 +23,7 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext;
-import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.STATIC_METHOD;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType.STATIC_METHOD;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

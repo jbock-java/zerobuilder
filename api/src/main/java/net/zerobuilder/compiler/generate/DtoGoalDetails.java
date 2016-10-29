@@ -2,13 +2,12 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoModule.Module;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
 import java.util.function.Function;
 
-public final class DtoGoal {
+public final class DtoGoalDetails {
 
   public enum GoalMethodType {
     STATIC_METHOD, INSTANCE_METHOD
@@ -37,28 +36,28 @@ public final class DtoGoal {
       this.name = name;
       this.access = access;
     }
-    public abstract <R> R acceptAbstract(AbstractGoalCases<R> cases);
+    public abstract <R> R acceptAbstract(AbstractGoalDetailsCases<R> cases);
   }
 
-  interface AbstractGoalCases<R> {
-    R regular(AbstractRegularGoalDetails goal);
+  interface AbstractGoalDetailsCases<R> {
+    R regular(AbstractRegularDetails goal);
     R bean(BeanGoalDetails goal);
   }
 
-  interface RegularGoalCases<R> {
+  interface RegularGoalDetailsCases<R> {
     R method(MethodGoalDetails goal);
     R constructor(ConstructorGoalDetails goal);
   }
 
-  public static <R> Function<AbstractGoalDetails, R> asFunction(final AbstractGoalCases<R> cases) {
+  public static <R> Function<AbstractGoalDetails, R> asFunction(final AbstractGoalDetailsCases<R> cases) {
     return goal -> goal.acceptAbstract(cases);
   }
 
-  public static <R> Function<AbstractRegularGoalDetails, R> asFunction(final RegularGoalCases<R> cases) {
+  public static <R> Function<AbstractRegularDetails, R> asFunction(final RegularGoalDetailsCases<R> cases) {
     return goal -> goal.accept(cases);
   }
 
-  public static abstract class AbstractRegularGoalDetails extends AbstractGoalDetails {
+  public static abstract class AbstractRegularDetails extends AbstractGoalDetails {
 
     /**
      * <p>method goal: return type</p>
@@ -81,22 +80,22 @@ public final class DtoGoal {
      * @param parameterNames parameter names in original order
      * @param access         goal options
      */
-    AbstractRegularGoalDetails(TypeName goalType, String name, List<String> parameterNames,
-                               Access access) {
+    AbstractRegularDetails(TypeName goalType, String name, List<String> parameterNames,
+                           Access access) {
       super(name, access);
       this.goalType = goalType;
       this.parameterNames = parameterNames;
     }
 
-    abstract <R> R accept(RegularGoalCases<R> cases);
+    abstract <R> R accept(RegularGoalDetailsCases<R> cases);
 
     @Override
-    public final <R> R acceptAbstract(AbstractGoalCases<R> cases) {
+    public final <R> R acceptAbstract(AbstractGoalDetailsCases<R> cases) {
       return cases.regular(this);
     }
   }
 
-  public static final class ConstructorGoalDetails extends AbstractRegularGoalDetails {
+  public static final class ConstructorGoalDetails extends AbstractRegularDetails {
 
     private ConstructorGoalDetails(TypeName goalType, String name, List<String> parameterNames,
                                    Access access) {
@@ -109,12 +108,12 @@ public final class DtoGoal {
     }
 
     @Override
-    <R> R accept(RegularGoalCases<R> cases) {
+    <R> R accept(RegularGoalDetailsCases<R> cases) {
       return cases.constructor(this);
     }
   }
 
-  public static final class MethodGoalDetails extends AbstractRegularGoalDetails {
+  public static final class MethodGoalDetails extends AbstractRegularDetails {
     final String methodName;
     final GoalMethodType methodType;
 
@@ -136,7 +135,7 @@ public final class DtoGoal {
     }
 
     @Override
-    <R> R accept(RegularGoalCases<R> cases) {
+    <R> R accept(RegularGoalDetailsCases<R> cases) {
       return cases.method(this);
     }
   }
@@ -154,15 +153,15 @@ public final class DtoGoal {
     }
 
     @Override
-    public <R> R acceptAbstract(AbstractGoalCases<R> cases) {
+    public <R> R acceptAbstract(AbstractGoalDetailsCases<R> cases) {
       return cases.bean(this);
     }
   }
 
   public static final Function<AbstractGoalDetails, TypeName> goalType
-      = asFunction(new AbstractGoalCases<TypeName>() {
+      = asFunction(new AbstractGoalDetailsCases<TypeName>() {
     @Override
-    public TypeName regular(AbstractRegularGoalDetails goal) {
+    public TypeName regular(AbstractRegularDetails goal) {
       return goal.goalType;
     }
     @Override
@@ -171,7 +170,7 @@ public final class DtoGoal {
     }
   });
 
-  private DtoGoal() {
+  private DtoGoalDetails() {
     throw new UnsupportedOperationException("no instances");
   }
 }

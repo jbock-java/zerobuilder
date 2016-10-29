@@ -7,8 +7,8 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
@@ -24,7 +24,7 @@ import static java.util.Optional.empty;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import static net.zerobuilder.compiler.generate.Utilities.asPredicate;
 import static net.zerobuilder.compiler.generate.Utilities.constructor;
@@ -129,11 +129,11 @@ public final class DtoProjectedRegularGoalContext {
       extends ProjectedRegularGoalContext {
 
     final BuildersContext context;
-    final DtoGoal.ConstructorGoalDetails details;
+    final DtoGoalDetails.ConstructorGoalDetails details;
     final List<ProjectedRegularStep> steps;
 
     ProjectedConstructorGoalContext(BuildersContext context,
-                                    DtoGoal.ConstructorGoalDetails details,
+                                    DtoGoalDetails.ConstructorGoalDetails details,
                                     List<ProjectedRegularStep> steps,
                                     List<TypeName> thrownTypes) {
       super(thrownTypes);
@@ -170,7 +170,7 @@ public final class DtoProjectedRegularGoalContext {
           method -> method.details.methodType == INSTANCE_METHOD,
           constructor -> false));
 
-  static final Function<ProjectedRegularGoalContext, AbstractRegularGoalDetails> goalDetails =
+  static final Function<ProjectedRegularGoalContext, AbstractRegularDetails> goalDetails =
       projectedRegularGoalContextCases(
           method -> method.details,
           constructor -> constructor.details);

@@ -16,10 +16,10 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.RegularGoalCases;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.RegularGoalDetailsCases;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
@@ -71,7 +71,7 @@ final class GoalContextFactory {
         context,
         simple.parameters,
         simpleRegularFactory);
-    return simple.details.accept(new RegularGoalCases<SimpleRegularGoalContext>() {
+    return simple.details.accept(new RegularGoalDetailsCases<SimpleRegularGoalContext>() {
       @Override
       public SimpleRegularGoalContext method(MethodGoalDetails details) {
         return new SimpleMethodGoalContext(context, details, steps, simple.thrownTypes);
@@ -93,7 +93,7 @@ final class GoalContextFactory {
         context,
         description.parameters,
         projectedRegularFactory);
-    return description.details.accept(new RegularGoalCases<ProjectedGoal>() {
+    return description.details.accept(new RegularGoalDetailsCases<ProjectedGoal>() {
       @Override
       public ProjectedGoal method(MethodGoalDetails details) {
         return new ProjectedMethodGoalContext(context, details, steps, description.thrownTypes);

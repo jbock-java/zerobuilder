@@ -8,7 +8,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
@@ -48,7 +48,7 @@ final class GeneratorVU {
   }
 
   BuilderMethod goalToUpdaterV(ProjectedRegularGoalContext goal) {
-    AbstractRegularGoalDetails details = goalDetails.apply(goal);
+    AbstractRegularDetails details = goalDetails.apply(goal);
     ParameterSpec updater = varUpdater(goal);
     MethodSpec method = methodBuilder(this.updater.legacyMethodName(goal))
         .addExceptions(thrownByProjections(goal))
@@ -137,7 +137,7 @@ final class GeneratorVU {
   }
 
   private ParameterSpec toBuilderParameter(ProjectedRegularGoalContext goal) {
-    AbstractRegularGoalDetails details = goalDetails.apply(goal);
+    AbstractRegularDetails details = goalDetails.apply(goal);
     TypeName goalType = details.goalType;
     return parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
   }

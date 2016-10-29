@@ -5,14 +5,11 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.generate.Access;
-import net.zerobuilder.compiler.generate.Builder;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.BeanGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType;
-import net.zerobuilder.compiler.generate.DtoGoal.MethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoModule.Module;
-import net.zerobuilder.compiler.generate.Updater;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -77,10 +74,10 @@ final class DtoGoalElement {
 
   static final class RegularGoalElement extends AbstractGoalElement {
     final List<ModuleChoice> modules;
-    final AbstractRegularGoalDetails details;
+    final AbstractRegularDetails details;
     final ExecutableElement executableElement;
 
-    private RegularGoalElement(List<ModuleChoice> modules, ExecutableElement element, AbstractRegularGoalDetails details, ModuleChoice module) {
+    private RegularGoalElement(List<ModuleChoice> modules, ExecutableElement element, AbstractRegularDetails details, ModuleChoice module) {
       super(element.getAnnotation(Goal.class), module);
       this.modules = modules;
       this.details = details;

@@ -6,7 +6,7 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.ProjectedDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoal.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
@@ -59,7 +59,6 @@ public class UpdaterTest {
     BuildersContext buildersContext = createBuildersContext(TYPE, GENERATED_TYPE, NEW_INSTANCE);
 
     String goalName = "myGoal";
-//    GoalOption updaterOption = GoalOption.create(PUBLIC, UPDATER_MODULE); // create an updater
     ConstructorGoalDetails details = ConstructorGoalDetails.create(
         TYPE, goalName, singletonList("foo"),
         PUBLIC);

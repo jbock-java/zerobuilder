@@ -9,7 +9,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoGoal.AbstractRegularGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
@@ -20,7 +20,7 @@ import java.util.function.Function;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoGoal.GoalMethodType.INSTANCE_METHOD;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
@@ -35,11 +35,11 @@ final class GeneratorVB {
   }
 
   BuilderMethod goalToBuilderV(SimpleRegularGoalContext goal) {
-    AbstractRegularGoalDetails abstractRegularGoalDetails = goal.regularDetails();
+    AbstractRegularDetails abstractRegularDetails = goal.regularDetails();
     List<? extends AbstractRegularStep> steps = goal.regularSteps();
     MethodSpec.Builder method = methodBuilder(builder.methodName(goal))
         .returns(builder.contractType(goal).nestedClass(steps.get(0).thisType))
-        .addModifiers(abstractRegularGoalDetails.access(STATIC));
+        .addModifiers(abstractRegularDetails.access(STATIC));
     ParameterSpec builder = builderInstance(goal);
     BuildersContext context = goal.context();
     ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));
