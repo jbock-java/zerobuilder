@@ -1,4 +1,4 @@
-package net.zerobuilder.updater;
+package net.zerobuilder.modules.updater;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;

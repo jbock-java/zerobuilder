@@ -31,7 +31,7 @@ public final class DtoRegularStep {
     public abstract Optional<DtoStep.CollectionInfo> collectionInfo();
     public abstract FieldSpec field();
     public abstract AbstractRegularParameter regularParameter();
-    abstract List<TypeName> declaredExceptions();
+    public abstract List<TypeName> declaredExceptions();
 
     @Override
     final <R> R accept(DtoStep.StepCases<R> cases) {
@@ -87,7 +87,7 @@ public final class DtoRegularStep {
     }
 
     @Override
-    List<TypeName> declaredExceptions() {
+    public List<TypeName> declaredExceptions() {
       return declaredExceptions;
     }
   }
@@ -136,7 +136,7 @@ public final class DtoRegularStep {
     }
 
     @Override
-    List<TypeName> declaredExceptions() {
+    public List<TypeName> declaredExceptions() {
       return emptyList();
     }
   }

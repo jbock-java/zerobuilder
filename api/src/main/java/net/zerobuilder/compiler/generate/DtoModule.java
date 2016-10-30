@@ -25,17 +25,17 @@ public final class DtoModule {
     protected abstract String name();
     abstract <R, P> R accept(ModuleCases<R, P> cases, P p);
 
-    protected final ClassName implType(SimpleGoal goal) {
+    public final ClassName implType(SimpleGoal goal) {
       String implName = DtoModule.implName.apply(this, goal);
       return context.apply(goal)
           .generatedType.nestedClass(implName);
     }
 
-    protected final String methodName(SimpleGoal goal) {
+    public final String methodName(SimpleGoal goal) {
       return name.apply(goal) + upcase(name());
     }
 
-    protected final FieldSpec cacheField(SimpleGoal goal) {
+    public final FieldSpec cacheField(SimpleGoal goal) {
       ClassName type = implType(goal);
       return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
           .initializer("new $T()", type)
@@ -69,7 +69,7 @@ public final class DtoModule {
       return transform(steps(goal), step -> contractType(goal).nestedClass(step.thisType));
     }
 
-    protected final ClassName contractType(SimpleGoal goal) {
+    public final ClassName contractType(SimpleGoal goal) {
       String contractName = upcase(name.apply(goal)) + upcase(name());
       return context.apply(goal)
           .generatedType.nestedClass(contractName);

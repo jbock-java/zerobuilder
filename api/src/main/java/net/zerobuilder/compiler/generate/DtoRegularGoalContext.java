@@ -10,9 +10,9 @@ import java.util.function.Function;
 
 final class DtoRegularGoalContext {
 
-  static abstract class RegularGoalContext extends AbstractGoalContext {
+  public static abstract class RegularGoalContext extends AbstractGoalContext {
 
-    final List<TypeName> thrownTypes;
+    public final List<TypeName> thrownTypes;
 
     RegularGoalContext(List<TypeName> thrownTypes) {
       this.thrownTypes = thrownTypes;

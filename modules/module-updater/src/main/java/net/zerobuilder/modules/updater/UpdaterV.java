@@ -1,4 +1,4 @@
-package net.zerobuilder.updater;
+package net.zerobuilder.modules.updater;
 
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;

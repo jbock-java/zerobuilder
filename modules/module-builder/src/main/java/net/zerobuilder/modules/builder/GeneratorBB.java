@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler.generate;
+package net.zerobuilder.modules.builder;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;

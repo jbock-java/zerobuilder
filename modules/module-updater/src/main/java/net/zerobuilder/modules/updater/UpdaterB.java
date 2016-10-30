@@ -1,4 +1,4 @@
-package net.zerobuilder.updater;
+package net.zerobuilder.modules.updater;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;

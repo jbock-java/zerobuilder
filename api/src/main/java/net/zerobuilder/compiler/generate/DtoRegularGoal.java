@@ -28,32 +28,32 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 
-final class DtoRegularGoal {
+public final class DtoRegularGoal {
 
-  static abstract class SimpleRegularGoalContext
+  public static abstract class SimpleRegularGoalContext
       extends RegularGoalContext implements SimpleGoal {
 
     SimpleRegularGoalContext(List<TypeName> thrownTypes) {
       super(thrownTypes);
     }
 
-    abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
+    public abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
     abstract List<String> parameterNames();
     abstract TypeName type();
 
-    final AbstractRegularDetails regularDetails() {
+    public final AbstractRegularDetails regularDetails() {
       return goalDetails.apply(this);
     }
 
-    final boolean isInstance() {
+    public final boolean isInstance() {
       return isInstance.test(this);
     }
 
-    final List<? extends AbstractRegularStep> regularSteps() {
+    public final List<? extends AbstractRegularStep> regularSteps() {
       return regularSteps.apply(this);
     }
 
-    final Optional<FieldSpec> maybeField() {
+    public final Optional<FieldSpec> maybeField() {
       return maybeField.apply(this);
     }
 
@@ -67,7 +67,7 @@ final class DtoRegularGoal {
       return cases.regular(this);
     }
 
-    final CodeBlock invocationParameters() {
+    public final CodeBlock invocationParameters() {
       return CodeBlock.of(String.join(", ", parameterNames()));
     }
   }
@@ -113,7 +113,7 @@ final class DtoRegularGoal {
           },
           staticMethod -> constructor(PRIVATE));
 
-  interface RegularGoalContextCases<R> {
+  public interface RegularGoalContextCases<R> {
     R constructorGoal(SimpleConstructorGoalContext goal);
     R methodGoal(InstanceMethodGoalContext goal);
     R staticMethodGoal(SimpleStaticMethodGoalContext goal);
@@ -123,7 +123,7 @@ final class DtoRegularGoal {
     return goal -> goal.acceptRegular(cases);
   }
 
-  static <R> Function<SimpleRegularGoalContext, R> regularGoalContextCases(
+  public static <R> Function<SimpleRegularGoalContext, R> regularGoalContextCases(
       Function<SimpleConstructorGoalContext, R> constructor,
       Function<InstanceMethodGoalContext, R> method,
       Function<SimpleStaticMethodGoalContext, R> staticMethod) {

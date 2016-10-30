@@ -13,7 +13,7 @@ import static java.util.function.Function.identity;
 
 public final class DtoSimpleGoal {
 
-  interface SimpleGoal {
+  public interface SimpleGoal {
     <R> R acceptSimple(SimpleGoalCases<R> cases);
   }
 
@@ -26,7 +26,7 @@ public final class DtoSimpleGoal {
     return goal -> goal.acceptSimple(cases);
   }
 
-  static <R> Function<SimpleGoal, R> simpleGoalCases(
+  public static <R> Function<SimpleGoal, R> simpleGoalCases(
       Function<? super SimpleRegularGoalContext, ? extends R> regularFunction,
       Function<? super BeanGoalContext, ? extends R> beanFunction) {
     return asFunction(new SimpleGoalCases<R>() {
@@ -60,7 +60,7 @@ public final class DtoSimpleGoal {
   static final Function<SimpleGoal, String> name =
       restrict(AbstractGoalContext::name);
 
-  static final Function<SimpleGoal, List<? extends AbstractStep>> abstractSteps =
+  public static final Function<SimpleGoal, List<? extends AbstractStep>> abstractSteps =
       restrict(AbstractGoalContext::steps);
   
   private DtoSimpleGoal() {

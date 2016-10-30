@@ -21,11 +21,11 @@ final class DtoGoalContext {
 
     abstract <R> R accept(GoalCases<R> cases);
 
-    final List<? extends AbstractStep> steps() {
+    public final List<? extends AbstractStep> steps() {
       return abstractSteps.apply(this);
     }
 
-    final String name() {
+    public final String name() {
       return goalName.apply(this);
     }
 

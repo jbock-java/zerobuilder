@@ -29,7 +29,7 @@ public final class Step {
     return nullCheck(name, name);
   });
 
-  static Function<AbstractStep, TypeSpec> asStepInterface(SimpleGoal goal) {
+  public static Function<AbstractStep, TypeSpec> asStepInterface(SimpleGoal goal) {
     return asFunction(stepCases(
         regularStepInterface(goal),
         beanStepInterface));

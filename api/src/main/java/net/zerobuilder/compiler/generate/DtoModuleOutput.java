@@ -36,7 +36,7 @@ public final class DtoModuleOutput {
   public static final class ContractModuleOutput extends AbstractModuleOutput {
     final TypeSpec contract;
 
-    protected ContractModuleOutput(BuilderMethod method, TypeSpec impl, TypeSpec contract) {
+    public ContractModuleOutput(BuilderMethod method, TypeSpec impl, TypeSpec contract) {
       super(method, impl);
       this.contract = contract;
     }

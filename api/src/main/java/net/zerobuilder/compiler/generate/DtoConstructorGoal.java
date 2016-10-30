@@ -13,11 +13,11 @@ import static java.util.Collections.unmodifiableList;
 
 public final class DtoConstructorGoal {
 
-  static final class SimpleConstructorGoalContext
+  public static final class SimpleConstructorGoalContext
       extends DtoRegularGoal.SimpleRegularGoalContext {
 
     final List<SimpleRegularStep> steps;
-    final BuildersContext context;
+    public final BuildersContext context;
     final ConstructorGoalDetails details;
 
     SimpleConstructorGoalContext(BuildersContext context,

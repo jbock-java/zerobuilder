@@ -25,7 +25,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
 public final class DtoMethodGoal {
 
-  static final class InstanceMethodGoalContext extends SimpleRegularGoalContext {
+  public static final class InstanceMethodGoalContext extends SimpleRegularGoalContext {
     final List<SimpleRegularStep> steps;
 
     InstanceMethodGoalContext(
@@ -40,7 +40,7 @@ public final class DtoMethodGoal {
       this.steps = steps;
     }
 
-    final BuildersContext context;
+    public final BuildersContext context;
     final InstanceMethodGoalDetails details;
 
     private final Supplier<FieldSpec> field;
@@ -48,7 +48,7 @@ public final class DtoMethodGoal {
     /**
      * @return An instance of type {@link BuildersContext#type}.
      */
-    FieldSpec field() {
+    public FieldSpec field() {
       return field.get();
     }
 
@@ -56,7 +56,7 @@ public final class DtoMethodGoal {
       return steps;
     }
 
-    CodeBlock methodGoalInvocation() {
+    public CodeBlock methodGoalInvocation() {
       String method = details.methodName;
       return statement("return this.$N.$N($L)", field(), method, invocationParameters());
     }
@@ -77,7 +77,7 @@ public final class DtoMethodGoal {
     }
   }
 
-  static final class SimpleStaticMethodGoalContext extends SimpleRegularGoalContext {
+  public static final class SimpleStaticMethodGoalContext extends SimpleRegularGoalContext {
     final List<SimpleRegularStep> steps;
 
     SimpleStaticMethodGoalContext(
@@ -91,14 +91,14 @@ public final class DtoMethodGoal {
       this.steps = steps;
     }
 
-    final BuildersContext context;
+    public final BuildersContext context;
     final StaticMethodGoalDetails details;
 
     List<SimpleRegularStep> methodSteps() {
       return steps;
     }
 
-    CodeBlock methodGoalInvocation() {
+    public CodeBlock methodGoalInvocation() {
       TypeName type = type();
       String method = details.methodName;
       return CodeBlock.builder()

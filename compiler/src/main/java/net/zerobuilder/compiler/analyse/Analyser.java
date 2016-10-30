@@ -8,7 +8,7 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractRegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
-import net.zerobuilder.compiler.generate.Builder;
+import net.zerobuilder.modules.builder.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
@@ -17,7 +17,7 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionIn
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
-import net.zerobuilder.updater.Updater;
+import net.zerobuilder.modules.updater.Updater;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;

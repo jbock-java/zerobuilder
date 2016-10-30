@@ -2,7 +2,7 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.Builder;
+import net.zerobuilder.modules.builder.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
