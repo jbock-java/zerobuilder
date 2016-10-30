@@ -1,7 +1,9 @@
 package net.zerobuilder.compiler.generate;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
@@ -20,10 +22,14 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.simpleGoalCases;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
+import static net.zerobuilder.compiler.generate.Utilities.constructor;
+import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 import static net.zerobuilder.compiler.generate.Utilities.transform;
 
@@ -33,15 +39,15 @@ public final class Builder extends ContractModule {
     return transform(abstractSteps.apply(goal), asStepInterface(goal));
   }
 
-  private final Function<SimpleGoal, List<MethodSpec>> steps(BuilderB builderB, BuilderV builderV) {
+  private Function<SimpleGoal, List<MethodSpec>> steps(BuilderB builderB, BuilderV builderV) {
     return simpleGoalCases(builderV.stepsV, builderB.stepsB);
   }
 
-  private final Function<SimpleGoal, List<FieldSpec>> fields(BuilderB builderB, BuilderV builderV) {
+  private Function<SimpleGoal, List<FieldSpec>> fields(BuilderB builderB, BuilderV builderV) {
     return simpleGoalCases(builderV.fieldsV, builderB.fieldsB);
   }
 
-  private final Function<SimpleGoal, BuilderMethod> goalToBuilder(GeneratorBB generatorBB, GeneratorVB generatorVB) {
+  private Function<SimpleGoal, BuilderMethod> goalToBuilder(GeneratorBB generatorBB, GeneratorVB generatorVB) {
     return simpleGoalCases(generatorVB::goalToBuilderV, generatorBB::goalToBuilderB);
   }
 
@@ -51,7 +57,7 @@ public final class Builder extends ContractModule {
         .addFields(fields(builderB, builderV).apply(goal))
         .addMethod(builderConstructor.apply(goal))
         .addMethods(steps(builderB, builderV).apply(goal))
-        .addModifiers(STATIC, FINAL)
+        .addModifiers(PRIVATE, STATIC, FINAL)
         .build();
   }
 
@@ -66,13 +72,26 @@ public final class Builder extends ContractModule {
         .build();
   }
 
+  private static final Function<SimpleRegularGoalContext, MethodSpec> regularConstructor =
+      regularGoalContextCases(
+          constructor -> constructor(),
+          method -> {
+            if (method.context.lifecycle == REUSE_INSTANCES) {
+              return constructor();
+            }
+            ClassName type = method.context.type;
+            ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
+            return constructorBuilder()
+                .addParameter(parameter)
+                .addStatement("this.$N = $N", method.field(), parameter)
+                .build();
+          },
+          staticMethod -> constructor());
+  
   private final Function<SimpleGoal, MethodSpec> builderConstructor =
       simpleGoalCases(
-          DtoRegularGoalContext.regularGoalContextCases(
-              SimpleRegularGoalContext::builderConstructor,
-              DtoProjectedRegularGoalContext.builderConstructor),
+          regularConstructor,
           bean -> constructorBuilder()
-              .addModifiers(PRIVATE)
               .addExceptions(bean.context.lifecycle == REUSE_INSTANCES
                   ? Collections.emptyList()
                   : bean.thrownTypes)

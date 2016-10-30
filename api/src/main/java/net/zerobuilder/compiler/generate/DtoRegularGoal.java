@@ -56,11 +56,7 @@ final class DtoRegularGoal {
     final Optional<FieldSpec> maybeField() {
       return maybeField.apply(this);
     }
-
-    final MethodSpec builderConstructor() {
-      return builderConstructor.apply(this);
-    }
-
+    
     @Override
     final <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {
       return cases.simple(this);
@@ -97,17 +93,14 @@ final class DtoRegularGoal {
   private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
       regularGoalContextCases(
           constructor -> empty(),
-          method -> isInstance.test(method) ?
-              Optional.of(method.field()) :
-              empty(),
+          method -> Optional.of(method.field()),
           staticMethod -> empty());
 
   private static final Function<SimpleRegularGoalContext, MethodSpec> builderConstructor =
       regularGoalContextCases(
           constructor -> constructor(PRIVATE),
           method -> {
-            if (!isInstance.test(method)
-                || method.context.lifecycle == REUSE_INSTANCES) {
+            if (method.context.lifecycle == REUSE_INSTANCES) {
               return constructor(PRIVATE);
             }
             ClassName type = method.context.type;

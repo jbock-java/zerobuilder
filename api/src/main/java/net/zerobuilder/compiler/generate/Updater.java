@@ -26,6 +26,7 @@ import static net.zerobuilder.compiler.generate.DtoProjectedGoal.goalType;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.projectedGoalCases;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
+import static net.zerobuilder.compiler.generate.Utilities.constructor;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.Utilities.statement;
 
@@ -60,13 +61,18 @@ public final class Updater extends ProjectedSimpleModule {
         .addMethods(updateMethods(updaterB, updaterV).apply(projectedGoal))
         .addMethod(buildMethod(projectedGoal))
         .addModifiers(PUBLIC, STATIC, FINAL)
-        .addMethod(builderConstructor.apply(projectedGoal))
+        .addMethod(updaterConstructor.apply(projectedGoal))
         .build();
   }
 
-  private static final Function<ProjectedGoal, MethodSpec> builderConstructor =
+  private static final Function<ProjectedRegularGoalContext, MethodSpec> regularConstructor =
+      DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
+          method -> constructor(PRIVATE),
+          constructor -> constructor(PRIVATE));
+
+  private static final Function<ProjectedGoal, MethodSpec> updaterConstructor =
       projectedGoalCases(
-          DtoProjectedRegularGoalContext.builderConstructor,
+          Updater.regularConstructor,
           bean -> constructorBuilder()
               .addModifiers(PRIVATE)
               .addExceptions(bean.context.lifecycle == REUSE_INSTANCES

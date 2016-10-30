@@ -124,11 +124,6 @@ public final class DtoProjectedRegularGoalContext {
     }
   }
 
-  static final Function<ProjectedRegularGoalContext, MethodSpec> builderConstructor =
-      DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
-          method -> constructor(PRIVATE),
-          constructor -> constructor(PRIVATE));
-
   static final Function<ProjectedRegularGoalContext, AbstractRegularDetails> goalDetails =
       projectedRegularGoalContextCases(
           method -> method.details,
