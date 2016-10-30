@@ -23,7 +23,7 @@ import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
-import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext;
+import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -56,7 +56,7 @@ public class UpdaterTest {
   @Test
   public void test() {
 
-    BuildersContext buildersContext = createBuildersContext(TYPE, GENERATED_TYPE, NEW_INSTANCE);
+    BuildersContext buildersContext = createContext(TYPE, GENERATED_TYPE, NEW_INSTANCE);
 
     String goalName = "myGoal";
     ConstructorGoalDetails details = ConstructorGoalDetails.create(

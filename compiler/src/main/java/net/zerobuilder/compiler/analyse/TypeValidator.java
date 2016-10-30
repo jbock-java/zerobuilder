@@ -19,7 +19,7 @@ final class TypeValidator {
   private static final Set<NestingKind> ALLOWED_NESTING_KINDS
       = EnumSet.of(TOP_LEVEL, MEMBER);
 
-  static void validateBuildersClass(TypeElement type) throws ValidationException {
+  static void validateContextClass(TypeElement type) throws ValidationException {
     Set<Modifier> modifiers = type.getModifiers();
     NestingKind nestingKind = type.getNestingKind();
     if (modifiers.contains(PRIVATE)) {

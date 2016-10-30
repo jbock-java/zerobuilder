@@ -48,7 +48,7 @@ public class FailTest {
     assertAbout(javaSources()).that(singletonList(javaFile))
         .processedWith(new ZeroProcessor())
         .failsToCompile()
-        .withErrorContaining("Multiple constructor goals")
+        .withErrorContaining("another goal with this name")
         .in(javaFile)
         .onLine(line + 1);
   }
@@ -68,7 +68,7 @@ public class FailTest {
     assertAbout(javaSources()).that(ImmutableList.of(javaFile))
         .processedWith(new ZeroProcessor())
         .failsToCompile()
-        .withErrorContaining("already a constructor goal")
+        .withErrorContaining("another goal with this name")
         .in(javaFile)
         .onLine(line + 1);
   }

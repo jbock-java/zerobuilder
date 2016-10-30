@@ -5,6 +5,7 @@ import net.zerobuilder.examples.values.MoreValues.NothingSpecial;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 import static net.zerobuilder.examples.values.MoreValues_InterfaceBuilders.interfaceBuilder;
 import static net.zerobuilder.examples.values.MoreValues_NothingBuilders.appendBuilder;
@@ -46,5 +47,11 @@ public class MoreValuesTest {
         .done();
     assertThat(foo.foo(), is("foo"));
     assertThat(bar.foo(), is("bar"));
+  }
+
+  @Test
+  public void testNoGoals() {
+    Method[] declaredMethods = MoreValues_NoGoalsBuilders.class.getDeclaredMethods();
+    assertThat(declaredMethods.length, is(0));
   }
 }

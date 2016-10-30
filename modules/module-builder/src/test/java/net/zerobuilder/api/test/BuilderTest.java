@@ -22,7 +22,7 @@ import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
-import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext;
+import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType.STATIC_METHOD;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -57,7 +57,7 @@ public class BuilderTest {
   public void staticMethodGoal() {
 
     // create goal context
-    BuildersContext buildersContext = createBuildersContext(
+    BuildersContext buildersContext = createContext(
         TYPE, // type that contains the goal method; in this case, this is the same as the goal type
         GENERATED_TYPE, // the type we want to generate; it will contain all the generated code
         NEW_INSTANCE // forbid caching of builder instances

@@ -15,9 +15,6 @@ public final class Messages {
     private static final String POJO_HINT
         = " If this is not a POJO, try putting the @Goal annotation on a constructor instead.";
 
-    private static final String GOAL_NAME_HINT
-        = " Goal name conflicts can be resolved with the @Goal(name = ...) attribute.";
-
     public static final String PRIVATE_METHOD =
         "The goal may not be private.";
 
@@ -34,9 +31,6 @@ public final class Messages {
     public static final String NESTING_KIND =
         "The @Builders annotation can only be used on top level and non-private static inner classes.";
 
-    public static final String NO_GOALS =
-        "No goals were found.";
-
     public static final String GOAL_NOT_IN_BUILD =
         "The @Goal annotation may not appear outside a class that carries the @Builders annotation.";
 
@@ -49,33 +43,9 @@ public final class Messages {
     public static final String STEP_DUPLICATE =
         "Step position is specified twice.";
 
-    /* empty, empty, constructor, constructor */
-    public static final String GOALNAME_EECC =
-        "Multiple constructor goals found. Please add a goal name.";
-
-    /* empty, empty, method, constructor */
-    public static final String GOALNAME_EEMC =
-        "There is already a constructor goal for this return type." + GOAL_NAME_HINT;
-
-    /* empty, empty, method, method */
-    public static final String GOALNAME_EEMM =
-        "There is already another goal for this return type." + GOAL_NAME_HINT;
-
-    /* named, empty, constructor, constructor */
-    public static final String GOALNAME_NECC =
-        "This goal name is taken by another constructor." + GOAL_NAME_HINT;
-
-    /* named, empty, method, constructor */
-    public static final String GOALNAME_NEMC =
-        "This goal name is taken by a constructor." + GOAL_NAME_HINT;
-
-    /* named, empty, method, method */
-    public static final String GOALNAME_NEMM =
-        "This goal name is taken by another goal." + GOAL_NAME_HINT;
-
-    /* named, named */
-    public static final String GOALNAME_NN =
-        "There is another goal with this goal name." + GOAL_NAME_HINT;
+    public static final String DUPLICATE_GOAL_NAME =
+        "There is another goal with this name. " +
+            "Goal name conflicts can be resolved with the @Goal(name = ...) attribute.";
 
     public static final String BEAN_NO_DEFAULT_CONSTRUCTOR =
         "The default constructor may not be private or absent." + POJO_HINT;
@@ -107,6 +77,8 @@ public final class Messages {
     public static final String NON_STATIC_UPDATER =
         "Method must be static if updater is true";
 
+    public static final String BEAN_SUBGOALS =
+        "Beans may not have subgoals." + POJO_HINT;
 
     private ErrorMessages() {
       throw new UnsupportedOperationException("no instances");

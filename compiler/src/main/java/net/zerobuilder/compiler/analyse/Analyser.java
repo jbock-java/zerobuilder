@@ -5,6 +5,7 @@ import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractRegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
 import net.zerobuilder.compiler.generate.Builder;
@@ -14,144 +15,95 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.ProjectedDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
+import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
+import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
 import net.zerobuilder.compiler.generate.Updater;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.tools.Diagnostic.Kind.WARNING;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NOT_ENOUGH_PARAMETERS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_GOALS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_METHOD;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SUBGOALS;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalElementCases;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalName;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalType;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.module;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.regularGoalElementCases;
+import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkAccessLevel;
+import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkMinParameters;
 import static net.zerobuilder.compiler.analyse.GoalnameValidator.checkNameConflict;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValue;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateValueIgnoreProjections;
-import static net.zerobuilder.compiler.analyse.TypeValidator.validateBuildersClass;
-import static net.zerobuilder.compiler.analyse.Utilities.appendSuffix;
+import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateBuilder;
+import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpdater;
+import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
+import static net.zerobuilder.compiler.analyse.Utilities.flatList;
+import static net.zerobuilder.compiler.analyse.Utilities.peer;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.common.LessElements.asExecutable;
-import static net.zerobuilder.compiler.generate.DtoContext.createBuildersContext;
+import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 
 public final class Analyser {
 
-  // only for validation
-  static final class NameElement {
-    final String name;
-    final Element element;
-    final Goal goalAnnotation;
-    NameElement(String name, Element element, Goal goalAnnotation) {
-      this.name = name;
-      this.element = element;
-      this.goalAnnotation = goalAnnotation;
-    }
-  }
+  private static final ContractModule BUILDER = new Builder();
+  private static final ProjectedSimpleModule UPDATER = new Updater();
 
-  public static GeneratorInput analyse(TypeElement buildersAnnotatedClass) throws ValidationException {
-    BuilderLifecycle lifecycle = buildersAnnotatedClass.getAnnotation(Builders.class).recycle()
+  public static GeneratorInput analyse(TypeElement tel) throws ValidationException {
+    validateContextClass(tel);
+    BuilderLifecycle lifecycle = tel.getAnnotation(Builders.class).recycle()
         ? BuilderLifecycle.REUSE_INSTANCES
         : BuilderLifecycle.NEW_INSTANCE;
-    ClassName type = ClassName.get(buildersAnnotatedClass);
-    ClassName generatedType = appendSuffix(type, "Builders");
-    BuildersContext context = createBuildersContext(type, generatedType, lifecycle);
-    List<AbstractGoalElement> goalElements = goals(buildersAnnotatedClass);
-    checkNameConflict(names(buildersAnnotatedClass));
-    validateBuildersClass(buildersAnnotatedClass);
-    List<DescriptionInput> descriptions = transform(goalElements, createDescription);
+    ClassName type = ClassName.get(tel);
+    ClassName generatedType = peer(type, "Builders");
+    BuildersContext context = createContext(type, generatedType, lifecycle);
+    List<? extends AbstractGoalElement> goals = goals(tel);
+    checkNameConflict(goals);
+    checkAccessLevel(goals);
+    checkMinParameters(goals);
+    List<DescriptionInput> descriptions = transform(goals, description);
     return GeneratorInput.create(context, descriptions);
   }
 
-  private static final Function<AbstractGoalElement, DescriptionInput> createDescription =
+  private static final Function<AbstractGoalElement, DescriptionInput> description =
       goalElementCases(
           regularGoalElementCases(
-              regular -> new SimpleDescriptionInput(new Builder(), validateValueIgnoreProjections.apply(regular)),
-              projectable -> new ProjectedDescriptionInput(new Updater(), validateValue.apply(projectable))),
-          bean -> module.apply(bean) == ModuleChoice.BUILDER ?
-              new SimpleDescriptionInput(new Builder(), validateBean.apply(bean)) :
-              new ProjectedDescriptionInput(new Updater(), validateBean.apply(bean)));
-
-  static List<ModuleChoice> modules(Goal goalAnnotation) {
-    ArrayList<ModuleChoice> modules = new ArrayList<>(2);
-    if (goalAnnotation.builder()) {
-      modules.add(ModuleChoice.BUILDER);
-    }
-    if (goalAnnotation.updater()) {
-      modules.add(ModuleChoice.UPDATER);
-    }
-    return modules;
-  }
-
-  private static List<NameElement> names(TypeElement buildElement) throws ValidationException {
-    List<NameElement> builder = new ArrayList<>();
-    if (buildElement.getAnnotation(Goal.class) != null) {
-      ClassName goalType = ClassName.get(buildElement);
-      Goal goalAnnotation = buildElement.getAnnotation(Goal.class);
-      String name = goalName(goalAnnotation, goalType);
-      builder.add(new NameElement(name, buildElement, goalAnnotation));
-    }
-    for (Element element : buildElement.getEnclosedElements()) {
-      Goal goalAnnotation = element.getAnnotation(Goal.class);
-      if (goalAnnotation != null) {
-        ElementKind kind = element.getKind();
-        if (kind == CONSTRUCTOR || kind == METHOD) {
-          ExecutableElement executableElement = asExecutable(element);
-          String name = goalName(goalAnnotation, goalType(executableElement));
-          builder.add(new NameElement(name, executableElement, goalAnnotation));
-        }
-      }
-    }
-    return builder;
-  }
-
+              general -> new SimpleDescriptionInput(BUILDER, validateBuilder.apply(general)),
+              projected -> new ProjectedDescriptionInput(UPDATER, validateUpdater.apply(projected))),
+          bean -> bean.moduleChoice == ModuleChoice.BUILDER ?
+              new SimpleDescriptionInput(BUILDER, validateBean.apply(bean)) :
+              new ProjectedDescriptionInput(UPDATER, validateBean.apply(bean)));
 
   /**
-   * @param buildElement a class that carries the {@link net.zerobuilder.Builders} annotation
+   * @param tel a class that carries the {@link net.zerobuilder.Builders} annotation
    * @return the goals that this class defines: one per {@link Goal} annotation
    * @throws ValidationException if validation fails
    */
-  private static List<AbstractGoalElement> goals(TypeElement buildElement) throws ValidationException {
-    Builders buildersAnnotation = buildElement.getAnnotation(Builders.class);
-    List<AbstractGoalElement> builder = new ArrayList<>();
+  private static List<? extends AbstractGoalElement> goals(TypeElement tel) throws ValidationException {
+    Builders buildersAnnotation = tel.getAnnotation(Builders.class);
     AccessLevel defaultAccess = buildersAnnotation.access();
-    if (buildElement.getAnnotation(Goal.class) != null) {
-      builder.addAll(BeanGoalElement.create(buildElement, defaultAccess));
-    } else {
-      for (Element element : buildElement.getEnclosedElements()) {
-        if (element.getAnnotation(Goal.class) != null) {
-          ElementKind kind = element.getKind();
-          if (kind == CONSTRUCTOR || kind == METHOD) {
-            ExecutableElement executableElement = asExecutable(element);
-            validateExecutable(buildElement, executableElement);
-            builder.addAll(DtoGoalElement.createRegular(executableElement, defaultAccess));
-          }
-        }
-      }
-    }
-    if (builder.isEmpty()) {
-      throw new ValidationException(WARNING, NO_GOALS, buildElement);
-    }
-    return builder;
+    return tel.getAnnotation(Goal.class) != null ?
+        beanGoals(tel, defaultAccess) :
+        regularGoals(tel, defaultAccess);
   }
-  private static void validateExecutable(TypeElement buildElement, ExecutableElement executableElement) {
-    if (executableElement.getModifiers().contains(PRIVATE)) {
-      throw new ValidationException(PRIVATE_METHOD, buildElement);
+
+  private static List<AbstractRegularGoalElement> regularGoals(TypeElement tel, AccessLevel defaultAccess) {
+    return tel.getEnclosedElements().stream()
+        .filter(el -> el.getAnnotation(Goal.class) != null)
+        .filter(el -> el.getKind() == CONSTRUCTOR || el.getKind() == METHOD)
+        .map(el -> asExecutable(el))
+        .map(el -> DtoGoalElement.createRegular(el, defaultAccess))
+        .collect(flatList());
+  }
+
+  private static List<BeanGoalElement> beanGoals(TypeElement buildElement, AccessLevel defaultAccess) {
+    Optional<? extends Element> annotated = buildElement.getEnclosedElements().stream()
+        .filter(el -> el.getAnnotation(Goal.class) != null)
+        .filter(el -> el.getKind() == METHOD || el.getKind() == CONSTRUCTOR)
+        .findAny();
+    if (annotated.isPresent()) {
+      throw new ValidationException(BEAN_SUBGOALS, annotated.get());
     }
-    if (executableElement.getParameters().isEmpty()) {
-      throw new ValidationException(NOT_ENOUGH_PARAMETERS, buildElement);
-    }
+    return BeanGoalElement.create(buildElement, defaultAccess);
   }
 
   private Analyser() {

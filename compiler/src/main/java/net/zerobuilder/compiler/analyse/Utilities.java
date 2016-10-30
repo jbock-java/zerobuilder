@@ -14,10 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 import static java.lang.Character.isUpperCase;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 
 final class Utilities {
@@ -68,12 +72,12 @@ final class Utilities {
    * @param suffix A string that usually starts with an uppercase character
    * @return A top level type in the same package.
    */
-  static ClassName appendSuffix(ClassName type, String suffix) {
+  static ClassName peer(ClassName type, String suffix) {
     String name = String.join("_", type.simpleNames()) + suffix;
     return type.topLevelClassName().peerClass(name);
   }
 
-  static <X, E> List<E> transform(Collection<X> input, Function<X, E> function) {
+  static <X, E> List<E> transform(Collection<? extends X> input, Function<X, E> function) {
     return input.stream().map(function).collect(toList());
   }
 
@@ -97,6 +101,34 @@ final class Utilities {
     return executableElement.getThrownTypes().stream()
         .map(TypeName::get)
         .collect(toList());
+  }
+
+  static <E> Collector<List<E>, List<E>, List<E>> flatList() {
+    return new Collector<List<E>, List<E>, List<E>>() {
+      @Override
+      public Supplier<List<E>> supplier() {
+        return ArrayList::new;
+      }
+      @Override
+      public BiConsumer<List<E>, List<E>> accumulator() {
+        return (left, right) -> left.addAll(right);
+      }
+      @Override
+      public BinaryOperator<List<E>> combiner() {
+        return (left, right) -> {
+          left.addAll(right);
+          return left;
+        };
+      }
+      @Override
+      public Function<List<E>, List<E>> finisher() {
+        return Function.identity();
+      }
+      @Override
+      public Set<Characteristics> characteristics() {
+        return emptySet();
+      }
+    };
   }
 
   private Utilities() {

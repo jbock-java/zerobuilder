@@ -61,9 +61,9 @@ public final class DtoContext {
    * @param builderLifecycle lifecycle setting
    * @return a BuildersContext
    */
-  public static BuildersContext createBuildersContext(ClassName type,
-                                                      ClassName generatedType,
-                                                      BuilderLifecycle builderLifecycle) {
+  public static BuildersContext createContext(ClassName type,
+                                              ClassName generatedType,
+                                              BuilderLifecycle builderLifecycle) {
     return new BuildersContext(builderLifecycle, type, generatedType);
   }
 

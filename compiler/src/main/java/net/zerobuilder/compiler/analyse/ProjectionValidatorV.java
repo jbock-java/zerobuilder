@@ -53,7 +53,7 @@ final class ProjectionValidatorV {
           && !"getClass".equals(method.getSimpleName().toString())
           && !"clone".equals(method.getSimpleName().toString());
 
-  static final Function<RegularProjectableGoalElement, ProjectedRegularGoalDescription> validateValue =
+  static final Function<RegularProjectableGoalElement, ProjectedRegularGoalDescription> validateUpdater =
       goal -> {
         TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
         validateType(goal, type);
@@ -104,7 +104,7 @@ final class ProjectionValidatorV {
     return getLocalAndInheritedMethods(type, LOOKS_LIKE_PROJECTION);
   }
 
-  static final Function<RegularGoalElement, SimpleDescription> validateValueIgnoreProjections
+  static final Function<RegularGoalElement, SimpleDescription> validateBuilder
       = goal -> {
     List<TmpSimpleParameter> parameters = executableElement.apply(goal).getParameters()
         .stream()

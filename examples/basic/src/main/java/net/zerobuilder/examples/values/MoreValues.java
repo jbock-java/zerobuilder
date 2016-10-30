@@ -49,4 +49,8 @@ public class MoreValues {
       return foo;
     }
   }
+
+  @Builders
+  static final class NoGoals {
+  }
 }
