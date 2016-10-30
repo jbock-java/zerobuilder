@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+mvn install -Psource -f api/
+mvn -o install -f modules/
+mvn -o install -f compiler/
+mvn -o clean test -f examples/
