@@ -13,8 +13,8 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.Utilities.ClassNames.THREAD_LOCAL;
-import static net.zerobuilder.compiler.generate.Utilities.memoize;
+import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.THREAD_LOCAL;
+import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 
 public final class DtoContext {
 
@@ -24,25 +24,25 @@ public final class DtoContext {
 
   public static final class BuildersContext {
 
-    final BuilderLifecycle lifecycle;
+    public final BuilderLifecycle lifecycle;
 
     /**
      * The type that should be generated.
      */
-    final ClassName generatedType;
+    public final ClassName generatedType;
 
     /**
      * The class that contains the goal method(s) or constructor(s).
      * Only used in regular goals.
      */
-    final ClassName type;
+    public final ClassName type;
 
     /**
      * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.
      * Only used when {@link #lifecycle} is
      * {@link BuilderLifecycle#REUSE_INSTANCES REUSE_INSTANCES}.
      */
-    final Supplier<FieldSpec> cache;
+    public final Supplier<FieldSpec> cache;
 
     private BuildersContext(BuilderLifecycle lifecycle, ClassName type, ClassName generatedType) {
       this.lifecycle = lifecycle;
@@ -88,4 +88,3 @@ public final class DtoContext {
     throw new UnsupportedOperationException("no instances");
   }
 }
-

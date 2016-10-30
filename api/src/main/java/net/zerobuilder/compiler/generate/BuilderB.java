@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
@@ -25,12 +24,12 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
-import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.generate.Utilities.flatList;
-import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
+import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
+import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
 final class BuilderB {
 

@@ -19,9 +19,9 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
-import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
+import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 
 final class StepB {
 

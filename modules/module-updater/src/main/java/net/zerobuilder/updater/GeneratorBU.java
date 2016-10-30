@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler.generate;
+package net.zerobuilder.updater;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -26,12 +26,12 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.Utilities.flatList;
-import static net.zerobuilder.compiler.generate.Utilities.joinCodeBlocks;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
+import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
 final class GeneratorBU {
 
@@ -49,7 +49,10 @@ final class GeneratorBU {
     MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
         .returns(this.updater.implType(goal))
-        .addExceptions(thrownTypes(goal, asList(AbstractBeanStep::getterThrownTypes, AbstractBeanStep::setterThrownTypes)))
+        .addExceptions(thrownTypes(goal,
+            asList(
+                AbstractBeanStep::getterThrownTypes,
+                AbstractBeanStep::setterThrownTypes)))
         .addCode(goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
         .addCode(initializeUpdater(goal, updater))
         .addCode(goal.steps.stream().map(copy(goal)).collect(joinCodeBlocks))

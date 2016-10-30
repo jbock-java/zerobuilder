@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler.generate;
+package net.zerobuilder.updater;
 
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -21,10 +21,10 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.steps;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
-import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
-import static net.zerobuilder.compiler.generate.Utilities.flatList;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
+import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 
 final class UpdaterV {
 

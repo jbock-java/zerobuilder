@@ -33,7 +33,7 @@ final class DtoGoalContext {
       return abstractGoalDetails.apply(this);
     }
 
-    final BuildersContext context() {
+    public final BuildersContext context() {
       return context.apply(this);
     }
 

@@ -14,12 +14,12 @@ import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
-import static net.zerobuilder.compiler.generate.Utilities.memoize;
+import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 
 public final class DtoRegularStep {
 
-  static abstract class AbstractRegularStep extends DtoStep.AbstractStep {
+  public static abstract class AbstractRegularStep extends DtoStep.AbstractStep {
 
     protected AbstractRegularStep(String thisType,
                                   Optional<AbstractRegularStep> nextType,
@@ -28,9 +28,9 @@ public final class DtoRegularStep {
       super(thisType, nextType, goalDetails, context);
     }
 
-    abstract Optional<DtoStep.CollectionInfo> collectionInfo();
-    abstract FieldSpec field();
-    abstract AbstractRegularParameter regularParameter();
+    public abstract Optional<DtoStep.CollectionInfo> collectionInfo();
+    public abstract FieldSpec field();
+    public abstract AbstractRegularParameter regularParameter();
     abstract List<TypeName> declaredExceptions();
 
     @Override
@@ -39,7 +39,7 @@ public final class DtoRegularStep {
     }
   }
 
-  static final class ProjectedRegularStep extends AbstractRegularStep {
+  public static final class ProjectedRegularStep extends AbstractRegularStep {
     final ProjectedParameter parameter;
     final List<TypeName> declaredExceptions;
 
@@ -72,17 +72,17 @@ public final class DtoRegularStep {
     }
 
     @Override
-    Optional<DtoStep.CollectionInfo> collectionInfo() {
+    public Optional<DtoStep.CollectionInfo> collectionInfo() {
       return collectionInfo.get();
     }
 
     @Override
-    FieldSpec field() {
+    public FieldSpec field() {
       return field.get();
     }
 
     @Override
-    AbstractRegularParameter regularParameter() {
+    public AbstractRegularParameter regularParameter() {
       return parameter;
     }
 
@@ -121,17 +121,17 @@ public final class DtoRegularStep {
     }
 
     @Override
-    Optional<DtoStep.CollectionInfo> collectionInfo() {
+    public Optional<DtoStep.CollectionInfo> collectionInfo() {
       return collectionInfo.get();
     }
 
     @Override
-    FieldSpec field() {
+    public FieldSpec field() {
       return field.get();
     }
 
     @Override
-    AbstractRegularParameter regularParameter() {
+    public AbstractRegularParameter regularParameter() {
       return parameter;
     }
 

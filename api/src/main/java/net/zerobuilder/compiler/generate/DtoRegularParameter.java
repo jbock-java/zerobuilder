@@ -49,7 +49,7 @@ public final class DtoRegularParameter {
     /**
      * original parameter name
      */
-    final String name;
+    public final String name;
 
     private AbstractRegularParameter(String name, TypeName type, NullPolicy nullPolicy) {
       super(type, nullPolicy);

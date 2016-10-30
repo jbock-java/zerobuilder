@@ -23,10 +23,10 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.util.Optional.empty;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.Utilities.asPredicate;
-import static net.zerobuilder.compiler.generate.Utilities.constructor;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.asPredicate;
+import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 
 final class DtoRegularGoal {
 
@@ -56,7 +56,7 @@ final class DtoRegularGoal {
     final Optional<FieldSpec> maybeField() {
       return maybeField.apply(this);
     }
-    
+
     @Override
     final <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {
       return cases.simple(this);

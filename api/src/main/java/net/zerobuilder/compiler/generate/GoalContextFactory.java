@@ -48,8 +48,8 @@ import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionI
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoProjectedDescription.projectedDescriptionCases;
 import static net.zerobuilder.compiler.generate.DtoSimpleDescription.simpleDescriptionCases;
-import static net.zerobuilder.compiler.generate.Utilities.reverse;
-import static net.zerobuilder.compiler.generate.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.reverse;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class GoalContextFactory {
 

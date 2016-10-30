@@ -19,7 +19,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod.getMethod;
-import static net.zerobuilder.compiler.generate.Utilities.transform;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class DtoGeneratorOutput {
 
@@ -31,7 +31,7 @@ public final class DtoGeneratorOutput {
     private final String name;
     private final MethodSpec method;
 
-    BuilderMethod(String name, MethodSpec method) {
+    public BuilderMethod(String name, MethodSpec method) {
       this.name = name;
       this.method = method;
     }
@@ -95,7 +95,7 @@ public final class DtoGeneratorOutput {
 
     private MethodSpec constructor() {
       return lifecycle == BuilderLifecycle.REUSE_INSTANCES ?
-          Utilities.constructor(PRIVATE) :
+          ZeroUtil.constructor(PRIVATE) :
           constructorBuilder()
               .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
               .addModifiers(PRIVATE)

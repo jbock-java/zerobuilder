@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler.generate;
+package net.zerobuilder.updater;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -11,6 +11,7 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
+import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,11 +23,10 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
-import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.generate.Utilities.flatList;
-import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.presentInstances;
+import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 
 final class UpdaterB {
 
@@ -108,7 +108,7 @@ final class UpdaterB {
         .returns(updater.implType(goal))
         .addParameter(parameter)
         .addExceptions(step.loneGetter.getterThrownTypes)
-        .addCode(nullCheck(name, name))
+        .addCode(ZeroUtil.nullCheck(name, name))
         .addCode(clearCollection(goal, step))
         .beginControlFlow("for ($T $N : $N)", iterationVar.type, iterationVar, name)
         .addStatement("this.$N.$N().add($N)",

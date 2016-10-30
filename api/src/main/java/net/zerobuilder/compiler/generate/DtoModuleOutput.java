@@ -24,7 +24,7 @@ public final class DtoModuleOutput {
 
   public static final class SimpleModuleOutput extends AbstractModuleOutput {
 
-    protected SimpleModuleOutput(BuilderMethod method, TypeSpec impl) {
+    public SimpleModuleOutput(BuilderMethod method, TypeSpec impl) {
       super(method, impl);
     }
     @Override

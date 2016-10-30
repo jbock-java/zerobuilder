@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler.generate;
+package net.zerobuilder.updater;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -9,6 +9,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
@@ -17,6 +18,7 @@ import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
+import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,10 +36,10 @@ import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.g
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.steps;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
 final class GeneratorVU {
 
@@ -62,12 +64,11 @@ final class GeneratorVU {
         .build();
     return new BuilderMethod(details.name, method);
   }
-  ;
 
   private CodeBlock copyBlock(ProjectedRegularGoalContext goal) {
     return steps.apply(goal).stream()
         .map(copyField(goal))
-        .collect(Utilities.joinCodeBlocks);
+        .collect(ZeroUtil.joinCodeBlocks);
   }
 
   private CodeBlock nullCheckingBlock(ProjectedRegularGoalContext goal) {
@@ -81,9 +82,10 @@ final class GeneratorVU {
   }
 
   private Function<AbstractRegularStep, CodeBlock> copyField(ProjectedRegularGoalContext goal) {
-    BiFunction<ProjectionInfo, AbstractRegularStep, CodeBlock> copy = projectionInfoCases(
-        copyFromMethod(goal),
-        copyFromField(goal));
+    BiFunction<ProjectionInfo, AbstractRegularStep, CodeBlock> copy =
+        projectionInfoCases(
+            copyFromMethod(goal),
+            copyFromField(goal));
     return step -> copy.apply(step.regularParameter().projectionInfo().get(), step);
   }
 

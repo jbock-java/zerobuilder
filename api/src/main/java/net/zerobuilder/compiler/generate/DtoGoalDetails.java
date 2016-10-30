@@ -77,14 +77,14 @@ public final class DtoGoalDetails {
 
   public static abstract class AbstractRegularDetails implements AbstractGoalDetails {
 
-    final String name;
+    public final String name;
     final Access access;
 
     /**
      * <p>method goal: return type</p>
      * <p>constructor goal: type of enclosing class</p>
      */
-    final TypeName goalType;
+    public final TypeName goalType;
 
     /**
      * parameter names in original order
@@ -203,7 +203,7 @@ public final class DtoGoalDetails {
 
   public static final class BeanGoalDetails implements AbstractGoalDetails {
     public final ClassName goalType;
-    final String name;
+    public final String name;
     private final Access access;
     public BeanGoalDetails(ClassName goalType, String name, Access access) {
       this.name = name;

@@ -12,7 +12,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegu
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.Generator;
-import net.zerobuilder.compiler.generate.Updater;
+import net.zerobuilder.updater.Updater;
 import org.junit.Test;
 
 import javax.lang.model.element.Modifier;

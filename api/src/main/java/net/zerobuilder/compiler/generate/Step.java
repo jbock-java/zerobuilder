@@ -14,12 +14,12 @@ import static net.zerobuilder.compiler.generate.DtoStep.asFunction;
 import static net.zerobuilder.compiler.generate.DtoStep.stepCases;
 import static net.zerobuilder.compiler.generate.StepB.beanStepInterface;
 import static net.zerobuilder.compiler.generate.StepV.regularStepInterface;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.Utilities.nullCheck;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 
-final class Step {
+public final class Step {
 
-  static final Function<AbstractStep, CodeBlock> nullCheck
+  public static final Function<AbstractStep, CodeBlock> nullCheck
       = always(step -> {
     AbstractParameter parameter = step.abstractParameter();
     if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {

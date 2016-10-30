@@ -17,11 +17,11 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
-import static net.zerobuilder.compiler.generate.Utilities.memoize;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
+import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
 public final class DtoMethodGoal {
 

@@ -8,7 +8,7 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
-import net.zerobuilder.compiler.generate.Utilities.ClassNames;
+import net.zerobuilder.compiler.generate.ZeroUtil.ClassNames;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,29 +17,29 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import static net.zerobuilder.compiler.generate.Utilities.ClassNames.COLLECTION;
-import static net.zerobuilder.compiler.generate.Utilities.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.generate.Utilities.ClassNames.SET;
-import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
-import static net.zerobuilder.compiler.generate.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.COLLECTION;
+import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.SET;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
-final class DtoStep {
+public final class DtoStep {
 
   private static final Set<ClassName> LIST_HIERARCHY
       = new HashSet<>(Arrays.asList(ClassNames.LIST, COLLECTION, ITERABLE));
 
-  static final class CollectionInfo {
+  public static final class CollectionInfo {
 
     /**
      * Initializer for a variable of type {@link AbstractParameter#type}.
      * It evaluates to an empty List or Set.
      */
-    final CodeBlock initializer;
+    public final CodeBlock initializer;
 
     /**
      * Name of the convenience method to be generated, e.g. {@code "emptyFoo"}
      */
-    final String name;
+    public final String name;
 
     private CollectionInfo(CodeBlock initializer, String name) {
       this.initializer = initializer;

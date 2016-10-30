@@ -31,9 +31,9 @@ import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_
 import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
 import static net.zerobuilder.compiler.generate.DtoModuleOutput.moduleOutputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
-import static net.zerobuilder.compiler.generate.Utilities.flatList;
-import static net.zerobuilder.compiler.generate.Utilities.listCollector;
-import static net.zerobuilder.compiler.generate.Utilities.transform;
+import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
+import static net.zerobuilder.compiler.generate.ZeroUtil.listCollector;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class Generator {
 

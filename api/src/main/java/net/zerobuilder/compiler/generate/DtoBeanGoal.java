@@ -18,19 +18,19 @@ import java.util.function.Supplier;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.fieldSpec;
-import static net.zerobuilder.compiler.generate.Utilities.memoize;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 
-final class DtoBeanGoal {
+public final class DtoBeanGoal {
 
-  static final class BeanGoalContext extends AbstractGoalContext
+  public static final class BeanGoalContext extends AbstractGoalContext
       implements ProjectedGoal, SimpleGoal {
 
-    final BuildersContext context;
-    final List<AbstractBeanStep> steps;
-    final BeanGoalDetails details;
-    final List<TypeName> thrownTypes;
+    public final BuildersContext context;
+    public final List<AbstractBeanStep> steps;
+    public final BeanGoalDetails details;
+    public final List<TypeName> thrownTypes;
 
     private final Supplier<FieldSpec> bean;
 
@@ -39,7 +39,7 @@ final class DtoBeanGoal {
      *
      * @return field spec
      */
-    FieldSpec bean() {
+    public FieldSpec bean() {
       return bean.get();
     }
 
@@ -63,7 +63,7 @@ final class DtoBeanGoal {
       });
     }
 
-    ClassName type() {
+    public ClassName type() {
       return details.goalType;
     }
 

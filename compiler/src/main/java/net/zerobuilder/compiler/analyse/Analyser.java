@@ -17,7 +17,7 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionIn
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
-import net.zerobuilder.compiler.generate.Updater;
+import net.zerobuilder.updater.Updater;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;

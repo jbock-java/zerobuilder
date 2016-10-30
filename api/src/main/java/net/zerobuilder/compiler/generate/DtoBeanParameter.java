@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static com.squareup.javapoet.ClassName.OBJECT;
-import static net.zerobuilder.compiler.generate.Utilities.distinctFrom;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.memoize;
-import static net.zerobuilder.compiler.generate.Utilities.onlyTypeArgument;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.rawClassName;
-import static net.zerobuilder.compiler.generate.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.distinctFrom;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
+import static net.zerobuilder.compiler.generate.ZeroUtil.onlyTypeArgument;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class DtoBeanParameter {
 
@@ -26,9 +26,9 @@ public final class DtoBeanParameter {
     /**
      * Name of the getter method (could start with {@code "is"})
      */
-    final String getter;
+    public final String getter;
 
-    final List<TypeName> getterThrownTypes;
+    public final List<TypeName> getterThrownTypes;
 
     private final Supplier<String> name;
 
@@ -68,7 +68,7 @@ public final class DtoBeanParameter {
 
   public static final class AccessorPair extends AbstractBeanParameter {
 
-    final List<TypeName> setterThrownTypes;
+    public final List<TypeName> setterThrownTypes;
 
     private final Supplier<String> setterName;
 
@@ -83,7 +83,7 @@ public final class DtoBeanParameter {
       return memoize(() -> "set" + upcase(name));
     }
 
-    String setterName() {
+    public String setterName() {
       return setterName.get();
     }
 
@@ -93,14 +93,15 @@ public final class DtoBeanParameter {
     }
   }
 
-  static final class LoneGetter extends AbstractBeanParameter {
+  public static final class LoneGetter extends AbstractBeanParameter {
 
     /**
      * Example: If getter returns {@code List<String>}, then this would be a variable of type
      * {@code String}
      */
     private final ParameterSpec iterationVar;
-    TypeName iterationType() {
+
+    public TypeName iterationType() {
       return iterationVar.type;
     }
 
@@ -110,7 +111,7 @@ public final class DtoBeanParameter {
      * @param avoid a variable name
      * @return a variable that's different from {@code avoid}, preferably {@link #iterationVar}
      */
-    ParameterSpec iterationVar(ParameterSpec avoid) {
+    public ParameterSpec iterationVar(ParameterSpec avoid) {
       if (!iterationVar.name.equals(avoid.name)) {
         return iterationVar;
       }
@@ -160,7 +161,7 @@ public final class DtoBeanParameter {
     TypeName collectionType = onlyTypeArgument(type).orElse(OBJECT);
     String name = rawClassName(collectionType)
         .map(ClassName::simpleName)
-        .map(Utilities::downcase)
+        .map(ZeroUtil::downcase)
         .orElseThrow(IllegalStateException::new);
     ParameterSpec iterationVar = parameterSpec(collectionType, name);
     return new LoneGetter(type, getter, nullPolicy, iterationVar, getterThrownTypes);

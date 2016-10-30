@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
@@ -15,10 +14,8 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.TypeName.VOID;
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
-import static net.zerobuilder.compiler.generate.Utilities.constructor;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 
 public final class DtoProjectedRegularGoalContext {
 
@@ -27,7 +24,7 @@ public final class DtoProjectedRegularGoalContext {
     R constructor(ProjectedConstructorGoalContext constructor);
   }
 
-  static abstract class ProjectedRegularGoalContext extends RegularGoalContext
+  public static abstract class ProjectedRegularGoalContext extends RegularGoalContext
       implements ProjectedGoal {
 
     ProjectedRegularGoalContext(List<TypeName> thrownTypes) {
@@ -46,7 +43,7 @@ public final class DtoProjectedRegularGoalContext {
       return cases.projected(this);
     }
 
-    final CodeBlock invocationParameters() {
+    public final CodeBlock invocationParameters() {
       return CodeBlock.of(String.join(", ", goalDetails.apply(this).parameterNames));
     }
   }
@@ -55,7 +52,7 @@ public final class DtoProjectedRegularGoalContext {
     return goal -> goal.acceptRegularProjected(cases);
   }
 
-  static <R> Function<ProjectedRegularGoalContext, R> projectedRegularGoalContextCases(
+  public static <R> Function<ProjectedRegularGoalContext, R> projectedRegularGoalContextCases(
       Function<? super ProjectedMethodGoalContext, ? extends R> methodFunction,
       Function<? super ProjectedConstructorGoalContext, ? extends R> constructorFunction) {
     return asFunction(new ProjectedRegularGoalContextCases<R>() {
@@ -70,12 +67,12 @@ public final class DtoProjectedRegularGoalContext {
     });
   }
 
-  static final class ProjectedMethodGoalContext extends ProjectedRegularGoalContext {
+  public static final class ProjectedMethodGoalContext extends ProjectedRegularGoalContext {
     final List<ProjectedRegularStep> steps;
     final BuildersContext context;
     final StaticMethodGoalDetails details;
 
-    CodeBlock methodGoalInvocation() {
+    public CodeBlock methodGoalInvocation() {
       TypeName type = details.goalType;
       String method = details.methodName;
       return CodeBlock.builder()
@@ -101,7 +98,7 @@ public final class DtoProjectedRegularGoalContext {
     }
   }
 
-  static final class ProjectedConstructorGoalContext
+  public static final class ProjectedConstructorGoalContext
       extends ProjectedRegularGoalContext {
 
     final BuildersContext context;
@@ -124,12 +121,12 @@ public final class DtoProjectedRegularGoalContext {
     }
   }
 
-  static final Function<ProjectedRegularGoalContext, AbstractRegularDetails> goalDetails =
+  public static final Function<ProjectedRegularGoalContext, AbstractRegularDetails> goalDetails =
       projectedRegularGoalContextCases(
           method -> method.details,
           constructor -> constructor.details);
 
-  static final Function<ProjectedRegularGoalContext, List<ProjectedRegularStep>> steps = DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
+  public static final Function<ProjectedRegularGoalContext, List<ProjectedRegularStep>> steps = DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
       method -> method.steps,
       constructor -> constructor.steps);
 

@@ -11,7 +11,7 @@ import static java.util.function.Function.identity;
 
 public final class DtoProjectedGoal {
 
-  interface ProjectedGoal {
+  public interface ProjectedGoal {
     <R> R acceptProjected(ProjectedGoalCases<R> cases);
   }
 
@@ -20,11 +20,11 @@ public final class DtoProjectedGoal {
     R bean(BeanGoalContext bean);
   }
 
-  static <R> Function<ProjectedGoal, R> asFunction(ProjectedGoalCases<R> cases) {
+  public static <R> Function<ProjectedGoal, R> asFunction(ProjectedGoalCases<R> cases) {
     return goal -> goal.acceptProjected(cases);
   }
 
-  static <R> Function<ProjectedGoal, R> projectedGoalCases(
+  public static <R> Function<ProjectedGoal, R> projectedGoalCases(
       Function<ProjectedRegularGoalContext, R> regularFunction,
       Function<BeanGoalContext, R> beanFunction) {
     return asFunction(new ProjectedGoalCases<R>() {
@@ -39,7 +39,7 @@ public final class DtoProjectedGoal {
     });
   }
 
-  static <R> Function<ProjectedGoal, R> restrict(Function<AbstractGoalContext, R> function) {
+  private static <R> Function<ProjectedGoal, R> restrict(Function<AbstractGoalContext, R> function) {
     return projectedGoalCases(
         regular -> function.apply(regular),
         bean -> function.apply(bean)
@@ -49,7 +49,7 @@ public final class DtoProjectedGoal {
   static final Function<ProjectedGoal, AbstractGoalContext> goalContext =
       restrict(identity());
 
-  static final Function<ProjectedGoal, TypeName> goalType =
+  public static final Function<ProjectedGoal, TypeName> goalType =
       restrict(AbstractGoalContext::goalType);
 
   static final Function<ProjectedGoal, DtoContext.BuildersContext> context =

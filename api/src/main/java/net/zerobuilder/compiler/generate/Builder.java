@@ -26,12 +26,12 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContex
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.simpleGoalCases;
 import static net.zerobuilder.compiler.generate.Step.asStepInterface;
-import static net.zerobuilder.compiler.generate.Utilities.constructor;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
-import static net.zerobuilder.compiler.generate.Utilities.transform;
+import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class Builder extends ContractModule {
 
@@ -87,7 +87,7 @@ public final class Builder extends ContractModule {
                 .build();
           },
           staticMethod -> constructor());
-  
+
   private final Function<SimpleGoal, MethodSpec> builderConstructor =
       simpleGoalCases(
           regularConstructor,

@@ -33,19 +33,19 @@ public final class DtoParameter {
     });
   }
 
-  abstract static class AbstractParameter {
+  public abstract static class AbstractParameter {
 
     /**
      * <p>for beans, this is the type that's returned by the getter,
      * or equivalently the type of the setter parameter</p>
      * <p>for regular goals, it is the original parameter type</p>
      */
-    final TypeName type;
+    public final TypeName type;
 
     /**
      * true if null checks should be added
      */
-    final NullPolicy nullPolicy;
+    public final NullPolicy nullPolicy;
 
     /**
      * For regular parameters, this is just the parameter name.

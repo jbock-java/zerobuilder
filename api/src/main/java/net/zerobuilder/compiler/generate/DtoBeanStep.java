@@ -15,10 +15,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static net.zerobuilder.compiler.generate.Utilities.parameterSpec;
-import static net.zerobuilder.compiler.generate.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
-final class DtoBeanStep {
+public final class DtoBeanStep {
 
   interface BeanStepCases<R> {
     R accessorPair(AccessorPairStep step);
@@ -29,8 +29,8 @@ final class DtoBeanStep {
     return abstractStep -> abstractStep.acceptBean(cases);
   }
 
-  static <R> Function<AbstractBeanStep, R> beanStepCases(Function<AccessorPairStep, R> accessorPair,
-                                                         Function<LoneGetterStep, R> loneGetter) {
+  public static <R> Function<AbstractBeanStep, R> beanStepCases(Function<AccessorPairStep, R> accessorPair,
+                                                                Function<LoneGetterStep, R> loneGetter) {
     return asFunction(new BeanStepCases<R>() {
       @Override
       public R accessorPair(AccessorPairStep step) {
@@ -43,7 +43,7 @@ final class DtoBeanStep {
     });
   }
 
-  static abstract class AbstractBeanStep extends AbstractStep {
+  public static abstract class AbstractBeanStep extends AbstractStep {
     AbstractBeanStep(String thisType,
                      Optional<? extends AbstractStep> nextType,
                      AbstractGoalDetails goalDetails,
@@ -56,22 +56,22 @@ final class DtoBeanStep {
     }
     abstract <R> R acceptBean(BeanStepCases<R> cases);
 
-    final List<TypeName> getterThrownTypes() {
+    public final List<TypeName> getterThrownTypes() {
       return getterThrownTypes.apply(this);
     }
 
-    final List<TypeName> setterThrownTypes() {
+    public final List<TypeName> setterThrownTypes() {
       return setterThrownTypes.apply(this);
     }
 
-    final AbstractBeanParameter beanParameter() {
+    public final AbstractBeanParameter beanParameter() {
       return validBeanParameter.apply(this);
     }
 
   }
 
-  static final class AccessorPairStep extends AbstractBeanStep {
-    final AccessorPair accessorPair;
+  public static final class AccessorPairStep extends AbstractBeanStep {
+    public final AccessorPair accessorPair;
 
     private AccessorPairStep(String thisType,
                              Optional<? extends AbstractStep> nextType,
@@ -90,13 +90,13 @@ final class DtoBeanStep {
       return new AccessorPairStep(thisType, nextType, goalDetails, context, accessorPair);
     }
 
-    Optional<CollectionInfo> emptyOption() {
+    public Optional<CollectionInfo> emptyOption() {
       String name = accessorPair.name();
       return CollectionInfo.create(accessorPair.type, name);
     }
 
 
-    ParameterSpec parameter() {
+    public ParameterSpec parameter() {
       return parameterSpec(accessorPair.type, accessorPair.name());
     }
 
@@ -106,9 +106,9 @@ final class DtoBeanStep {
     }
   }
 
-  static final class LoneGetterStep extends AbstractBeanStep {
-    final LoneGetter loneGetter;
-    final String emptyMethod;
+  public static final class LoneGetterStep extends AbstractBeanStep {
+    public final LoneGetter loneGetter;
+    public final String emptyMethod;
 
     private LoneGetterStep(String thisType,
                            Optional<? extends AbstractStep> nextType,

@@ -1,10 +1,11 @@
-package net.zerobuilder.compiler.generate;
+package net.zerobuilder.updater;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
@@ -26,9 +27,9 @@ import static net.zerobuilder.compiler.generate.DtoProjectedGoal.goalType;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.projectedGoalCases;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
-import static net.zerobuilder.compiler.generate.Utilities.constructor;
-import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.Utilities.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
 public final class Updater extends ProjectedSimpleModule {
 
@@ -66,7 +67,7 @@ public final class Updater extends ProjectedSimpleModule {
   }
 
   private static final Function<ProjectedRegularGoalContext, MethodSpec> regularConstructor =
-      DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
+      projectedRegularGoalContextCases(
           method -> constructor(PRIVATE),
           constructor -> constructor(PRIVATE));
 

@@ -16,9 +16,9 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.context;
-import static net.zerobuilder.compiler.generate.Utilities.downcase;
-import static net.zerobuilder.compiler.generate.Utilities.transform;
-import static net.zerobuilder.compiler.generate.Utilities.upcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class DtoProjectedModule {
 
@@ -28,18 +28,18 @@ public final class DtoProjectedModule {
   }
 
   static abstract class ProjectedModule {
-    abstract String name();
+    protected abstract String name();
 
     protected final AbstractGoalContext goalContext(ProjectedGoal goal) {
       return DtoProjectedGoal.goalContext.apply(goal);
     }
 
-    protected final ClassName implType(ProjectedGoal goal) {
+    public final ClassName implType(ProjectedGoal goal) {
       return legacyImplType(goalContext(goal));
     }
 
     @Deprecated
-    protected final ClassName legacyImplType(AbstractGoalContext goal) {
+    public final ClassName legacyImplType(AbstractGoalContext goal) {
       String implName = DtoProjectedModule.implName.apply(this, goal);
       return context.apply(goal)
           .generatedType.nestedClass(implName);
@@ -50,16 +50,16 @@ public final class DtoProjectedModule {
     }
 
     @Deprecated
-    protected final String legacyMethodName(AbstractGoalContext goal) {
+    public final String legacyMethodName(AbstractGoalContext goal) {
       return goal.name() + upcase(name());
     }
 
-    protected final FieldSpec cacheField(ProjectedGoal goal) {
+    public final FieldSpec cacheField(ProjectedGoal goal) {
       return legacyCacheField(goalContext(goal));
     }
 
     @Deprecated
-    protected final FieldSpec legacyCacheField(AbstractGoalContext goal) {
+    public final FieldSpec legacyCacheField(AbstractGoalContext goal) {
       ClassName type = legacyImplType(goal);
       return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
           .initializer("new $T()", type)

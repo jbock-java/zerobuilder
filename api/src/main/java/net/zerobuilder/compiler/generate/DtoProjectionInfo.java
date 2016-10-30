@@ -42,7 +42,7 @@ public final class DtoProjectionInfo {
     });
   }
 
-  static <R, P> BiFunction<ProjectionInfo, P, R> projectionInfoCases(
+  public static <R, P> BiFunction<ProjectionInfo, P, R> projectionInfoCases(
       BiFunction<ProjectionMethod, P, R> projectionMethod,
       BiFunction<FieldAccess, P, R> fieldAccess) {
     return asBiFunction(new ProjectionInfoCases<R, P>() {
@@ -58,7 +58,7 @@ public final class DtoProjectionInfo {
   }
 
   public static final class ProjectionMethod implements ProjectionInfo {
-    final String methodName;
+    public final String methodName;
     final List<TypeName> thrownTypes;
 
     private ProjectionMethod(String methodName, List<TypeName> thrownTypes) {
@@ -81,7 +81,7 @@ public final class DtoProjectionInfo {
   }
 
   public static final class FieldAccess implements ProjectionInfo {
-    final String fieldName;
+    public final String fieldName;
 
     private FieldAccess(String fieldName) {
       this.fieldName = fieldName;
@@ -97,7 +97,7 @@ public final class DtoProjectionInfo {
     }
   }
 
-  static final Function<ProjectionInfo, List<TypeName>> thrownTypes =
+  public static final Function<ProjectionInfo, List<TypeName>> thrownTypes =
       projectionInfoCases(
           projection -> projection.thrownTypes,
           projection -> emptyList());

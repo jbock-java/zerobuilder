@@ -32,15 +32,15 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-final class Utilities {
+public final class ZeroUtil {
 
-  static final class ClassNames {
+  public static final class ClassNames {
 
-    static final ClassName COLLECTION = ClassName.get(Collection.class);
-    static final ClassName LIST = ClassName.get(List.class);
-    static final ClassName SET = ClassName.get(Set.class);
-    static final ClassName ITERABLE = ClassName.get(Iterable.class);
-    static final ClassName THREAD_LOCAL = ClassName.get(ThreadLocal.class);
+    public static final ClassName COLLECTION = ClassName.get(Collection.class);
+    public static final ClassName LIST = ClassName.get(List.class);
+    public static final ClassName SET = ClassName.get(Set.class);
+    public static final ClassName ITERABLE = ClassName.get(Iterable.class);
+    public static final ClassName THREAD_LOCAL = ClassName.get(ThreadLocal.class);
 
     private ClassNames() {
       throw new UnsupportedOperationException("no instances");
@@ -55,16 +55,16 @@ final class Utilities {
       "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
       "float", "native", "super", "while"));
 
-  static final CodeBlock emptyCodeBlock = CodeBlock.of("");
+  public static final CodeBlock emptyCodeBlock = CodeBlock.of("");
 
-  static String upcase(String s) {
+  public static String upcase(String s) {
     if (s.isEmpty() || Character.isUpperCase(s.charAt(0))) {
       return s;
     }
     return Character.toUpperCase(s.charAt(0)) + s.substring(1);
   }
 
-  static String downcase(String s) {
+  public static String downcase(String s) {
     if (s.length() >= 2 && isUpperCase(s.charAt(1))) {
       return s;
     }
@@ -75,41 +75,41 @@ final class Utilities {
     return lowered;
   }
 
-  static CodeBlock statement(String format, Object... args) {
+  public static CodeBlock statement(String format, Object... args) {
     return CodeBlock.builder().addStatement(format, args).build();
   }
 
-  static ParameterSpec parameterSpec(TypeName type, String name) {
+  public static ParameterSpec parameterSpec(TypeName type, String name) {
     return ParameterSpec.builder(type, name).build();
   }
 
-  static FieldSpec fieldSpec(TypeName type, String name, Modifier... modifiers) {
+  public static FieldSpec fieldSpec(TypeName type, String name, Modifier... modifiers) {
     return FieldSpec.builder(type, name, modifiers).build();
   }
 
-  static CodeBlock nullCheck(String varName, String message) {
+  public static CodeBlock nullCheck(String varName, String message) {
     return CodeBlock.builder()
         .beginControlFlow("if ($N == null)", varName)
         .addStatement("throw new $T($S)", NullPointerException.class, message)
         .endControlFlow().build();
   }
 
-  static CodeBlock nullCheck(ParameterSpec parameterSpec) {
+  public static CodeBlock nullCheck(ParameterSpec parameterSpec) {
     return nullCheck(parameterSpec.name, parameterSpec.name);
   }
 
-  static CodeBlock nullCheck(ParameterSpec parameterSpec, String message) {
+  public static CodeBlock nullCheck(ParameterSpec parameterSpec, String message) {
     return nullCheck(parameterSpec.name, message);
   }
 
-  static String distinctFrom(String string, String other) {
+  public static String distinctFrom(String string, String other) {
     if (string.equals(other)) {
       return 'a' + upcase(string);
     }
     return string;
   }
 
-  static Optional<ClassName> rawClassName(TypeName typeName) {
+  public static Optional<ClassName> rawClassName(TypeName typeName) {
     if (typeName instanceof ClassName) {
       return Optional.of((ClassName) typeName);
     }
@@ -120,7 +120,7 @@ final class Utilities {
     return Optional.empty();
   }
 
-  static List<TypeName> typeArguments(TypeName typeName) {
+  public static List<TypeName> typeArguments(TypeName typeName) {
     if (typeName instanceof ParameterizedTypeName) {
       ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
       return parameterized.typeArguments;
@@ -133,7 +133,7 @@ final class Utilities {
    * @return first type argument, if any
    * @throws IllegalArgumentException if type has multiple type arguments
    */
-  static Optional<TypeName> onlyTypeArgument(TypeName typeName) {
+  public static Optional<TypeName> onlyTypeArgument(TypeName typeName) {
     List<TypeName> types = typeArguments(typeName);
     switch (types.size()) {
       case 0:
@@ -145,39 +145,39 @@ final class Utilities {
     }
   }
 
-  static <X, E> List<E> transform(Collection<? extends X> input, Function<X, E> function) {
+  public static <X, E> List<E> transform(Collection<? extends X> input, Function<X, E> function) {
     return input.stream().map(function).collect(toList());
   }
 
-  static <P> List<P> presentInstances(Optional<P> optional) {
+  public static <P> List<P> presentInstances(Optional<P> optional) {
     if (optional.isPresent()) {
       return singletonList(optional.get());
     }
     return emptyList();
   }
 
-  static <P> List<P> reverse(List<P> list) {
+  public static <P> List<P> reverse(List<P> list) {
     ArrayList<P> reversed = new ArrayList<>(list.size());
     reversed.addAll(list);
     Collections.reverse(reversed);
     return reversed;
   }
 
-  static <P> List<P> concat(P first, List<P> list) {
+  public static <P> List<P> concat(P first, List<P> list) {
     ArrayList<P> builder = new ArrayList<>(list.size() + 1);
     builder.add(first);
     builder.addAll(list);
     return builder;
   }
 
-  static <P> List<P> concat(List<P> left, List<P> right) {
+  public static <P> List<P> concat(List<P> left, List<P> right) {
     ArrayList<P> builder = new ArrayList<>(left.size() + right.size());
     builder.addAll(left);
     builder.addAll(right);
     return builder;
   }
 
-  static final Collector<CodeBlock, CodeBlock.Builder, CodeBlock> joinCodeBlocks
+  public static final Collector<CodeBlock, CodeBlock.Builder, CodeBlock> joinCodeBlocks
       = new Collector<CodeBlock, CodeBlock.Builder, CodeBlock>() {
     @Override
     public Supplier<CodeBlock.Builder> supplier() {
@@ -204,7 +204,7 @@ final class Utilities {
     }
   };
 
-  static <E> Collector<List<E>, List<E>, List<E>> flatList() {
+  public static <E> Collector<List<E>, List<E>, List<E>> flatList() {
     return new Collector<List<E>, List<E>, List<E>>() {
       @Override
       public Supplier<List<E>> supplier() {
@@ -232,7 +232,7 @@ final class Utilities {
     };
   }
 
-  static <E, R> Collector<E, List<E>, R> listCollector(Function<List<E>, R> finisher) {
+  public static <E, R> Collector<E, List<E>, R> listCollector(Function<List<E>, R> finisher) {
     return new Collector<E, List<E>, R>() {
 
       @Override
@@ -265,8 +265,7 @@ final class Utilities {
     };
   }
 
-
-  static <R> Supplier<R> memoize(Supplier<R> supplier) {
+  public static <R> Supplier<R> memoize(Supplier<R> supplier) {
     List<R> ref = new ArrayList<>(singletonList(null));
     return () -> {
       R element = ref.get(0);
@@ -278,15 +277,15 @@ final class Utilities {
     };
   }
 
-  static <R> Predicate<R> asPredicate(Function<R, Boolean> function) {
+  public static <R> Predicate<R> asPredicate(Function<R, Boolean> function) {
     return r -> function.apply(r);
   }
 
-  static MethodSpec constructor(Modifier... modifiers) {
+  public static MethodSpec constructor(Modifier... modifiers) {
     return constructorBuilder().addModifiers(modifiers).build();
   }
 
-  private Utilities() {
+  private ZeroUtil() {
     throw new UnsupportedOperationException("no instances");
   }
 }
