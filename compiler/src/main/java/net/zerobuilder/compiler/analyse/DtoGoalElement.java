@@ -5,12 +5,12 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
 import net.zerobuilder.compiler.generate.Access;
+import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 
@@ -264,14 +264,11 @@ final class DtoGoalElement {
     String name = goalName(goalAnnotation, goalType);
     List<ModuledOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
     String methodName = element.getSimpleName().toString();
-    GoalMethodType goalMethodType = element.getModifiers().contains(STATIC)
-        ? GoalMethodType.STATIC_METHOD
-        : GoalMethodType.INSTANCE_METHOD;
     return transform(goalOptions,
         goalOption ->
             goalOption.module == BUILDER ?
                 createBuilderGoal(element, goalType, name, methodName,
-                    goalMethodType, parameterNames(element), goalOption) :
+                    parameterNames(element), goalOption) :
                 createUpdaterGoal(element, goalType, name, methodName,
                     parameterNames(element), goalOption));
   }
@@ -290,13 +287,13 @@ final class DtoGoalElement {
   }
 
   private static AbstractRegularGoalElement createBuilderGoal(ExecutableElement element, TypeName goalType, String name,
-                                                              String methodName, GoalMethodType goalMethodType,
+                                                              String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
     AbstractRegularDetails details = element.getKind() == CONSTRUCTOR ?
         ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption.access) :
         element.getModifiers().contains(STATIC) ?
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access) :
-            MethodGoalDetails.create(goalType, name, parameterNames, methodName, goalMethodType, goalOption.access);
+            InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);
     return new RegularGoalElement(element, details);
   }
 

@@ -9,10 +9,6 @@ import java.util.function.Function;
 
 public final class DtoGoalDetails {
 
-  public enum GoalMethodType {
-    STATIC_METHOD, INSTANCE_METHOD
-  }
-
   public interface AbstractGoalDetails {
 
     /**
@@ -33,7 +29,7 @@ public final class DtoGoalDetails {
   }
 
   interface RegularGoalDetailsCases<R> {
-    R method(MethodGoalDetails details);
+    R method(InstanceMethodGoalDetails details);
     R staticMethod(StaticMethodGoalDetails details);
     R constructor(ConstructorGoalDetails details);
   }
@@ -153,25 +149,21 @@ public final class DtoGoalDetails {
     }
   }
 
-  public static final class MethodGoalDetails extends AbstractRegularDetails {
+  public static final class InstanceMethodGoalDetails extends AbstractRegularDetails {
     final String methodName;
-    final GoalMethodType methodType;
 
-    private MethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
-                              GoalMethodType methodType, Access access) {
+    private InstanceMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
+                                      Access access) {
       super(goalType, name, parameterNames, access);
       this.methodName = methodName;
-      this.methodType = methodType;
     }
 
-    public static MethodGoalDetails create(TypeName goalType,
-                                           String name,
-                                           List<String> parameterNames,
-                                           String methodName,
-                                           GoalMethodType goalMethodType,
-                                           Access access) {
-      return new MethodGoalDetails(goalType, name, parameterNames, methodName,
-          goalMethodType, access);
+    public static InstanceMethodGoalDetails create(TypeName goalType,
+                                                   String name,
+                                                   List<String> parameterNames,
+                                                   String methodName,
+                                                   Access access) {
+      return new InstanceMethodGoalDetails(goalType, name, parameterNames, methodName, access);
     }
 
     @Override

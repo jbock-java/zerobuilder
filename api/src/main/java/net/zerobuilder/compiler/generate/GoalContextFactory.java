@@ -18,11 +18,11 @@ import net.zerobuilder.compiler.generate.DtoGeneratorInput.GoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetailsCases;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.RegularGoalDetailsCases;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
@@ -76,8 +76,8 @@ final class GoalContextFactory {
         simpleRegularFactory);
     return simple.details.accept(new RegularGoalDetailsCases<SimpleRegularGoalContext>() {
       @Override
-      public SimpleRegularGoalContext method(MethodGoalDetails details) {
-        return new SimpleMethodGoalContext(context, details, steps, simple.thrownTypes);
+      public SimpleRegularGoalContext method(InstanceMethodGoalDetails details) {
+        return new InstanceMethodGoalContext(context, details, steps, simple.thrownTypes);
       }
       @Override
       public SimpleRegularGoalContext staticMethod(StaticMethodGoalDetails details) {

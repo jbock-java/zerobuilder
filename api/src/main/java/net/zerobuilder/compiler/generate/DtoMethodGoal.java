@@ -5,8 +5,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 
@@ -17,7 +16,6 @@ import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType.INSTANCE_METHOD;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import static net.zerobuilder.compiler.generate.Utilities.downcase;
 import static net.zerobuilder.compiler.generate.Utilities.emptyCodeBlock;
@@ -27,12 +25,12 @@ import static net.zerobuilder.compiler.generate.Utilities.statement;
 
 public final class DtoMethodGoal {
 
-  static final class SimpleMethodGoalContext extends SimpleRegularGoalContext {
+  static final class InstanceMethodGoalContext extends SimpleRegularGoalContext {
     final List<SimpleRegularStep> steps;
 
-    SimpleMethodGoalContext(
+    InstanceMethodGoalContext(
         BuildersContext context,
-        MethodGoalDetails details,
+        InstanceMethodGoalDetails details,
         List<SimpleRegularStep> steps,
         List<TypeName> thrownTypes) {
       super(thrownTypes);
@@ -43,11 +41,7 @@ public final class DtoMethodGoal {
     }
 
     final BuildersContext context;
-    final MethodGoalDetails details;
-
-    GoalMethodType methodType() {
-      return details.methodType;
-    }
+    final InstanceMethodGoalDetails details;
 
     private final Supplier<FieldSpec> field;
 
@@ -63,14 +57,8 @@ public final class DtoMethodGoal {
     }
 
     CodeBlock methodGoalInvocation() {
-      TypeName type = type();
       String method = details.methodName;
-      return details.methodType == INSTANCE_METHOD ?
-          statement("return this.$N.$N($L)", field(), method, invocationParameters()) :
-          CodeBlock.builder()
-              .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
-              .addStatement("$T.$N($L)", context.type, method, invocationParameters())
-              .build();
+      return statement("return this.$N.$N($L)", field(), method, invocationParameters());
     }
 
     @Override
@@ -100,21 +88,11 @@ public final class DtoMethodGoal {
       super(thrownTypes);
       this.details = details;
       this.context = context;
-      this.field = memoizeField(context);
       this.steps = steps;
     }
 
     final BuildersContext context;
     final StaticMethodGoalDetails details;
-
-    private final Supplier<FieldSpec> field;
-
-    /**
-     * @return An instance of type {@link BuildersContext#type}.
-     */
-    FieldSpec field() {
-      return field.get();
-    }
 
     List<SimpleRegularStep> methodSteps() {
       return steps;

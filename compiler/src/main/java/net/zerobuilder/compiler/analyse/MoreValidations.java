@@ -16,7 +16,7 @@ import static net.zerobuilder.compiler.analyse.DtoGoalElement.element;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalName;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.isRegular;
 
-final class GoalnameValidator {
+final class MoreValidations {
 
   static void checkNameConflict(List<? extends AbstractGoalElement> goals) throws ValidationException {
     Map<String, List<AbstractGoalElement>> m = goals.stream()
@@ -36,7 +36,7 @@ final class GoalnameValidator {
     });
   }
 
-  static void checkAccessLevel(List<? extends AbstractGoalElement> goals) {
+  static void checkAccessLevel(List<? extends AbstractGoalElement> goals) throws ValidationException {
     goals.stream().map(element)
         .forEach(el -> {
           if (el.getModifiers().contains(Modifier.PRIVATE)) {
@@ -45,7 +45,7 @@ final class GoalnameValidator {
         });
   }
 
-  static void checkMinParameters(List<? extends AbstractGoalElement> goals) {
+  static void checkMinParameters(List<? extends AbstractGoalElement> goals) throws ValidationException {
     goals.stream()
         .filter(isRegular)
         .map(element)
@@ -57,7 +57,7 @@ final class GoalnameValidator {
         });
   }
 
-  private GoalnameValidator() {
+  private MoreValidations() {
     throw new UnsupportedOperationException("no instances");
   }
 }

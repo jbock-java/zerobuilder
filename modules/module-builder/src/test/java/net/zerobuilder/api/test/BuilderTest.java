@@ -7,7 +7,7 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
@@ -23,7 +23,6 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType.STATIC_METHOD;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -65,14 +64,13 @@ public class BuilderTest {
 
     // create goal details
     String goalName = "myGoal"; // free choice, but should be a valid java identifier
-    MethodGoalDetails details = MethodGoalDetails.create(
+    StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
         TYPE, // return type of the goal method
         // names of generated classes and methods are based on this
         goalName,
         // parameter names in correct order
         asList("foo", "bar"),
         "create", // correct goal method name
-        STATIC_METHOD, // goal method is static
         PRIVATE);
 
     // use SimpleParameter because the builder module doesn't need projections

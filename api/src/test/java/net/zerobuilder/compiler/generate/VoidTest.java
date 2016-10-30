@@ -8,7 +8,7 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.MethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import org.junit.Test;
@@ -23,7 +23,6 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.GoalMethodType.STATIC_METHOD;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -56,9 +55,9 @@ public class VoidTest {
 
     // create goal details
     String goalName = "Void";
-    MethodGoalDetails details = MethodGoalDetails.create(
+    StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
         TypeName.VOID, goalName, singletonList("message"),
-        "doUpdate", STATIC_METHOD, PRIVATE);
+        "doUpdate", PRIVATE);
 
     SimpleParameter parameter = DtoRegularParameter.create("message", STRING, ALLOW);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
