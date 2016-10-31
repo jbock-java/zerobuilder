@@ -34,7 +34,7 @@ final class GeneratorVB {
     this.builder = builder;
   }
 
-  BuilderMethod goalToBuilderV(SimpleRegularGoalContext goal) {
+  BuilderMethod builderMethodV(SimpleRegularGoalContext goal) {
     AbstractRegularDetails abstractRegularDetails = goal.regularDetails();
     List<? extends AbstractRegularStep> steps = goal.regularSteps();
     MethodSpec.Builder method = methodBuilder(builder.methodName(goal))

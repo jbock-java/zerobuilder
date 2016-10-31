@@ -23,7 +23,7 @@ final class GeneratorBB {
     this.builder = builder;
   }
 
-  BuilderMethod goalToBuilderB(BeanGoalContext goal) {
+  BuilderMethod builderMethodB(BeanGoalContext goal) {
     ClassName builderType = builder.implType(goal);
     String name = goal.details.name;
     String builder = downcase(builderType.simpleName());

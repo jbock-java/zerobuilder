@@ -48,7 +48,7 @@ public final class Builder extends ContractModule {
   }
 
   private Function<SimpleGoal, BuilderMethod> goalToBuilder(GeneratorBB generatorBB, GeneratorVB generatorVB) {
-    return simpleGoalCases(generatorVB::goalToBuilderV, generatorBB::goalToBuilderB);
+    return simpleGoalCases(generatorVB::builderMethodV, generatorBB::builderMethodB);
   }
 
   private TypeSpec defineBuilderImpl(SimpleGoal goal, BuilderB builderB, BuilderV builderV) {

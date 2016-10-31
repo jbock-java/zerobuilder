@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
@@ -19,6 +20,7 @@ import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedContractMod
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModuleCases;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
 
+import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -27,6 +29,7 @@ import java.util.stream.Collector;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
 import static net.zerobuilder.compiler.generate.DtoModuleOutput.moduleOutputCases;
@@ -77,6 +80,7 @@ public final class Generator {
     }
     List<FieldSpec> fields = new ArrayList<>(inputOutputs.size() + 1);
     fields.add(context.cache.get());
+    fields.add(FieldSpec.builder(TypeName.INT, "refs", PRIVATE).build());
     inputOutputs.forEach(tmp ->
         fields.add(tmp.cacheField()));
     return fields;
