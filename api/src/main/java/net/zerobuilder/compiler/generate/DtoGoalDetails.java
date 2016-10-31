@@ -150,7 +150,7 @@ public final class DtoGoalDetails {
   }
 
   public static final class InstanceMethodGoalDetails extends AbstractRegularDetails {
-    final String methodName;
+    public final String methodName;
 
     private InstanceMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
                                       Access access) {
@@ -174,7 +174,7 @@ public final class DtoGoalDetails {
 
   public static final class StaticMethodGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {
-    final String methodName;
+    public final String methodName;
 
     private StaticMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
                                     Access access) {

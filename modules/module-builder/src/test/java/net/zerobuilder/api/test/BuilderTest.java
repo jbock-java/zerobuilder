@@ -2,7 +2,6 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.modules.builder.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
@@ -12,6 +11,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegular
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.Generator;
+import net.zerobuilder.modules.builder.Builder;
 import org.junit.Test;
 
 import javax.lang.model.element.Modifier;
@@ -99,7 +99,7 @@ public class BuilderTest {
         is(GENERATED_TYPE.nestedClass("MyGoalBuilder")
             .nestedClass("Foo")));
 
-    // Try printing typeSpec to System.out!
+    // Prints nicely
     TypeSpec typeSpec = generatorOutput.typeSpec();
     assertThat(typeSpec.name, is("MyTypeBuilders"));
     assertThat(typeSpec.methodSpecs.size(), is(2)); // myGoalBuilder, constructor

@@ -41,7 +41,7 @@ public final class DtoMethodGoal {
     }
 
     public final BuildersContext context;
-    final InstanceMethodGoalDetails details;
+    public final InstanceMethodGoalDetails details;
 
     private final Supplier<FieldSpec> field;
 
@@ -54,11 +54,6 @@ public final class DtoMethodGoal {
 
     List<SimpleRegularStep> methodSteps() {
       return steps;
-    }
-
-    public CodeBlock methodGoalInvocation() {
-      String method = details.methodName;
-      return statement("return this.$N.$N($L)", field(), method, invocationParameters());
     }
 
     @Override
@@ -92,20 +87,12 @@ public final class DtoMethodGoal {
     }
 
     public final BuildersContext context;
-    final StaticMethodGoalDetails details;
+    public final StaticMethodGoalDetails details;
 
     List<SimpleRegularStep> methodSteps() {
       return steps;
     }
 
-    public CodeBlock methodGoalInvocation() {
-      TypeName type = type();
-      String method = details.methodName;
-      return CodeBlock.builder()
-          .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
-          .addStatement("$T.$N($L)", context.type, method, invocationParameters())
-          .build();
-    }
 
     @Override
     public final <R> R acceptRegular(DtoRegularGoal.RegularGoalContextCases<R> cases) {

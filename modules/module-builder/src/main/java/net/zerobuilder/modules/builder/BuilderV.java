@@ -6,8 +6,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoMethodGoal;
+import net.zerobuilder.compiler.generate.DtoGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
@@ -20,12 +22,14 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.VOID;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
@@ -128,11 +132,25 @@ final class BuilderV {
       regularGoalContextCases(
           constructor -> statement("return new $T($L)", constructor.type(),
               constructor.invocationParameters()),
-          method -> method.methodGoalInvocation(),
-          staticMethod -> staticMethod.methodGoalInvocation());
+          method -> methodGoalInvocation(method),
+          staticMethod -> methodGoalInvocation(staticMethod));
 
-  final RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,
-                                                                 CollectionInfo collectionInfo) {
+  private static CodeBlock methodGoalInvocation(InstanceMethodGoalContext goal) {
+    String method = goal.details.methodName;
+    return statement("return this.$N.$N($L)", goal.field(), method, goal.invocationParameters());
+  }
+
+  private static CodeBlock methodGoalInvocation(SimpleStaticMethodGoalContext goal) {
+    TypeName type = goal.type();
+    String method = goal.details.methodName;
+    return CodeBlock.builder()
+        .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
+        .addStatement("$T.$N($L)", goal.context.type, method, goal.invocationParameters())
+        .build();
+  }
+
+  RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,
+                                                           CollectionInfo collectionInfo) {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
       public CodeBlock constructorGoal(SimpleConstructorGoalContext goal) {
@@ -150,16 +168,16 @@ final class BuilderV {
         String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
-            .add(goal.methodGoalInvocation())
+            .add(methodGoalInvocation(goal))
             .build();
       }
       @Override
-      public CodeBlock staticMethodGoal(DtoMethodGoal.SimpleStaticMethodGoalContext goal) {
+      public CodeBlock staticMethodGoal(SimpleStaticMethodGoalContext goal) {
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
-            .add(goal.methodGoalInvocation())
+            .add(methodGoalInvocation(goal))
             .build();
       }
     };
