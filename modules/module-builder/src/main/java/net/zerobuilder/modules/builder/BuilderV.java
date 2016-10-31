@@ -5,9 +5,8 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
@@ -118,29 +117,35 @@ final class BuilderV {
 
   private CodeBlock emptyCollectionAssignment(AbstractRegularStep step, SimpleRegularGoalContext goal,
                                               CollectionInfo collInfo) {
-    if (step.isLast()) {
-      return goal.acceptRegular(emptyCollectionInvoke(step, collInfo));
-    } else {
-      return CodeBlock.builder()
-          .addStatement("this.$N = $L", step.field(), collInfo.initializer)
-          .addStatement("return this")
-          .build();
-    }
+    return step.isLast() ?
+        goal.acceptRegular(emptyCollectionInvoke(step, collInfo)) :
+        CodeBlock.builder()
+            .addStatement("this.$N = $L", step.field(), collInfo.initializer)
+            .addStatement("return this")
+            .build();
   }
 
   private final Function<SimpleRegularGoalContext, CodeBlock> regularInvoke =
       regularGoalContextCases(
-          constructor -> statement("return new $T($L)", constructor.type(),
-              constructor.invocationParameters()),
-          method -> methodGoalInvocation(method),
-          staticMethod -> methodGoalInvocation(staticMethod));
+          this::constructorCall,
+          this::instanceCall,
+          this::staticCall);
 
-  private static CodeBlock methodGoalInvocation(InstanceMethodGoalContext goal) {
-    String method = goal.details.methodName;
-    return statement("return this.$N.$N($L)", goal.field(), method, goal.invocationParameters());
+  CodeBlock constructorCall(SimpleConstructorGoalContext constructor) {
+    return statement("return new $T($L)", constructor.type(),
+        constructor.invocationParameters());
   }
 
-  private static CodeBlock methodGoalInvocation(SimpleStaticMethodGoalContext goal) {
+  CodeBlock instanceCall(InstanceMethodGoalContext goal) {
+    TypeName type = goal.type();
+    String method = goal.details.methodName;
+    return CodeBlock.builder()
+        .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
+        .addStatement("this.$N.$N($L)", goal.field(), method, goal.invocationParameters())
+        .build();
+  }
+
+  CodeBlock staticCall(SimpleStaticMethodGoalContext goal) {
     TypeName type = goal.type();
     String method = goal.details.methodName;
     return CodeBlock.builder()
@@ -168,7 +173,7 @@ final class BuilderV {
         String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
-            .add(methodGoalInvocation(goal))
+            .add(instanceCall(goal))
             .build();
       }
       @Override
@@ -177,7 +182,7 @@ final class BuilderV {
         String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
-            .add(methodGoalInvocation(goal))
+            .add(staticCall(goal))
             .build();
       }
     };
