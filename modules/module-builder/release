@@ -2,5 +2,5 @@
 if [[ -z "$1" ]]; then echo arg: version; exit 1; fi
 mvn versions:set -DnewVersion=$1 &>/dev/null
 mvn clean install -Psonatype-oss-release
-cp pom.xml target/zerobuilder-module-updater-$1.pom
+cp pom.xml target/zerobuilder-module-builder-$1.pom
 mv pom.xml.versionsBackup pom.xml
