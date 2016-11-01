@@ -131,24 +131,29 @@ final class BuilderV {
           this::instanceCall,
           this::staticCall);
 
-  CodeBlock constructorCall(SimpleConstructorGoalContext constructor) {
-    return statement("return new $T($L)", constructor.type(),
-        constructor.invocationParameters());
+  private CodeBlock constructorCall(SimpleConstructorGoalContext constructor) {
+    return CodeBlock.builder()
+        .addStatement("$N.get().refs--", constructor.context.cache.get())
+        .addStatement("return new $T($L)", constructor.type(),
+            constructor.invocationParameters())
+        .build();
   }
 
-  CodeBlock instanceCall(InstanceMethodGoalContext goal) {
+  private CodeBlock instanceCall(InstanceMethodGoalContext goal) {
     TypeName type = goal.type();
     String method = goal.details.methodName;
     return CodeBlock.builder()
+        .addStatement("$N.get().refs--", goal.context.cache.get())
         .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
         .addStatement("this.$N.$N($L)", goal.field(), method, goal.invocationParameters())
         .build();
   }
 
-  CodeBlock staticCall(SimpleStaticMethodGoalContext goal) {
+  private CodeBlock staticCall(SimpleStaticMethodGoalContext goal) {
     TypeName type = goal.type();
     String method = goal.details.methodName;
     return CodeBlock.builder()
+        .addStatement("$N.get().refs--", goal.context.cache.get())
         .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
         .addStatement("$T.$N($L)", goal.context.type, method, goal.invocationParameters())
         .build();

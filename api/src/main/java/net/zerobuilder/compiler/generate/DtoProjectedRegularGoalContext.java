@@ -13,9 +13,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContex
 import java.util.List;
 import java.util.function.Function;
 
-import static com.squareup.javapoet.TypeName.VOID;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 
 public final class DtoProjectedRegularGoalContext {
 
@@ -68,18 +66,9 @@ public final class DtoProjectedRegularGoalContext {
   }
 
   public static final class ProjectedMethodGoalContext extends ProjectedRegularGoalContext {
-    final List<ProjectedRegularStep> steps;
-    final BuildersContext context;
-    final StaticMethodGoalDetails details;
-
-    public CodeBlock methodGoalInvocation() {
-      TypeName type = details.goalType;
-      String method = details.methodName;
-      return CodeBlock.builder()
-          .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
-          .addStatement("$T.$N($L)", context.type, method, invocationParameters())
-          .build();
-    }
+    public final List<ProjectedRegularStep> steps;
+    public final BuildersContext context;
+    public final StaticMethodGoalDetails details;
 
     ProjectedMethodGoalContext(
         BuildersContext context,
@@ -101,9 +90,9 @@ public final class DtoProjectedRegularGoalContext {
   public static final class ProjectedConstructorGoalContext
       extends ProjectedRegularGoalContext {
 
-    final BuildersContext context;
-    final ConstructorGoalDetails details;
-    final List<ProjectedRegularStep> steps;
+    public final BuildersContext context;
+    public final ConstructorGoalDetails details;
+    public final List<ProjectedRegularStep> steps;
 
     ProjectedConstructorGoalContext(BuildersContext context,
                                     ConstructorGoalDetails details,

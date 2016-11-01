@@ -57,7 +57,7 @@ final class GeneratorVU {
         .addParameter(toBuilderParameter(goal))
         .returns(updater.type)
         .addCode(nullCheckingBlock(goal))
-        .addCode(initUpdater(goal, updater))
+        .addCode(initVarUpdater(goal, updater))
         .addCode(copyBlock(goal))
         .addStatement("return $N", updater)
         .addModifiers(details.access(STATIC))
@@ -144,16 +144,24 @@ final class GeneratorVU {
     return parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
   }
 
-  private CodeBlock initUpdater(ProjectedRegularGoalContext goal, ParameterSpec updater) {
+  private CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {
     BuildersContext context = goal.context();
     if (context.lifecycle == REUSE_INSTANCES) {
+      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
       FieldSpec cache = context.cache.get();
       FieldSpec updaterField = this.updater.legacyCacheField(goal);
-      return statement("$T $N = $N.get().$N",
-          updater.type, updater, cache, updaterField);
+      return CodeBlock.builder()
+          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
+          .addStatement("$T $N", varUpdater.type, varUpdater)
+          .beginControlFlow("if ($N.refs++ == 0)", varContext)
+          .addStatement("$N = $N.$N", varUpdater, varContext, updaterField)
+          .endControlFlow()
+          .beginControlFlow("else")
+          .addStatement("$N = new $T()", varUpdater, varUpdater.type)
+          .endControlFlow()
+          .build();
     } else {
-      return statement("$T $N = new $T()",
-          updater.type, updater, updater.type);
+      return statement("$T $N = new $T()", varUpdater.type, varUpdater, varUpdater.type);
     }
   }
 

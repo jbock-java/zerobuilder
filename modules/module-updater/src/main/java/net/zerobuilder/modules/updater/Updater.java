@@ -3,12 +3,15 @@ package net.zerobuilder.modules.updater;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 
 import java.util.Collections;
@@ -17,6 +20,7 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.VOID;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -84,17 +88,31 @@ public final class Updater extends ProjectedSimpleModule {
                   : statement("this.$N = new $T()", bean.bean(), bean.type()))
               .build());
 
-  private static final Function<ProjectedRegularGoalContext, CodeBlock> regularInvoke =
+  private final Function<ProjectedRegularGoalContext, CodeBlock> regularInvoke =
       projectedRegularGoalContextCases(
-          goal -> goal.methodGoalInvocation(),
-          goal -> statement("return new $T($L)", goalDetails.apply(goal).goalType,
-              goal.invocationParameters()));
+          this::staticCall,
+          this::constructorCall);
 
+  private CodeBlock staticCall(ProjectedMethodGoalContext goal) {
+    String method = goal.details.methodName;
+    return CodeBlock.builder()
+        .addStatement("$N.get().refs--", goal.context.cache.get())
+        .addStatement("return $T.$N($L)", goal.context.type, method, goal.invocationParameters())
+        .build();
+  }
 
-  private static final Function<BeanGoalContext, CodeBlock> returnBean
+  private CodeBlock constructorCall(ProjectedConstructorGoalContext goal) {
+    return CodeBlock.builder()
+        .addStatement("$N.get().refs--", goal.context.cache.get())
+        .addStatement("return new $T($L)", goalDetails.apply(goal).goalType,
+            goal.invocationParameters())
+        .build();
+  }
+
+  private final Function<BeanGoalContext, CodeBlock> returnBean
       = goal -> statement("return this.$N", goal.bean());
 
-  private static final Function<ProjectedGoal, CodeBlock> invoke
+  private final Function<ProjectedGoal, CodeBlock> invoke
       = projectedGoalCases(regularInvoke, returnBean);
 
   @Override
