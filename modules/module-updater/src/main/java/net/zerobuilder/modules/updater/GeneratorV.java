@@ -41,11 +41,11 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
-final class GeneratorVU {
+final class GeneratorV {
 
   private final Updater updater;
 
-  GeneratorVU(Updater updater) {
+  GeneratorV(Updater updater) {
     this.updater = updater;
   }
 

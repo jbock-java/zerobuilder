@@ -44,8 +44,8 @@ public final class Updater extends ProjectedSimpleModule {
   }
 
   private Function<ProjectedGoal, DtoGeneratorOutput.BuilderMethod> goalToUpdater(
-      GeneratorBU generatorBU, GeneratorVU generatorVU) {
-    return projectedGoalCases(generatorVU::updaterMethodV, generatorBU::updaterMethodB);
+      GeneratorB generatorB, GeneratorV generatorV) {
+    return projectedGoalCases(generatorV::updaterMethodV, generatorB::updaterMethodB);
   }
 
   private MethodSpec buildMethod(ProjectedGoal goal) {
@@ -130,10 +130,10 @@ public final class Updater extends ProjectedSimpleModule {
 
   @Override
   protected SimpleModuleOutput process(ProjectedGoal goal) {
-    GeneratorBU generatorBU = new GeneratorBU(this);
-    GeneratorVU generatorVU = new GeneratorVU(this);
+    GeneratorB generatorB = new GeneratorB(this);
+    GeneratorV generatorV = new GeneratorV(this);
     return new SimpleModuleOutput(
-        goalToUpdater(generatorBU, generatorVU).apply(goal),
+        goalToUpdater(generatorB, generatorV).apply(goal),
         defineUpdater(goal));
   }
 }

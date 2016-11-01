@@ -25,11 +25,11 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
-final class GeneratorVB {
+final class GeneratorV {
 
   private final Builder builder;
 
-  GeneratorVB(Builder builder) {
+  GeneratorV(Builder builder) {
     this.builder = builder;
   }
 

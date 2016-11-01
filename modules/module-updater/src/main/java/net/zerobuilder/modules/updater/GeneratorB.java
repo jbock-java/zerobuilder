@@ -35,11 +35,11 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
-final class GeneratorBU {
+final class GeneratorB {
 
   private final Updater updater;
 
-  GeneratorBU(Updater updater) {
+  GeneratorB(Updater updater) {
     this.updater = updater;
   }
 

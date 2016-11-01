@@ -96,23 +96,6 @@ public final class DtoRegularGoal {
           method -> Optional.of(method.field()),
           staticMethod -> empty());
 
-  private static final Function<SimpleRegularGoalContext, MethodSpec> builderConstructor =
-      regularGoalContextCases(
-          constructor -> constructor(PRIVATE),
-          method -> {
-            if (method.context.lifecycle == REUSE_INSTANCES) {
-              return constructor(PRIVATE);
-            }
-            ClassName type = method.context.type;
-            ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
-            return constructorBuilder()
-                .addParameter(parameter)
-                .addStatement("this.$N = $N", method.field(), parameter)
-                .addModifiers(PRIVATE)
-                .build();
-          },
-          staticMethod -> constructor(PRIVATE));
-
   public interface RegularGoalContextCases<R> {
     R constructorGoal(SimpleConstructorGoalContext goal);
     R methodGoal(InstanceMethodGoalContext goal);

@@ -7,6 +7,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
@@ -15,6 +16,7 @@ import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -22,7 +24,9 @@ import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
@@ -30,6 +34,7 @@ import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
@@ -46,11 +51,18 @@ final class BuilderV {
   final Function<SimpleRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
     List<? extends AbstractRegularStep> steps = goal.regularSteps();
-    return Stream.concat(
+    return asList(
         presentInstances(goal.maybeField()).stream(),
+        goal.context().lifecycle == DtoContext.BuilderLifecycle.REUSE_INSTANCES ?
+            Stream.of(FieldSpec.builder(TypeName.BOOLEAN, "_currently_in_use", PRIVATE)
+                .initializer("$L", true)
+                .build()) :
+            Stream.<FieldSpec>empty(),
         steps.stream()
             .limit(steps.size() - 1)
             .map(AbstractRegularStep::field))
+        .stream()
+        .flatMap(Function.identity())
         .collect(toList());
   };
 

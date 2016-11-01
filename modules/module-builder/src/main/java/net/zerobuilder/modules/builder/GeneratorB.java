@@ -20,11 +20,11 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
-final class GeneratorBB {
+final class GeneratorB {
 
   private final Builder builder;
 
-  GeneratorBB(Builder builder) {
+  GeneratorB(Builder builder) {
     this.builder = builder;
   }
 

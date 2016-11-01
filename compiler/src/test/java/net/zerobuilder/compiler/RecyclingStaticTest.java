@@ -102,6 +102,7 @@ public class RecyclingStaticTest {
             "",
             "  private static final class CuboidBuilderImpl implements",
             "        CuboidBuilder.Height, CuboidBuilder.Length, CuboidBuilder.Width {",
+            "    private boolean _currently_in_use = true;",
             "    private double height;",
             "    private List<String> length;",
             "    CuboidBuilderImpl() {}",

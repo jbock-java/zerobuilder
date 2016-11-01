@@ -47,8 +47,8 @@ public final class Builder extends ContractModule {
     return simpleGoalCases(builderV.fieldsV, builderB.fieldsB);
   }
 
-  private Function<SimpleGoal, BuilderMethod> goalToBuilder(GeneratorBB generatorBB, GeneratorVB generatorVB) {
-    return simpleGoalCases(generatorVB::builderMethodV, generatorBB::builderMethodB);
+  private Function<SimpleGoal, BuilderMethod> goalToBuilder(GeneratorB generatorB, GeneratorV generatorV) {
+    return simpleGoalCases(generatorV::builderMethodV, generatorB::builderMethodB);
   }
 
   private TypeSpec defineBuilderImpl(SimpleGoal goal, BuilderB builderB, BuilderV builderV) {
@@ -104,10 +104,10 @@ public final class Builder extends ContractModule {
   protected ContractModuleOutput process(SimpleGoal goal) {
     BuilderB builderB = new BuilderB(this);
     BuilderV builderV = new BuilderV(this);
-    GeneratorBB generatorBB = new GeneratorBB(this);
-    GeneratorVB generatorVB = new GeneratorVB(this);
+    GeneratorB generatorB = new GeneratorB(this);
+    GeneratorV generatorV = new GeneratorV(this);
     return new ContractModuleOutput(
-        goalToBuilder(generatorBB, generatorVB).apply(goal),
+        goalToBuilder(generatorB, generatorV).apply(goal),
         defineBuilderImpl(goal, builderB, builderV),
         defineContract(goal));
   }
