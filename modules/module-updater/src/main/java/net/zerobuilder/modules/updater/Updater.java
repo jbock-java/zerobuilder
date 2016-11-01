@@ -6,6 +6,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
@@ -96,14 +97,18 @@ public final class Updater extends ProjectedSimpleModule {
   private CodeBlock staticCall(ProjectedMethodGoalContext goal) {
     String method = goal.details.methodName;
     return CodeBlock.builder()
-        .addStatement("$N.get().refs--", goal.context.cache.get())
+        .add(goal.context.lifecycle == REUSE_INSTANCES ?
+            statement("$N.get().refs--", goal.context.cache.get()) :
+            emptyCodeBlock)
         .addStatement("return $T.$N($L)", goal.context.type, method, goal.invocationParameters())
         .build();
   }
 
   private CodeBlock constructorCall(ProjectedConstructorGoalContext goal) {
     return CodeBlock.builder()
-        .addStatement("$N.get().refs--", goal.context.cache.get())
+        .add(goal.context.lifecycle == REUSE_INSTANCES ?
+            statement("$N.get().refs--", goal.context.cache.get()) :
+            emptyCodeBlock)
         .addStatement("return new $T($L)", goalDetails.apply(goal).goalType,
             goal.invocationParameters())
         .build();

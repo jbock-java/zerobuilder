@@ -24,6 +24,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
@@ -131,11 +132,13 @@ final class BuilderV {
           this::instanceCall,
           this::staticCall);
 
-  private CodeBlock constructorCall(SimpleConstructorGoalContext constructor) {
+  private CodeBlock constructorCall(SimpleConstructorGoalContext goal) {
     return CodeBlock.builder()
-        .addStatement("$N.get().refs--", constructor.context.cache.get())
-        .addStatement("return new $T($L)", constructor.type(),
-            constructor.invocationParameters())
+        .add(goal.context.lifecycle == REUSE_INSTANCES ?
+            statement("$N.get().refs--", goal.context.cache.get()) :
+            emptyCodeBlock)
+        .addStatement("return new $T($L)", goal.type(),
+            goal.invocationParameters())
         .build();
   }
 
@@ -143,7 +146,9 @@ final class BuilderV {
     TypeName type = goal.type();
     String method = goal.details.methodName;
     return CodeBlock.builder()
-        .addStatement("$N.get().refs--", goal.context.cache.get())
+        .add(goal.context.lifecycle == REUSE_INSTANCES ?
+            statement("$N.get().refs--", goal.context.cache.get()) :
+            emptyCodeBlock)
         .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
         .addStatement("this.$N.$N($L)", goal.field(), method, goal.invocationParameters())
         .build();
@@ -153,7 +158,9 @@ final class BuilderV {
     TypeName type = goal.type();
     String method = goal.details.methodName;
     return CodeBlock.builder()
-        .addStatement("$N.get().refs--", goal.context.cache.get())
+        .add(goal.context.lifecycle == REUSE_INSTANCES ?
+            statement("$N.get().refs--", goal.context.cache.get()) :
+            emptyCodeBlock)
         .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
         .addStatement("$T.$N($L)", goal.context.type, method, goal.invocationParameters())
         .build();

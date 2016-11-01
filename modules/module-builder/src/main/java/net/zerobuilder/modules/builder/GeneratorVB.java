@@ -40,59 +40,72 @@ final class GeneratorVB {
     MethodSpec.Builder method = methodBuilder(builder.methodName(goal))
         .returns(builder.contractType(goal).nestedClass(steps.get(0).thisType))
         .addModifiers(abstractRegularDetails.access(STATIC));
-    ParameterSpec builder = builderInstance(goal);
     BuildersContext context = goal.context();
-    ParameterSpec instance = parameterSpec(context.type, downcase(context.type.simpleName()));
-    CodeBlock initStatement = initBuilder(builder, instance).apply(goal);
-    method.addCode(initStatement);
+    ParameterSpec varInstance = parameterSpec(context.type,
+        downcase(context.type.simpleName()));
+    CodeBlock returnBlock = returnBlock(varInstance).apply(goal);
+    method.addCode(returnBlock);
     if (goal.isInstance()) {
-      method.addParameter(instance);
+      method.addParameter(varInstance);
     }
     MethodSpec methodSpec = method.build();
     return new BuilderMethod(goal.name(), methodSpec);
   }
 
-  private Function<SimpleRegularGoalContext, CodeBlock> initBuilder(
-      ParameterSpec builder, ParameterSpec instance) {
+  private Function<SimpleRegularGoalContext, CodeBlock> returnBlock(ParameterSpec varInstance) {
     return regularGoalContextCases(
-        constructor -> initConstructorBuilder(constructor, builder),
-        method -> initInstanceMethodBuilder(method, builder, instance),
-        method -> initStaticMethodBuilder(method, builder));
+        this::returnConstructor,
+        method -> returnInstanceMethod(method, varInstance),
+        this::returnStaticMethod);
   }
 
-  private CodeBlock initConstructorBuilder(SimpleConstructorGoalContext constructor,
-                                           ParameterSpec builder) {
-    BuildersContext context = constructor.context;
-    TypeName type = builder.type;
-    FieldSpec cache = context.cache.get();
-    return context.lifecycle == REUSE_INSTANCES ?
-        statement("$T $N = $N.get().$N", type, builder, cache, this.builder.cacheField(constructor)) :
-        statement("$T $N = new $T()", type, builder, type);
-  }
-
-  private CodeBlock initInstanceMethodBuilder(
-      InstanceMethodGoalContext method, ParameterSpec builder, ParameterSpec instance) {
-    BuildersContext context = method.context;
-    TypeName type = builder.type;
-    FieldSpec cache = context.cache.get();
-    return context.lifecycle == REUSE_INSTANCES ?
-        CodeBlock.builder()
-            .addStatement("$T $N = $N.get().$N", type, builder, cache, this.builder.cacheField(method))
-            .addStatement("$N.$N = $N", builder, method.field(), instance)
-            .build() :
-        statement("$T $N = new $T($N)", type, builder, type, instance);
-  }
-
-  private CodeBlock initStaticMethodBuilder(
-      SimpleStaticMethodGoalContext method, ParameterSpec varBuilder) {
-    BuildersContext context = method.context;
-    FieldSpec cache = context.cache.get();
+  private CodeBlock returnConstructor(SimpleConstructorGoalContext goal) {
+    ParameterSpec varBuilder = builderInstance(goal);
+    BuildersContext context = goal.context;
+    TypeName type = varBuilder.type;
     if (context.lifecycle == REUSE_INSTANCES) {
+      FieldSpec cache = context.cache.get();
+      return CodeBlock.builder()
+          .addStatement("$T $N = $N.get().$N", type, varBuilder, cache, builder.cacheField(goal))
+          .build();
+    }
+    return statement("$T $N = new $T()", type, varBuilder, type);
+  }
+
+  private CodeBlock returnInstanceMethod(
+      InstanceMethodGoalContext goal, ParameterSpec varInstance) {
+    ParameterSpec varBuilder = builderInstance(goal);
+    BuildersContext context = goal.context;
+    if (context.lifecycle == REUSE_INSTANCES) {
+      FieldSpec cache = context.cache.get();
+      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
+      return CodeBlock.builder()
+          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
+          .addStatement("$T $N", varBuilder.type, varBuilder)
+          .beginControlFlow("if ($N.refs++ == 0)", varContext)
+          .addStatement("$N = $N.$N", varBuilder, varContext, builder.cacheField(goal))
+          .endControlFlow()
+          .beginControlFlow("else")
+          .addStatement("$N = new $T()", varBuilder, varBuilder.type)
+          .endControlFlow()
+          .addStatement("$N.$N = $N", varBuilder, goal.field(), varInstance)
+          .addStatement("return $N", varBuilder)
+          .build();
+    }
+    return statement("return new $T($N)", varBuilder.type, varInstance);
+  }
+
+  private CodeBlock returnStaticMethod(
+      SimpleStaticMethodGoalContext goal) {
+    ParameterSpec varBuilder = builderInstance(goal);
+    BuildersContext context = goal.context;
+    if (context.lifecycle == REUSE_INSTANCES) {
+      FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
           .beginControlFlow("if ($N.refs++ == 0)", varContext)
-          .addStatement("return $N.$N", varContext, builder.cacheField(method))
+          .addStatement("return $N.$N", varContext, builder.cacheField(goal))
           .endControlFlow()
           .addStatement("return new $T()", varBuilder.type)
           .build();

@@ -5,6 +5,7 @@ import org.junit.Test;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static net.zerobuilder.examples.derive4j.RequestBuilders.putBuilder;
 import static net.zerobuilder.examples.derive4j.Requests.getBody;
 import static net.zerobuilder.examples.derive4j.Requests.getPath;
 import static org.hamcrest.core.Is.is;
@@ -20,7 +21,7 @@ public class RequestTest {
 
   @Test
   public void put() throws Exception {
-    Request body = RequestBuilders.putBuilder()
+    Request body = putBuilder()
         .path("/put")
         .body("body");
     assertThat(getPath(body), is("/put"));
@@ -56,4 +57,14 @@ public class RequestTest {
     assertThat(type.apply(body), is("DELETE"));
   }
 
+  @Test
+  public void refs() {
+    Request request = putBuilder()
+        .path("/external/path")
+        .body(getBody(putBuilder()
+            .path("/internal/path")
+            .body("body"))
+            .orElse(""));
+    assertThat(getPath(request), is("/external/path"));
+  }
 }
