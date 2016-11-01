@@ -104,7 +104,7 @@ public class RecyclingStaticTest {
             "        CuboidBuilder.Height, CuboidBuilder.Length, CuboidBuilder.Width {",
             "    private double height;",
             "    private List<String> length;",
-            "    StepsImpl() {}",
+            "    CuboidBuilderImpl() {}",
             "    @Override public CuboidBuilder.Length height(double height) { this.height = height; return this; }",
             "    @Override public CuboidBuilder.Width length(List<String> length) { this.length = length; return this; }",
             "    @Override public CuboidBuilder.Width emptyLength() {",

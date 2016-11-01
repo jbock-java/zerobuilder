@@ -5,7 +5,6 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
@@ -62,14 +61,18 @@ final class GeneratorVB {
   private CodeBlock returnConstructor(SimpleConstructorGoalContext goal) {
     ParameterSpec varBuilder = builderInstance(goal);
     BuildersContext context = goal.context;
-    TypeName type = varBuilder.type;
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
+      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
       return CodeBlock.builder()
-          .addStatement("$T $N = $N.get().$N", type, varBuilder, cache, builder.cacheField(goal))
+          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
+          .beginControlFlow("if ($N.refs++ == 0)", varContext)
+          .addStatement("return $N.$N", varContext, builder.cacheField(goal))
+          .endControlFlow()
+          .addStatement("return new $T()", varBuilder.type)
           .build();
     }
-    return statement("$T $N = new $T()", type, varBuilder, type);
+    return statement("return new $T()", varBuilder.type);
   }
 
   private CodeBlock returnInstanceMethod(

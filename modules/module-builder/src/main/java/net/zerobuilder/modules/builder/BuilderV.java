@@ -176,6 +176,9 @@ final class BuilderV {
         String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
+            .add(goal.context.lifecycle == REUSE_INSTANCES ?
+                statement("$N.get().refs--", goal.context.cache.get()) :
+                emptyCodeBlock)
             .addStatement("return new $T($L)", goal.type(), parameters)
             .build();
       }

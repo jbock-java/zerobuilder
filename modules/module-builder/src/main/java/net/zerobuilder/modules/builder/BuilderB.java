@@ -23,9 +23,11 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -77,7 +79,7 @@ final class BuilderB {
         .returns(nextType(step))
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), emptyColl)
-        .addCode(regularFinalBlock(goal, step.isLast()))
+        .addCode(normalReturn(goal, step.isLast()))
         .addModifiers(PUBLIC)
         .build());
   }
@@ -92,15 +94,20 @@ final class BuilderB {
     return methodBuilder(step.emptyMethod)
         .addAnnotation(Override.class)
         .returns(nextType(step))
-        .addCode(regularFinalBlock(goal, step.isLast()))
+        .addCode(normalReturn(goal, step.isLast()))
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private CodeBlock regularFinalBlock(BeanGoalContext goal, boolean isLast) {
-    return isLast
-        ? statement("return this.$N", goal.bean())
-        : statement("return this");
+  private CodeBlock normalReturn(BeanGoalContext goal, boolean isLast) {
+    return isLast ?
+        CodeBlock.builder()
+            .add(goal.context.lifecycle == REUSE_INSTANCES ?
+                statement("$N.get().refs--", goal.context.cache.get()) :
+                emptyCodeBlock)
+            .addStatement("return this.$N", goal.bean())
+            .build() :
+        statement("return this");
   }
 
   private MethodSpec iterateCollection(LoneGetterStep step, BeanGoalContext goal) {
@@ -120,7 +127,7 @@ final class BuilderB {
         .addStatement("this.$N.$L().add($N)", goal.bean(),
             step.loneGetter.getter, iterationVar)
         .endControlFlow()
-        .addCode(regularFinalBlock(goal, step.isLast()))
+        .addCode(normalReturn(goal, step.isLast()))
         .addModifiers(PUBLIC)
         .build();
   }
@@ -135,6 +142,6 @@ final class BuilderB {
         .returns(nextType(step))
         .addCode(nullCheck.apply(step))
         .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), parameter)
-        .addCode(regularFinalBlock(goal, step.isLast())).build();
+        .addCode(normalReturn(goal, step.isLast())).build();
   }
 }

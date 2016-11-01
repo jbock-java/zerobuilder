@@ -3,10 +3,8 @@ package net.zerobuilder.modules.updater;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
@@ -21,7 +19,6 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static com.squareup.javapoet.TypeName.VOID;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -48,7 +45,7 @@ public final class Updater extends ProjectedSimpleModule {
 
   private Function<ProjectedGoal, DtoGeneratorOutput.BuilderMethod> goalToUpdater(
       GeneratorBU generatorBU, GeneratorVU generatorVU) {
-    return projectedGoalCases(generatorVU::goalToUpdaterV, generatorBU::goalToUpdaterB);
+    return projectedGoalCases(generatorVU::updaterMethodV, generatorBU::updaterMethodB);
   }
 
   private MethodSpec buildMethod(ProjectedGoal goal) {
@@ -114,11 +111,17 @@ public final class Updater extends ProjectedSimpleModule {
         .build();
   }
 
-  private final Function<BeanGoalContext, CodeBlock> returnBean
-      = goal -> statement("return this.$N", goal.bean());
+  private CodeBlock returnBean(BeanGoalContext goal) {
+    return CodeBlock.builder()
+        .add(goal.context.lifecycle == REUSE_INSTANCES ?
+            statement("$N.get().refs--", goal.context.cache.get()) :
+            emptyCodeBlock)
+        .addStatement("return this.$N", goal.bean())
+        .build();
+  }
 
   private final Function<ProjectedGoal, CodeBlock> invoke
-      = projectedGoalCases(regularInvoke, returnBean);
+      = projectedGoalCases(regularInvoke, this::returnBean);
 
   @Override
   public String name() {

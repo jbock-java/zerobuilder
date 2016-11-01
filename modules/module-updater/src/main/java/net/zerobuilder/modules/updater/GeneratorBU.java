@@ -11,6 +11,8 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoContext;
+import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
 import javax.lang.model.element.Modifier;
@@ -41,7 +43,7 @@ final class GeneratorBU {
     this.updater = updater;
   }
 
-  BuilderMethod goalToUpdaterB(BeanGoalContext goal) {
+  BuilderMethod updaterMethodB(BeanGoalContext goal) {
     String name = goal.details.name;
     ClassName type = goal.details.goalType;
     ParameterSpec updater = updaterInstance(goal);
@@ -130,21 +132,29 @@ final class GeneratorBU {
         .endControlFlow().build();
   }
 
-  private CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec updater) {
-    CodeBlock.Builder builder = CodeBlock.builder();
-    FieldSpec cache = goal.context.cache.get();
+  private CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec varUpdater) {
     ClassName type = goal.details.goalType;
-    builder.add(goal.context.lifecycle == REUSE_INSTANCES
-        ? statement("$T $N = $N.get().$N", updater.type, updater, cache, this.updater.cacheField(goal))
-        : statement("$T $N = new $T()", updater.type, updater, updater.type));
-    builder.add(goal.context.lifecycle == REUSE_INSTANCES
-        ? statement("$N.$N = new $T()", updater, goal.bean(), type)
-        : emptyCodeBlock);
-    return builder.build();
+    BuildersContext context = goal.context();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      FieldSpec cache = context.cache.get();
+      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
+      return CodeBlock.builder()
+          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
+          .addStatement("$T $N", varUpdater.type, varUpdater)
+          .beginControlFlow("if ($N.refs++ == 0)", varContext)
+          .addStatement("$N = $N.$N", varUpdater, varContext, updater.cacheField(goal))
+          .endControlFlow()
+          .beginControlFlow("else")
+          .addStatement("$N = new $T()", varUpdater, varUpdater.type)
+          .endControlFlow()
+          .addStatement("$N.$N = new $T()", varUpdater, goal.bean(), type)
+          .build();
+    }
+    return statement("$T $N = new $T()", varUpdater.type, varUpdater, varUpdater.type);
   }
 
   private ParameterSpec updaterInstance(BeanGoalContext goal) {
-    ClassName updaterType = this.updater.implType(goal);
+    ClassName updaterType = updater.implType(goal);
     return parameterSpec(updaterType, "updater");
   }
 }

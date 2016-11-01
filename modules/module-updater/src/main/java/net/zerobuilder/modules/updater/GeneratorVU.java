@@ -49,7 +49,7 @@ final class GeneratorVU {
     this.updater = updater;
   }
 
-  BuilderMethod goalToUpdaterV(ProjectedRegularGoalContext goal) {
+  BuilderMethod updaterMethodV(ProjectedRegularGoalContext goal) {
     AbstractRegularDetails details = goalDetails.apply(goal);
     ParameterSpec updater = varUpdater(goal);
     MethodSpec method = methodBuilder(this.updater.legacyMethodName(goal))
