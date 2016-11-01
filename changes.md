@@ -121,3 +121,9 @@
 
 * rename `toBuilder` -> `updater` (breaking)
 * rename `build()` -> `done()` (breaking)
+
+### 2016-11-01 zerobuilder 1.511 released
+
+* add ref counter (recycle) (issues-3)
+* forbid updater=true for instance-method goal (bugfix)
+* modulize the Java API
