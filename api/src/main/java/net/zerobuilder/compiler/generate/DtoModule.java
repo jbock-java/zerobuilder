@@ -9,6 +9,7 @@ import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -16,6 +17,7 @@ import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
@@ -35,9 +37,10 @@ public final class DtoModule {
       return name.apply(goal) + upcase(name());
     }
 
+    // TODO this should not need goal argument
     public final FieldSpec cacheField(SimpleGoal goal) {
       ClassName type = implType(goal);
-      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
+      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
           .initializer("new $T()", type)
           .build();
     }

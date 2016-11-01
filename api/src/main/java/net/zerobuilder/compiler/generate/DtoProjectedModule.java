@@ -61,7 +61,7 @@ public final class DtoProjectedModule {
     @Deprecated
     public final FieldSpec legacyCacheField(AbstractGoalContext goal) {
       ClassName type = legacyImplType(goal);
-      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE, FINAL)
+      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
           .initializer("new $T()", type)
           .build();
     }

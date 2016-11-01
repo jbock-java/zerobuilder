@@ -23,8 +23,10 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static com.squareup.javapoet.TypeName.VOID;
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -54,15 +56,13 @@ final class BuilderV {
     return asList(
         presentInstances(goal.maybeField()).stream(),
         goal.context().lifecycle == DtoContext.BuilderLifecycle.REUSE_INSTANCES ?
-            Stream.of(FieldSpec.builder(TypeName.BOOLEAN, "_currently_in_use", PRIVATE)
-                .initializer("$L", true)
-                .build()) :
+            Stream.of(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
             Stream.<FieldSpec>empty(),
         steps.stream()
             .limit(steps.size() - 1)
             .map(AbstractRegularStep::field))
         .stream()
-        .flatMap(Function.identity())
+        .flatMap(identity())
         .collect(toList());
   };
 
@@ -171,7 +171,7 @@ final class BuilderV {
     String method = goal.details.methodName;
     return CodeBlock.builder()
         .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("$N.get().refs--", goal.context.cache.get()) :
+            statement("this._currently_in_use = false") :
             emptyCodeBlock)
         .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
         .addStatement("$T.$N($L)", goal.context.type, method, goal.invocationParameters())
