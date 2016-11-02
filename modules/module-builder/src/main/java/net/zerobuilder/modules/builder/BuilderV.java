@@ -55,7 +55,7 @@ final class BuilderV {
     List<? extends AbstractRegularStep> steps = goal.regularSteps();
     return asList(
         presentInstances(goal.maybeField()).stream(),
-        goal.context().lifecycle == DtoContext.BuilderLifecycle.REUSE_INSTANCES ?
+        goal.context().lifecycle == REUSE_INSTANCES ?
             Stream.of(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
             Stream.<FieldSpec>empty(),
         steps.stream()

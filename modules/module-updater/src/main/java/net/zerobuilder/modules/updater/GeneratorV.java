@@ -152,13 +152,11 @@ final class GeneratorV {
       FieldSpec updaterField = this.updater.legacyCacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .addStatement("$T $N", varUpdater.type, varUpdater)
-          .beginControlFlow("if ($N.refs++ == 0)", varContext)
-          .addStatement("$N = $N.$N", varUpdater, varContext, updaterField)
+          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, updaterField)
+          .addStatement("$N.$N = new $T()", varContext, updaterField, varUpdater.type)
           .endControlFlow()
-          .beginControlFlow("else")
-          .addStatement("$N = new $T()", varUpdater, varUpdater.type)
-          .endControlFlow()
+          .addStatement("$T $N = $N.$N", varUpdater.type, varUpdater, varContext, updaterField)
+          .addStatement("$N._currently_in_use = true", varUpdater)
           .build();
     } else {
       return statement("$T $N = new $T()", varUpdater.type, varUpdater, varUpdater.type);

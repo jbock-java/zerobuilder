@@ -80,7 +80,6 @@ public final class Generator {
     }
     List<FieldSpec> fields = new ArrayList<>(inputOutputs.size() + 1);
     fields.add(context.cache.get());
-    fields.add(FieldSpec.builder(TypeName.INT, "refs", PRIVATE).build());
     inputOutputs.forEach(tmp ->
         fields.add(tmp.cacheField()));
     return fields;

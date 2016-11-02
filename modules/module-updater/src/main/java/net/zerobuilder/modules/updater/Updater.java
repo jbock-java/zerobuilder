@@ -95,7 +95,7 @@ public final class Updater extends ProjectedSimpleModule {
     String method = goal.details.methodName;
     return CodeBlock.builder()
         .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("$N.get().refs--", goal.context.cache.get()) :
+            statement("this._currently_in_use = false") :
             emptyCodeBlock)
         .addStatement("return $T.$N($L)", goal.context.type, method, goal.invocationParameters())
         .build();
