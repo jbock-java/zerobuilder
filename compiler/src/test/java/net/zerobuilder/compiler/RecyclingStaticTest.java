@@ -8,7 +8,7 @@ import javax.tools.JavaFileObject;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.testing.compile.JavaFileObjects.forSourceLines;
 import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static net.zerobuilder.compiler.GeneratedLines.GENERATED_ANNOTATION;
+import static net.zerobuilder.compiler.test_util.GeneratedLines.GENERATED_ANNOTATION;
 
 public class RecyclingStaticTest {
 

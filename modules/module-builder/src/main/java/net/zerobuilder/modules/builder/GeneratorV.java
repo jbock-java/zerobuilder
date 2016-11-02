@@ -64,12 +64,14 @@ final class GeneratorV {
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
+      FieldSpec goalField = builder.cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .beginControlFlow("if ($N.refs++ == 0)", varContext)
-          .addStatement("return $N.$N", varContext, builder.cacheField(goal))
+          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, goalField)
+          .addStatement("$N.$N = new $T()", varContext, goalField, varBuilder.type)
           .endControlFlow()
-          .addStatement("return new $T()", varBuilder.type)
+          .addStatement("$N.$N._currently_in_use = true", varContext, goalField)
+          .addStatement("return $N.$N", varContext, goalField)
           .build();
     }
     return statement("return new $T()", varBuilder.type);

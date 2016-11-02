@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package net.zerobuilder.compiler;
+package net.zerobuilder.compiler.test_util;
 
-final class GeneratedLines {
-  static final String GENERATED_ANNOTATION =
+import net.zerobuilder.compiler.Messages;
+import net.zerobuilder.compiler.ZeroProcessor;
+
+public final class GeneratedLines {
+  public static final String GENERATED_ANNOTATION =
       "@Generated("
           + "value = \""
           + ZeroProcessor.class.getName()

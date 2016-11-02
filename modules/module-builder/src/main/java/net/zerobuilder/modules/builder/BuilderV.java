@@ -147,7 +147,7 @@ final class BuilderV {
   private CodeBlock constructorCall(SimpleConstructorGoalContext goal) {
     return CodeBlock.builder()
         .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("$N.get().refs--", goal.context.cache.get()) :
+            statement("this._currently_in_use = false") :
             emptyCodeBlock)
         .addStatement("return new $T($L)", goal.type(),
             goal.invocationParameters())
