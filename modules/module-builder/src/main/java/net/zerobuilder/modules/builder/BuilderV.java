@@ -1,5 +1,6 @@
 package net.zerobuilder.modules.builder;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -35,6 +36,7 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContex
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
@@ -145,37 +147,55 @@ final class BuilderV {
           this::staticCall);
 
   private CodeBlock constructorCall(SimpleConstructorGoalContext goal) {
-    return CodeBlock.builder()
-        .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("this._currently_in_use = false") :
-            emptyCodeBlock)
-        .addStatement("return new $T($L)", goal.type(),
-            goal.invocationParameters())
+    TypeName type = goal.type();
+    ParameterSpec varGoal = parameterSpec(type,
+        downcase(((ClassName) type.box()).simpleName()));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    return builder
+        .addStatement("$T $N = $T($L)", varGoal.type, varGoal, goal.type(), goal.invocationParameters())
+        .addStatement("return $N", varGoal)
         .build();
   }
 
   private CodeBlock instanceCall(InstanceMethodGoalContext goal) {
     TypeName type = goal.type();
     String method = goal.details.methodName;
-    return CodeBlock.builder()
-        .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("this._currently_in_use = false") :
-            emptyCodeBlock)
-        .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
-        .addStatement("this.$N.$N($L)", goal.instanceField(), method, goal.invocationParameters())
-        .build();
+    ParameterSpec varGoal = parameterSpec(type,
+        downcase(((ClassName) type.box()).simpleName()));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    if (!VOID.equals(type)) {
+      builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type, varGoal, goal.instanceField(),
+          method, goal.invocationParameters());
+    }
+    if (!VOID.equals(type)) {
+      builder.addStatement("return $N", varGoal);
+    }
+    return builder.build();
   }
 
   private CodeBlock staticCall(SimpleStaticMethodGoalContext goal) {
     TypeName type = goal.type();
     String method = goal.details.methodName;
-    return CodeBlock.builder()
-        .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("this._currently_in_use = false") :
-            emptyCodeBlock)
-        .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
-        .addStatement("$T.$N($L)", goal.context.type, method, goal.invocationParameters())
-        .build();
+    ParameterSpec varGoal = parameterSpec(type,
+        downcase(((ClassName) type.box()).simpleName()));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    if (!VOID.equals(type)) {
+      builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.context.type,
+          method, goal.invocationParameters());
+    }
+    if (!VOID.equals(type)) {
+      builder.addStatement("return $N", varGoal);
+    }
+    return builder.build();
   }
 
   private RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,

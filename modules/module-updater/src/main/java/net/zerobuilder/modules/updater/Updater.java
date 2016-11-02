@@ -1,8 +1,11 @@
 package net.zerobuilder.modules.updater;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
@@ -19,6 +22,7 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.VOID;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -30,7 +34,9 @@ import static net.zerobuilder.compiler.generate.DtoProjectedGoal.projectedGoalCa
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
 public final class Updater extends ProjectedSimpleModule {
@@ -93,30 +99,46 @@ public final class Updater extends ProjectedSimpleModule {
 
   private CodeBlock staticCall(ProjectedMethodGoalContext goal) {
     String method = goal.details.methodName;
-    return CodeBlock.builder()
-        .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("this._currently_in_use = false") :
-            emptyCodeBlock)
-        .addStatement("return $T.$N($L)", goal.context.type, method, goal.invocationParameters())
+    TypeName type = goal.details.goalType;
+    ParameterSpec varGoal = parameterSpec(type,
+        downcase(((ClassName) type.box()).simpleName()));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    return builder
+        .addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.context.type,
+            method, goal.invocationParameters())
+        .addStatement("return $N", varGoal)
         .build();
   }
 
   private CodeBlock constructorCall(ProjectedConstructorGoalContext goal) {
-    return CodeBlock.builder()
-        .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("this._currently_in_use = false") :
-            emptyCodeBlock)
-        .addStatement("return new $T($L)", goalDetails.apply(goal).goalType,
-            goal.invocationParameters())
+    TypeName type = goal.details.goalType;
+    ParameterSpec varGoal = parameterSpec(type,
+        downcase(((ClassName) type.box()).simpleName()));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    return builder
+        .addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, goal.invocationParameters())
+        .addStatement("return $N", varGoal)
         .build();
   }
 
   private CodeBlock returnBean(BeanGoalContext goal) {
-    return CodeBlock.builder()
-        .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("this._currently_in_use = false") :
-            emptyCodeBlock)
-        .addStatement("return this.$N", goal.bean())
+    TypeName type = goal.details.goalType;
+    ParameterSpec varGoal = parameterSpec(type,
+        downcase(((ClassName) type.box()).simpleName()));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    return builder
+        .addStatement("$T $N = this.$N", varGoal.type, varGoal, goal.bean())
+        .addStatement("this.$N = null", goal.bean())
+        .addStatement("return $N", varGoal)
         .build();
   }
 
