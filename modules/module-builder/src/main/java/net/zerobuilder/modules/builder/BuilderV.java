@@ -178,9 +178,10 @@ final class BuilderV {
         .build();
   }
 
-  //FIXME repeated code
   private RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,
                                                                    CollectionInfo collectionInfo) {
+
+
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
       public CodeBlock constructor(SimpleConstructorGoalContext goal) {

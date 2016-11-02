@@ -11,7 +11,6 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
-import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
@@ -56,7 +55,7 @@ final class GeneratorB {
                 AbstractBeanStep::getterThrownTypes,
                 AbstractBeanStep::setterThrownTypes)))
         .addCode(goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
-        .addCode(initializeUpdater(goal, updater))
+        .addCode(initVarUpdater(goal, updater))
         .addCode(goal.steps.stream().map(copy(goal)).collect(joinCodeBlocks))
         .addStatement("return $N", updater)
         .addModifiers(modifiers)
@@ -132,22 +131,20 @@ final class GeneratorB {
         .endControlFlow().build();
   }
 
-  private CodeBlock initializeUpdater(BeanGoalContext goal, ParameterSpec varUpdater) {
-    ClassName type = goal.details.goalType;
+  private CodeBlock initVarUpdater(BeanGoalContext goal, ParameterSpec varUpdater) {
     BuildersContext context = goal.context();
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
+      FieldSpec updaterField = updater.cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .addStatement("$T $N", varUpdater.type, varUpdater)
-          .beginControlFlow("if ($N.refs++ == 0)", varContext)
-          .addStatement("$N = $N.$N", varUpdater, varContext, updater.cacheField(goal))
+          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, updaterField)
+          .addStatement("$N.$N = new $T()", varContext, updaterField, varUpdater.type)
           .endControlFlow()
-          .beginControlFlow("else")
-          .addStatement("$N = new $T()", varUpdater, varUpdater.type)
-          .endControlFlow()
-          .addStatement("$N.$N = new $T()", varUpdater, goal.bean(), type)
+          .addStatement("$T $N = $N.$N", varUpdater.type, varUpdater, varContext, updaterField)
+          .addStatement("$N.$N = new $T()", varUpdater, goal.bean(), goal.details.goalType)
+          .addStatement("$N._currently_in_use = true", varUpdater)
           .build();
     }
     return statement("$T $N = new $T()", varUpdater.type, varUpdater, varUpdater.type);

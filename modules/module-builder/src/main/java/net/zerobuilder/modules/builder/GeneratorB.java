@@ -43,22 +43,20 @@ final class GeneratorB {
 
   private CodeBlock returnBuilder(BeanGoalContext goal) {
     ClassName implType = builder.implType(goal);
-    ParameterSpec varBuilder = parameterSpec(implType, downcase(implType.simpleName()));
+    ParameterSpec varUpdater = parameterSpec(implType, downcase(implType.simpleName()));
     DtoContext.BuildersContext context = goal.context;
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = goal.context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
+      FieldSpec builderField = builder.cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .addStatement("$T $N", implType, varBuilder)
-          .beginControlFlow("if ($N.refs++ == 0)", varContext)
-          .addStatement("$N = $N.$N", varBuilder, varContext, builder.cacheField(goal))
+          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, builderField)
+          .addStatement("$N.$N = new $T()", varContext, builderField, implType)
           .endControlFlow()
-          .beginControlFlow("else")
-          .addStatement("$N = new $T()", varBuilder, implType)
-          .endControlFlow()
-          .addStatement("$N.$N = new $T()", varBuilder, goal.bean(), goal.details.goalType)
-          .addStatement("return $N", varBuilder)
+          .addStatement("$N.$N.$N = new $T()", varContext, varUpdater, goal.bean(), goal.details.goalType)
+          .addStatement("$N.$N._currently_in_use = true", varContext, varUpdater)
+          .addStatement("return $N.$N", varContext, varUpdater)
           .build();
     }
     return statement("return new $T()", implType);

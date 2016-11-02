@@ -53,14 +53,14 @@ final class GeneratorV {
 
   private Function<SimpleRegularGoalContext, CodeBlock> returnBlock(ParameterSpec varInstance) {
     return regularGoalContextCases(
-        this::returnConstructor,
+        this::returnRegular,
         method -> returnInstanceMethod(method, varInstance),
-        this::returnStaticMethod);
+        this::returnRegular);
   }
 
-  private CodeBlock returnConstructor(SimpleConstructorGoalContext goal) {
+  private CodeBlock returnRegular(SimpleRegularGoalContext goal) {
     ParameterSpec varBuilder = builderInstance(goal);
-    BuildersContext context = goal.context;
+    BuildersContext context = goal.context();
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
@@ -95,26 +95,6 @@ final class GeneratorV {
           .build();
     }
     return statement("return new $T($N)", builder.implType(goal), varInstance);
-  }
-
-  private CodeBlock returnStaticMethod(
-      SimpleStaticMethodGoalContext goal) {
-    ParameterSpec varBuilder = builderInstance(goal);
-    BuildersContext context = goal.context;
-    if (context.lifecycle == REUSE_INSTANCES) {
-      FieldSpec cache = context.cache.get();
-      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec goalField = builder.cacheField(goal);
-      return CodeBlock.builder()
-          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, goalField)
-          .addStatement("$N.$N = new $T()", varContext, goalField, varBuilder.type)
-          .endControlFlow()
-          .addStatement("$N.$N._currently_in_use = true", varContext, goalField)
-          .addStatement("return $N.$N", varContext, goalField)
-          .build();
-    }
-    return statement("return new $T()", varBuilder.type);
   }
 
   private ParameterSpec builderInstance(SimpleRegularGoalContext goal) {

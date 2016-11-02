@@ -19,8 +19,11 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
@@ -28,6 +31,7 @@ import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -42,8 +46,12 @@ final class BuilderB {
     this.builder = builder;
   }
 
-  final Function<BeanGoalContext, List<FieldSpec>> fieldsB
-      = goal -> singletonList(goal.bean());
+  final Function<BeanGoalContext, List<FieldSpec>> fieldsB =
+      goal -> goal.context().lifecycle == REUSE_INSTANCES ?
+          asList(
+              fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
+              goal.bean()) :
+          singletonList(goal.bean());
 
   final Function<BeanGoalContext, List<MethodSpec>> stepsB =
       goal -> goal.steps.stream()
@@ -103,7 +111,7 @@ final class BuilderB {
     return isLast ?
         CodeBlock.builder()
             .add(goal.context.lifecycle == REUSE_INSTANCES ?
-                statement("$N.get().refs--", goal.context.cache.get()) :
+                statement("this._currently_in_use = false") :
                 emptyCodeBlock)
             .addStatement("return this.$N", goal.bean())
             .build() :

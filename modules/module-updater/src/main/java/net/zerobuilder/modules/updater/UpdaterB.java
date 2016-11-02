@@ -14,16 +14,22 @@ import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
+import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
+import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
@@ -36,8 +42,12 @@ final class UpdaterB {
     this.updater = updater;
   }
 
-  final Function<BeanGoalContext, List<FieldSpec>> fieldsB
-      = goal -> singletonList(goal.bean());
+  final Function<BeanGoalContext, List<FieldSpec>> fieldsB =
+      goal -> goal.context().lifecycle == REUSE_INSTANCES ?
+          asList(
+              fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
+              goal.bean()) :
+          singletonList(goal.bean());
 
   final Function<BeanGoalContext, List<MethodSpec>> updateMethodsB = goal ->
       goal.steps.stream()
