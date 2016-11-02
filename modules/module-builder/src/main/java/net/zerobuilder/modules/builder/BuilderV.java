@@ -159,10 +159,10 @@ final class BuilderV {
     String method = goal.details.methodName;
     return CodeBlock.builder()
         .add(goal.context.lifecycle == REUSE_INSTANCES ?
-            statement("$N.get().refs--", goal.context.cache.get()) :
+            statement("this._currently_in_use = false") :
             emptyCodeBlock)
         .add(VOID.equals(type) ? emptyCodeBlock : CodeBlock.of("return "))
-        .addStatement("this.$N.$N($L)", goal.field(), method, goal.invocationParameters())
+        .addStatement("this.$N.$N($L)", goal.instanceField(), method, goal.invocationParameters())
         .build();
   }
 
@@ -178,37 +178,44 @@ final class BuilderV {
         .build();
   }
 
-  RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,
-                                                           CollectionInfo collectionInfo) {
+  //FIXME repeated code
+  private RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,
+                                                                   CollectionInfo collectionInfo) {
     return new RegularGoalContextCases<CodeBlock>() {
       @Override
-      public CodeBlock constructorGoal(SimpleConstructorGoalContext goal) {
+      public CodeBlock constructor(SimpleConstructorGoalContext goal) {
         CodeBlock parameters = goal.invocationParameters();
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
             .add(goal.context.lifecycle == REUSE_INSTANCES ?
-                statement("$N.get().refs--", goal.context.cache.get()) :
+                statement("this._currently_in_use = false") :
                 emptyCodeBlock)
             .addStatement("return new $T($L)", goal.type(), parameters)
             .build();
       }
       @Override
-      public CodeBlock methodGoal(InstanceMethodGoalContext goal) {
+      public CodeBlock instanceMethod(InstanceMethodGoalContext goal) {
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
+            .add(goal.context.lifecycle == REUSE_INSTANCES ?
+                statement("this._currently_in_use = false") :
+                emptyCodeBlock)
             .add(instanceCall(goal))
             .build();
       }
       @Override
-      public CodeBlock staticMethodGoal(SimpleStaticMethodGoalContext goal) {
+      public CodeBlock staticMethod(SimpleStaticMethodGoalContext goal) {
         TypeName type = step.regularParameter().type;
         String name = step.regularParameter().name;
         return CodeBlock.builder()
             .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
+            .add(goal.context.lifecycle == REUSE_INSTANCES ?
+                statement("this._currently_in_use = false") :
+                emptyCodeBlock)
             .add(staticCall(goal))
             .build();
       }

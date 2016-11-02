@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
@@ -12,16 +11,13 @@ import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext
 import java.util.List;
 import java.util.function.Supplier;
 
-import static com.squareup.javapoet.TypeName.VOID;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
-import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
 public final class DtoMethodGoal {
 
@@ -36,20 +32,20 @@ public final class DtoMethodGoal {
       super(thrownTypes);
       this.details = details;
       this.context = context;
-      this.field = memoizeField(context);
+      this.instanceField = memoizeInstanceField(context);
       this.steps = steps;
     }
 
     public final BuildersContext context;
     public final InstanceMethodGoalDetails details;
 
-    private final Supplier<FieldSpec> field;
+    private final Supplier<FieldSpec> instanceField;
 
     /**
      * @return An instance of type {@link BuildersContext#type}.
      */
-    public FieldSpec field() {
-      return field.get();
+    public FieldSpec instanceField() {
+      return instanceField.get();
     }
 
     List<SimpleRegularStep> methodSteps() {
@@ -58,7 +54,7 @@ public final class DtoMethodGoal {
 
     @Override
     public final <R> R acceptRegular(DtoRegularGoal.RegularGoalContextCases<R> cases) {
-      return cases.methodGoal(this);
+      return cases.instanceMethod(this);
     }
 
     @Override
@@ -96,7 +92,7 @@ public final class DtoMethodGoal {
 
     @Override
     public final <R> R acceptRegular(DtoRegularGoal.RegularGoalContextCases<R> cases) {
-      return cases.staticMethodGoal(this);
+      return cases.staticMethod(this);
     }
 
     @Override
@@ -110,7 +106,7 @@ public final class DtoMethodGoal {
     }
   }
 
-  private static Supplier<FieldSpec> memoizeField(BuildersContext context) {
+  private static Supplier<FieldSpec> memoizeInstanceField(BuildersContext context) {
     return memoize(() -> {
       ClassName type = context.type;
       String name = '_' + downcase(type.simpleName());

@@ -36,7 +36,7 @@ public final class DtoConstructorGoal {
 
     @Override
     public final <R> R acceptRegular(RegularGoalContextCases<R> cases) {
-      return cases.constructorGoal(this);
+      return cases.constructor(this);
     }
 
     @Override

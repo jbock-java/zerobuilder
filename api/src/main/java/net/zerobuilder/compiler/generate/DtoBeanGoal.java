@@ -35,9 +35,9 @@ public final class DtoBeanGoal {
     private final Supplier<FieldSpec> bean;
 
     /**
-     * A field that holds an instance of the bean type.
+     * A instanceField that holds an instance of the bean type.
      *
-     * @return field spec
+     * @return instanceField spec
      */
     public FieldSpec bean() {
       return bean.get();

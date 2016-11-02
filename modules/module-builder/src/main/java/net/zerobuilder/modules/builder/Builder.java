@@ -83,7 +83,7 @@ public final class Builder extends ContractModule {
             ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
             return constructorBuilder()
                 .addParameter(parameter)
-                .addStatement("this.$N = $N", method.field(), parameter)
+                .addStatement("this.$N = $N", method.instanceField(), parameter)
                 .build();
           },
           staticMethod -> constructor());
