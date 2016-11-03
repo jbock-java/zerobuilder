@@ -1,22 +1,5 @@
-# zerobuilder-api
+# module-builder
 
-A library of the core functionality of zerobuilder.
-It is intended for use in other annotation processors.
+A zerobuilder module that generates the "telescoping" builder pattern.
 
-### Caution
-
-Work in progress!
-
-### Usage
-
-See tests.
-
-### Maven
-
-````xml
-<dependency>
-    <groupId>com.github.h908714124</groupId>
-    <artifactId>zerobuilder-api</artifactId>
-    <version>1.501</version>
-</dependency>
-````
+### [Maven](https://search.maven.org/#search|ga|1|g%3A%22com.github.h908714124%22%2C%20a%3A%22zerobuilder-module-builder%22)
