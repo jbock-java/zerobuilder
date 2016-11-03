@@ -22,7 +22,6 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static com.squareup.javapoet.TypeName.VOID;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -31,7 +30,6 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.goalType;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.projectedGoalCases;
-import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
@@ -101,7 +99,7 @@ public final class Updater extends ProjectedSimpleModule {
     String method = goal.details.methodName;
     TypeName type = goal.details.goalType;
     ParameterSpec varGoal = parameterSpec(type,
-        downcase(((ClassName) type.box()).simpleName()));
+        '_' + downcase(((ClassName) type.box()).simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
@@ -114,9 +112,9 @@ public final class Updater extends ProjectedSimpleModule {
   }
 
   private CodeBlock constructorCall(ProjectedConstructorGoalContext goal) {
-    TypeName type = goal.details.goalType;
+    ClassName type = goal.details.goalType;
     ParameterSpec varGoal = parameterSpec(type,
-        downcase(((ClassName) type.box()).simpleName()));
+        '_' + downcase(type.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
