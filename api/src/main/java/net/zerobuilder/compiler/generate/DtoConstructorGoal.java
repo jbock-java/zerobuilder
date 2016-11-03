@@ -16,7 +16,7 @@ public final class DtoConstructorGoal {
   public static final class SimpleConstructorGoalContext
       extends DtoRegularGoal.SimpleRegularGoalContext {
 
-    final List<SimpleRegularStep> steps;
+    public final List<SimpleRegularStep> steps;
     public final BuildersContext context;
     public final ConstructorGoalDetails details;
 

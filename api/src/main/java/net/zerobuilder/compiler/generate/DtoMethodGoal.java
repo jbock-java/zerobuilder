@@ -22,7 +22,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 public final class DtoMethodGoal {
 
   public static final class InstanceMethodGoalContext extends SimpleRegularGoalContext {
-    final List<SimpleRegularStep> steps;
+    public final List<SimpleRegularStep> steps;
 
     InstanceMethodGoalContext(
         BuildersContext context,
@@ -69,7 +69,7 @@ public final class DtoMethodGoal {
   }
 
   public static final class SimpleStaticMethodGoalContext extends SimpleRegularGoalContext {
-    final List<SimpleRegularStep> steps;
+    public final List<SimpleRegularStep> steps;
 
     SimpleStaticMethodGoalContext(
         BuildersContext context,

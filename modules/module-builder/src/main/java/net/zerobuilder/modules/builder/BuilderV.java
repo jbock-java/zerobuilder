@@ -37,6 +37,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
+import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -153,6 +154,7 @@ final class BuilderV {
     }
     return builder
         .addStatement("$T $N = new $T($L)", varGoal.type, varGoal, goal.type(), goal.invocationParameters())
+        .add(free(goal.steps))
         .addStatement("return $N", varGoal)
         .build();
   }
@@ -176,6 +178,7 @@ final class BuilderV {
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this.$N = null", goal.instanceField());
     }
+    builder.add(free(goal.steps));
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);
     }
@@ -198,10 +201,20 @@ final class BuilderV {
       builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.context.type,
           method, goal.invocationParameters());
     }
+    builder.add(free(goal.steps));
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);
     }
     return builder.build();
+  }
+
+  private CodeBlock free(List<? extends AbstractRegularStep> steps) {
+    return steps.stream()
+        .filter(step -> !step.isLast())
+        .map(step -> step.regularParameter())
+        .filter(parameter -> !parameter.type.isPrimitive())
+        .map(parameter -> statement("this.$N = null", parameter.name))
+        .collect(joinCodeBlocks);
   }
 
   private RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,

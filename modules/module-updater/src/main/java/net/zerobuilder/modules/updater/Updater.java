@@ -15,6 +15,7 @@ import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModul
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +35,7 @@ import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.p
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
@@ -107,6 +109,7 @@ public final class Updater extends ProjectedSimpleModule {
     return builder
         .addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.context.type,
             method, goal.invocationParameters())
+        .add(free(goal.steps))
         .addStatement("return $N", varGoal)
         .build();
   }
@@ -121,8 +124,17 @@ public final class Updater extends ProjectedSimpleModule {
     }
     return builder
         .addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, goal.invocationParameters())
+        .add(free(goal.steps))
         .addStatement("return $N", varGoal)
         .build();
+  }
+
+  private CodeBlock free(List<? extends AbstractRegularStep> steps) {
+    return steps.stream()
+        .map(step -> step.regularParameter())
+        .filter(parameter -> !parameter.type.isPrimitive())
+        .map(parameter -> statement("this.$N = null", parameter.name))
+        .collect(joinCodeBlocks);
   }
 
   private CodeBlock returnBean(BeanGoalContext goal) {
