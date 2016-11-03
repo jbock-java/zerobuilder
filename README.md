@@ -23,9 +23,9 @@ After compilation, the annotated source does not depend on zerobuilder; see
 Maven compiler plugin version `3.5.1` or greater is recommended.
 
 Your IDE may need some initial help, to recognize that `target/generated-sources/annotations`
-now contains generated sources.
+contains generated sources.
 
-<em>Tip for intellij users:</em> If you do a `mvn install` before opening one of the example projects,
+<em>Tip for intellij users:</em> If you do a `mvn install` _before_ opening one of the example projects,
 intellij will recognize `target/generated-sources/annotations` automatically.
 
 ### Java API
@@ -43,7 +43,7 @@ In this case, the intermediate builder objects are stored in `ThreadLocal` insta
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
-    <version>1.511</version>
+    <version>1.512</version>
     <scope>provided</scope>
 </dependency>
 ````
