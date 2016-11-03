@@ -140,7 +140,7 @@ final class GeneratorV {
 
   private ParameterSpec toBuilderParameter(ProjectedRegularGoalContext goal) {
     AbstractRegularDetails details = goalDetails.apply(goal);
-    TypeName goalType = details.goalType;
+    TypeName goalType = details.type();
     return parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
   }
 

@@ -18,7 +18,7 @@ public final class DtoConstructorGoal {
 
     final List<SimpleRegularStep> steps;
     public final BuildersContext context;
-    final ConstructorGoalDetails details;
+    public final ConstructorGoalDetails details;
 
     SimpleConstructorGoalContext(BuildersContext context,
                                  ConstructorGoalDetails details,

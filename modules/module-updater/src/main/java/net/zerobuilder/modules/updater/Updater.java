@@ -128,18 +128,18 @@ public final class Updater extends ProjectedSimpleModule {
   }
 
   private CodeBlock returnBean(BeanGoalContext goal) {
-    TypeName type = goal.details.goalType;
+    ClassName type = goal.details.goalType;
     ParameterSpec varGoal = parameterSpec(type,
-        downcase(((ClassName) type.box()).simpleName()));
+        '_' + downcase(type.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
-    return builder
-        .addStatement("$T $N = this.$N", varGoal.type, varGoal, goal.bean())
-        .addStatement("this.$N = null", goal.bean())
-        .addStatement("return $N", varGoal)
-        .build();
+    builder.addStatement("$T $N = this.$N", varGoal.type, varGoal, goal.bean());
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this.$N = null", goal.bean());
+    }
+    return builder.addStatement("return $N", varGoal).build();
   }
 
   private final Function<ProjectedGoal, CodeBlock> invoke

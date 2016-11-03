@@ -4,6 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.common.LessTypes;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
@@ -31,6 +32,7 @@ import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILD
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDATER;
 import static net.zerobuilder.compiler.analyse.Utilities.downcase;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
+import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 
 final class DtoGoalElement {
 
@@ -281,7 +283,8 @@ final class DtoGoalElement {
     }
     ProjectableDetails details =
         element.getKind() == CONSTRUCTOR ?
-            ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption.access) :
+            ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
+                name, parameterNames, goalOption.access) :
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);
     return new RegularProjectableGoalElement(element, details);
   }
@@ -290,7 +293,8 @@ final class DtoGoalElement {
                                                               String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
     AbstractRegularDetails details = element.getKind() == CONSTRUCTOR ?
-        ConstructorGoalDetails.create(goalType, name, parameterNames, goalOption.access) :
+        ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
+            name, parameterNames, goalOption.access) :
         element.getModifiers().contains(STATIC) ?
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access) :
             InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);

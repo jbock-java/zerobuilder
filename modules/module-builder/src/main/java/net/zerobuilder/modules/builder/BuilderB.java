@@ -11,6 +11,7 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoStep;
+import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +31,8 @@ import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUS
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.distinctFrom;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
@@ -87,7 +89,7 @@ final class BuilderB {
         .returns(nextType(step))
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), emptyColl)
-        .addCode(normalReturn(goal, step.isLast()))
+        .addCode(step.isLast() ? normalReturn(goal) : statement("return this"))
         .addModifiers(PUBLIC)
         .build());
   }
@@ -102,20 +104,23 @@ final class BuilderB {
     return methodBuilder(step.emptyMethod)
         .addAnnotation(Override.class)
         .returns(nextType(step))
-        .addCode(normalReturn(goal, step.isLast()))
+        .addCode(step.isLast() ? normalReturn(goal) : statement("return this"))
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private CodeBlock normalReturn(BeanGoalContext goal, boolean isLast) {
-    return isLast ?
-        CodeBlock.builder()
-            .add(goal.context.lifecycle == REUSE_INSTANCES ?
-                statement("this._currently_in_use = false") :
-                emptyCodeBlock)
-            .addStatement("return this.$N", goal.bean())
-            .build() :
-        statement("return this");
+  private CodeBlock normalReturn(BeanGoalContext goal) {
+    ParameterSpec varBean = parameterSpec(goal.type(),
+        '_' + downcase(goal.details.goalType.simpleName()));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    builder.addStatement("$T $N = this.$N", varBean.type, varBean, goal.bean());
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this.$N = null", goal.bean());
+    }
+    return builder.addStatement("return $N", varBean).build();
   }
 
   private MethodSpec iterateCollection(LoneGetterStep step, BeanGoalContext goal) {
@@ -135,7 +140,7 @@ final class BuilderB {
         .addStatement("this.$N.$L().add($N)", goal.bean(),
             step.loneGetter.getter, iterationVar)
         .endControlFlow()
-        .addCode(normalReturn(goal, step.isLast()))
+        .addCode(step.isLast() ? normalReturn(goal) : statement("return this"))
         .addModifiers(PUBLIC)
         .build();
   }
@@ -150,6 +155,7 @@ final class BuilderB {
         .returns(nextType(step))
         .addCode(nullCheck.apply(step))
         .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), parameter)
-        .addCode(normalReturn(goal, step.isLast())).build();
+        .addCode(step.isLast() ? normalReturn(goal) : statement("return this"))
+        .build();
   }
 }

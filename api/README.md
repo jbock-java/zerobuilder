@@ -9,7 +9,7 @@ Work in progress!
 
 ### Usage
 
-See tests.
+See tests in [module-builder](../modules/module-builder) and [module-updater](../modules/module-updater).
 
 ### Maven
 

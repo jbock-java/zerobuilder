@@ -81,12 +81,6 @@ public final class DtoGoalDetails {
     final Access access;
 
     /**
-     * <p>method goal: return type</p>
-     * <p>constructor goal: type of enclosing class</p>
-     */
-    public final TypeName goalType;
-
-    /**
      * parameter names in original order
      */
     final List<String> parameterNames;
@@ -99,21 +93,17 @@ public final class DtoGoalDetails {
       return access.modifiers(modifiers);
     }
 
-    public final TypeName type() {
-      return goalType;
-    }
+    public abstract TypeName type();
 
     /**
-     * @param goalType       goal type
      * @param name           goal name
      * @param parameterNames parameter names in original order
      * @param access         goal options
      */
-    AbstractRegularDetails(TypeName goalType, String name, List<String> parameterNames,
+    AbstractRegularDetails(String name, List<String> parameterNames,
                            Access access) {
       this.name = name;
       this.access = access;
-      this.goalType = goalType;
       this.parameterNames = parameterNames;
     }
 
@@ -128,14 +118,22 @@ public final class DtoGoalDetails {
   public static final class ConstructorGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {
 
-    private ConstructorGoalDetails(TypeName goalType, String name, List<String> parameterNames,
+    public final ClassName goalType;
+
+    private ConstructorGoalDetails(ClassName goalType, String name, List<String> parameterNames,
                                    Access access) {
-      super(goalType, name, parameterNames, access);
+      super(name, parameterNames, access);
+      this.goalType = goalType;
     }
 
-    public static ConstructorGoalDetails create(TypeName goalType, String name, List<String> parameterNames,
+    public static ConstructorGoalDetails create(ClassName goalType, String name, List<String> parameterNames,
                                                 Access access) {
       return new ConstructorGoalDetails(goalType, name, parameterNames, access);
+    }
+
+    @Override
+    public TypeName type() {
+      return goalType;
     }
 
     @Override
@@ -151,10 +149,12 @@ public final class DtoGoalDetails {
 
   public static final class InstanceMethodGoalDetails extends AbstractRegularDetails {
     public final String methodName;
+    public final TypeName goalType;
 
     private InstanceMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
                                       Access access) {
-      super(goalType, name, parameterNames, access);
+      super(name, parameterNames, access);
+      this.goalType = goalType;
       this.methodName = methodName;
     }
 
@@ -167,6 +167,11 @@ public final class DtoGoalDetails {
     }
 
     @Override
+    public TypeName type() {
+      return goalType;
+    }
+
+    @Override
     <R> R accept(RegularGoalDetailsCases<R> cases) {
       return cases.method(this);
     }
@@ -175,10 +180,12 @@ public final class DtoGoalDetails {
   public static final class StaticMethodGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {
     public final String methodName;
+    public final TypeName goalType;
 
     private StaticMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
                                     Access access) {
-      super(goalType, name, parameterNames, access);
+      super(name, parameterNames, access);
+      this.goalType = goalType;
       this.methodName = methodName;
     }
 
@@ -188,6 +195,11 @@ public final class DtoGoalDetails {
                                                  String methodName,
                                                  Access access) {
       return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access);
+    }
+
+    @Override
+    public TypeName type() {
+      return goalType;
     }
 
     @Override
@@ -236,7 +248,7 @@ public final class DtoGoalDetails {
       = asFunction(new AbstractGoalDetailsCases<TypeName>() {
     @Override
     public TypeName regular(AbstractRegularDetails goal) {
-      return goal.goalType;
+      return goal.type();
     }
     @Override
     public TypeName bean(BeanGoalDetails goal) {
