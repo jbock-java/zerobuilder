@@ -1,11 +1,16 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.FieldSpec;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoModule.Module;
+import net.zerobuilder.compiler.generate.DtoModule.RegularContractModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 class DtoInputOutput {
@@ -13,6 +18,7 @@ class DtoInputOutput {
   interface InputOutputCases<R> {
     R simple(InputOutput simple);
     R projected(ProjectedInputOutput projected);
+    R simpleRegular(SimpleRegularInputOutput simpleRegular);
   }
 
   static <R> Function<AbstractInputOutput, R> asFunction(InputOutputCases<R> cases) {
@@ -21,7 +27,8 @@ class DtoInputOutput {
 
   static <R> Function<AbstractInputOutput, R> inputOutputCases(
       Function<InputOutput, R> simpleFunction,
-      Function<ProjectedInputOutput, R> projectedFunction) {
+      Function<ProjectedInputOutput, R> projectedFunction,
+      Function<SimpleRegularInputOutput, R> simpleRegularFunction) {
     return asFunction(new InputOutputCases<R>() {
       @Override
       public R simple(InputOutput simple) {
@@ -31,12 +38,16 @@ class DtoInputOutput {
       public R projected(ProjectedInputOutput projected) {
         return projectedFunction.apply(projected);
       }
+      @Override
+      public R simpleRegular(SimpleRegularInputOutput simpleRegular) {
+        return simpleRegularFunction.apply(simpleRegular);
+      }
     });
   }
 
   static abstract class AbstractInputOutput {
     final AbstractModuleOutput output;
-    final FieldSpec cacheField() {
+    final Optional<FieldSpec> cacheField() {
       return cacheField.apply(this);
     }
 
@@ -48,10 +59,10 @@ class DtoInputOutput {
   }
 
   static final class InputOutput extends AbstractInputOutput {
-    private final DtoModule.Module module;
+    private final Module module;
     private final SimpleGoal goal;
 
-    InputOutput(DtoModule.Module module, SimpleGoal goal, AbstractModuleOutput output) {
+    InputOutput(Module module, SimpleGoal goal, AbstractModuleOutput output) {
       super(output);
       this.module = module;
       this.goal = goal;
@@ -60,6 +71,22 @@ class DtoInputOutput {
     @Override
     <R> R accept(InputOutputCases<R> cases) {
       return cases.simple(this);
+    }
+  }
+
+  static final class SimpleRegularInputOutput extends AbstractInputOutput {
+    private final RegularContractModule module;
+    private final SimpleStaticMethodGoalContext goal;
+
+    SimpleRegularInputOutput(RegularContractModule module, SimpleStaticMethodGoalContext goal, AbstractModuleOutput output) {
+      super(output);
+      this.module = module;
+      this.goal = goal;
+    }
+
+    @Override
+    <R> R accept(InputOutputCases<R> cases) {
+      return cases.simpleRegular(this);
     }
   }
 
@@ -79,10 +106,11 @@ class DtoInputOutput {
     }
   }
 
-  private static Function<AbstractInputOutput, FieldSpec> cacheField =
+  private static Function<AbstractInputOutput, Optional<FieldSpec>> cacheField =
       inputOutputCases(
-          simple -> simple.module.cacheField(simple.goal),
-          projected -> projected.module.cacheField(projected.goal));
+          simple -> Optional.of(simple.module.cacheField(simple.goal)),
+          projected -> Optional.of(projected.module.cacheField(projected.goal)),
+          simpleRegular -> Optional.empty());
 
   private DtoInputOutput() {
     throw new UnsupportedOperationException("no instances");

@@ -3,12 +3,14 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
+import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescriptionCases;
 
 import java.util.List;
 import java.util.function.Function;
@@ -92,8 +94,39 @@ public final class DtoRegularGoalDescription {
     }
 
     @Override
-    public <R> R acceptSimple(DtoSimpleDescription.SimpleDescriptionCases<R> cases) {
+    public <R> R acceptSimple(SimpleDescriptionCases<R> cases) {
       return cases.regular(this);
+    }
+  }
+
+  /**
+   * Describes of a goal that represents either a static method or an instance method, or a constructor.
+   */
+  public static final class SimpleStaticGoalDescription
+      implements SimpleDescription {
+
+    final List<SimpleParameter> parameters;
+    final StaticMethodGoalDetails details;
+    final List<TypeName> thrownTypes;
+
+    private SimpleStaticGoalDescription(StaticMethodGoalDetails details,
+                                        List<TypeName> thrownTypes,
+                                        List<SimpleParameter> parameters) {
+      this.details = details;
+      this.parameters = parameters;
+      this.thrownTypes = thrownTypes;
+    }
+
+    public static SimpleStaticGoalDescription create(StaticMethodGoalDetails details,
+                                                     List<TypeName> thrownTypes,
+                                                     List<SimpleParameter> parameters) {
+      checkParameterNames(details.parameterNames, parameters);
+      return new SimpleStaticGoalDescription(details, thrownTypes, parameters);
+    }
+
+    @Override
+    public <R> R acceptSimple(SimpleDescriptionCases<R> cases) {
+      return cases.regularStatic(this);
     }
   }
 

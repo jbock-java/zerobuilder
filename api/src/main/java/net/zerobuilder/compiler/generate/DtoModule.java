@@ -2,22 +2,21 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
-import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
@@ -68,20 +67,14 @@ public final class DtoModule {
   public static abstract class ContractModule extends Module {
     protected abstract ContractModuleOutput process(SimpleGoal goal);
 
-    protected final List<ClassName> stepInterfaceTypes(SimpleGoal goal) {
-      return transform(steps(goal), step -> contractType(goal).nestedClass(step.thisType));
-    }
-
-    public final ClassName contractType(SimpleGoal goal) {
-      String contractName = upcase(name.apply(goal)) + upcase(name());
-      return context.apply(goal)
-          .generatedType.nestedClass(contractName);
-    }
-
     @Override
     public final <R, P> R accept(ModuleCases<R, P> cases, P p) {
       return cases.contract(this, p);
     }
+  }
+
+  public static abstract class RegularContractModule {
+    protected abstract ContractModuleOutput process(SimpleStaticMethodGoalContext goal);
   }
 
   static <R, P> BiFunction<Module, P, R> asFunction(ModuleCases<R, P> cases) {

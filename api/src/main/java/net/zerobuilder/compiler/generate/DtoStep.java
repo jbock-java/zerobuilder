@@ -101,7 +101,7 @@ public final class DtoStep {
     }
     abstract <R> R accept(StepCases<R> cases);
 
-    final AbstractParameter abstractParameter() {
+    public final AbstractParameter abstractParameter() {
       return abstractParameter.apply(this);
     }
   }
@@ -111,12 +111,12 @@ public final class DtoStep {
     R beanStep(AbstractBeanStep bean);
   }
 
-  static <R> Function<AbstractStep, R> asFunction(final StepCases<R> cases) {
+  public static <R> Function<AbstractStep, R> asFunction(final StepCases<R> cases) {
     return abstractStep -> abstractStep.accept(cases);
   }
 
-  static <R> StepCases<R> stepCases(final Function<? super AbstractRegularStep, R> regularFunction,
-                                    final Function<? super AbstractBeanStep, R> beanFunction) {
+  public static <R> StepCases<R> stepCases(final Function<? super AbstractRegularStep, R> regularFunction,
+                                           final Function<? super AbstractBeanStep, R> beanFunction) {
     return new StepCases<R>() {
       @Override
       public R regularStep(AbstractRegularStep step) {
@@ -141,7 +141,7 @@ public final class DtoStep {
     }
   });
 
-  static <R> Function<AbstractStep, R> always(final Function<AbstractStep, R> parameterFunction) {
+  public static <R> Function<AbstractStep, R> always(final Function<AbstractStep, R> parameterFunction) {
     return asFunction(new StepCases<R>() {
       @Override
       public R regularStep(AbstractRegularStep step) {

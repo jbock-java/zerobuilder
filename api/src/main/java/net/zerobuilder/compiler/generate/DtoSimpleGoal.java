@@ -54,10 +54,10 @@ public final class DtoSimpleGoal {
   static final Function<SimpleGoal, TypeName> goalType =
       restrict(AbstractGoalContext::goalType);
 
-  static final Function<SimpleGoal, DtoContext.BuildersContext> context =
+  public static final Function<SimpleGoal, DtoContext.BuildersContext> context =
       restrict(AbstractGoalContext::context);
 
-  static final Function<SimpleGoal, String> name =
+  public static final Function<SimpleGoal, String> name =
       restrict(AbstractGoalContext::name);
 
   public static final Function<SimpleGoal, List<? extends AbstractStep>> abstractSteps =

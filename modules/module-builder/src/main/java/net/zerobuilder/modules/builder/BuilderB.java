@@ -11,7 +11,6 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoStep;
-import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,9 +28,8 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
-import static net.zerobuilder.compiler.generate.Step.nullCheck;
+import static net.zerobuilder.modules.builder.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.generate.ZeroUtil.distinctFrom;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;

@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler.generate;
+package net.zerobuilder.modules.builder;
 
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -7,6 +7,8 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoParameter;
+import net.zerobuilder.compiler.generate.DtoStep;
 
 import java.util.Optional;
 import java.util.function.Function;

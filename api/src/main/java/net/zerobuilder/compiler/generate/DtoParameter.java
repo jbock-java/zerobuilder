@@ -63,7 +63,7 @@ public final class DtoParameter {
     public abstract <R> R acceptParameter(ParameterCases<R> cases);
   }
 
-  static final Function<AbstractParameter, String> parameterName = parameterCases(
+  public static final Function<AbstractParameter, String> parameterName = parameterCases(
       parameter -> parameter.name,
       parameter -> parameter.name());
 

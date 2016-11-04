@@ -24,14 +24,17 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
+import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
+import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.simpleGoalCases;
-import static net.zerobuilder.compiler.generate.Step.asStepInterface;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
+import static net.zerobuilder.modules.builder.Step.asStepInterface;
 
 public final class Builder extends ContractModule {
 
@@ -110,6 +113,16 @@ public final class Builder extends ContractModule {
         goalToBuilder(generatorB, generatorV).apply(goal),
         defineBuilderImpl(goal, builderB, builderV),
         defineContract(goal));
+  }
+
+  List<ClassName> stepInterfaceTypes(SimpleGoal goal) {
+    return transform(abstractSteps.apply(goal), step -> contractType(goal).nestedClass(step.thisType));
+  }
+
+  ClassName contractType(SimpleGoal goal) {
+    String contractName = upcase(name.apply(goal)) + upcase(name());
+    return context.apply(goal)
+        .generatedType.nestedClass(contractName);
   }
 
   @Override

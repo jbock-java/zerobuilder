@@ -18,6 +18,7 @@
     <modules>
         <module>module-builder</module>
         <module>module-updater</module>
+        <module>module-generics</module>
     </modules>
 
 </project>

@@ -1,8 +1,11 @@
 package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoModule.Module;
+import net.zerobuilder.compiler.generate.DtoModule.RegularContractModule;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleStaticGoalDescription;
 import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
 import java.util.function.BiFunction;
@@ -12,6 +15,7 @@ public final class DtoDescriptionInput {
 
   interface DescriptionInputCases<R> {
     R simple(SimpleDescriptionInput simple);
+    R simpleRegular(SimpleRegularDescriptionInput simple);
     R projected(ProjectedDescriptionInput projected);
   }
 
@@ -25,11 +29,16 @@ public final class DtoDescriptionInput {
 
   static <R> Function<DescriptionInput, R> descriptionInputCases(
       BiFunction<Module, SimpleDescription, R> simpleFunction,
+      BiFunction<RegularContractModule, SimpleStaticGoalDescription, R> simpleRegularFunction,
       BiFunction<ProjectedModule, ProjectedDescription, R> projectedFunction) {
     return asFunction(new DescriptionInputCases<R>() {
       @Override
       public R simple(SimpleDescriptionInput simple) {
         return simpleFunction.apply(simple.module, simple.description);
+      }
+      @Override
+      public R simpleRegular(SimpleRegularDescriptionInput simple) {
+        return simpleRegularFunction.apply(simple.module, simple.description);
       }
       @Override
       public R projected(ProjectedDescriptionInput projected) {
@@ -49,6 +58,20 @@ public final class DtoDescriptionInput {
     @Override
     public <R> R accept(DescriptionInputCases<R> cases) {
       return cases.simple(this);
+    }
+  }
+
+  public static final class SimpleRegularDescriptionInput implements DescriptionInput {
+    final RegularContractModule module;
+    final SimpleStaticGoalDescription description;
+    public SimpleRegularDescriptionInput(RegularContractModule module, SimpleStaticGoalDescription description) {
+      this.module = module;
+      this.description = description;
+    }
+
+    @Override
+    public <R> R accept(DescriptionInputCases<R> cases) {
+      return cases.simpleRegular(this);
     }
   }
 
