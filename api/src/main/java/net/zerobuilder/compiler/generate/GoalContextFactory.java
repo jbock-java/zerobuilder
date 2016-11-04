@@ -223,8 +223,6 @@ final class GoalContextFactory {
             simpleDescriptionCases(
                 regular -> GoalContextFactory.prepareRegular(
                     context, regular),
-                regular -> GoalContextFactory.prepareSimpleRegular(
-                    context, regular),
                 bean -> GoalContextFactory.prepareBean(
                     context, bean)).apply(description)),
         (module, description) -> new SimpleRegularGoalInput(

@@ -102,8 +102,7 @@ public final class DtoRegularGoalDescription {
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
-  public static final class SimpleStaticGoalDescription
-      implements SimpleDescription {
+  public static final class SimpleStaticGoalDescription {
 
     final List<SimpleParameter> parameters;
     final StaticMethodGoalDetails details;
@@ -122,11 +121,6 @@ public final class DtoRegularGoalDescription {
                                                      List<SimpleParameter> parameters) {
       checkParameterNames(details.parameterNames, parameters);
       return new SimpleStaticGoalDescription(details, thrownTypes, parameters);
-    }
-
-    @Override
-    public <R> R acceptSimple(SimpleDescriptionCases<R> cases) {
-      return cases.regularStatic(this);
     }
   }
 
