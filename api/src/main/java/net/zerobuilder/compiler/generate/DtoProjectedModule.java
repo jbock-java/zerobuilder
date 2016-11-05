@@ -76,16 +76,6 @@ public final class DtoProjectedModule {
 
     protected abstract ContractModuleOutput process(ProjectedGoal goal);
 
-    protected final ClassName contractType(ProjectedGoal goal) {
-      String contractName = upcase(goalContext(goal).name()) + upcase(name());
-      return context.apply(goalContext(goal))
-          .generatedType.nestedClass(contractName);
-    }
-
-    protected final List<ClassName> stepInterfaceTypes(ProjectedGoal goal) {
-      return transform(steps(goal), step -> contractType(goal).nestedClass(step.thisType));
-    }
-
     @Override
     public final <R, P> R accept(ProjectedModuleCases<R, P> cases, P p) {
       return cases.contract(this, p);

@@ -76,7 +76,7 @@ public final class DtoGoalContext {
               method -> method.context,
               constructor -> constructor.context));
 
-  static final Function<AbstractGoalContext, BuildersContext> context =
+  public static final Function<AbstractGoalContext, BuildersContext> context =
       goalCases(
           regularContext,
           bean -> bean.context);

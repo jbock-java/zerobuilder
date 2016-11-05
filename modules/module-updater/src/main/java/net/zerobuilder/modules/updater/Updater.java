@@ -30,6 +30,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.context;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.goalType;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.projectedGoalCases;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
@@ -39,6 +40,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class Updater extends ProjectedSimpleModule {
 
