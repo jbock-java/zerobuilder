@@ -6,18 +6,19 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoModule;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -122,8 +123,8 @@ public final class Builder extends Module {
     GeneratorV generatorV = new GeneratorV(this);
     return new ContractModuleOutput(
         goalToBuilder(generatorB, generatorV).apply(goal),
-        defineBuilderImpl(goal, builderB, builderV),
-        defineContract(goal),
+        asList(defineBuilderImpl(goal, builderB, builderV),
+            defineContract(goal)),
         singletonList(cacheField(goal)));
   }
 

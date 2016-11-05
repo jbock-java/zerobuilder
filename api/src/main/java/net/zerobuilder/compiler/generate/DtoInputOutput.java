@@ -17,7 +17,10 @@ class DtoInputOutput {
   }
 
   static abstract class AbstractInputOutput {
-    final AbstractModuleOutput output;
+    private final AbstractModuleOutput output;
+    final AbstractModuleOutput output() {
+      return output;
+    }
 
     AbstractInputOutput(AbstractModuleOutput output) {
       this.output = output;
@@ -30,10 +33,14 @@ class DtoInputOutput {
     private final Module module;
     private final SimpleGoal goal;
 
-    InputOutput(Module module, SimpleGoal goal, AbstractModuleOutput output) {
+    private InputOutput(Module module, SimpleGoal goal, AbstractModuleOutput output) {
       super(output);
       this.module = module;
       this.goal = goal;
+    }
+
+    static InputOutput create(Module module, SimpleGoal goal) {
+      return new InputOutput(module, goal, module.process(goal));
     }
 
     @Override
@@ -46,10 +53,14 @@ class DtoInputOutput {
     private final RegularContractModule module;
     private final SimpleStaticMethodGoalContext goal;
 
-    SimpleRegularInputOutput(RegularContractModule module, SimpleStaticMethodGoalContext goal, AbstractModuleOutput output) {
+    private SimpleRegularInputOutput(RegularContractModule module, SimpleStaticMethodGoalContext goal, AbstractModuleOutput output) {
       super(output);
       this.module = module;
       this.goal = goal;
+    }
+
+    static SimpleRegularInputOutput create(RegularContractModule module, SimpleStaticMethodGoalContext goal) {
+      return new SimpleRegularInputOutput(module, goal, module.process(goal));
     }
 
     @Override
@@ -59,13 +70,17 @@ class DtoInputOutput {
   }
 
   static final class ProjectedInputOutput extends AbstractInputOutput {
-    final ProjectedModule module;
-    final ProjectedGoal goal;
+    private final ProjectedModule module;
+    private final ProjectedGoal goal;
 
-    ProjectedInputOutput(ProjectedModule module, ProjectedGoal goal, AbstractModuleOutput output) {
+    private ProjectedInputOutput(ProjectedModule module, ProjectedGoal goal, AbstractModuleOutput output) {
       super(output);
       this.module = module;
       this.goal = goal;
+    }
+
+    static ProjectedInputOutput create(ProjectedModule module, ProjectedGoal goal) {
+      return new ProjectedInputOutput(module, goal, module.process(goal));
     }
 
     @Override

@@ -8,11 +8,14 @@ import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalCon
 import net.zerobuilder.compiler.generate.DtoModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -23,7 +26,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 public final class GenericsBuilder extends DtoModule.RegularContractModule {
 
   private List<TypeSpec> stepInterfaces(SimpleStaticMethodGoalContext goal) {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   private TypeSpec defineContract(SimpleStaticMethodGoalContext goal) {
@@ -65,8 +68,7 @@ public final class GenericsBuilder extends DtoModule.RegularContractModule {
   protected ContractModuleOutput process(SimpleStaticMethodGoalContext goal) {
     return new ContractModuleOutput(
         builderMethod(goal),
-        defineImpl(goal),
-        defineContract(goal),
-        Collections.emptyList());
+        asList(defineImpl(goal), defineContract(goal)),
+        emptyList());
   }
 }

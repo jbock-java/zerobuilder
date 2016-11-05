@@ -6,10 +6,8 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
@@ -138,16 +136,6 @@ public final class DtoGeneratorOutput {
      */
     public ClassName generatedType() {
       return generatedType;
-    }
-  }
-
-  static final class SingleModuleOutputWithField {
-    final SimpleModuleOutput output;
-    final Optional<FieldSpec> field;
-
-    SingleModuleOutputWithField(SimpleModuleOutput output, Optional<FieldSpec> field) {
-      this.output = output;
-      this.field = field;
     }
   }
 

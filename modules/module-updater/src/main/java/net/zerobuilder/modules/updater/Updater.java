@@ -9,9 +9,8 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoModule;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
@@ -194,12 +193,13 @@ public final class Updater extends ProjectedModule {
   }
 
   @Override
-  protected SimpleModuleOutput process(ProjectedGoal goal) {
+  protected ContractModuleOutput
+  process(ProjectedGoal goal) {
     GeneratorB generatorB = new GeneratorB(this);
     GeneratorV generatorV = new GeneratorV(this);
-    return new SimpleModuleOutput(
+    return new ContractModuleOutput(
         goalToUpdater(generatorB, generatorV).apply(goal),
-        defineUpdater(goal),
+        Collections.singletonList(defineUpdater(goal)),
         Collections.singletonList(cacheField(goal)));
   }
 }

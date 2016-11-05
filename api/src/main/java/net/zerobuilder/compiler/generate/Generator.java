@@ -14,21 +14,18 @@ import net.zerobuilder.compiler.generate.DtoInputOutput.ProjectedInputOutput;
 import net.zerobuilder.compiler.generate.DtoInputOutput.SimpleRegularInputOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collector;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
-import static net.zerobuilder.compiler.generate.DtoModuleOutput.moduleOutputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
+import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.listCollector;
-import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class Generator {
 
@@ -57,12 +54,16 @@ public final class Generator {
   }
 
   private static List<BuilderMethod> methods(List<AbstractInputOutput> inputOutputs) {
-    return transform(inputOutputs, tmp -> tmp.output.method);
+    return inputOutputs.stream()
+        .map(AbstractInputOutput::output)
+        .map(AbstractModuleOutput::method)
+        .collect(toList());
   }
 
   private static List<TypeSpec> types(List<AbstractInputOutput> inputOutputs) {
     return inputOutputs.stream()
-        .map(tmp -> nestedTypes.apply(tmp.output))
+        .map(AbstractInputOutput::output)
+        .map(AbstractModuleOutput::typeSpecs)
         .collect(flatList());
   }
 
@@ -70,26 +71,18 @@ public final class Generator {
     if (context.lifecycle == NEW_INSTANCE) {
       return emptyList();
     }
-    List<FieldSpec> fields = new ArrayList<>(inputOutputs.size() + 1);
-    fields.add(context.cache.get());
-    inputOutputs.forEach(tmp ->
-        tmp.output.cacheFields.forEach(fields::add));
-    return fields;
+    List<FieldSpec> fieldSpecs = inputOutputs.stream()
+        .map(AbstractInputOutput::output)
+        .map(AbstractModuleOutput::cacheFields)
+        .collect(flatList());
+    return concat(context.cache.get(), fieldSpecs);
   }
 
   private static final Function<AbstractGoalInput, AbstractInputOutput> process =
       goalInputCases(
-          simpleInput -> new InputOutput(simpleInput.module, simpleInput.goal,
-              simpleInput.module.process(simpleInput.goal)),
-          projectedInput -> new ProjectedInputOutput(projectedInput.module, projectedInput.goal,
-              projectedInput.module.process(projectedInput.goal)),
-          simpleRegular -> new SimpleRegularInputOutput(simpleRegular.module, simpleRegular.goal,
-              simpleRegular.module.process(simpleRegular.goal)));
-
-  private static final Function<AbstractModuleOutput, List<TypeSpec>> nestedTypes =
-      moduleOutputCases(
-          simple -> singletonList(simple.impl),
-          contract -> asList(contract.impl, contract.contract));
+          simple -> InputOutput.create(simple.module, simple.goal),
+          projected -> ProjectedInputOutput.create(projected.module, projected.goal),
+          regular -> SimpleRegularInputOutput.create(regular.module, regular.goal));
 
   private Generator() {
     throw new UnsupportedOperationException("no instances");
