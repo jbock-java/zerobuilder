@@ -1,12 +1,13 @@
 package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.List;
 import java.util.function.Function;
+
+import static java.util.Collections.unmodifiableList;
 
 public final class DtoSimpleGoal {
 
@@ -38,23 +39,29 @@ public final class DtoSimpleGoal {
     });
   }
 
-  static <R> Function<SimpleGoal, R> restrict(Function<AbstractGoalContext, R> function) {
-    return simpleGoalCases(
-        regular -> function.apply(regular),
-        bean -> function.apply(bean)
-    );
-  }
-
   public static final Function<SimpleGoal, DtoContext.BuildersContext> context =
-      restrict(AbstractGoalContext::context);
+      simpleGoalCases(
+          DtoRegularGoal.regularGoalContextCases(
+              constructor -> constructor.context,
+              method -> method.context,
+              staticMethod -> staticMethod.context),
+          bean -> bean.context);
 
   public static final Function<SimpleGoal, String> name =
       simpleGoalCases(
-          simpleRegularGoalContext -> simpleRegularGoalContext.regularDetails().name,
+          DtoRegularGoal.regularGoalContextCases(
+              constructor -> constructor.details.name,
+              method -> method.details.name,
+              staticMethod -> staticMethod.details.name),
           bean -> bean.details.name);
 
   public static final Function<SimpleGoal, List<? extends AbstractStep>> abstractSteps =
-      restrict(AbstractGoalContext::steps);
+      simpleGoalCases(
+          DtoRegularGoal.regularGoalContextCases(
+              constructor -> constructor.steps,
+              method -> method.steps,
+              staticMethod -> staticMethod.steps),
+          bean -> unmodifiableList(bean.steps));
 
   private DtoSimpleGoal() {
     throw new UnsupportedOperationException("no instances");
