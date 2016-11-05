@@ -8,10 +8,6 @@ import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoInputOutput.AbstractInputOutput;
-import net.zerobuilder.compiler.generate.DtoInputOutput.InputOutput;
-import net.zerobuilder.compiler.generate.DtoInputOutput.ProjectedInputOutput;
-import net.zerobuilder.compiler.generate.DtoInputOutput.SimpleRegularInputOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
 
 import java.util.List;
@@ -44,7 +40,7 @@ public final class Generator {
         .collect(collectOutput(context));
   }
 
-  private static Collector<AbstractInputOutput, List<AbstractInputOutput>, GeneratorOutput> collectOutput(BuildersContext context) {
+  private static Collector<AbstractModuleOutput, List<AbstractModuleOutput>, GeneratorOutput> collectOutput(BuildersContext context) {
     return listCollector(tmpOutputs ->
         GeneratorOutput.create(
             methods(tmpOutputs),
@@ -53,36 +49,33 @@ public final class Generator {
             context));
   }
 
-  private static List<BuilderMethod> methods(List<AbstractInputOutput> inputOutputs) {
+  private static List<BuilderMethod> methods(List<AbstractModuleOutput> inputOutputs) {
     return inputOutputs.stream()
-        .map(AbstractInputOutput::output)
         .map(AbstractModuleOutput::method)
         .collect(toList());
   }
 
-  private static List<TypeSpec> types(List<AbstractInputOutput> inputOutputs) {
+  private static List<TypeSpec> types(List<AbstractModuleOutput> inputOutputs) {
     return inputOutputs.stream()
-        .map(AbstractInputOutput::output)
         .map(AbstractModuleOutput::typeSpecs)
         .collect(flatList());
   }
 
-  private static List<FieldSpec> fields(BuildersContext context, List<AbstractInputOutput> inputOutputs) {
+  private static List<FieldSpec> fields(BuildersContext context, List<AbstractModuleOutput> inputOutputs) {
     if (context.lifecycle == NEW_INSTANCE) {
       return emptyList();
     }
     List<FieldSpec> fieldSpecs = inputOutputs.stream()
-        .map(AbstractInputOutput::output)
         .map(AbstractModuleOutput::cacheFields)
         .collect(flatList());
     return concat(context.cache.get(), fieldSpecs);
   }
 
-  private static final Function<AbstractGoalInput, AbstractInputOutput> process =
+  private static final Function<AbstractGoalInput, AbstractModuleOutput> process =
       goalInputCases(
-          simple -> InputOutput.create(simple.module, simple.goal),
-          projected -> ProjectedInputOutput.create(projected.module, projected.goal),
-          regular -> SimpleRegularInputOutput.create(regular.module, regular.goal));
+          simple -> simple.module.process(simple.goal),
+          projected -> projected.module.process(projected.goal),
+          regular -> regular.module.process(regular.goal));
 
   private Generator() {
     throw new UnsupportedOperationException("no instances");
