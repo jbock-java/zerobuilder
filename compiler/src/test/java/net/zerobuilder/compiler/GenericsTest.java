@@ -27,6 +27,7 @@ public class GenericsTest {
         "final class Fuchur {",
         "  @Goal",
         "  static <K, V> Map<K, V> multiKey(List<K> keys, V value) {",
+        "    Map<K, V> m = new HashMap<>();",
         "    for (K key : keys) {",
         "      m.put(key, value);",
         "    }",
