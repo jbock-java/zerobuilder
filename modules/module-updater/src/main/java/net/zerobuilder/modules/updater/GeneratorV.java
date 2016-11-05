@@ -149,7 +149,7 @@ final class GeneratorV {
     if (context.lifecycle == REUSE_INSTANCES) {
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
       FieldSpec cache = context.cache.get();
-      FieldSpec updaterField = this.updater.legacyCacheField(goal);
+      FieldSpec updaterField = updater.cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
           .beginControlFlow("if ($N.$N._currently_in_use)", varContext, updaterField)
@@ -164,7 +164,7 @@ final class GeneratorV {
   }
 
   private ParameterSpec varUpdater(ProjectedRegularGoalContext goal) {
-    ClassName updaterType = updater.legacyImplType(goal);
+    ClassName updaterType = updater.implType(goal);
     return parameterSpec(updaterType, "updater");
   }
 

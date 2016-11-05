@@ -8,7 +8,6 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractRegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
-import net.zerobuilder.modules.builder.Builder;
 import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
@@ -16,7 +15,8 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.ProjectedDescriptio
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
-import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
+import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
+import net.zerobuilder.modules.builder.Builder;
 import net.zerobuilder.modules.updater.Updater;
 
 import javax.lang.model.element.Element;
@@ -46,7 +46,7 @@ import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 public final class Analyser {
 
   private static final ContractModule BUILDER = new Builder();
-  private static final ProjectedSimpleModule UPDATER = new Updater();
+  private static final ProjectedModule UPDATER = new Updater();
 
   public static GeneratorInput analyse(TypeElement tel) throws ValidationException {
     validateContextClass(tel);

@@ -11,7 +11,7 @@ import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
-import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
+import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
@@ -42,7 +42,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
-public final class Updater extends ProjectedSimpleModule {
+public final class Updater extends ProjectedModule {
 
   private Function<ProjectedGoal, List<FieldSpec>> fields(UpdaterB updaterB, UpdaterV updaterV) {
     return projectedGoalCases(updaterV.fieldsV, updaterB.fieldsB);
@@ -75,6 +75,13 @@ public final class Updater extends ProjectedSimpleModule {
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(updaterConstructor.apply(projectedGoal))
         .build();
+  }
+
+  public final ClassName implType(ProjectedGoal projectedGoal) {
+    AbstractGoalContext goal = goalContext(projectedGoal);
+    String implName = upcase(goal.name()) + upcase(name());
+    return context.apply(goal)
+        .generatedType.nestedClass(implName);
   }
 
   private static final Function<ProjectedRegularGoalContext, MethodSpec> regularConstructor =
@@ -163,13 +170,9 @@ public final class Updater extends ProjectedSimpleModule {
     return "updater";
   }
 
-  public final FieldSpec cacheField(ProjectedGoal goal) {
-    return legacyCacheField(goalContext(goal));
-  }
-
-  @Deprecated
-  public final FieldSpec legacyCacheField(AbstractGoalContext goal) {
-    ClassName type = legacyImplType(goal);
+  public final FieldSpec cacheField(ProjectedGoal projectedGoal) {
+    ClassName type = implType(projectedGoal);
+    AbstractGoalContext goal = goalContext(projectedGoal);
     return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
         .initializer("new $T()", type)
         .build();

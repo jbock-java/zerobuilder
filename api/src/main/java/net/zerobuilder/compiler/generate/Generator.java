@@ -16,9 +16,6 @@ import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
 import net.zerobuilder.compiler.generate.DtoModule.ModuleCases;
 import net.zerobuilder.compiler.generate.DtoModule.SimpleModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
-import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedContractModule;
-import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModuleCases;
-import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedSimpleModule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,16 +94,7 @@ public final class Generator {
                 }
               }, null)),
           projectedInput -> new ProjectedInputOutput(projectedInput.module, projectedInput.goal,
-              projectedInput.module.accept(new ProjectedModuleCases<AbstractModuleOutput, Void>() {
-                @Override
-                public AbstractModuleOutput simple(ProjectedSimpleModule module, Void aVoid) {
-                  return module.process(projectedInput.goal);
-                }
-                @Override
-                public AbstractModuleOutput contract(ProjectedContractModule module, Void aVoid) {
-                  return module.process(projectedInput.goal);
-                }
-              }, null)),
+              projectedInput.module.process(projectedInput.goal)),
           simpleRegular -> new SimpleRegularInputOutput(simpleRegular.module, simpleRegular.goal,
               simpleRegular.module.process(simpleRegular.goal)));
 
