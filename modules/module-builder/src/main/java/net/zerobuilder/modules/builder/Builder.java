@@ -6,7 +6,8 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
+import net.zerobuilder.compiler.generate.DtoModule;
+import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
@@ -37,7 +38,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.Step.asStepInterface;
 
-public final class Builder extends ContractModule {
+public final class Builder extends Module {
 
   private List<TypeSpec> stepInterfaces(SimpleGoal goal) {
     return transform(abstractSteps.apply(goal), asStepInterface(goal));
@@ -60,6 +61,9 @@ public final class Builder extends ContractModule {
     return contract.peerClass(contract.simpleName() + "Impl");
   }
 
+  String methodName(SimpleGoal goal) {
+    return name.apply(goal) + upcase(name());
+  }
 
   private TypeSpec defineBuilderImpl(SimpleGoal goal, BuilderB builderB, BuilderV builderV) {
     return classBuilder(implType(goal))

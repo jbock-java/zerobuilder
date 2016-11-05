@@ -14,7 +14,7 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.ProjectedDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
-import net.zerobuilder.compiler.generate.DtoModule.ContractModule;
+import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
 import net.zerobuilder.modules.builder.Builder;
 import net.zerobuilder.modules.updater.Updater;
@@ -45,7 +45,7 @@ import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 
 public final class Analyser {
 
-  private static final ContractModule BUILDER = new Builder();
+  private static final Module BUILDER = new Builder();
   private static final ProjectedModule UPDATER = new Updater();
 
   public static GeneratorInput analyse(TypeElement tel) throws ValidationException {
