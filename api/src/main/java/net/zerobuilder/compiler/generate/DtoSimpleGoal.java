@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
@@ -8,8 +7,6 @@ import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.List;
 import java.util.function.Function;
-
-import static java.util.function.Function.identity;
 
 public final class DtoSimpleGoal {
 
@@ -48,21 +45,17 @@ public final class DtoSimpleGoal {
     );
   }
 
-  static final Function<SimpleGoal, AbstractGoalContext> goalContext =
-      restrict(identity());
-
-  static final Function<SimpleGoal, TypeName> goalType =
-      restrict(AbstractGoalContext::goalType);
-
   public static final Function<SimpleGoal, DtoContext.BuildersContext> context =
       restrict(AbstractGoalContext::context);
 
   public static final Function<SimpleGoal, String> name =
-      restrict(AbstractGoalContext::name);
+      simpleGoalCases(
+          simpleRegularGoalContext -> simpleRegularGoalContext.regularDetails().name,
+          bean -> bean.details.name);
 
   public static final Function<SimpleGoal, List<? extends AbstractStep>> abstractSteps =
       restrict(AbstractGoalContext::steps);
-  
+
   private DtoSimpleGoal() {
     throw new UnsupportedOperationException("no instances");
   }

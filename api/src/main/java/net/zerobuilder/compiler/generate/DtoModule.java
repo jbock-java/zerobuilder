@@ -27,12 +27,6 @@ public final class DtoModule {
     protected abstract String name();
     abstract <R, P> R accept(ModuleCases<R, P> cases, P p);
 
-    public final ClassName implType(SimpleGoal goal) {
-      String implName = DtoModule.implName.apply(this, goal);
-      return context.apply(goal)
-          .generatedType.nestedClass(implName);
-    }
-
     public final String methodName(SimpleGoal goal) {
       return name.apply(goal) + upcase(name());
     }

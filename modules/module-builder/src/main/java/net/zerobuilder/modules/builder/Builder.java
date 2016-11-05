@@ -55,6 +55,12 @@ public final class Builder extends ContractModule {
     return simpleGoalCases(generatorV::builderMethodV, generatorB::builderMethodB);
   }
 
+  ClassName implType(SimpleGoal goal) {
+    ClassName contract = contractType(goal);
+    return contract.peerClass(contract.simpleName() + "Impl");
+  }
+
+
   private TypeSpec defineBuilderImpl(SimpleGoal goal, BuilderB builderB, BuilderV builderV) {
     return classBuilder(implType(goal))
         .addSuperinterfaces(stepInterfaceTypes(goal))

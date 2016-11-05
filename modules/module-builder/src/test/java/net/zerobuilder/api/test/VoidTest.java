@@ -81,6 +81,7 @@ public class VoidTest {
     assertThat(method.exceptions.size(), is(0));
     assertThat(output.nestedTypes().size(), is(2));
     Map<String, List<TypeSpec>> specs = output.nestedTypes().stream().collect(groupingBy(type -> type.name));
+    System.out.println(specs.keySet());
     assertThat(specs.get("VoidBuilderImpl").size(), is(1));
     assertThat(specs.get("VoidBuilderImpl").get(0).methodSpecs.size(), is(2));
     MethodSpec messageMethod = specs.get("VoidBuilderImpl").get(0).methodSpecs.get(1);
