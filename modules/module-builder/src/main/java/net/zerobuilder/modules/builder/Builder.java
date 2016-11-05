@@ -146,8 +146,7 @@ public final class Builder extends Module {
         .generatedType.nestedClass(contractName);
   }
 
-  @Override
-  public String name() {
+  String name() {
     return "builder";
   }
 }
