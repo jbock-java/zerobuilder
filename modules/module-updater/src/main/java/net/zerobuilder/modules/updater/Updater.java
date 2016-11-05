@@ -10,6 +10,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.SimpleModuleOutput;
+import net.zerobuilder.compiler.generate.DtoProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
@@ -165,8 +166,21 @@ public final class Updater extends ProjectedModule {
   private final Function<ProjectedGoal, CodeBlock> invoke
       = projectedGoalCases(regularInvoke, this::returnBean);
 
-  @Override
-  public String name() {
+  protected final AbstractGoalContext goalContext(ProjectedGoal goal) {
+    return DtoProjectedGoal.goalContext.apply(goal);
+  }
+
+  protected final String methodName(ProjectedGoal goal) {
+    return legacyMethodName(goalContext(goal));
+  }
+
+  @Deprecated
+  public final String legacyMethodName(AbstractGoalContext goal) {
+    return goal.name() + upcase(name());
+  }
+
+
+  String name() {
     return "updater";
   }
 

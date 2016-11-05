@@ -46,7 +46,7 @@ public final class DtoProjectedGoal {
     );
   }
 
-  static final Function<ProjectedGoal, AbstractGoalContext> goalContext =
+  public static final Function<ProjectedGoal, AbstractGoalContext> goalContext =
       restrict(identity());
 
   public static final Function<ProjectedGoal, TypeName> goalType =
