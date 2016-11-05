@@ -28,7 +28,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
-import static net.zerobuilder.modules.builder.Step.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
@@ -37,42 +36,37 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.modules.builder.Step.nullCheck;
 
 final class BuilderB {
 
-  private final Builder builder;
-
-  BuilderB(Builder builder) {
-    this.builder = builder;
-  }
-
-  final Function<BeanGoalContext, List<FieldSpec>> fieldsB =
+  static final Function<BeanGoalContext, List<FieldSpec>> fieldsB =
       goal -> goal.context().lifecycle == REUSE_INSTANCES ?
           asList(
               fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
               goal.bean()) :
           singletonList(goal.bean());
 
-  final Function<BeanGoalContext, List<MethodSpec>> stepsB =
+  static final Function<BeanGoalContext, List<MethodSpec>> stepsB =
       goal -> goal.steps.stream()
           .map(stepToMethods(goal))
           .collect(flatList());
 
-  private Function<AbstractBeanStep, List<MethodSpec>> stepToMethods(
+  static Function<AbstractBeanStep, List<MethodSpec>> stepToMethods(
       BeanGoalContext goal) {
     return beanStepCases(
         step -> regularMethods(step, goal),
         step -> collectionMethods(step, goal));
   }
 
-  private List<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal) {
+  static List<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal) {
     List<MethodSpec> builder = new ArrayList<>();
     builder.add(regularStep(step, goal));
     builder.addAll(presentInstances(regularEmptyCollection(step, goal)));
     return builder;
   }
 
-  private Optional<MethodSpec> regularEmptyCollection(AccessorPairStep step, BeanGoalContext goal) {
+  static Optional<MethodSpec> regularEmptyCollection(AccessorPairStep step, BeanGoalContext goal) {
     Optional<DtoStep.CollectionInfo> maybeEmptyOption = step.emptyOption();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
@@ -92,13 +86,13 @@ final class BuilderB {
         .build());
   }
 
-  private List<MethodSpec> collectionMethods(LoneGetterStep step, BeanGoalContext goal) {
+  static List<MethodSpec> collectionMethods(LoneGetterStep step, BeanGoalContext goal) {
     return Arrays.asList(
         iterateCollection(step, goal),
         loneGetterEmptyCollection(step, goal));
   }
 
-  private MethodSpec loneGetterEmptyCollection(LoneGetterStep step, BeanGoalContext goal) {
+  static MethodSpec loneGetterEmptyCollection(LoneGetterStep step, BeanGoalContext goal) {
     return methodBuilder(step.emptyMethod)
         .addAnnotation(Override.class)
         .returns(nextType(step))
@@ -107,7 +101,7 @@ final class BuilderB {
         .build();
   }
 
-  private CodeBlock normalReturn(BeanGoalContext goal) {
+  static CodeBlock normalReturn(BeanGoalContext goal) {
     ParameterSpec varBean = parameterSpec(goal.type(),
         '_' + downcase(goal.details.goalType.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
@@ -121,7 +115,7 @@ final class BuilderB {
     return builder.addStatement("return $N", varBean).build();
   }
 
-  private MethodSpec iterateCollection(LoneGetterStep step, BeanGoalContext goal) {
+  static MethodSpec iterateCollection(LoneGetterStep step, BeanGoalContext goal) {
     String name = step.loneGetter.name();
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
@@ -143,7 +137,7 @@ final class BuilderB {
         .build();
   }
 
-  private MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal) {
+  static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal) {
     ParameterSpec parameter = step.parameter();
     return methodBuilder(step.accessorPair.name())
         .addAnnotation(Override.class)
@@ -155,5 +149,9 @@ final class BuilderB {
         .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), parameter)
         .addCode(step.isLast() ? normalReturn(goal) : statement("return this"))
         .build();
+  }
+
+  private BuilderB() {
+    throw new UnsupportedOperationException("no instances");
   }
 }

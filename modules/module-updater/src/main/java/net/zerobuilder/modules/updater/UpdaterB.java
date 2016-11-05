@@ -14,7 +14,6 @@ import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -33,41 +32,36 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
+import static net.zerobuilder.modules.updater.Updater.implType;
 
 final class UpdaterB {
 
-  private final Updater updater;
-
-  UpdaterB(Updater updater) {
-    this.updater = updater;
-  }
-
-  final Function<BeanGoalContext, List<FieldSpec>> fieldsB =
+  final static Function<BeanGoalContext, List<FieldSpec>> fieldsB =
       goal -> goal.context().lifecycle == REUSE_INSTANCES ?
           asList(
               fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
               goal.bean()) :
           singletonList(goal.bean());
 
-  final Function<BeanGoalContext, List<MethodSpec>> updateMethodsB = goal ->
+  final static Function<BeanGoalContext, List<MethodSpec>> updateMethodsB = goal ->
       goal.steps.stream()
           .map(stepToMethods(goal))
           .collect(flatList());
 
-  private Function<AbstractBeanStep, List<MethodSpec>> stepToMethods(BeanGoalContext goal) {
+  private static Function<AbstractBeanStep, List<MethodSpec>> stepToMethods(BeanGoalContext goal) {
     return beanStepCases(
         step -> regularMethods(step, goal),
         step -> collectionUpdaters(goal, step));
   }
 
-  private List<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal) {
+  private static List<MethodSpec> regularMethods(AccessorPairStep step, BeanGoalContext goal) {
     List<MethodSpec> builder = new ArrayList<>();
     builder.add(normalUpdate(goal, step));
     builder.addAll(presentInstances(regularEmptyCollection(goal, step)));
     return builder;
   }
 
-  private Optional<MethodSpec> regularEmptyCollection(BeanGoalContext goal, AccessorPairStep step) {
+  private static Optional<MethodSpec> regularEmptyCollection(BeanGoalContext goal, AccessorPairStep step) {
     Optional<CollectionInfo> maybeEmptyOption = step.emptyOption();
     if (!maybeEmptyOption.isPresent()) {
       return Optional.empty();
@@ -77,7 +71,7 @@ final class UpdaterB {
     String name = step.accessorPair.name();
     ParameterSpec emptyColl = parameterSpec(type, name);
     return Optional.of(methodBuilder(collectionInfo.name)
-        .returns(updater.implType(goal))
+        .returns(implType(goal))
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addStatement("$T $N = $L", emptyColl.type, emptyColl, collectionInfo.initializer)
         .addStatement("this.$N.$L($N)",
@@ -87,11 +81,11 @@ final class UpdaterB {
         .build());
   }
 
-  private MethodSpec normalUpdate(BeanGoalContext goal, AccessorPairStep step) {
+  private static MethodSpec normalUpdate(BeanGoalContext goal, AccessorPairStep step) {
     String name = step.accessorPair.name();
     ParameterSpec parameter = step.parameter();
     return methodBuilder(name)
-        .returns(updater.implType(goal))
+        .returns(implType(goal))
         .addExceptions(step.accessorPair.setterThrownTypes)
         .addParameter(parameter)
         .addStatement("this.$N.$L($N)",
@@ -101,21 +95,21 @@ final class UpdaterB {
         .build();
   }
 
-  private List<MethodSpec> collectionUpdaters(BeanGoalContext goal, LoneGetterStep step) {
+  private static List<MethodSpec> collectionUpdaters(BeanGoalContext goal, LoneGetterStep step) {
     List<MethodSpec> builder = new ArrayList<>();
     builder.add(iterateCollection(goal, step));
     builder.add(loneGetterEmptyCollection(goal, step));
     return builder;
   }
 
-  private MethodSpec iterateCollection(BeanGoalContext goal, LoneGetterStep step) {
+  private static MethodSpec iterateCollection(BeanGoalContext goal, LoneGetterStep step) {
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.loneGetter.iterationType()));
     String name = step.loneGetter.name();
     ParameterSpec parameter = parameterSpec(iterable, name);
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
     return methodBuilder(name)
-        .returns(updater.implType(goal))
+        .returns(implType(goal))
         .addParameter(parameter)
         .addExceptions(step.loneGetter.getterThrownTypes)
         .addCode(ZeroUtil.nullCheck(name, name))
@@ -129,9 +123,9 @@ final class UpdaterB {
         .build();
   }
 
-  private MethodSpec loneGetterEmptyCollection(BeanGoalContext goal, LoneGetterStep step) {
+  private static MethodSpec loneGetterEmptyCollection(BeanGoalContext goal, LoneGetterStep step) {
     return methodBuilder(step.emptyMethod)
-        .returns(updater.implType(goal))
+        .returns(implType(goal))
         .addExceptions(step.loneGetter.getterThrownTypes)
         .addCode(clearCollection(goal, step))
         .addStatement("return this")
@@ -139,8 +133,12 @@ final class UpdaterB {
         .build();
   }
 
-  private CodeBlock clearCollection(BeanGoalContext goal, LoneGetterStep step) {
+  private static CodeBlock clearCollection(BeanGoalContext goal, LoneGetterStep step) {
     return CodeBlock.builder().addStatement("this.$N.$N().clear()",
         goal.bean(), step.loneGetter.getter).build();
+  }
+
+  private UpdaterB() {
+    throw new UnsupportedOperationException("no instances");
   }
 }

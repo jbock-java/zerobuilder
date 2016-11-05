@@ -5,12 +5,10 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
@@ -24,20 +22,16 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContex
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.modules.builder.Builder.cacheField;
+import static net.zerobuilder.modules.builder.Builder.implType;
 
 final class GeneratorV {
 
-  private final Builder builder;
-
-  GeneratorV(Builder builder) {
-    this.builder = builder;
-  }
-
-  BuilderMethod builderMethodV(SimpleRegularGoalContext goal) {
+  static BuilderMethod builderMethodV(SimpleRegularGoalContext goal) {
     AbstractRegularDetails abstractRegularDetails = goal.regularDetails();
     List<? extends AbstractRegularStep> steps = goal.regularSteps();
-    MethodSpec.Builder method = methodBuilder(builder.methodName(goal))
-        .returns(builder.contractType(goal).nestedClass(steps.get(0).thisType))
+    MethodSpec.Builder method = methodBuilder(Builder.methodName(goal))
+        .returns(Builder.contractType(goal).nestedClass(steps.get(0).thisType))
         .addModifiers(abstractRegularDetails.access(STATIC));
     BuildersContext context = goal.context();
     ParameterSpec varInstance = parameterSpec(context.type,
@@ -51,20 +45,20 @@ final class GeneratorV {
     return new BuilderMethod(goal.name(), methodSpec);
   }
 
-  private Function<SimpleRegularGoalContext, CodeBlock> returnBlock(ParameterSpec varInstance) {
+  private static Function<SimpleRegularGoalContext, CodeBlock> returnBlock(ParameterSpec varInstance) {
     return regularGoalContextCases(
-        this::returnRegular,
+        GeneratorV::returnRegular,
         method -> returnInstanceMethod(method, varInstance),
-        this::returnRegular);
+        GeneratorV::returnRegular);
   }
 
-  private CodeBlock returnRegular(SimpleRegularGoalContext goal) {
+  private static CodeBlock returnRegular(SimpleRegularGoalContext goal) {
     ParameterSpec varBuilder = builderInstance(goal);
     BuildersContext context = goal.context();
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec goalField = builder.cacheField(goal);
+      FieldSpec goalField = cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
           .beginControlFlow("if ($N.$N._currently_in_use)", varContext, goalField)
@@ -77,28 +71,32 @@ final class GeneratorV {
     return statement("return new $T()", varBuilder.type);
   }
 
-  private CodeBlock returnInstanceMethod(
+  private static CodeBlock returnInstanceMethod(
       InstanceMethodGoalContext goal, ParameterSpec varInstance) {
     BuildersContext context = goal.context;
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec goalField = builder.cacheField(goal);
+      FieldSpec goalField = cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
           .beginControlFlow("if ($N.$N._currently_in_use)", varContext, goalField)
-          .addStatement("$N.$N = new $T()", varContext, goalField, builder.implType(goal))
+          .addStatement("$N.$N = new $T()", varContext, goalField, implType(goal))
           .endControlFlow()
           .addStatement("$N.$N._currently_in_use = true", varContext, goalField)
           .addStatement("$N.$N.$N = $N", varContext, goalField, goal.instanceField(), varInstance)
           .addStatement("return $N.$N", varContext, goalField)
           .build();
     }
-    return statement("return new $T($N)", builder.implType(goal), varInstance);
+    return statement("return new $T($N)", implType(goal), varInstance);
   }
 
-  private ParameterSpec builderInstance(SimpleRegularGoalContext goal) {
-    ClassName type = builder.implType(goal);
+  private static ParameterSpec builderInstance(SimpleRegularGoalContext goal) {
+    ClassName type = implType(goal);
     return parameterSpec(type, downcase(type.simpleName()));
+  }
+
+  private GeneratorV() {
+    throw new UnsupportedOperationException("no instances");
   }
 }

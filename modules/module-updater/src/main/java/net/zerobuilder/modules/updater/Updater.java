@@ -10,7 +10,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
@@ -25,6 +25,7 @@ import java.util.function.Function;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -45,18 +46,16 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class Updater extends ProjectedModule {
 
-  private Function<ProjectedGoal, List<FieldSpec>> fields(UpdaterB updaterB, UpdaterV updaterV) {
-    return projectedGoalCases(updaterV.fieldsV, updaterB.fieldsB);
-  }
+  private static final String moduleName = "updater";
 
-  private Function<ProjectedGoal, List<MethodSpec>> updateMethods(UpdaterB updaterB, UpdaterV updaterV) {
-    return projectedGoalCases(updaterV.updateMethodsV, updaterB.updateMethodsB);
-  }
+  private static final Function<ProjectedGoal, List<FieldSpec>> fields =
+      projectedGoalCases(UpdaterV.fieldsV, UpdaterB.fieldsB);
 
-  private Function<ProjectedGoal, DtoGeneratorOutput.BuilderMethod> goalToUpdater(
-      GeneratorB generatorB, GeneratorV generatorV) {
-    return projectedGoalCases(generatorV::updaterMethodV, generatorB::updaterMethodB);
-  }
+  private static final Function<ProjectedGoal, List<MethodSpec>> updateMethods =
+      projectedGoalCases(UpdaterV.updateMethodsV, UpdaterB.updateMethodsB);
+
+  private static final Function<ProjectedGoal, DtoGeneratorOutput.BuilderMethod> goalToUpdater =
+      projectedGoalCases(GeneratorV::updaterMethodV, GeneratorB::updaterMethodB);
 
   private MethodSpec buildMethod(ProjectedGoal goal) {
     return methodBuilder("done")
@@ -67,20 +66,18 @@ public final class Updater extends ProjectedModule {
   }
 
   private TypeSpec defineUpdater(ProjectedGoal projectedGoal) {
-    UpdaterB updaterB = new UpdaterB(this);
-    UpdaterV updaterV = new UpdaterV(this);
     return classBuilder(implType(projectedGoal))
-        .addFields(fields(updaterB, updaterV).apply(projectedGoal))
-        .addMethods(updateMethods(updaterB, updaterV).apply(projectedGoal))
+        .addFields(fields.apply(projectedGoal))
+        .addMethods(updateMethods.apply(projectedGoal))
         .addMethod(buildMethod(projectedGoal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(updaterConstructor.apply(projectedGoal))
         .build();
   }
 
-  public final ClassName implType(ProjectedGoal projectedGoal) {
+  static ClassName implType(ProjectedGoal projectedGoal) {
     AbstractGoalContext goal = goalContext(projectedGoal);
-    String implName = upcase(goal.name()) + upcase(name());
+    String implName = upcase(goal.name()) + upcase(moduleName);
     return context.apply(goal)
         .generatedType.nestedClass(implName);
   }
@@ -166,40 +163,26 @@ public final class Updater extends ProjectedModule {
   private final Function<ProjectedGoal, CodeBlock> invoke
       = projectedGoalCases(regularInvoke, this::returnBean);
 
-  protected final AbstractGoalContext goalContext(ProjectedGoal goal) {
+  static AbstractGoalContext goalContext(ProjectedGoal goal) {
     return DtoProjectedGoal.goalContext.apply(goal);
   }
 
-  protected final String methodName(ProjectedGoal goal) {
-    return legacyMethodName(goalContext(goal));
+  static String methodName(AbstractGoalContext goal) {
+    return goal.name() + upcase(moduleName);
   }
 
-  @Deprecated
-  public final String legacyMethodName(AbstractGoalContext goal) {
-    return goal.name() + upcase(name());
-  }
-
-
-  String name() {
-    return "updater";
-  }
-
-  public final FieldSpec cacheField(ProjectedGoal projectedGoal) {
+  static FieldSpec cacheField(ProjectedGoal projectedGoal) {
     ClassName type = implType(projectedGoal);
-    AbstractGoalContext goal = goalContext(projectedGoal);
     return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
         .initializer("new $T()", type)
         .build();
   }
 
   @Override
-  protected ContractModuleOutput
-  process(ProjectedGoal goal) {
-    GeneratorB generatorB = new GeneratorB(this);
-    GeneratorV generatorV = new GeneratorV(this);
-    return new ContractModuleOutput(
-        goalToUpdater(generatorB, generatorV).apply(goal),
-        Collections.singletonList(defineUpdater(goal)),
-        Collections.singletonList(cacheField(goal)));
+  protected AbstractModuleOutput process(ProjectedGoal goal) {
+    return new AbstractModuleOutput(
+        goalToUpdater.apply(goal),
+        singletonList(defineUpdater(goal)),
+        singletonList(cacheField(goal)));
   }
 }

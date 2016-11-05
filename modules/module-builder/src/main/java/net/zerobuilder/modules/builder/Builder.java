@@ -7,11 +7,10 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -41,37 +40,36 @@ import static net.zerobuilder.modules.builder.Step.asStepInterface;
 
 public final class Builder extends Module {
 
+  private static final String moduleName = "builder";
+
   private List<TypeSpec> stepInterfaces(SimpleGoal goal) {
     return transform(abstractSteps.apply(goal), asStepInterface(goal));
   }
 
-  private Function<SimpleGoal, List<MethodSpec>> steps(BuilderB builderB, BuilderV builderV) {
-    return simpleGoalCases(builderV.stepsV, builderB.stepsB);
-  }
+  private Function<SimpleGoal, List<MethodSpec>> steps =
+      simpleGoalCases(BuilderV.stepsV, BuilderB.stepsB);
 
-  private Function<SimpleGoal, List<FieldSpec>> fields(BuilderB builderB, BuilderV builderV) {
-    return simpleGoalCases(builderV.fieldsV, builderB.fieldsB);
-  }
+  private final Function<SimpleGoal, List<FieldSpec>> fields =
+      simpleGoalCases(BuilderV.fieldsV, BuilderB.fieldsB);
 
-  private Function<SimpleGoal, BuilderMethod> goalToBuilder(GeneratorB generatorB, GeneratorV generatorV) {
-    return simpleGoalCases(generatorV::builderMethodV, generatorB::builderMethodB);
-  }
+  private final Function<SimpleGoal, BuilderMethod> goalToBuilder =
+      simpleGoalCases(GeneratorV::builderMethodV, GeneratorB::builderMethodB);
 
-  ClassName implType(SimpleGoal goal) {
+  static ClassName implType(SimpleGoal goal) {
     ClassName contract = contractType(goal);
     return contract.peerClass(contract.simpleName() + "Impl");
   }
 
-  String methodName(SimpleGoal goal) {
-    return name.apply(goal) + upcase(name());
+  static String methodName(SimpleGoal goal) {
+    return name.apply(goal) + upcase(moduleName);
   }
 
-  private TypeSpec defineBuilderImpl(SimpleGoal goal, BuilderB builderB, BuilderV builderV) {
+  private TypeSpec defineBuilderImpl(SimpleGoal goal) {
     return classBuilder(implType(goal))
         .addSuperinterfaces(stepInterfaceTypes(goal))
-        .addFields(fields(builderB, builderV).apply(goal))
+        .addFields(fields.apply(goal))
         .addMethod(builderConstructor.apply(goal))
-        .addMethods(steps(builderB, builderV).apply(goal))
+        .addMethods(steps.apply(goal))
         .addModifiers(PRIVATE, STATIC, FINAL)
         .build();
   }
@@ -116,20 +114,16 @@ public final class Builder extends Module {
               .build());
 
   @Override
-  protected ContractModuleOutput process(SimpleGoal goal) {
-    BuilderB builderB = new BuilderB(this);
-    BuilderV builderV = new BuilderV(this);
-    GeneratorB generatorB = new GeneratorB(this);
-    GeneratorV generatorV = new GeneratorV(this);
-    return new ContractModuleOutput(
-        goalToBuilder(generatorB, generatorV).apply(goal),
-        asList(defineBuilderImpl(goal, builderB, builderV),
+  protected AbstractModuleOutput process(SimpleGoal goal) {
+    return new AbstractModuleOutput(
+        goalToBuilder.apply(goal),
+        asList(
+            defineBuilderImpl(goal),
             defineContract(goal)),
         singletonList(cacheField(goal)));
   }
 
-  // TODO this should not need goal argument
-  public final FieldSpec cacheField(SimpleGoal goal) {
+  static FieldSpec cacheField(SimpleGoal goal) {
     ClassName type = implType(goal);
     return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
         .initializer("new $T()", type)
@@ -141,13 +135,10 @@ public final class Builder extends Module {
     return transform(abstractSteps.apply(goal), step -> contractType(goal).nestedClass(step.thisType));
   }
 
-  ClassName contractType(SimpleGoal goal) {
-    String contractName = upcase(name.apply(goal)) + upcase(name());
+  // FIXME this should not need to access context
+  static ClassName contractType(SimpleGoal goal) {
+    String contractName = upcase(name.apply(goal)) + upcase(moduleName);
     return context.apply(goal)
         .generatedType.nestedClass(contractName);
-  }
-
-  String name() {
-    return "builder";
   }
 }

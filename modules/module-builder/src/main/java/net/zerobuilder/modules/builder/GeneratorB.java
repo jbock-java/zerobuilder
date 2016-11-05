@@ -19,19 +19,17 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.modules.builder.Builder.cacheField;
+import static net.zerobuilder.modules.builder.Builder.contractType;
+import static net.zerobuilder.modules.builder.Builder.implType;
+import static net.zerobuilder.modules.builder.Builder.methodName;
 
 final class GeneratorB {
 
-  private final Builder builder;
-
-  GeneratorB(Builder builder) {
-    this.builder = builder;
-  }
-
-  BuilderMethod builderMethodB(BeanGoalContext goal) {
+  static BuilderMethod builderMethodB(BeanGoalContext goal) {
     String name = goal.details.name;
-    MethodSpec method = methodBuilder(this.builder.methodName(goal))
-        .returns(builder.contractType(goal).nestedClass(goal.steps().get(0).thisType))
+    MethodSpec method = methodBuilder(methodName(goal))
+        .returns(contractType(goal).nestedClass(goal.steps().get(0).thisType))
         .addModifiers(goal.details.access(STATIC))
         .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
@@ -41,14 +39,14 @@ final class GeneratorB {
     return new BuilderMethod(name, method);
   }
 
-  private CodeBlock returnBuilder(BeanGoalContext goal) {
-    ClassName implType = builder.implType(goal);
+  private static CodeBlock returnBuilder(BeanGoalContext goal) {
+    ClassName implType = implType(goal);
     ParameterSpec varUpdater = parameterSpec(implType, downcase(implType.simpleName()));
     DtoContext.BuildersContext context = goal.context;
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = goal.context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec builderField = builder.cacheField(goal);
+      FieldSpec builderField = cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
           .beginControlFlow("if ($N.$N._currently_in_use)", varContext, builderField)
@@ -60,5 +58,9 @@ final class GeneratorB {
           .build();
     }
     return statement("return new $T()", implType);
+  }
+
+  private GeneratorB() {
+    throw new UnsupportedOperationException("no instances");
   }
 }

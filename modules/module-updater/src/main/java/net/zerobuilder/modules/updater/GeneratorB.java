@@ -33,38 +33,33 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.modules.updater.Updater.implType;
 
 final class GeneratorB {
 
-  private final Updater updater;
-
-  GeneratorB(Updater updater) {
-    this.updater = updater;
-  }
-
-  BuilderMethod updaterMethodB(BeanGoalContext goal) {
+  static BuilderMethod updaterMethodB(BeanGoalContext goal) {
     String name = goal.details.name;
     ClassName type = goal.details.goalType;
-    ParameterSpec updater = updaterInstance(goal);
+    ParameterSpec varUpdater = updaterInstance(goal);
     Modifier[] modifiers = goal.details.access(STATIC);
     MethodSpec method = methodBuilder(downcase(name + "Updater"))
         .addParameter(parameterSpec(type, downcase(type.simpleName())))
-        .returns(this.updater.implType(goal))
+        .returns(implType(goal))
         .addExceptions(thrownTypes(goal,
             asList(
                 AbstractBeanStep::getterThrownTypes,
                 AbstractBeanStep::setterThrownTypes)))
         .addCode(goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
-        .addCode(initVarUpdater(goal, updater))
+        .addCode(initVarUpdater(goal, varUpdater))
         .addCode(goal.steps.stream().map(copy(goal)).collect(joinCodeBlocks))
-        .addStatement("return $N", updater)
+        .addStatement("return $N", varUpdater)
         .addModifiers(modifiers)
         .build();
     return new BuilderMethod(name, method);
   }
 
-  private Set<TypeName> thrownTypes(BeanGoalContext goal,
-                                    List<Function<AbstractBeanStep, List<TypeName>>> functions) {
+  private static Set<TypeName> thrownTypes(BeanGoalContext goal,
+                                           List<Function<AbstractBeanStep, List<TypeName>>> functions) {
     Set<TypeName> thrownTypes = new HashSet<>();
     for (Function<AbstractBeanStep, List<TypeName>> function : functions) {
       thrownTypes.addAll(goal.steps.stream()
@@ -77,13 +72,13 @@ final class GeneratorB {
     return thrownTypes;
   }
 
-  private Function<AbstractBeanStep, CodeBlock> copy(BeanGoalContext goal) {
+  private static Function<AbstractBeanStep, CodeBlock> copy(BeanGoalContext goal) {
     return beanStepCases(
         step -> copyRegular(goal, step),
         step -> copyCollection(goal, step));
   }
 
-  private Function<AbstractBeanStep, CodeBlock> nullChecks(BeanGoalContext goal) {
+  private static Function<AbstractBeanStep, CodeBlock> nullChecks(BeanGoalContext goal) {
     return beanStepCases(
         step -> step.accessorPair.nullPolicy == ALLOW
             ? emptyCodeBlock
@@ -91,7 +86,7 @@ final class GeneratorB {
         step -> nullCheck(goal, step.loneGetter));
   }
 
-  private CodeBlock copyCollection(BeanGoalContext goal, LoneGetterStep step) {
+  private static CodeBlock copyCollection(BeanGoalContext goal, LoneGetterStep step) {
     ClassName type = goal.details.goalType;
     ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
     ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
@@ -107,7 +102,7 @@ final class GeneratorB {
         .build();
   }
 
-  private CodeBlock copyRegular(BeanGoalContext goal, AccessorPairStep step) {
+  private static CodeBlock copyRegular(BeanGoalContext goal, AccessorPairStep step) {
     ClassName type = goal.details.goalType;
     ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
     ParameterSpec updater = updaterInstance(goal);
@@ -120,7 +115,7 @@ final class GeneratorB {
         .build();
   }
 
-  private CodeBlock nullCheck(BeanGoalContext goal, AbstractBeanParameter beanParameter) {
+  private static CodeBlock nullCheck(BeanGoalContext goal, AbstractBeanParameter beanParameter) {
     ClassName type = goal.details.goalType;
     ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
     return CodeBlock.builder()
@@ -131,12 +126,12 @@ final class GeneratorB {
         .endControlFlow().build();
   }
 
-  private CodeBlock initVarUpdater(BeanGoalContext goal, ParameterSpec varUpdater) {
+  private static CodeBlock initVarUpdater(BeanGoalContext goal, ParameterSpec varUpdater) {
     BuildersContext context = goal.context();
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec updaterField = updater.cacheField(goal);
+      FieldSpec updaterField = Updater.cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
           .beginControlFlow("if ($N.$N._currently_in_use)", varContext, updaterField)
@@ -150,8 +145,11 @@ final class GeneratorB {
     return statement("$T $N = new $T()", varUpdater.type, varUpdater, varUpdater.type);
   }
 
-  private ParameterSpec updaterInstance(BeanGoalContext goal) {
-    ClassName updaterType = updater.implType(goal);
+  private static ParameterSpec updaterInstance(BeanGoalContext goal) {
+    ClassName updaterType = implType(goal);
     return parameterSpec(updaterType, "updater");
+  }
+  private GeneratorB() {
+    throw new UnsupportedOperationException("no instances");
   }
 }
