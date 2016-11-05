@@ -4,10 +4,9 @@ import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
+import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularContractModule;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
-import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.List;

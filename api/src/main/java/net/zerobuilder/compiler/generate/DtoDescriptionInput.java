@@ -1,10 +1,9 @@
 package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoModule.Module;
+import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularContractModule;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
-import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleStaticGoalDescription;
 import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 

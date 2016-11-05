@@ -14,8 +14,9 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.ProjectedDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
+import net.zerobuilder.compiler.generate.DtoModule;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
-import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
+import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.modules.builder.Builder;
 import net.zerobuilder.modules.updater.Updater;
 
