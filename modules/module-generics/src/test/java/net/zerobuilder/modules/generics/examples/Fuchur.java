@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler.examples;
+package net.zerobuilder.modules.generics.examples;
 
 import java.util.HashMap;
 import java.util.List;

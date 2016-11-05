@@ -1,24 +1,24 @@
-package net.zerobuilder.compiler.examples;
+package net.zerobuilder.modules.generics.examples;
 
 import java.util.List;
 import java.util.Map;
 
-public final class TrickyGenericsBuilders {
-
-  public static GetListBuilder.Keys getListBuilder() {
-    return GetListBuilderImpl.getListBuilder;
+public final class FuchurBuilders {
+  
+  public static MultiKeyBuilder.Keys multiKeyBuilder() {
+    return MultiKeyBuilderImpl.multiKeyBuilder;
   }
 
-  private static final class GetListBuilderImpl implements GetListBuilder.Keys {
+  private static final class MultiKeyBuilderImpl implements MultiKeyBuilder.Keys {
 
-    static final GetListBuilderImpl getListBuilder = new GetListBuilderImpl();
+    static final MultiKeyBuilderImpl multiKeyBuilder = new MultiKeyBuilderImpl();
 
     @Override
-    public <K> GetListBuilder.Value<K> keys(List<K> keys) {
+    public <K> MultiKeyBuilder.Value<K> keys(List<K> keys) {
       return new ValueImpl<>(keys);
     }
 
-    private static final class ValueImpl<K> implements GetListBuilder.Value<K> {
+    private static final class ValueImpl<K> implements MultiKeyBuilder.Value<K> {
 
       private final List<K> keys;
 
@@ -33,7 +33,7 @@ public final class TrickyGenericsBuilders {
     }
   }
 
-  public static final class GetListBuilder {
+  public static final class MultiKeyBuilder {
 
     public interface Keys {
       <K> Value<K> keys(List<K> keys);
@@ -43,12 +43,12 @@ public final class TrickyGenericsBuilders {
       <V> Map<K, V> value(V value);
     }
 
-    private GetListBuilder() {
+    private MultiKeyBuilder() {
       throw new UnsupportedOperationException("no instances");
     }
   }
 
-  private TrickyGenericsBuilders() {
+  private FuchurBuilders() {
     throw new UnsupportedOperationException("no instances");
   }
 }
