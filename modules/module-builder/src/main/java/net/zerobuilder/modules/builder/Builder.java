@@ -135,7 +135,6 @@ public final class Builder extends Module {
     return transform(abstractSteps.apply(goal), step -> contractType(goal).nestedClass(step.thisType));
   }
 
-  // FIXME this should not need to access context
   static ClassName contractType(SimpleGoal goal) {
     String contractName = upcase(name.apply(goal)) + upcase(moduleName);
     return context.apply(goal)
