@@ -17,6 +17,7 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -112,8 +113,18 @@ public final class Builder extends ContractModule {
     return new ContractModuleOutput(
         goalToBuilder(generatorB, generatorV).apply(goal),
         defineBuilderImpl(goal, builderB, builderV),
-        defineContract(goal));
+        defineContract(goal),
+        singletonList(cacheField(goal)));
   }
+
+  // TODO this should not need goal argument
+  public final FieldSpec cacheField(SimpleGoal goal) {
+    ClassName type = implType(goal);
+    return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
+        .initializer("new $T()", type)
+        .build();
+  }
+
 
   List<ClassName> stepInterfaceTypes(SimpleGoal goal) {
     return transform(abstractSteps.apply(goal), step -> contractType(goal).nestedClass(step.thisType));

@@ -54,18 +54,6 @@ public final class DtoProjectedModule {
       return goal.name() + upcase(name());
     }
 
-    public final FieldSpec cacheField(ProjectedGoal goal) {
-      return legacyCacheField(goalContext(goal));
-    }
-
-    @Deprecated
-    public final FieldSpec legacyCacheField(AbstractGoalContext goal) {
-      ClassName type = legacyImplType(goal);
-      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
-          .initializer("new $T()", type)
-          .build();
-    }
-
     protected final List<? extends DtoStep.AbstractStep> steps(ProjectedGoal goal) {
       return abstractSteps.apply(goalContext(goal));
     }

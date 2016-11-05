@@ -29,6 +29,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.goalType;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.projectedGoalCases;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
@@ -160,12 +161,25 @@ public final class Updater extends ProjectedSimpleModule {
     return "updater";
   }
 
+  public final FieldSpec cacheField(ProjectedGoal goal) {
+    return legacyCacheField(goalContext(goal));
+  }
+
+  @Deprecated
+  public final FieldSpec legacyCacheField(AbstractGoalContext goal) {
+    ClassName type = legacyImplType(goal);
+    return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
+        .initializer("new $T()", type)
+        .build();
+  }
+
   @Override
   protected SimpleModuleOutput process(ProjectedGoal goal) {
     GeneratorB generatorB = new GeneratorB(this);
     GeneratorV generatorV = new GeneratorV(this);
     return new SimpleModuleOutput(
         goalToUpdater(generatorB, generatorV).apply(goal),
-        defineUpdater(goal));
+        defineUpdater(goal),
+        Collections.singletonList(cacheField(goal)));
   }
 }

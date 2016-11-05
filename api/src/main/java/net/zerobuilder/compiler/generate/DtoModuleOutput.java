@@ -1,8 +1,10 @@
 package net.zerobuilder.compiler.generate;
 
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
+import java.util.List;
 import java.util.function.Function;
 
 public final class DtoModuleOutput {
@@ -15,17 +17,21 @@ public final class DtoModuleOutput {
   public static abstract class AbstractModuleOutput {
     final BuilderMethod method;
     final TypeSpec impl;
-    protected AbstractModuleOutput(BuilderMethod method, TypeSpec impl) {
+    final List<FieldSpec> cacheFields;
+    protected AbstractModuleOutput(BuilderMethod method, TypeSpec impl,
+                                   List<FieldSpec> cacheFields) {
       this.method = method;
       this.impl = impl;
+      this.cacheFields = cacheFields;
     }
     public abstract <R> R accept(ModuleOutputCases<R> cases);
   }
 
   public static final class SimpleModuleOutput extends AbstractModuleOutput {
 
-    public SimpleModuleOutput(BuilderMethod method, TypeSpec impl) {
-      super(method, impl);
+    public SimpleModuleOutput(BuilderMethod method, TypeSpec impl,
+                              List<FieldSpec> cacheFields) {
+      super(method, impl, cacheFields);
     }
     @Override
     public <R> R accept(ModuleOutputCases<R> cases) {
@@ -36,8 +42,9 @@ public final class DtoModuleOutput {
   public static final class ContractModuleOutput extends AbstractModuleOutput {
     final TypeSpec contract;
 
-    public ContractModuleOutput(BuilderMethod method, TypeSpec impl, TypeSpec contract) {
-      super(method, impl);
+    public ContractModuleOutput(BuilderMethod method, TypeSpec impl, TypeSpec contract,
+                                List<FieldSpec> cacheFields) {
+      super(method, impl, cacheFields);
       this.contract = contract;
     }
     @Override

@@ -79,7 +79,7 @@ public final class Generator {
     List<FieldSpec> fields = new ArrayList<>(inputOutputs.size() + 1);
     fields.add(context.cache.get());
     inputOutputs.forEach(tmp ->
-        tmp.cacheField().ifPresent(fields::add));
+        tmp.output.cacheFields.forEach(fields::add));
     return fields;
   }
 

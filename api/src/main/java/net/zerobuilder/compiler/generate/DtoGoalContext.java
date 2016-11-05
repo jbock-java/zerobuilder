@@ -15,9 +15,9 @@ import static java.util.Collections.unmodifiableList;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularGoalContextCases;
 
-final class DtoGoalContext {
+public final class DtoGoalContext {
 
-  static abstract class AbstractGoalContext {
+  public static abstract class AbstractGoalContext {
 
     abstract <R> R accept(GoalCases<R> cases);
 

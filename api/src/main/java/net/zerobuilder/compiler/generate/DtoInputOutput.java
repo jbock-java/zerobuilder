@@ -7,10 +7,9 @@ import net.zerobuilder.compiler.generate.DtoModule.RegularContractModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedModule.ProjectedModule;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.function.Function;
 
 class DtoInputOutput {
@@ -47,9 +46,6 @@ class DtoInputOutput {
 
   static abstract class AbstractInputOutput {
     final AbstractModuleOutput output;
-    final Optional<FieldSpec> cacheField() {
-      return cacheField.apply(this);
-    }
 
     AbstractInputOutput(AbstractModuleOutput output) {
       this.output = output;
@@ -105,12 +101,6 @@ class DtoInputOutput {
       return cases.projected(this);
     }
   }
-
-  private static Function<AbstractInputOutput, Optional<FieldSpec>> cacheField =
-      inputOutputCases(
-          simple -> Optional.of(simple.module.cacheField(simple.goal)),
-          projected -> Optional.of(projected.module.cacheField(projected.goal)),
-          simpleRegular -> Optional.empty());
 
   private DtoInputOutput() {
     throw new UnsupportedOperationException("no instances");

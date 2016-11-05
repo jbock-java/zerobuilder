@@ -51,6 +51,7 @@ public class MoreValues {
   }
 
   @Builders
+  @SuppressWarnings("unused")
   static final class NoGoals {
   }
 }

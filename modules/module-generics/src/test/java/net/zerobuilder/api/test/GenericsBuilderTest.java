@@ -12,9 +12,8 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.modules.generics.GenericsBuilder;
-import org.junit.Rule;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import javax.lang.model.element.Modifier;
 import java.util.Collections;
@@ -30,8 +29,10 @@ import static org.junit.Assert.assertThat;
 
 public class GenericsBuilderTest {
 
+/*
   @Rule
   public ExpectedException exception = ExpectedException.none();
+*/
 
   private static final ClassName STRING = ClassName.get(String.class);
   private static final ClassName INTEGER = ClassName.get(Integer.class);
@@ -51,16 +52,17 @@ public class GenericsBuilderTest {
    * <pre><code>
    *   class MyType {
    *     // our goal method
-   *     static MyType create(String foo, Integer bar) {
+   *     static <K, V> Map<K, V> multiKey(List<K> keys, V value) {
    *       return null;
    *     }
    *   }
    * </pre></code>
    */
+  @Ignore
   @Test
   public void staticMethodGoal() {
 
-    exception.expect(NullPointerException.class);
+//    exception.expect(NullPointerException.class);
 
     // create goal context
     BuildersContext buildersContext = createContext(
@@ -70,7 +72,7 @@ public class GenericsBuilderTest {
     );
 
     // create goal details
-    String goalName = "myGoal"; // free choice, but should be a valid java identifier
+    String goalName = "multiKey"; // free choice, but should be a valid java identifier
     StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
         TYPE, // return type of the goal method
         // names of generated classes and methods are based on this
@@ -98,7 +100,7 @@ public class GenericsBuilderTest {
 
     assertThat(generatorOutput.methods().size(), is(1));
     assertThat(generatorOutput.methods().get(0).name(), is(goalName));
-    assertThat(generatorOutput.methods().get(0).method().name, is("myGoalBuilder"));
+    assertThat(generatorOutput.methods().get(0).method().name, is("multiKeyBuilder"));
     assertThat(generatorOutput.methods().get(0).method().parameters.size(), is(0));
     assertThat(generatorOutput.methods().get(0).method().modifiers.contains(Modifier.STATIC), is(true));
     assertThat(generatorOutput.methods().get(0).method().modifiers.contains(Modifier.PRIVATE), is(true));
@@ -106,7 +108,6 @@ public class GenericsBuilderTest {
         is(GENERATED_TYPE.nestedClass("MyGoalBuilder")
             .nestedClass("Foo")));
 
-    // Prints nicely
     TypeSpec typeSpec = generatorOutput.typeSpec();
     assertThat(typeSpec.name, is("MyTypeBuilders"));
     assertThat(typeSpec.methodSpecs.size(), is(2)); // myGoalBuilder, constructor

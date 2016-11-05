@@ -1,7 +1,9 @@
 package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ContractModuleOutput;
@@ -35,20 +37,36 @@ public final class GenericsBuilder extends DtoModule.RegularContractModule {
         .build();
   }
 
-  ClassName contractType(SimpleStaticMethodGoalContext goal) {
-    String contractName = upcase(goal.details.name) + upcase(name());
+  private TypeSpec defineImpl(SimpleStaticMethodGoalContext goal) {
+    return TypeSpec.classBuilder(implType(goal)).build();
+  }
+
+  private ClassName contractType(SimpleStaticMethodGoalContext goal) {
+    String contractName = upcase(goal.details.name) + "Builder";
     return context.apply(goal)
         .generatedType.nestedClass(contractName);
   }
 
-  private String name() {
-    return "builder";
+  private ClassName implType(SimpleStaticMethodGoalContext goal) {
+    String contractName = upcase(goal.details.name) + "BuilderImpl";
+    return context.apply(goal)
+        .generatedType.nestedClass(contractName);
+  }
+
+  private DtoGeneratorOutput.BuilderMethod builderMethod(SimpleStaticMethodGoalContext goal) {
+    return new DtoGeneratorOutput.BuilderMethod(
+        goal.details.name,
+        MethodSpec.methodBuilder(goal.details.name + "Builder")
+            .addModifiers(PUBLIC, STATIC)
+            .build());
   }
 
   @Override
   protected ContractModuleOutput process(SimpleStaticMethodGoalContext goal) {
     return new ContractModuleOutput(
-        null, null,
-        defineContract(goal));
+        builderMethod(goal),
+        defineImpl(goal),
+        defineContract(goal),
+        Collections.emptyList());
   }
 }

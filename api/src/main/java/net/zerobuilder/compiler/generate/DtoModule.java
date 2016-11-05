@@ -10,6 +10,7 @@ import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -34,14 +35,6 @@ public final class DtoModule {
 
     public final String methodName(SimpleGoal goal) {
       return name.apply(goal) + upcase(name());
-    }
-
-    // TODO this should not need goal argument
-    public final FieldSpec cacheField(SimpleGoal goal) {
-      ClassName type = implType(goal);
-      return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
-          .initializer("new $T()", type)
-          .build();
     }
 
     protected final List<? extends AbstractStep> steps(SimpleGoal goal) {
