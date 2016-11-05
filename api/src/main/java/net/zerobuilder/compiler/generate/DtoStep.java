@@ -4,7 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
@@ -73,7 +73,7 @@ public final class DtoStep {
   public static abstract class AbstractStep {
 
     public final AbstractGoalDetails goalDetails;
-    public final BuildersContext context;
+    public final GoalContext context;
     public final String thisType;
     private final Optional<? extends AbstractStep> nextStep;
 
@@ -93,7 +93,7 @@ public final class DtoStep {
     AbstractStep(String thisType,
                  Optional<? extends AbstractStep> nextStep,
                  AbstractGoalDetails goalDetails,
-                 BuildersContext context) {
+                 GoalContext context) {
       this.thisType = thisType;
       this.nextStep = nextStep;
       this.goalDetails = goalDetails;

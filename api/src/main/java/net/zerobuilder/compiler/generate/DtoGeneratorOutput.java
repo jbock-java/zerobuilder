@@ -5,7 +5,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
+import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 
 import java.util.List;
 import java.util.function.Function;
@@ -57,10 +57,10 @@ public final class DtoGeneratorOutput {
     final List<TypeSpec> nestedTypes;
     final List<FieldSpec> fields;
     final ClassName generatedType;
-    final BuilderLifecycle lifecycle;
+    final ContextLifecycle lifecycle;
 
     private GeneratorOutput(List<BuilderMethod> methods, List<TypeSpec> nestedTypes, List<FieldSpec> fields,
-                            ClassName generatedType, BuilderLifecycle lifecycle) {
+                            ClassName generatedType, ContextLifecycle lifecycle) {
       this.methods = methods;
       this.nestedTypes = nestedTypes;
       this.fields = fields;
@@ -69,7 +69,7 @@ public final class DtoGeneratorOutput {
     }
 
     static GeneratorOutput create(List<BuilderMethod> methods, List<TypeSpec> nestedTypes, List<FieldSpec> fields,
-                                  DtoContext.BuildersContext context) {
+                                  DtoContext.GoalContext context) {
       return new GeneratorOutput(methods, nestedTypes, fields, context.generatedType, context.lifecycle);
     }
 
@@ -92,7 +92,7 @@ public final class DtoGeneratorOutput {
     }
 
     private MethodSpec constructor() {
-      return lifecycle == BuilderLifecycle.REUSE_INSTANCES ?
+      return lifecycle == ContextLifecycle.REUSE_INSTANCES ?
           ZeroUtil.constructor(PRIVATE) :
           constructorBuilder()
               .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")

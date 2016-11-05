@@ -39,7 +39,7 @@ public final class DtoSimpleGoal {
     });
   }
 
-  public static final Function<SimpleGoal, DtoContext.BuildersContext> context =
+  public static final Function<SimpleGoal, DtoContext.GoalContext> context =
       simpleGoalCases(
           DtoRegularGoal.regularGoalContextCases(
               constructor -> constructor.context,

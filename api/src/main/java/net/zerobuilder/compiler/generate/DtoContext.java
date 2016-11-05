@@ -18,18 +18,18 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 
 public final class DtoContext {
 
-  public enum BuilderLifecycle {
+  public enum ContextLifecycle {
     REUSE_INSTANCES, NEW_INSTANCE;
   }
 
-  public static final class BuildersContext {
-
-    public final BuilderLifecycle lifecycle;
+  public static final class GoalContext {
 
     /**
      * The type that should be generated.
      */
     public final ClassName generatedType;
+
+    public final ContextLifecycle lifecycle;
 
     /**
      * The class that contains the goal method(s) or constructor(s).
@@ -40,11 +40,11 @@ public final class DtoContext {
     /**
      * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.
      * Only used when {@link #lifecycle} is
-     * {@link BuilderLifecycle#REUSE_INSTANCES REUSE_INSTANCES}.
+     * {@link ContextLifecycle#REUSE_INSTANCES REUSE_INSTANCES}.
      */
     public final Supplier<FieldSpec> cache;
 
-    private BuildersContext(BuilderLifecycle lifecycle, ClassName type, ClassName generatedType) {
+    private GoalContext(ContextLifecycle lifecycle, ClassName type, ClassName generatedType) {
       this.lifecycle = lifecycle;
       this.type = type;
       this.generatedType = generatedType;
@@ -58,13 +58,13 @@ public final class DtoContext {
    * @param type             type that contains the goal methods / constructors;
    *                         for bean goals, this is just the bean type
    * @param generatedType    type name that should be generated
-   * @param builderLifecycle lifecycle setting
-   * @return a BuildersContext
+   * @param contextLifecycle lifecycle setting
+   * @return a GoalContext
    */
-  public static BuildersContext createContext(ClassName type,
-                                              ClassName generatedType,
-                                              BuilderLifecycle builderLifecycle) {
-    return new BuildersContext(builderLifecycle, type, generatedType);
+  public static GoalContext createContext(ClassName type,
+                                          ClassName generatedType,
+                                          ContextLifecycle contextLifecycle) {
+    return new GoalContext(contextLifecycle, type, generatedType);
   }
 
   private static Supplier<FieldSpec> memoizeCache(ClassName generatedType) {

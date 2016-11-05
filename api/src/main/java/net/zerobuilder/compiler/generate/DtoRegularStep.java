@@ -2,7 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
@@ -24,7 +24,7 @@ public final class DtoRegularStep {
     protected AbstractRegularStep(String thisType,
                                   Optional<AbstractRegularStep> nextType,
                                   AbstractGoalDetails goalDetails,
-                                  BuildersContext context) {
+                                  GoalContext context) {
       super(thisType, nextType, goalDetails, context);
     }
 
@@ -49,7 +49,7 @@ public final class DtoRegularStep {
     private ProjectedRegularStep(String thisType,
                                  Optional<AbstractRegularStep> nextType,
                                  AbstractGoalDetails goalDetails,
-                                 BuildersContext context,
+                                 GoalContext context,
                                  ProjectedParameter parameter,
                                  List<TypeName> declaredExceptions,
                                  Supplier<FieldSpec> field,
@@ -64,7 +64,7 @@ public final class DtoRegularStep {
     static ProjectedRegularStep create(String thisType,
                                        Optional<? extends AbstractRegularStep> nextType,
                                        AbstractGoalDetails goalDetails,
-                                       BuildersContext context,
+                                       GoalContext context,
                                        ProjectedParameter parameter,
                                        List<TypeName> declaredExceptions) {
       return new ProjectedRegularStep(thisType, Optional.ofNullable(nextType.orElse(null)), goalDetails, context, parameter, declaredExceptions,
@@ -101,7 +101,7 @@ public final class DtoRegularStep {
     private SimpleRegularStep(String thisType,
                               Optional<AbstractRegularStep> nextType,
                               AbstractGoalDetails goalDetails,
-                              BuildersContext context,
+                              DtoContext.GoalContext context,
                               SimpleParameter parameter,
                               Supplier<FieldSpec> field,
                               Supplier<Optional<DtoStep.CollectionInfo>> collectionInfo) {
@@ -114,7 +114,7 @@ public final class DtoRegularStep {
     static SimpleRegularStep create(String thisType,
                                     Optional<? extends AbstractRegularStep> nextType,
                                     AbstractGoalDetails goalDetails,
-                                    BuildersContext context,
+                                    GoalContext context,
                                     SimpleParameter parameter) {
       return new SimpleRegularStep(thisType, Optional.ofNullable(nextType.orElse(null)), goalDetails, context, parameter,
           memoizeField(parameter), memoizeCollectionInfo(parameter));

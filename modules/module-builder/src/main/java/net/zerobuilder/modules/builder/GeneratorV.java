@@ -5,7 +5,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -33,7 +33,7 @@ final class GeneratorV {
     MethodSpec.Builder method = methodBuilder(Builder.methodName(goal))
         .returns(Builder.contractType(goal).nestedClass(steps.get(0).thisType))
         .addModifiers(abstractRegularDetails.access(STATIC));
-    BuildersContext context = goal.context();
+    GoalContext context = goal.context();
     ParameterSpec varInstance = parameterSpec(context.type,
         downcase(context.type.simpleName()));
     CodeBlock returnBlock = returnBlock(varInstance).apply(goal);
@@ -54,7 +54,7 @@ final class GeneratorV {
 
   private static CodeBlock returnRegular(SimpleRegularGoalContext goal) {
     ParameterSpec varBuilder = builderInstance(goal);
-    BuildersContext context = goal.context();
+    GoalContext context = goal.context();
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
@@ -73,7 +73,7 @@ final class GeneratorV {
 
   private static CodeBlock returnInstanceMethod(
       InstanceMethodGoalContext goal, ParameterSpec varInstance) {
-    BuildersContext context = goal.context;
+    GoalContext context = goal.context;
     if (context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");

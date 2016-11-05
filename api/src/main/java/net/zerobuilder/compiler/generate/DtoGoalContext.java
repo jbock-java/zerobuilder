@@ -2,7 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
@@ -33,7 +33,7 @@ public final class DtoGoalContext {
       return abstractGoalDetails.apply(this);
     }
 
-    public final BuildersContext context() {
+    public final GoalContext context() {
       return context.apply(this);
     }
 
@@ -66,7 +66,7 @@ public final class DtoGoalContext {
     });
   }
 
-  static final Function<RegularGoalContext, BuildersContext> regularContext =
+  static final Function<RegularGoalContext, GoalContext> regularContext =
       regularGoalContextCases(
           DtoRegularGoal.regularGoalContextCases(
               constructor -> constructor.context,
@@ -76,7 +76,7 @@ public final class DtoGoalContext {
               method -> method.context,
               constructor -> constructor.context));
 
-  public static final Function<AbstractGoalContext, BuildersContext> context =
+  public static final Function<AbstractGoalContext, GoalContext> context =
       goalCases(
           regularContext,
           bean -> bean.context);

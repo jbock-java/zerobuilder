@@ -6,7 +6,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 
 import java.util.List;
 
@@ -63,8 +63,8 @@ public final class GenericsBuilder extends DtoModule.RegularContractModule {
   }
 
   @Override
-  protected AbstractModuleOutput process(SimpleStaticMethodGoalContext goal) {
-    return new AbstractModuleOutput(
+  protected ModuleOutput process(SimpleStaticMethodGoalContext goal) {
+    return new ModuleOutput(
         builderMethod(goal),
         asList(defineImpl(goal), defineContract(goal)),
         emptyList());

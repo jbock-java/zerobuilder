@@ -4,7 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
@@ -24,7 +24,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -51,7 +51,7 @@ public class VoidTest {
   public void test() {
 
     // create goal context
-    BuildersContext buildersContext = createContext(
+    DtoContext.GoalContext goalContext = createContext(
         ClassName.get(VoidTest.class).peerClass("Throw"),
         ClassName.get(VoidTest.class).nestedClass("ThrowBuilders"),
         NEW_INSTANCE);
@@ -68,7 +68,7 @@ public class VoidTest {
         singletonList(parameter));
 
     GeneratorInput input = GeneratorInput.create(
-        buildersContext, singletonList(new SimpleDescriptionInput(MODULE_BUILDER, description)));
+        goalContext, singletonList(new SimpleDescriptionInput(MODULE_BUILDER, description)));
 
     // Invoke the generator
     GeneratorOutput output = Generator.generate(input);

@@ -8,13 +8,12 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractRegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
-import net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext;
+import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.ProjectedDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
-import net.zerobuilder.compiler.generate.DtoModule;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.modules.builder.Builder;
@@ -51,12 +50,12 @@ public final class Analyser {
 
   public static GeneratorInput analyse(TypeElement tel) throws ValidationException {
     validateContextClass(tel);
-    BuilderLifecycle lifecycle = tel.getAnnotation(Builders.class).recycle()
-        ? BuilderLifecycle.REUSE_INSTANCES
-        : BuilderLifecycle.NEW_INSTANCE;
+    ContextLifecycle lifecycle = tel.getAnnotation(Builders.class).recycle()
+        ? ContextLifecycle.REUSE_INSTANCES
+        : ContextLifecycle.NEW_INSTANCE;
     ClassName type = ClassName.get(tel);
     ClassName generatedType = peer(type, "Builders");
-    BuildersContext context = createContext(type, generatedType, lifecycle);
+    DtoContext.GoalContext context = createContext(type, generatedType, lifecycle);
     List<? extends AbstractGoalElement> goals = goals(tel);
     checkNameConflict(goals);
     checkAccessLevel(goals);

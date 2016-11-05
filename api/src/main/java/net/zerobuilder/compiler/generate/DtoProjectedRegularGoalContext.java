@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
@@ -67,11 +66,11 @@ public final class DtoProjectedRegularGoalContext {
 
   public static final class ProjectedMethodGoalContext extends ProjectedRegularGoalContext {
     public final List<ProjectedRegularStep> steps;
-    public final BuildersContext context;
+    public final DtoContext.GoalContext context;
     public final StaticMethodGoalDetails details;
 
     ProjectedMethodGoalContext(
-        BuildersContext context,
+        DtoContext.GoalContext context,
         StaticMethodGoalDetails details,
         List<ProjectedRegularStep> steps,
         List<TypeName> thrownTypes) {
@@ -90,11 +89,11 @@ public final class DtoProjectedRegularGoalContext {
   public static final class ProjectedConstructorGoalContext
       extends ProjectedRegularGoalContext {
 
-    public final BuildersContext context;
+    public final DtoContext.GoalContext context;
     public final ConstructorGoalDetails details;
     public final List<ProjectedRegularStep> steps;
 
-    ProjectedConstructorGoalContext(BuildersContext context,
+    ProjectedConstructorGoalContext(DtoContext.GoalContext context,
                                     ConstructorGoalDetails details,
                                     List<ProjectedRegularStep> steps,
                                     List<TypeName> thrownTypes) {

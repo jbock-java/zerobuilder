@@ -5,7 +5,6 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import net.zerobuilder.compiler.generate.DtoBeanGoal;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
@@ -14,9 +13,8 @@ import java.util.Collections;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.builder.Builder.cacheField;
@@ -42,7 +40,7 @@ final class GeneratorB {
   private static CodeBlock returnBuilder(BeanGoalContext goal) {
     ClassName implType = implType(goal);
     ParameterSpec varUpdater = parameterSpec(implType, downcase(implType.simpleName()));
-    DtoContext.BuildersContext context = goal.context;
+    DtoContext.GoalContext context = goal.context;
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = goal.context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");

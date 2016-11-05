@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
@@ -90,14 +90,14 @@ public final class DtoGeneratorInput {
 
   public static final class GeneratorInput {
     public final List<DescriptionInput> goals;
-    public final BuildersContext context;
+    public final GoalContext context;
 
-    private GeneratorInput(BuildersContext context, List<DescriptionInput> goals) {
+    private GeneratorInput(DtoContext.GoalContext context, List<DescriptionInput> goals) {
       this.goals = goals;
       this.context = context;
     }
 
-    public static GeneratorInput create(BuildersContext context, List<DescriptionInput> goals) {
+    public static GeneratorInput create(GoalContext context, List<DescriptionInput> goals) {
       return new GeneratorInput(context, goals);
     }
   }

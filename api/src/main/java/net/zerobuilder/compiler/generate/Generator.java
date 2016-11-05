@@ -2,13 +2,13 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 
 import java.util.List;
 import java.util.function.Function;
@@ -16,7 +16,7 @@ import java.util.stream.Collector;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
@@ -33,14 +33,14 @@ public final class Generator {
    */
   public static GeneratorOutput generate(GeneratorInput generatorInput) {
     List<DescriptionInput> goals = generatorInput.goals;
-    BuildersContext context = generatorInput.context;
+    DtoContext.GoalContext context = generatorInput.context;
     return goals.stream()
         .map(prepare(context))
         .map(process)
         .collect(collectOutput(context));
   }
 
-  private static Collector<AbstractModuleOutput, List<AbstractModuleOutput>, GeneratorOutput> collectOutput(BuildersContext context) {
+  private static Collector<ModuleOutput, List<ModuleOutput>, GeneratorOutput> collectOutput(GoalContext context) {
     return listCollector(tmpOutputs ->
         GeneratorOutput.create(
             methods(tmpOutputs),
@@ -49,29 +49,29 @@ public final class Generator {
             context));
   }
 
-  private static List<BuilderMethod> methods(List<AbstractModuleOutput> inputOutputs) {
+  private static List<BuilderMethod> methods(List<ModuleOutput> inputOutputs) {
     return inputOutputs.stream()
-        .map(AbstractModuleOutput::method)
+        .map(ModuleOutput::method)
         .collect(toList());
   }
 
-  private static List<TypeSpec> types(List<AbstractModuleOutput> inputOutputs) {
+  private static List<TypeSpec> types(List<ModuleOutput> inputOutputs) {
     return inputOutputs.stream()
-        .map(AbstractModuleOutput::typeSpecs)
+        .map(ModuleOutput::typeSpecs)
         .collect(flatList());
   }
 
-  private static List<FieldSpec> fields(BuildersContext context, List<AbstractModuleOutput> inputOutputs) {
+  private static List<FieldSpec> fields(GoalContext context, List<ModuleOutput> inputOutputs) {
     if (context.lifecycle == NEW_INSTANCE) {
       return emptyList();
     }
     List<FieldSpec> fieldSpecs = inputOutputs.stream()
-        .map(AbstractModuleOutput::cacheFields)
+        .map(ModuleOutput::cacheFields)
         .collect(flatList());
     return concat(context.cache.get(), fieldSpecs);
   }
 
-  private static final Function<AbstractGoalInput, AbstractModuleOutput> process =
+  private static final Function<AbstractGoalInput, ModuleOutput> process =
       goalInputCases(
           simple -> simple.module.process(simple.goal),
           projected -> projected.module.process(projected.goal),

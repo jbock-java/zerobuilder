@@ -10,7 +10,7 @@ import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.AbstractModuleOutput;
+import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
@@ -30,7 +30,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.context;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.goalType;
@@ -179,8 +179,8 @@ public final class Updater extends ProjectedModule {
   }
 
   @Override
-  protected AbstractModuleOutput process(ProjectedGoal goal) {
-    return new AbstractModuleOutput(
+  protected ModuleOutput process(ProjectedGoal goal) {
+    return new ModuleOutput(
         goalToUpdater.apply(goal),
         singletonList(defineUpdater(goal)),
         singletonList(cacheField(goal)));

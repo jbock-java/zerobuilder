@@ -8,7 +8,7 @@ import java.util.List;
 
 public final class DtoModuleOutput {
 
-  public static final class AbstractModuleOutput {
+  public static final class ModuleOutput {
     private final BuilderMethod method;
     private final List<TypeSpec> typeSpecs;
     private final List<FieldSpec> cacheFields;
@@ -25,9 +25,9 @@ public final class DtoModuleOutput {
       return cacheFields;
     }
 
-    public AbstractModuleOutput(BuilderMethod method,
-                                List<TypeSpec> typeSpecs,
-                                List<FieldSpec> cacheFields) {
+    public ModuleOutput(BuilderMethod method,
+                        List<TypeSpec> typeSpecs,
+                        List<FieldSpec> cacheFields) {
       this.method = method;
       this.typeSpecs = typeSpecs;
       this.cacheFields = cacheFields;

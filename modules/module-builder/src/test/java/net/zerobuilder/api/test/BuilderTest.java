@@ -2,7 +2,7 @@ package net.zerobuilder.api.test;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
@@ -21,7 +21,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.NEW_INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -56,7 +56,7 @@ public class BuilderTest {
   public void staticMethodGoal() {
 
     // create goal context
-    BuildersContext buildersContext = createContext(
+    DtoContext.GoalContext goalContext = createContext(
         TYPE, // type that contains the goal method; in this case, this is the same as the goal type
         GENERATED_TYPE, // the type we want to generate; it will contain all the generated code
         NEW_INSTANCE // forbid caching of builder instances
@@ -84,7 +84,7 @@ public class BuilderTest {
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(
-        buildersContext, singletonList(new SimpleDescriptionInput(MODULE_BUILDER, description)));
+        goalContext, singletonList(new SimpleDescriptionInput(MODULE_BUILDER, description)));
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);

@@ -52,7 +52,7 @@ public final class DtoProjectedGoal {
   public static final Function<ProjectedGoal, TypeName> goalType =
       restrict(AbstractGoalContext::goalType);
 
-  static final Function<ProjectedGoal, DtoContext.BuildersContext> context =
+  static final Function<ProjectedGoal, DtoContext.GoalContext> context =
       restrict(AbstractGoalContext::context);
 
   private DtoProjectedGoal() {

@@ -4,7 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
-import net.zerobuilder.compiler.generate.DtoContext.BuildersContext;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoContext.BuilderLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
@@ -27,7 +27,7 @@ public final class DtoBeanGoal {
   public static final class BeanGoalContext extends AbstractGoalContext
       implements ProjectedGoal, SimpleGoal {
 
-    public final BuildersContext context;
+    public final GoalContext context;
     public final List<AbstractBeanStep> steps;
     public final BeanGoalDetails details;
     public final List<TypeName> thrownTypes;
@@ -43,7 +43,7 @@ public final class DtoBeanGoal {
       return bean.get();
     }
 
-    BeanGoalContext(BuildersContext context,
+    BeanGoalContext(DtoContext.GoalContext context,
                     BeanGoalDetails details,
                     List<AbstractBeanStep> steps,
                     List<TypeName> thrownTypes) {
@@ -54,7 +54,7 @@ public final class DtoBeanGoal {
       this.thrownTypes = thrownTypes;
     }
 
-    private static Supplier<FieldSpec> beanSupplier(ClassName type, BuildersContext context) {
+    private static Supplier<FieldSpec> beanSupplier(ClassName type, DtoContext.GoalContext context) {
       return memoize(() -> {
         String name = downcase(type.simpleName());
         return context.lifecycle == REUSE_INSTANCES
