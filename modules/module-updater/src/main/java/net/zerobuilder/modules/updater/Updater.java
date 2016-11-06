@@ -40,6 +40,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -108,8 +109,7 @@ public final class Updater extends ProjectedModule {
   private CodeBlock staticCall(ProjectedMethodGoalContext goal) {
     String method = goal.details.methodName;
     TypeName type = goal.details.goalType;
-    ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(((ClassName) type.box()).simpleName()));
+    ParameterSpec varGoal = parameterSpec(type, '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");

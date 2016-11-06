@@ -4,9 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.common.LessTypes;
 import net.zerobuilder.compiler.generate.Access;
-import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
@@ -33,6 +31,7 @@ import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDAT
 import static net.zerobuilder.compiler.analyse.Utilities.downcase;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 
 final class DtoGoalElement {
 
@@ -209,7 +208,7 @@ final class DtoGoalElement {
 
   static String goalName(Goal goalAnnotation, TypeName goalType) {
     return goalAnnotation.name().isEmpty()
-        ? downcase(((ClassName) goalType.box()).simpleName())
+        ? downcase(simpleName(goalType))
         : goalAnnotation.name();
   }
 

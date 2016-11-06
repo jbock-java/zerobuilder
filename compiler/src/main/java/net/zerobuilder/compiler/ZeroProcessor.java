@@ -77,6 +77,7 @@ public final class ZeroProcessor extends AbstractProcessor {
       } catch (ValidationException e) {
         processingEnv.getMessager().printMessage(e.kind, e.getMessage(), e.about);
       } catch (RuntimeException e) {
+        e.printStackTrace();
         String message = "Error processing "
             + ClassName.get(annotatedType) + ": " + e.getMessage();
         processingEnv.getMessager().printMessage(ERROR, message, annotatedType);

@@ -285,6 +285,19 @@ public final class ZeroUtil {
     return constructorBuilder().addModifiers(modifiers).build();
   }
 
+  public static String simpleName(TypeName type) {
+    if (type.isPrimitive() || type == TypeName.VOID) {
+      return ((ClassName) type.box()).simpleName();
+    }
+    if (type instanceof ClassName) {
+      return ((ClassName) type).simpleName();
+    }
+    if (type instanceof ParameterizedTypeName) {
+      return ((ParameterizedTypeName) type).rawType.simpleName();
+    }
+    throw new IllegalArgumentException("unknown kind: " + type);
+  }
+
   private ZeroUtil() {
     throw new UnsupportedOperationException("no instances");
   }

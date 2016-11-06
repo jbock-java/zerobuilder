@@ -38,6 +38,7 @@ import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfo
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.updater.Updater.cacheField;
@@ -143,7 +144,7 @@ final class GeneratorV {
   private static ParameterSpec toBuilderParameter(ProjectedRegularGoalContext goal) {
     AbstractRegularDetails details = goalDetails.apply(goal);
     TypeName goalType = details.type();
-    return parameterSpec(goalType, downcase(((ClassName) goalType.box()).simpleName()));
+    return parameterSpec(goalType, downcase(simpleName(goalType)));
   }
 
   private static CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {

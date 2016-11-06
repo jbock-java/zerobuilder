@@ -1,6 +1,5 @@
 package net.zerobuilder.modules.builder;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -36,6 +35,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -140,7 +140,7 @@ final class BuilderV {
   private static CodeBlock constructorCall(SimpleConstructorGoalContext goal) {
     TypeName type = goal.type();
     ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(((ClassName) type.box()).simpleName()));
+        '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
@@ -156,7 +156,7 @@ final class BuilderV {
     TypeName type = goal.type();
     String method = goal.details.methodName;
     ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(((ClassName) type.box()).simpleName()));
+        '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
@@ -182,7 +182,7 @@ final class BuilderV {
     TypeName type = goal.type();
     String method = goal.details.methodName;
     ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(((ClassName) type.box()).simpleName()));
+        '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");

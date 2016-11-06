@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 
 import javax.lang.model.element.ExecutableElement;
