@@ -16,10 +16,12 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
@@ -284,7 +286,11 @@ final class DtoGoalElement {
         element.getKind() == CONSTRUCTOR ?
             ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
                 name, parameterNames, goalOption.access) :
-            StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);
+            StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
+                element.getTypeParameters().stream()
+                    .map(TypeParameterElement::asType)
+                    .map(TypeName::get)
+                    .collect(Collectors.toList()));
     return new RegularProjectableGoalElement(element, details);
   }
 
@@ -295,7 +301,11 @@ final class DtoGoalElement {
         ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
             name, parameterNames, goalOption.access) :
         element.getModifiers().contains(STATIC) ?
-            StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access) :
+            StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
+                element.getTypeParameters().stream()
+                    .map(TypeParameterElement::asType)
+                    .map(TypeName::get)
+                    .collect(Collectors.toList())) :
             InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);
     return new RegularGoalElement(element, details);
   }

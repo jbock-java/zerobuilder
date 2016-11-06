@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static net.zerobuilder.NullPolicy.ALLOW;
@@ -60,7 +61,7 @@ public class VoidTest {
     String goalName = "Void";
     StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
         TypeName.VOID, goalName, singletonList("message"),
-        "doUpdate", PRIVATE);
+        "doUpdate", PRIVATE, emptyList());
 
     SimpleParameter parameter = DtoRegularParameter.create("message", STRING, ALLOW);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(

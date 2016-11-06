@@ -18,6 +18,7 @@ import javax.lang.model.element.Modifier;
 import java.util.Collections;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
@@ -71,7 +72,8 @@ public class BuilderTest {
         // parameter names in correct order
         asList("foo", "bar"),
         "create", // correct goal method name
-        PRIVATE);
+        PRIVATE,
+        emptyList());
 
     // use SimpleParameter because the builder module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW);

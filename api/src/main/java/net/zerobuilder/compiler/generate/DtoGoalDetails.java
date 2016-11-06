@@ -179,22 +179,24 @@ public final class DtoGoalDetails {
 
   public static final class StaticMethodGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {
+    public final List<TypeName> typeParameters;
     public final String methodName;
     public final TypeName goalType;
 
     private StaticMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
-                                    Access access) {
+                                    Access access, List<TypeName> typeParameters) {
       super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
+      this.typeParameters = typeParameters;
     }
 
     public static StaticMethodGoalDetails create(TypeName goalType,
                                                  String name,
                                                  List<String> parameterNames,
                                                  String methodName,
-                                                 Access access) {
-      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access);
+                                                 Access access, List<TypeName> typeParameters) {
+      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters);
     }
 
     @Override

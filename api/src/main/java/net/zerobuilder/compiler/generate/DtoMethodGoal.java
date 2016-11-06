@@ -69,17 +69,21 @@ public final class DtoMethodGoal {
   }
 
   public static final class SimpleStaticMethodGoalContext extends SimpleRegularGoalContext {
+
+    public final List<TypeName> typeParameters;
     public final List<SimpleRegularStep> steps;
 
     SimpleStaticMethodGoalContext(
         GoalContext context,
         StaticMethodGoalDetails details,
         List<SimpleRegularStep> steps,
-        List<TypeName> thrownTypes) {
+        List<TypeName> thrownTypes,
+        List<TypeName> typeParameters) {
       super(thrownTypes);
       this.details = details;
       this.context = context;
       this.steps = steps;
+      this.typeParameters = typeParameters;
     }
 
     public final DtoContext.GoalContext context;

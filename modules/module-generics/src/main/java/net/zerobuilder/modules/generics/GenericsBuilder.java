@@ -2,6 +2,7 @@ package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
@@ -64,6 +65,7 @@ public final class GenericsBuilder extends DtoModule.RegularContractModule {
 
   @Override
   protected ModuleOutput process(SimpleStaticMethodGoalContext goal) {
+    List<TypeName> typeParameters = goal.details.typeParameters;
     return new ModuleOutput(
         builderMethod(goal),
         asList(defineImpl(goal), defineContract(goal)),

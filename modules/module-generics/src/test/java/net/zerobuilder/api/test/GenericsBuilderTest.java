@@ -19,6 +19,7 @@ import javax.lang.model.element.Modifier;
 import java.util.Collections;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
@@ -80,7 +81,8 @@ public class GenericsBuilderTest {
         // parameter names in correct order
         asList("foo", "bar"),
         "create", // correct goal method name
-        PRIVATE);
+        PRIVATE, // the static method should be private
+        emptyList()); // no type parameters
 
     // use SimpleParameter because the generics module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW);
