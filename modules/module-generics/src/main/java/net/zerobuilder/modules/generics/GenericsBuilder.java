@@ -70,7 +70,8 @@ public final class GenericsBuilder extends DtoModule.RegularContractModule {
 
   @Override
   protected ModuleOutput process(SimpleStaticMethodGoalContext goal) {
-    List<VarLife> lifes = varLifes(goal.details.typeParameters, goal.steps);
+    List<List<TypeName>> lifes = varLifes(goal.details.typeParameters, goal.steps);
+    System.out.println(lifes);
     return new ModuleOutput(
         builderMethod(goal),
         asList(defineImpl(goal), defineContract(goal)),

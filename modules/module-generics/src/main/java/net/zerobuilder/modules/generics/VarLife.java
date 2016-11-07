@@ -2,45 +2,35 @@ package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoRegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static net.zerobuilder.modules.generics.GenericsUtil.references;
 
 final class VarLife {
 
-  final TypeName typeParameter;
-  final int start;
-  final int end;
-
-  private VarLife(TypeName typeParameter, int start, int end) {
-    this.typeParameter = typeParameter;
-    if (start < 0) {
-      throw new IllegalArgumentException("start: " + start);
-    }
-    if (start > end) {
-      throw new IllegalArgumentException(start + " > " + end);
-    }
-    this.start = start;
-    this.end = end;
-  }
-
-  static List<VarLife> varLifes(List<TypeName> typeParameters, List<DtoRegularStep.SimpleRegularStep> steps) {
-    List<VarLife> builder = new ArrayList<>(steps.size());
+  static List<List<TypeName>> varLifes(List<TypeName> typeParameters, List<SimpleRegularStep> steps) {
+    Stream<List<TypeName>> generate = Stream.generate(ArrayList::new);
+    List<List<TypeName>> builder = new ArrayList<>(steps.size());
+    generate.limit(steps.size()).forEach(builder::add);
     for (TypeName typeParameter : typeParameters) {
       int start = varLifeStart(typeParameter, steps);
       if (start >= 0) {
         int end = varLifeEnd(typeParameter, steps);
-        builder.add(new VarLife(typeParameter, start, end));
+        for (int i = start; i <= end; i++) {
+          builder.get(i).add(typeParameter);
+        }
       }
     }
     return builder;
   }
 
-  private static int varLifeStart(TypeName typeParameter, List<DtoRegularStep.SimpleRegularStep> steps) {
+  private static int varLifeStart(TypeName typeParameter, List<SimpleRegularStep> steps) {
     for (int i = 0; i < steps.size(); i++) {
-      DtoRegularStep.SimpleRegularStep step = steps.get(i);
+      SimpleRegularStep step = steps.get(i);
       if (references(step.parameter.type, typeParameter)) {
         return i;
       }
@@ -48,9 +38,9 @@ final class VarLife {
     return -1;
   }
 
-  private static int varLifeEnd(TypeName typeParameter, List<DtoRegularStep.SimpleRegularStep> steps) {
+  private static int varLifeEnd(TypeName typeParameter, List<SimpleRegularStep> steps) {
     for (int i = steps.size() - 1; i >= 0; i--) {
-      DtoRegularStep.SimpleRegularStep step = steps.get(i);
+      SimpleRegularStep step = steps.get(i);
       if (references(step.parameter.type, typeParameter)) {
         return i;
       }
@@ -58,8 +48,7 @@ final class VarLife {
     throw new IllegalStateException(typeParameter + " not found");
   }
 
-  @Override
-  public String toString() {
-    return '(' + String.join(",", typeParameter.toString(), Integer.toString(start), Integer.toString(end)) + ')';
+  private VarLife() {
+    throw new UnsupportedOperationException("no instances");
   }
 }
