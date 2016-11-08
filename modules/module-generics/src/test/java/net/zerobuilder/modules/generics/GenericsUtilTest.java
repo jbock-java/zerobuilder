@@ -19,10 +19,15 @@ public class GenericsUtilTest {
 
   private static final ParameterizedTypeName LIST_OF_K =
       ParameterizedTypeName.get(ClassName.get(List.class), K);
+  private static final ParameterizedTypeName LIST_OF_V =
+      ParameterizedTypeName.get(ClassName.get(List.class), V);
   private static final ParameterizedTypeName MAP_K_V =
       ParameterizedTypeName.get(ClassName.get(Map.class), K, V);
   private static final ParameterizedTypeName MAP_V_LIST_OF_K =
       ParameterizedTypeName.get(ClassName.get(Map.class), V, LIST_OF_K);
+  private static final ParameterizedTypeName MAP_K_LIST_V =
+      ParameterizedTypeName.get(ClassName.get(Map.class), K, LIST_OF_V);
+
 
   @Test
   public void testReferences() throws Exception {

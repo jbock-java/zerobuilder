@@ -12,16 +12,20 @@ import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.generics.GenericsUtil.references;
 import static net.zerobuilder.modules.generics.VarLife.varLifes;
@@ -70,7 +74,8 @@ public final class GenericsBuilder extends DtoModule.RegularContractModule {
 
   @Override
   protected ModuleOutput process(SimpleStaticMethodGoalContext goal) {
-    List<List<TypeName>> lifes = varLifes(goal.details.typeParameters, goal.steps);
+    List<TypeName> steps = transform(goal.steps, step -> step.parameter.type);
+    List<List<TypeName>> lifes = varLifes(goal.details.typeParameters, steps);
     System.out.println(lifes);
     return new ModuleOutput(
         builderMethod(goal),
