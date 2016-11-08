@@ -46,8 +46,6 @@ import static net.zerobuilder.modules.updater.Updater.implType;
 
 final class GeneratorV {
 
-  private final Updater updater = null;
-
   private GeneratorV() {
     throw new UnsupportedOperationException("no instances");
   }

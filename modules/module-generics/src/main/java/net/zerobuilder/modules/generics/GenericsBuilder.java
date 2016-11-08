@@ -74,12 +74,19 @@ public final class GenericsBuilder extends DtoModule.RegularContractModule {
 
   @Override
   protected ModuleOutput process(SimpleStaticMethodGoalContext goal) {
-    List<TypeName> steps = transform(goal.steps, step -> step.parameter.type);
-    List<List<TypeName>> lifes = varLifes(goal.details.typeParameters, steps);
+    List<List<TypeName>> lifes = varLifes(goal.details.typeParameters, stepTypes(goal));
     System.out.println(lifes);
     return new ModuleOutput(
         builderMethod(goal),
         asList(defineImpl(goal), defineContract(goal)),
         emptyList());
   }
+
+  private List<TypeName> stepTypes(SimpleStaticMethodGoalContext goal) {
+    List<TypeName> builder = new ArrayList<>(goal.steps.size() + 1);
+    goal.steps.stream().map(step -> step.parameter.type).forEach(builder::add);
+    builder.add(goal.details.goalType);
+    return builder;
+  }
+
 }

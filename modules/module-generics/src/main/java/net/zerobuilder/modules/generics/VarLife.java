@@ -2,10 +2,10 @@ package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.TypeName;
 
-import java.security.Provider;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -18,10 +18,10 @@ final class VarLife {
       () -> Stream.generate(ArrayList::new);
 
   static List<List<TypeName>> methodParams(List<List<TypeName>> varLifes) {
-    List<List<TypeName>> builder = new ArrayList<>(varLifes.size());
-    emptyLists.get().limit(varLifes.size()).forEach(builder::add);
+    List<List<TypeName>> builder = new ArrayList<>(varLifes.size() - 1);
+    emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeName> previous = emptyList();
-    for (int i = 0; i < varLifes.size(); i++) {
+    for (int i = 0; i < varLifes.size() - 1; i++) {
       List<TypeName> typeNames = varLifes.get(i);
       for (TypeName typeName : typeNames) {
         if (!previous.contains(typeName)) {
@@ -34,29 +34,38 @@ final class VarLife {
   }
 
   static List<List<TypeName>> typeParams(List<List<TypeName>> varLifes) {
-    List<List<TypeName>> builder = new ArrayList<>(varLifes.size());
-    emptyLists.get().limit(varLifes.size()).forEach(builder::add);
+    List<List<TypeName>> builder = new ArrayList<>(varLifes.size() - 1);
+    emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeName> previous = emptyList();
-    List<TypeName> previouslyAdded = emptyList();
-    for (int i = 0; i < varLifes.size(); i++) {
-      List<TypeName> typeNames = varLifes.get(i);
-      for (TypeName typeName : typeNames) {
-        if (previous.contains(typeName)) {
-          builder.get(i).add(typeName);
+    List<TypeName> later = new ArrayList<>();
+    for (int i = 0; i < varLifes.size() - 1; i++) {
+      builder.get(i).addAll(later);
+      later.clear();
+      for (TypeName t : varLifes.get(i)) {
+        if (previous.contains(t)) {
+          if (!builder.get(i).contains(t)) {
+            builder.get(i).add(t);
+          }
+        } else {
+          later.add(t);
         }
       }
-      for (TypeName typeName : previouslyAdded) {
-        if (!builder.get(i).contains(typeName)) {
-          builder.get(i).add(typeName);
+      previous = varLifes.get(i);
+    }
+    return builder;
+  }
+
+  static List<List<TypeName>> implTypeParams(List<List<TypeName>> varLifes) {
+    List<List<TypeName>> builder = new ArrayList<>(varLifes.size() - 1);
+    emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
+    List<TypeName> seen = new ArrayList<>();
+    for (int i = 0; i < varLifes.size() - 1; i++) {
+      builder.get(i).addAll(seen);
+      for (TypeName typeName : varLifes.get(i)) {
+        if (!seen.contains(typeName)) {
+          seen.add(typeName);
         }
       }
-      previouslyAdded = new ArrayList<>();
-      for (TypeName typeName : typeNames) {
-        if (!previous.contains(typeName)) {
-          previouslyAdded.add(typeName);
-        }
-      }
-      previous = typeNames;
     }
     return builder;
   }
