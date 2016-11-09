@@ -37,8 +37,10 @@ import static net.zerobuilder.modules.generics.VarLife.varLifes;
 
 public final class GenericsBuilder extends DtoModule.RegularContractModule {
 
+  private static final TypeVariableName[] NO_TYPEVARNAME = new TypeVariableName[0];
+
   private List<TypeSpec> stepInterfaces(SimpleStaticMethodGoalContext goal) {
-    List<List<TypeVariableName>> lifes = varLifes(VarLife.typeVars(goal.details.typeParameters), stepTypes(goal));
+    List<List<TypeVariableName>> lifes = varLifes(goal.details.typeParameters, stepTypes(goal));
     List<List<TypeVariableName>> typeParams = typeParams(lifes);
     List<List<TypeVariableName>> methodParams = methodParams(lifes);
     ArrayList<TypeSpec> builder = new ArrayList<>();
@@ -52,7 +54,7 @@ public final class GenericsBuilder extends DtoModule.RegularContractModule {
               .returns(step.isLast() ?
                   nextType(step) :
                   ParameterizedTypeName.get(rawClassName(nextType(step)).get(),
-                      methodParams.get(i).toArray(new TypeVariableName[0])))
+                      methodParams.get(i).toArray(NO_TYPEVARNAME)))
               .addParameter(parameterSpec(step.parameter.type, step.parameter.name))
               .build())
           .build());

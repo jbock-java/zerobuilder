@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeVariableName;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
@@ -179,12 +180,12 @@ public final class DtoGoalDetails {
 
   public static final class StaticMethodGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {
-    public final List<TypeName> typeParameters;
+    public final List<TypeVariableName> typeParameters;
     public final String methodName;
     public final TypeName goalType;
 
     private StaticMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
-                                    Access access, List<TypeName> typeParameters) {
+                                    Access access, List<TypeVariableName> typeParameters) {
       super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
@@ -195,7 +196,7 @@ public final class DtoGoalDetails {
                                                  String name,
                                                  List<String> parameterNames,
                                                  String methodName,
-                                                 Access access, List<TypeName> typeParameters) {
+                                                 Access access, List<TypeVariableName> typeParameters) {
       return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters);
     }
 

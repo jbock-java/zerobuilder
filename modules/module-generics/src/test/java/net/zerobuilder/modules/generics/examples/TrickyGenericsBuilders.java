@@ -28,23 +28,23 @@ public final class TrickyGenericsBuilders {
 
       @Override
       public GetListBuilder.DefaultValue<V> key(K key) {
-        return new DefaultValueImpl(source, key);
+        return new DefaultValueImpl(this, key);
       }
     }
 
     private static final class DefaultValueImpl<K, V> implements GetListBuilder.DefaultValue<V> {
 
-      private final Map<K, List<V>> source;
+      private final KeyImpl<K, V> keyImpl;
       private final K key;
 
-      private DefaultValueImpl(Map<K, List<V>> source, K key) {
-        this.source = source;
+      private DefaultValueImpl(KeyImpl<K, V> keyImpl, K key) {
+        this.keyImpl = keyImpl;
         this.key = key;
       }
 
       @Override
       public List<V> defaultValue(V value) {
-        return TrickyGenerics.getList(source, key, value);
+        return TrickyGenerics.getList(keyImpl.source, key, value);
       }
     }
   }

@@ -40,6 +40,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.h908714124</groupId>
+            <artifactId>zerobuilder-module-generics</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>junit</groupId>

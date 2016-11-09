@@ -85,18 +85,6 @@ final class VarLife {
     return builder;
   }
 
-  static List<TypeVariableName> typeVars(List<TypeName> types) {
-    List<TypeVariableName> typeVars = new ArrayList<>();
-    for (TypeName type : types) {
-      for (TypeVariableName var : GenericsUtil.typeVars(type)) {
-        if (!typeVars.contains(var)) {
-          typeVars.add(var);
-        }
-      }
-    }
-    return typeVars;
-  }
-
   private static int varLifeStart(TypeName typeParameter, List<TypeName> steps) {
     for (int i = 0; i < steps.size(); i++) {
       TypeName step = steps.get(i);
