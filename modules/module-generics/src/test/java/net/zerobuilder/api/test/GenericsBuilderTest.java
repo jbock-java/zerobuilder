@@ -3,6 +3,7 @@ package net.zerobuilder.api.test;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoContext;
@@ -15,7 +16,7 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.modules.generics.GenericsBuilder;
-import org.junit.Ignore;
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
 import javax.lang.model.element.Modifier;
@@ -63,7 +64,6 @@ public class GenericsBuilderTest {
    *   }
    * </pre></code>
    */
-  @Ignore
   @Test
   public void staticMethodGoal() {
 
@@ -118,7 +118,10 @@ public class GenericsBuilderTest {
     assertThat(keys.typeVariables.size(), is(0));
     MethodSpec stepMethod = keys.methodSpecs.get(0);
     assertThat(stepMethod.typeVariables, is(singletonList(K)));
-    assertThat(stepMethod.returnType, is(LIST_OF_K));
+    TypeName returnType = stepMethod.returnType;
+    assertThat(returnType, is(CoreMatchers.instanceOf(ParameterizedTypeName.class)));
+    assertThat(((ParameterizedTypeName) returnType).rawType.simpleName(), is("Value"));
+    assertThat(((ParameterizedTypeName) returnType).typeArguments, is(singletonList(TypeVariableName.get("K"))));
   }
 
   private void checkValueContract(TypeSpec value) {

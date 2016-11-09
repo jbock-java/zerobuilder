@@ -21,8 +21,8 @@ import static org.junit.Assert.assertThat;
 
 public class VarLifeTest {
 
-  private static final TypeName K = TypeVariableName.get("K");
-  private static final TypeName V = TypeVariableName.get("V");
+  private static final TypeVariableName K = TypeVariableName.get("K");
+  private static final TypeVariableName V = TypeVariableName.get("V");
 
   private static TypeName listOf(TypeName v) {
     return ParameterizedTypeName.get(ClassName.get(List.class), v);
@@ -34,7 +34,7 @@ public class VarLifeTest {
 
   @Test
   public void testKV() {
-    List<List<TypeName>> life = varLifes(asList(K, V), asList(listOf(K), V, map(K, V)));
+    List<List<TypeVariableName>> life = varLifes(asList(K, V), asList(listOf(K), V, map(K, V)));
     assertThat(life, is(asList(singletonList(K), asList(K, V), asList(K, V))));
     assertThat(methodParams(life), is(asList(singletonList(K), singletonList(V))));
     assertThat(typeParams(life), is(asList(emptyList(), singletonList(K))));
@@ -43,7 +43,7 @@ public class VarLifeTest {
 
   @Test
   public void testMKV() {
-    List<List<TypeName>> life = varLifes(asList(K, V), asList(map(K, V), K, V, listOf(V)));
+    List<List<TypeVariableName>> life = varLifes(asList(K, V), asList(map(K, V), K, V, listOf(V)));
     assertThat(life, is(asList(asList(K, V), asList(K, V), singletonList(V), singletonList(V))));
     assertThat(methodParams(life), is(asList(asList(K, V), emptyList(), emptyList())));
     assertThat(typeParams(life), is(asList(emptyList(), asList(K, V), singletonList(V))));

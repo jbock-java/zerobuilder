@@ -1,11 +1,10 @@
 package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeVariableName;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -14,16 +13,16 @@ import static net.zerobuilder.modules.generics.GenericsUtil.references;
 
 final class VarLife {
 
-  private static final Supplier<Stream<List<TypeName>>> emptyLists =
+  private static final Supplier<Stream<List<TypeVariableName>>> emptyLists =
       () -> Stream.generate(ArrayList::new);
 
-  static List<List<TypeName>> methodParams(List<List<TypeName>> varLifes) {
-    List<List<TypeName>> builder = new ArrayList<>(varLifes.size() - 1);
+  static List<List<TypeVariableName>> methodParams(List<List<TypeVariableName>> varLifes) {
+    List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
-    List<TypeName> previous = emptyList();
+    List<TypeVariableName> previous = emptyList();
     for (int i = 0; i < varLifes.size() - 1; i++) {
-      List<TypeName> typeNames = varLifes.get(i);
-      for (TypeName typeName : typeNames) {
+      List<TypeVariableName> typeNames = varLifes.get(i);
+      for (TypeVariableName typeName : typeNames) {
         if (!previous.contains(typeName)) {
           builder.get(i).add(typeName);
         }
@@ -33,15 +32,15 @@ final class VarLife {
     return builder;
   }
 
-  static List<List<TypeName>> typeParams(List<List<TypeName>> varLifes) {
-    List<List<TypeName>> builder = new ArrayList<>(varLifes.size() - 1);
+  static List<List<TypeVariableName>> typeParams(List<List<TypeVariableName>> varLifes) {
+    List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
-    List<TypeName> previous = emptyList();
-    List<TypeName> later = new ArrayList<>();
+    List<TypeVariableName> previous = emptyList();
+    List<TypeVariableName> later = new ArrayList<>();
     for (int i = 0; i < varLifes.size() - 1; i++) {
       builder.get(i).addAll(later);
       later.clear();
-      for (TypeName t : varLifes.get(i)) {
+      for (TypeVariableName t : varLifes.get(i)) {
         if (previous.contains(t)) {
           if (!builder.get(i).contains(t)) {
             builder.get(i).add(t);
@@ -55,13 +54,13 @@ final class VarLife {
     return builder;
   }
 
-  static List<List<TypeName>> implTypeParams(List<List<TypeName>> varLifes) {
-    List<List<TypeName>> builder = new ArrayList<>(varLifes.size() - 1);
+  static List<List<TypeVariableName>> implTypeParams(List<List<TypeVariableName>> varLifes) {
+    List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
-    List<TypeName> seen = new ArrayList<>();
+    List<TypeVariableName> seen = new ArrayList<>();
     for (int i = 0; i < varLifes.size() - 1; i++) {
       builder.get(i).addAll(seen);
-      for (TypeName typeName : varLifes.get(i)) {
+      for (TypeVariableName typeName : varLifes.get(i)) {
         if (!seen.contains(typeName)) {
           seen.add(typeName);
         }
@@ -71,10 +70,10 @@ final class VarLife {
   }
 
 
-  static List<List<TypeName>> varLifes(List<TypeName> typeParameters, List<TypeName> steps) {
-    List<List<TypeName>> builder = new ArrayList<>(steps.size());
+  static List<List<TypeVariableName>> varLifes(List<TypeVariableName> typeParameters, List<TypeName> steps) {
+    List<List<TypeVariableName>> builder = new ArrayList<>(steps.size());
     emptyLists.get().limit(steps.size()).forEach(builder::add);
-    for (TypeName typeParameter : typeParameters) {
+    for (TypeVariableName typeParameter : typeParameters) {
       int start = varLifeStart(typeParameter, steps);
       if (start >= 0) {
         int end = varLifeEnd(typeParameter, steps);
@@ -84,6 +83,18 @@ final class VarLife {
       }
     }
     return builder;
+  }
+
+  static List<TypeVariableName> typeVars(List<TypeName> types) {
+    List<TypeVariableName> typeVars = new ArrayList<>();
+    for (TypeName type : types) {
+      for (TypeVariableName var : GenericsUtil.typeVars(type)) {
+        if (!typeVars.contains(var)) {
+          typeVars.add(var);
+        }
+      }
+    }
+    return typeVars;
   }
 
   private static int varLifeStart(TypeName typeParameter, List<TypeName> steps) {

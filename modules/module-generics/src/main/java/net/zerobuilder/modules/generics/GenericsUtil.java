@@ -2,8 +2,11 @@ package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeVariableName;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Stack;
 
 final class GenericsUtil {
@@ -43,6 +46,20 @@ final class GenericsUtil {
       }
     }
     return false;
+  }
+
+  static List<TypeVariableName> typeVars(TypeName type) {
+    List<TypeVariableName> builder = new ArrayList<>();
+    TypeWalk walk = new TypeWalk(type);
+    while (walk.hasNext()) {
+      TypeName typeName = walk.next();
+      if (typeName instanceof TypeVariableName) {
+        if (!builder.contains(typeName)) {
+          builder.add((TypeVariableName) typeName);
+        }
+      }
+    }
+    return builder;
   }
 
   private GenericsUtil() {
