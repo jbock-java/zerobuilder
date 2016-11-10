@@ -11,6 +11,7 @@ import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalCon
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
+import net.zerobuilder.compiler.generate.DtoStep;
 import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
 import java.util.ArrayList;
@@ -29,19 +30,28 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.DtoStep.AbstractStep.nextType;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.Step.nullCheck;
 
 final class BuilderV {
+
+  static TypeName nextType(DtoStep.AbstractStep step) {
+    if (step.nextStep.isPresent()) {
+      return step.context.generatedType
+          .nestedClass(upcase(step.goalDetails.name() + "Builder"))
+          .nestedClass(step.nextStep.get().thisType);
+    }
+    return step.goalDetails.type();
+  }
 
   static final Function<SimpleRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
@@ -122,7 +132,7 @@ final class BuilderV {
   }
 
   private static CodeBlock emptyCollectionAssignment(AbstractRegularStep step, SimpleRegularGoalContext goal,
-                                              CollectionInfo collInfo) {
+                                                     CollectionInfo collInfo) {
     return step.isLast() ?
         goal.acceptRegular(emptyCollectionInvoke(step, collInfo)) :
         CodeBlock.builder()
@@ -211,7 +221,7 @@ final class BuilderV {
   }
 
   private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,
-                                                                   CollectionInfo collectionInfo) {
+                                                                          CollectionInfo collectionInfo) {
 
 
     return new RegularGoalContextCases<CodeBlock>() {

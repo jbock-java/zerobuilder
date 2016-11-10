@@ -75,21 +75,12 @@ public final class DtoStep {
     public final AbstractGoalDetails goalDetails;
     public final GoalContext context;
     public final String thisType;
-    private final Optional<? extends AbstractStep> nextStep;
+    public final Optional<? extends AbstractStep> nextStep;
 
     public final boolean isLast() {
       return !nextStep.isPresent();
     }
-
-    public static TypeName nextType(AbstractStep step) {
-      if (step.nextStep.isPresent()) {
-        return step.context.generatedType
-            .nestedClass(upcase(step.goalDetails.name() + "Builder"))
-            .nestedClass(step.nextStep.get().thisType);
-      }
-      return step.goalDetails.type();
-    }
-
+    
     AbstractStep(String thisType,
                  Optional<? extends AbstractStep> nextStep,
                  AbstractGoalDetails goalDetails,
