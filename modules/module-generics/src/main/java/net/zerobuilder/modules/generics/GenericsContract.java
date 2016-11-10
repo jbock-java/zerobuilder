@@ -43,7 +43,7 @@ final class GenericsContract {
     return step.goalDetails.type();
   }
 
-  private static List<TypeSpec> stepInterfaces(SimpleStaticMethodGoalContext goal) {
+  static List<TypeSpec> stepInterfaces(SimpleStaticMethodGoalContext goal) {
     List<List<TypeVariableName>> lifes = varLifes(goal.details.typeParameters, stepTypes(goal));
     List<List<TypeVariableName>> typeParams = typeParams(lifes);
     List<List<TypeVariableName>> methodParams = methodParams(lifes);
@@ -78,18 +78,7 @@ final class GenericsContract {
         nextType(step);
   }
 
-  static TypeSpec defineContract(SimpleStaticMethodGoalContext goal) {
-    return classBuilder(contractType(goal))
-        .addTypes(stepInterfaces(goal))
-        .addModifiers(PUBLIC, STATIC, FINAL)
-        .addMethod(constructorBuilder()
-            .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
-            .addModifiers(PRIVATE)
-            .build())
-        .build();
-  }
-
-  private static ClassName contractType(SimpleStaticMethodGoalContext goal) {
+  static ClassName contractType(SimpleStaticMethodGoalContext goal) {
     String contractName = upcase(goal.details.name) + "Builder";
     return context.apply(goal)
         .generatedType.nestedClass(contractName);
