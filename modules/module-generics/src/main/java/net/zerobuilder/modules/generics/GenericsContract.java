@@ -43,10 +43,9 @@ final class GenericsContract {
     return step.goalDetails.type();
   }
 
-  static List<TypeSpec> stepInterfaces(SimpleStaticMethodGoalContext goal) {
-    List<List<TypeVariableName>> lifes = varLifes(goal.details.typeParameters, stepTypes(goal));
-    List<List<TypeVariableName>> typeParams = typeParams(lifes);
-    List<List<TypeVariableName>> methodParams = methodParams(lifes);
+  static List<TypeSpec> stepInterfaces(SimpleStaticMethodGoalContext goal,
+                                       List<List<TypeVariableName>> typeParams,
+                                       List<List<TypeVariableName>> methodParams) {
     ArrayList<TypeSpec> builder = new ArrayList<>();
     for (int i = 0; i < goal.steps.size(); i++) {
       SimpleRegularStep step = goal.steps.get(i);
@@ -73,8 +72,10 @@ final class GenericsContract {
     }
     Optional<ClassName> rawClassName = rawClassName(nextType(step));
     return rawClassName.isPresent() ?
-        ParameterizedTypeName.get(rawClassName.get(),
-            typeVars.toArray(NO_TYPEVARNAME)) :
+        typeVars.isEmpty() ?
+            rawClassName.get() :
+            ParameterizedTypeName.get(rawClassName.get(),
+                typeVars.toArray(NO_TYPEVARNAME)) :
         nextType(step);
   }
 
@@ -84,7 +85,13 @@ final class GenericsContract {
         .generatedType.nestedClass(contractName);
   }
 
-  private static List<TypeName> stepTypes(SimpleStaticMethodGoalContext goal) {
+  static ClassName implType(SimpleStaticMethodGoalContext goal) {
+    String contractName = upcase(goal.details.name) + "BuilderImpl";
+    return context.apply(goal)
+        .generatedType.nestedClass(contractName);
+  }
+
+  static List<TypeName> stepTypes(SimpleStaticMethodGoalContext goal) {
     List<TypeName> builder = new ArrayList<>(goal.steps.size() + 1);
     goal.steps.stream().map(step -> step.parameter.type).forEach(builder::add);
     builder.add(goal.details.goalType);
