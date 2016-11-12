@@ -3,4 +3,5 @@ if [[ -z "$1" ]]; then echo arg: version; exit 1; fi
 (cd api; ./release $1)
 (cd modules/module-builder; ./release $1)
 (cd modules/module-updater; ./release $1)
+(cd modules/module-generics; ./release $1)
 (cd compiler; ./release $1)

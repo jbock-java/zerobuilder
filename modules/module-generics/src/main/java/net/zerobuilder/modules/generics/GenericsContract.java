@@ -14,25 +14,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.squareup.javapoet.MethodSpec.constructorBuilder;
-import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
-import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.generics.VarLife.methodParams;
-import static net.zerobuilder.modules.generics.VarLife.typeParams;
-import static net.zerobuilder.modules.generics.VarLife.varLifes;
 
 final class GenericsContract {
 
-  private static final TypeVariableName[] NO_TYPEVARNAME = new TypeVariableName[0];
+  static final TypeVariableName[] NO_TYPEVARNAME = new TypeVariableName[0];
 
   private static TypeName nextType(DtoStep.AbstractStep step) {
     if (step.nextStep.isPresent()) {

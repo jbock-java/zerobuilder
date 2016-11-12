@@ -1,18 +1,22 @@
 package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 
 import java.util.List;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
+import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.generics.GenericsContract.contractType;
 import static net.zerobuilder.modules.generics.GenericsContract.implType;
 import static net.zerobuilder.modules.generics.GenericsContract.stepInterfaces;
@@ -24,32 +28,35 @@ import static net.zerobuilder.modules.generics.VarLife.varLifes;
 
 final class GenericsGenerator {
 
+  private static final String FIRST_STEP = "firstStep";
+
   private final List<TypeSpec> stepSpecs;
   private final List<List<TypeVariableName>> methodParams;
-  private final List<List<TypeVariableName>> typeParams;
   private final List<List<TypeVariableName>> implTypeParams;
-  private final SimpleStaticMethodGoalContext goal;
   private final ClassName implType;
+  private final ClassName contractType;
   private final GenericsImpl impl;
 
   private GenericsGenerator(List<TypeSpec> stepSpecs,
                             List<List<TypeVariableName>> methodParams,
-                            List<List<TypeVariableName>> typeParams,
                             List<List<TypeVariableName>> implTypeParams,
                             SimpleStaticMethodGoalContext goal) {
     this.stepSpecs = stepSpecs;
     this.methodParams = methodParams;
-    this.typeParams = typeParams;
     this.implTypeParams = implTypeParams;
-    this.goal = goal;
     this.implType = implType(goal);
-    this.impl = new GenericsImpl(implType);
+    this.contractType = contractType(goal);
+    this.impl = new GenericsImpl(implType, contractType, goal);
   }
 
   TypeSpec defineImpl() {
+    List<TypeSpec> stepImpls = impl.stepImpls(stepSpecs, methodParams, implTypeParams);
+    ClassName firstImplType = implType.nestedClass(stepImpls.get(0).name);
     return classBuilder(implType)
         .addModifiers(STATIC, FINAL)
-        .addTypes(impl.stepImpls(implType, stepSpecs, methodParams, implTypeParams))
+        .addField(FieldSpec.builder(firstImplType,
+            FIRST_STEP, PRIVATE, STATIC, FINAL).initializer("new $T()", firstImplType).build())
+        .addTypes(stepImpls)
         .addMethod(constructorBuilder()
             .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
             .addModifiers(PRIVATE)
@@ -58,7 +65,7 @@ final class GenericsGenerator {
   }
 
   TypeSpec defineContract() {
-    return classBuilder(contractType(goal))
+    return classBuilder(contractType)
         .addTypes(stepSpecs)
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder()
@@ -68,12 +75,22 @@ final class GenericsGenerator {
         .build();
   }
 
+  DtoGeneratorOutput.BuilderMethod builderMethod(SimpleStaticMethodGoalContext goal) {
+    return new DtoGeneratorOutput.BuilderMethod(
+        goal.details.name,
+        methodBuilder(goal.details.name + "Builder")
+            .addModifiers(goal.details.access(STATIC))
+            .returns(contractType.nestedClass(stepSpecs.get(0).name))
+            .addCode(statement("return $T.$L", implType, FIRST_STEP))
+            .build());
+  }
+
   static GenericsGenerator create(SimpleStaticMethodGoalContext goal) {
     List<List<TypeVariableName>> lifes = varLifes(goal.details.typeParameters, stepTypes(goal));
     List<List<TypeVariableName>> typeParams = typeParams(lifes);
     List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes);
     List<List<TypeVariableName>> methodParams = methodParams(lifes);
     List<TypeSpec> stepSpecs = stepInterfaces(goal, typeParams, methodParams);
-    return new GenericsGenerator(stepSpecs, methodParams, typeParams, implTypeParams, goal);
+    return new GenericsGenerator(stepSpecs, methodParams, implTypeParams, goal);
   }
 }

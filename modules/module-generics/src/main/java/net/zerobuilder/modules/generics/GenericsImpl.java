@@ -5,8 +5,11 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,43 +23,64 @@ import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
+import static net.zerobuilder.modules.generics.GenericsContract.NO_TYPEVARNAME;
 
 final class GenericsImpl {
 
   private final ClassName impl;
+  private final ClassName contract;
+  private final SimpleStaticMethodGoalContext goal;
 
-  List<TypeSpec> stepImpls(ClassName implType,
-                           List<TypeSpec> stepSpecs,
+  List<TypeSpec> stepImpls(List<TypeSpec> stepSpecs,
                            List<List<TypeVariableName>> methodParams,
                            List<List<TypeVariableName>> typeParams) {
     List<TypeSpec> builder = new ArrayList<>(stepSpecs.size());
     builder.addAll(nCopies(stepSpecs.size(), null));
     for (int i = 0; i < stepSpecs.size(); i++) {
-      TypeSpec type = stepSpecs.get(i);
-      MethodSpec method = type.methodSpecs.get(0);
+      TypeSpec stepSpec = stepSpecs.get(i);
+      MethodSpec method = stepSpec.methodSpecs.get(0);
       ParameterSpec parameter = method.parameters.get(0);
       List<FieldSpec> fields = fields(stepSpecs, i);
-      builder.set(i, classBuilder(implType.nestedClass(type.name + "Impl"))
+      TypeName superinterface = stepSpec.typeVariables.isEmpty() ?
+          contract.nestedClass(stepSpec.name) :
+          ParameterizedTypeName.get(contract.nestedClass(stepSpec.name),
+              stepSpec.typeVariables.toArray(NO_TYPEVARNAME));
+      builder.set(i, classBuilder(impl.nestedClass(stepSpec.name + "Impl"))
           .addFields(fields)
+          .addSuperinterface(superinterface)
           .addMethod(createConstructor(fields))
           .addTypeVariables(typeParams.get(i))
           .addMethod(methodBuilder(method.name)
               .addParameter(parameter)
               .addTypeVariables(methodParams.get(i))
+              .addModifiers(PUBLIC)
               .returns(method.returnType)
-              .addCode(i == stepSpecs.size() - 1 ?
-                  invoke(stepSpecs) :
-                  statement("return new $T(this, $N)",
-                      implType.nestedClass(stepSpecs.get(i + 1).name + "Impl"), parameter))
+              .addCode(getCodeBlock(stepSpecs, i, parameter))
               .build())
+          .addModifiers(PRIVATE, STATIC, FINAL)
           .build());
+
     }
     return builder;
+  }
+
+  private CodeBlock getCodeBlock(List<TypeSpec> stepSpecs, int i, ParameterSpec parameter) {
+    if (i == stepSpecs.size() - 1) {
+      return statement("return $T.$L($L)",
+          goal.context.type,
+          goal.details.methodName, invoke(stepSpecs));
+    }
+    ClassName next = impl.nestedClass(stepSpecs.get(i + 1).name + "Impl");
+    return i == 0 ?
+        statement("return new $T($N)", next, parameter) :
+        statement("return new $T(this, $N)", next, parameter);
   }
 
   static CodeBlock invoke(List<TypeSpec> stepSpecs) {
@@ -110,7 +134,9 @@ final class GenericsImpl {
         .build();
   }
 
-  GenericsImpl(ClassName impl) {
+  GenericsImpl(ClassName impl, ClassName contract, SimpleStaticMethodGoalContext goal) {
     this.impl = impl;
+    this.contract = contract;
+    this.goal = goal;
   }
 }
