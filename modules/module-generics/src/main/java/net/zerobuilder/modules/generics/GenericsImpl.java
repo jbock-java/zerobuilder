@@ -47,12 +47,12 @@ final class GenericsImpl {
       TypeSpec stepSpec = stepSpecs.get(i);
       MethodSpec method = stepSpec.methodSpecs.get(0);
       ParameterSpec parameter = method.parameters.get(0);
-      List<FieldSpec> fields = fields(stepSpecs, i);
+      List<FieldSpec> fields = fields(stepSpecs, i, typeParams);
       TypeName superinterface = stepSpec.typeVariables.isEmpty() ?
           contract.nestedClass(stepSpec.name) :
           ParameterizedTypeName.get(contract.nestedClass(stepSpec.name),
               stepSpec.typeVariables.toArray(NO_TYPEVARNAME));
-      builder.set(i, classBuilder(impl.nestedClass(stepSpec.name + "Impl"))
+      builder.set(i, classBuilder(stepSpec.name + "Impl")
           .addFields(fields)
           .addSuperinterface(superinterface)
           .addMethod(createConstructor(fields))
@@ -112,19 +112,23 @@ final class GenericsImpl {
         .build();
   }
 
-  private List<FieldSpec> fields(List<TypeSpec> stepSpecs, int i) {
+  private List<FieldSpec> fields(List<TypeSpec> stepSpecs, int i, List<List<TypeVariableName>> typeParams) {
     if (i == 0) {
       return emptyList();
     }
     if (i == 1) {
       return singletonList(parameterField(stepSpecs.get(0)));
     }
-    TypeSpec previous = stepSpecs.get(i - 1);
+    TypeSpec stepSpec = stepSpecs.get(i - 1);
+    TypeName implType = typeParams.get(i - 1).isEmpty() ?
+        impl.nestedClass(stepSpec.name + "Impl") :
+        ParameterizedTypeName.get(impl.nestedClass(stepSpec.name + "Impl"),
+            typeParams.get(i - 1).toArray(NO_TYPEVARNAME));
     return asList(
-        FieldSpec.builder(impl.nestedClass(previous.name), downcase(previous.name) + "Impl",
+        FieldSpec.builder(implType, downcase(stepSpec.name) + "Impl",
             PRIVATE, FINAL)
             .build(),
-        parameterField(previous));
+        parameterField(stepSpec));
   }
 
   private FieldSpec parameterField(TypeSpec type) {

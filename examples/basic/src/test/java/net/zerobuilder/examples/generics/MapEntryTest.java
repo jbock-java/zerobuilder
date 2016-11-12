@@ -2,12 +2,11 @@ package net.zerobuilder.examples.generics;
 
 import org.junit.Test;
 
-import java.util.Map;
 import java.util.Map.Entry;
 
 import static net.zerobuilder.examples.generics.MapEntryBuilders.entryBuilder;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class MapEntryTest {
 

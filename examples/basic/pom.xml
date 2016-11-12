@@ -17,7 +17,7 @@
         <dependency>
             <groupId>com.github.h908714124</groupId>
             <artifactId>zerobuilder</artifactId>
-            <version>${revision}</version>
+            <version>1.91-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -35,8 +35,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.5.1</version>
                 <configuration>
-                    <source>7</source>
-                    <target>7</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
         </plugins>
