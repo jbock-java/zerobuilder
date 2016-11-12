@@ -17,6 +17,24 @@ import static org.junit.Assert.assertThat;
 public class GenericsImplTest {
 
   @Test
+  public void invoke1() {
+    List<TypeSpec> typeSpecs = Stream.of("DefaultValue")
+        .map(this::typeSpec)
+        .collect(toList());
+    CodeBlock block = GenericsImpl.invoke(typeSpecs);
+    assertThat(block, is(CodeBlock.builder().add("defaultValue").build()));
+  }
+
+  @Test
+  public void invoke2() {
+    List<TypeSpec> typeSpecs = Stream.of("Key", "DefaultValue")
+        .map(this::typeSpec)
+        .collect(toList());
+    CodeBlock block = GenericsImpl.invoke(typeSpecs);
+    assertThat(block, is(CodeBlock.builder().add("key, defaultValue").build()));
+  }
+
+  @Test
   public void invoke3() {
     List<TypeSpec> typeSpecs = Stream.of("Source", "Key", "DefaultValue")
         .map(this::typeSpec)
