@@ -58,6 +58,7 @@ final class GenericsImpl {
           .addMethod(createConstructor(fields))
           .addTypeVariables(typeParams.get(i))
           .addMethod(methodBuilder(method.name)
+              .addAnnotation(Override.class)
               .addParameter(parameter)
               .addTypeVariables(methodParams.get(i))
               .addModifiers(PUBLIC)

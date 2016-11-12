@@ -16,6 +16,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.generics.GenericsContract.contractType;
 import static net.zerobuilder.modules.generics.GenericsContract.implType;
@@ -28,14 +29,13 @@ import static net.zerobuilder.modules.generics.VarLife.varLifes;
 
 final class GenericsGenerator {
 
-  private static final String FIRST_STEP = "firstStep";
-
   private final List<TypeSpec> stepSpecs;
   private final List<List<TypeVariableName>> methodParams;
   private final List<List<TypeVariableName>> implTypeParams;
   private final ClassName implType;
   private final ClassName contractType;
   private final GenericsImpl impl;
+  private final List<TypeSpec> stepImpls;
 
   private GenericsGenerator(List<TypeSpec> stepSpecs,
                             List<List<TypeVariableName>> methodParams,
@@ -47,15 +47,15 @@ final class GenericsGenerator {
     this.implType = implType(goal);
     this.contractType = contractType(goal);
     this.impl = new GenericsImpl(implType, contractType, goal);
+    this.stepImpls = impl.stepImpls(stepSpecs, methodParams, implTypeParams);
   }
 
   TypeSpec defineImpl() {
-    List<TypeSpec> stepImpls = impl.stepImpls(stepSpecs, methodParams, implTypeParams);
     ClassName firstImplType = implType.nestedClass(stepImpls.get(0).name);
     return classBuilder(implType)
-        .addModifiers(STATIC, FINAL)
+        .addModifiers(PRIVATE, STATIC, FINAL)
         .addField(FieldSpec.builder(firstImplType,
-            FIRST_STEP, PRIVATE, STATIC, FINAL).initializer("new $T()", firstImplType).build())
+            downcase(firstImplType.simpleName()), PRIVATE, STATIC, FINAL).initializer("new $T()", firstImplType).build())
         .addTypes(stepImpls)
         .addMethod(constructorBuilder()
             .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
@@ -81,7 +81,7 @@ final class GenericsGenerator {
         methodBuilder(goal.details.name + "Builder")
             .addModifiers(goal.details.access(STATIC))
             .returns(contractType.nestedClass(stepSpecs.get(0).name))
-            .addCode(statement("return $T.$L", implType, FIRST_STEP))
+            .addCode(statement("return $T.$L", implType, downcase(stepImpls.get(0).name)))
             .build());
   }
 

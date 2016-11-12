@@ -24,7 +24,7 @@ public @interface Step {
 
   /**
    * <p>Overrides the default position in the generated chain of builder steps
-   * for this parameter. By default, bean steps are in alphabetic order.</p>
+   * for this parameter.</p>
    *
    * @return The desired position of this step in the builder chain.
    * Negative values are ignored.

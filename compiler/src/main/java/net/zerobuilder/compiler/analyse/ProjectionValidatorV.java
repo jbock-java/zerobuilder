@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -127,7 +128,15 @@ final class ProjectionValidatorV {
         .stream()
         .map(parameter -> TmpSimpleParameter.create(parameter, goalAnnotation.apply(goal)))
         .collect(toList());
-    // TODO allow shuffle
+    Optional<TmpSimpleParameter> any = parameters.stream()
+        .filter(p -> p.annotation.isPresent())
+        .filter(p -> p.annotation.get().value() >= 0)
+        .findAny();
+    if (any.isPresent()) {
+      // TODO allow shuffle
+      throw new ValidationException("Changing parameter order is not allowed in generic goal",
+          any.get().element);
+    }
     return SimpleStaticGoalDescription.create(
         goal.details, thrownTypes(executableElement.apply(goal)),
         transform(parameters, parameter -> parameter.parameter));
