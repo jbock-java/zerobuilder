@@ -1,6 +1,7 @@
 package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
@@ -9,6 +10,7 @@ import com.squareup.javapoet.TypeVariableName;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
@@ -47,10 +49,33 @@ final class GenericsImpl {
               .addParameter(parameter)
               .addTypeVariables(methodParams.get(i))
               .returns(method.returnType)
+              .addCode(i == stepSpecs.size() - 1 ?
+                  invoke(stepSpecs) :
+                  statement("return new $T(this, $N)",
+                      implType.nestedClass(stepSpecs.get(i + 1).name + "Impl"), parameter))
               .build())
           .build());
     }
     return builder;
+  }
+
+  static CodeBlock invoke(List<TypeSpec> stepSpecs) {
+    return IntStream.range(0, stepSpecs.size())
+        .mapToObj(i -> {
+          CodeBlock.Builder block = CodeBlock.builder();
+          for (int j = stepSpecs.size() - 3; j >= i; j--) {
+            TypeSpec type = stepSpecs.get(j + 1);
+            MethodSpec method = type.methodSpecs.get(0);
+            ParameterSpec parameter = method.parameters.get(0);
+            block.add("$N", parameter).add("Impl.");
+          }
+          TypeSpec type = stepSpecs.get(i);
+          MethodSpec method = type.methodSpecs.get(0);
+          ParameterSpec parameter = method.parameters.get(0);
+          block.add("$N", parameter);
+          return block.build();
+        })
+        .collect(joinCodeBlocks(", "));
   }
 
   private MethodSpec createConstructor(List<FieldSpec> fields) {

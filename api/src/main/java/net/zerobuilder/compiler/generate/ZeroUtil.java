@@ -7,6 +7,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import com.sun.org.apache.bcel.internal.classfile.Code;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
@@ -177,32 +178,49 @@ public final class ZeroUtil {
     return builder;
   }
 
-  public static final Collector<CodeBlock, CodeBlock.Builder, CodeBlock> joinCodeBlocks
-      = new Collector<CodeBlock, CodeBlock.Builder, CodeBlock>() {
-    @Override
-    public Supplier<CodeBlock.Builder> supplier() {
-      return CodeBlock::builder;
-    }
-    @Override
-    public BiConsumer<CodeBlock.Builder, CodeBlock> accumulator() {
-      return (builder, block) -> builder.add(block);
-    }
-    @Override
-    public BinaryOperator<CodeBlock.Builder> combiner() {
-      return (left, right) -> {
-        left.add(right.build());
-        return left;
-      };
-    }
-    @Override
-    public Function<CodeBlock.Builder, CodeBlock> finisher() {
-      return CodeBlock.Builder::build;
-    }
-    @Override
-    public Set<Characteristics> characteristics() {
-      return emptySet();
-    }
-  };
+  public static final Collector<CodeBlock, List<CodeBlock>, CodeBlock> joinCodeBlocks
+      = joinCodeBlocks("");
+
+  public static Collector<CodeBlock, List<CodeBlock>, CodeBlock> joinCodeBlocks(String delimiter) {
+    return new Collector<CodeBlock, List<CodeBlock>, CodeBlock>() {
+      @Override
+      public Supplier<List<CodeBlock>> supplier() {
+        return ArrayList::new;
+      }
+      @Override
+      public BiConsumer<List<CodeBlock>, CodeBlock> accumulator() {
+        return (builder, block) -> builder.add(block);
+      }
+      @Override
+      public BinaryOperator<List<CodeBlock>> combiner() {
+        return (left, right) -> {
+          left.addAll(right);
+          return left;
+        };
+      }
+      @Override
+      public Function<List<CodeBlock>, CodeBlock> finisher() {
+        return blocks -> {
+          if (blocks.isEmpty()) {
+            return emptyCodeBlock;
+          }
+          CodeBlock.Builder builder = CodeBlock.builder();
+          for (int i = 0; i < blocks.size() - 1; i++) {
+            builder.add(blocks.get(i));
+            if (!delimiter.isEmpty()) {
+              builder.add(delimiter);
+            }
+          }
+          builder.add(blocks.get(blocks.size() - 1));
+          return builder.build();
+        };
+      }
+      @Override
+      public Set<Characteristics> characteristics() {
+        return emptySet();
+      }
+    };
+  }
 
   public static <E> Collector<List<E>, List<E>, List<E>> flatList() {
     return new Collector<List<E>, List<E>, List<E>>() {

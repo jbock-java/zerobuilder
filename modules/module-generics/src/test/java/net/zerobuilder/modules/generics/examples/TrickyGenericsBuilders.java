@@ -43,8 +43,8 @@ public final class TrickyGenericsBuilders {
       }
 
       @Override
-      public List<V> defaultValue(V value) {
-        return TrickyGenerics.getList(keyImpl.source, key, value);
+      public List<V> defaultValue(V defaultValue) {
+        return TrickyGenerics.getList(keyImpl.source, key, defaultValue);
       }
     }
   }

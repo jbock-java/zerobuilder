@@ -80,6 +80,12 @@ public final class Messages {
     public static final String BEAN_SUBGOALS =
         "Beans may not have subgoals." + POJO_HINT;
 
+    public static final String NO_TYPE_PARAMS_HERE =
+        "Type parameters are not allowed in an updater goal.";
+
+    public static final String NONSTATIC_TYPE_PARAMETERS =
+        "Only static methods may have type parameters";
+
     private ErrorMessages() {
       throw new UnsupportedOperationException("no instances");
     }
