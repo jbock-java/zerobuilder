@@ -41,6 +41,7 @@ final class GenericsContract {
           .addMethod(nextStep(goal,
               typeParams,
               methodParams, i))
+          .addModifiers(PUBLIC)
           .build());
     }
     return builder;
