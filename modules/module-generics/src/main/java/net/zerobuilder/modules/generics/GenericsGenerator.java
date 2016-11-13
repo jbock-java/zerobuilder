@@ -19,6 +19,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.generics.GenericsContract.contractType;
@@ -88,13 +89,14 @@ final class GenericsGenerator {
     ParameterSpec instance = parameterSpec(goal.context.type, "instance");
     MethodSpec.Builder builder = methodBuilder(goal.details.name + "Builder")
         .addModifiers(goal.details.access(STATIC))
-        .returns(contractType.nestedClass(stepSpecs.get(0).name))
-        .addCode(goal.details.instance ?
-            statement("return new $T($N)", implType.nestedClass(stepImpls.get(0).name), instance) :
-            statement("return $T.$L", implType, downcase(stepImpls.get(0).name)));
+        .returns(contractType.nestedClass(stepSpecs.get(0).name));
     if (goal.details.instance) {
       builder.addParameter(instance);
+      builder.addCode(nullCheck(instance));
     }
+    builder.addCode(goal.details.instance ?
+        statement("return new $T($N)", implType.nestedClass(stepImpls.get(0).name), instance) :
+        statement("return $T.$L", implType, downcase(stepImpls.get(0).name)));
     return new DtoGeneratorOutput.BuilderMethod(
         goal.details.name,
         builder.build());

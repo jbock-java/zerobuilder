@@ -7,10 +7,16 @@ import java.util.AbstractMap;
 import java.util.Map;
 
 @Builders
-public class Instance {
+final class Instance<S extends String> {
+
+  private final S prefix;
+
+  Instance(S prefix) {
+    this.prefix = prefix;
+  }
 
   @Goal(name = "entry")
-  <K, V> Map.Entry<K, V> entry(K key, V value) {
-    return new AbstractMap.SimpleEntry(key, value);
+  <K, V extends S> Map.Entry<K, V> entry(K key, V value) {
+    return new AbstractMap.SimpleEntry(key, String.valueOf(prefix) + value);
   }
 }
