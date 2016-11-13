@@ -12,6 +12,7 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static net.zerobuilder.modules.generics.VarLife.expand;
 import static net.zerobuilder.modules.generics.VarLife.implTypeParams;
 import static net.zerobuilder.modules.generics.VarLife.methodParams;
 import static net.zerobuilder.modules.generics.VarLife.typeParams;
@@ -56,5 +57,16 @@ public class VarLifeTest {
     assertThat(life, is(asList(singletonList(K), asList(K, V), asList(K, V), singletonList(V))));
     assertThat(methodParams(life), is(asList(singletonList(K), singletonList(V), emptyList())));
     assertThat(typeParams(life), is(asList(emptyList(), singletonList(K), asList(V, K))));
+  }
+
+  @Test
+  public void testExtend() {
+    TypeVariableName s = TypeVariableName.get("S", String.class);
+    TypeVariableName k = TypeVariableName.get("K");
+    TypeVariableName v = TypeVariableName.get("V", s);
+    List<TypeVariableName> expand = expand(singletonList(v));
+    System.out.println(expand);
+    List<List<TypeVariableName>> life = varLifes(asList(s, k, v), asList(k, v));
+    System.out.println(life);
   }
 }

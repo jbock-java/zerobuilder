@@ -10,6 +10,7 @@ import java.util.Map;
 
 import static net.zerobuilder.modules.generics.GenericsUtil.references;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class GenericsUtilTest {
@@ -35,5 +36,12 @@ public class GenericsUtilTest {
     assertFalse(references(LIST_OF_K, V));
     assertTrue(references(MAP_K_V, V));
     assertTrue(references(MAP_V_LIST_OF_K, K));
+  }
+
+  @Test
+  public void testReferencesHard() throws Exception {
+    TypeVariableName s = TypeVariableName.get("S", String.class);
+    TypeVariableName v = TypeVariableName.get("V", s);
+    assertTrue(references(v, s));
   }
 }

@@ -4,12 +4,14 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
 import static net.zerobuilder.modules.generics.GenericsUtil.references;
+import static net.zerobuilder.modules.generics.GenericsUtil.typeVars;
 
 final class VarLife {
 
@@ -73,7 +75,8 @@ final class VarLife {
   static List<List<TypeVariableName>> varLifes(List<TypeVariableName> typeParameters, List<TypeName> steps) {
     List<List<TypeVariableName>> builder = new ArrayList<>(steps.size());
     emptyLists.get().limit(steps.size()).forEach(builder::add);
-    for (TypeVariableName typeParameter : typeParameters) {
+    List<TypeVariableName> expanded = expand(typeParameters);
+    for (TypeVariableName typeParameter : expanded) {
       int start = varLifeStart(typeParameter, steps);
       if (start >= 0) {
         int end = varLifeEnd(typeParameter, steps);
@@ -85,7 +88,20 @@ final class VarLife {
     return builder;
   }
 
-  private static int varLifeStart(TypeName typeParameter, List<TypeName> steps) {
+  static List<TypeVariableName> expand(List<TypeVariableName> typeParameters) {
+    List<TypeVariableName> builder = new ArrayList<>(typeParameters.size());
+    for (TypeVariableName type : typeParameters) {
+      List<TypeVariableName> types = typeVars(type);
+      for (TypeVariableName t : types) {
+        if (!builder.contains(t)) {
+          builder.add(t);
+        }
+      }
+    }
+    return builder;
+  }
+
+  static int varLifeStart(TypeName typeParameter, List<TypeName> steps) {
     for (int i = 0; i < steps.size(); i++) {
       TypeName step = steps.get(i);
       if (references(step, typeParameter)) {
