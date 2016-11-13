@@ -9,6 +9,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 
 import java.util.ArrayList;
@@ -26,8 +27,10 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.NullPolicy.REJECT;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
+import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
@@ -74,15 +77,20 @@ final class GenericsImpl {
   }
 
   private CodeBlock getCodeBlock(List<TypeSpec> stepSpecs, int i, ParameterSpec parameter) {
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.parameters.get(i).nullPolicy == REJECT
+        && !goal.parameters.get(i).type.isPrimitive()) {
+      builder.add(nullCheck(parameter.name, parameter.name));
+    }
     if (i == stepSpecs.size() - 1) {
-      return statement("return $T.$L($L)",
+      return builder.addStatement("return $T.$L($L)",
           goal.context.type,
-          goal.details.methodName, invoke(stepSpecs));
+          goal.details.methodName, invoke(stepSpecs)).build();
     }
     ClassName next = impl.nestedClass(stepSpecs.get(i + 1).name + "Impl");
     return i == 0 ?
-        statement("return new $T($N)", next, parameter) :
-        statement("return new $T(this, $N)", next, parameter);
+        builder.addStatement("return new $T($N)", next, parameter).build() :
+        builder.addStatement("return new $T(this, $N)", next, parameter).build();
   }
 
   CodeBlock invoke(List<TypeSpec> stepSpecs) {
