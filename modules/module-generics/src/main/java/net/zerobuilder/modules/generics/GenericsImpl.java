@@ -88,7 +88,7 @@ final class GenericsImpl {
           goal.details.methodName, invoke(stepSpecs)).build();
     }
     ClassName next = impl.nestedClass(stepSpecs.get(i + 1).name + "Impl");
-    return i == 0 ?
+    return i == 0 && !goal.details.instance ?
         builder.addStatement("return new $T($N)", next, parameter).build() :
         builder.addStatement("return new $T(this, $N)", next, parameter).build();
   }
@@ -129,9 +129,12 @@ final class GenericsImpl {
 
   private List<FieldSpec> fields(List<TypeSpec> stepSpecs, int i, List<List<TypeVariableName>> typeParams) {
     if (i == 0) {
-      return emptyList();
+      return goal.details.instance ?
+          singletonList(FieldSpec.builder(goal.context.type, "instance",
+              PRIVATE, FINAL).build()) :
+          emptyList();
     }
-    if (i == 1) {
+    if (i == 1 && !goal.details.instance) {
       return singletonList(parameterField(stepSpecs.get(0)));
     }
     TypeSpec stepSpec = stepSpecs.get(i - 1);

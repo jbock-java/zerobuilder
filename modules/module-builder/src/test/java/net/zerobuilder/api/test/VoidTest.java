@@ -61,7 +61,7 @@ public class VoidTest {
     String goalName = "Void";
     StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
         TypeName.VOID, goalName, singletonList("message"),
-        "doUpdate", PRIVATE, emptyList());
+        "doUpdate", PRIVATE, emptyList(), false);
 
     SimpleParameter parameter = DtoRegularParameter.create("message", STRING, ALLOW);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(

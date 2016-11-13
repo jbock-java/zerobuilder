@@ -84,7 +84,8 @@ public class TrickyGenericsBuilderTest {
         asList("source", "key", "defaultValue"),
         "getList",
         PRIVATE,
-        asList(K, V));
+        asList(K, V),
+        false);
 
     // use SimpleParameter because the generics module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("source", MAP_K_LIST_V, ALLOW);

@@ -25,11 +25,8 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
-import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NONSTATIC_TYPE_PARAMETERS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NON_STATIC_UPDATER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_TYPE_PARAMS_HERE;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDATER;
@@ -314,9 +311,6 @@ final class DtoGoalElement {
   private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType, String name,
                                                               String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
-    if (element.getKind() == METHOD && !element.getModifiers().contains(STATIC)) {
-      throw new ValidationException(NON_STATIC_UPDATER, element);
-    }
     if (!element.getTypeParameters().isEmpty()) {
       throw new ValidationException(NO_TYPE_PARAMS_HERE, element);
     }
@@ -325,7 +319,7 @@ final class DtoGoalElement {
             ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
                 name, parameterNames, goalOption.access) :
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                emptyList());
+                emptyList(), !element.getModifiers().contains(STATIC));
     return new RegularProjectableGoalElement(element, details);
   }
 
@@ -342,18 +336,14 @@ final class DtoGoalElement {
       return new RegularGoalElement(element, details);
     }
     if (!element.getTypeParameters().isEmpty()) {
-      // TODO allow non-static
-      if (!element.getModifiers().contains(STATIC)) {
-        throw new ValidationException(NONSTATIC_TYPE_PARAMETERS, element);
-      }
       StaticMethodGoalDetails details = StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-          typeParameters);
+          typeParameters, !element.getModifiers().contains(STATIC));
       return new RegularStaticGoalElement(element, details);
     }
     AbstractRegularDetails details =
         element.getModifiers().contains(STATIC) ?
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                typeParameters) :
+                typeParameters, !element.getModifiers().contains(STATIC)) :
             InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);
     return new RegularGoalElement(element, details);
   }

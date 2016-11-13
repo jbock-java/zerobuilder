@@ -2,6 +2,8 @@ package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
@@ -17,6 +19,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.generics.GenericsContract.contractType;
 import static net.zerobuilder.modules.generics.GenericsContract.implType;
@@ -36,6 +39,7 @@ final class GenericsGenerator {
   private final ClassName contractType;
   private final GenericsImpl impl;
   private final List<TypeSpec> stepImpls;
+  private final SimpleStaticMethodGoalContext goal;
 
   private GenericsGenerator(List<TypeSpec> stepSpecs,
                             List<List<TypeVariableName>> methodParams,
@@ -47,15 +51,20 @@ final class GenericsGenerator {
     this.implType = implType(goal);
     this.contractType = contractType(goal);
     this.impl = new GenericsImpl(implType, contractType, goal);
+    this.goal = goal;
     this.stepImpls = impl.stepImpls(stepSpecs, methodParams, implTypeParams);
   }
 
   TypeSpec defineImpl() {
     ClassName firstImplType = implType.nestedClass(stepImpls.get(0).name);
-    return classBuilder(implType)
-        .addModifiers(PRIVATE, STATIC, FINAL)
-        .addField(FieldSpec.builder(firstImplType,
-            downcase(firstImplType.simpleName()), PRIVATE, STATIC, FINAL).initializer("new $T()", firstImplType).build())
+    TypeSpec.Builder builder = classBuilder(implType)
+        .addModifiers(PRIVATE, STATIC, FINAL);
+    if (!goal.details.instance) {
+      builder.addField(FieldSpec.builder(firstImplType,
+          downcase(firstImplType.simpleName()), PRIVATE, STATIC, FINAL)
+          .initializer("new $T()", firstImplType).build());
+    }
+    return builder
         .addTypes(stepImpls)
         .addMethod(constructorBuilder()
             .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
@@ -76,13 +85,19 @@ final class GenericsGenerator {
   }
 
   DtoGeneratorOutput.BuilderMethod builderMethod(SimpleStaticMethodGoalContext goal) {
+    ParameterSpec instance = parameterSpec(goal.context.type, "instance");
+    MethodSpec.Builder builder = methodBuilder(goal.details.name + "Builder")
+        .addModifiers(goal.details.access(STATIC))
+        .returns(contractType.nestedClass(stepSpecs.get(0).name))
+        .addCode(goal.details.instance ?
+            statement("return new $T($N)", implType.nestedClass(stepImpls.get(0).name), instance) :
+            statement("return $T.$L", implType, downcase(stepImpls.get(0).name)));
+    if (goal.details.instance) {
+      builder.addParameter(instance);
+    }
     return new DtoGeneratorOutput.BuilderMethod(
         goal.details.name,
-        methodBuilder(goal.details.name + "Builder")
-            .addModifiers(goal.details.access(STATIC))
-            .returns(contractType.nestedClass(stepSpecs.get(0).name))
-            .addCode(statement("return $T.$L", implType, downcase(stepImpls.get(0).name)))
-            .build());
+        builder.build());
   }
 
   static GenericsGenerator create(SimpleStaticMethodGoalContext goal) {

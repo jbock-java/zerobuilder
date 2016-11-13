@@ -4,3 +4,4 @@ target
 /compiler/dependency-reduced-pom.xml
 /deploy
 
+/examples/basic/src/main/java/net/zerobuilder/examples/generics/InstanceBuilders2.java

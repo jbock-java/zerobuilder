@@ -82,7 +82,8 @@ public class GenericsBuilderTest {
         asList("keys", "value"),
         "multiKey",
         PRIVATE,
-        asList(K, V));
+        asList(K, V),
+        false);
 
     // use SimpleParameter because the generics module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("keys", LIST_OF_K, ALLOW);

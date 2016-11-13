@@ -72,8 +72,8 @@ public final class DtoRegularGoal {
   private static final Predicate<SimpleRegularGoalContext> isInstance =
       asPredicate(regularGoalContextCases(
           constructor -> false,
-          method -> true,
-          instanceMethod -> false));
+          instance -> true,
+          simple -> simple.details.instance));
 
   private static final Function<SimpleRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
       regularGoalContextCases(

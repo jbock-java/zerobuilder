@@ -73,7 +73,8 @@ public class BuilderTest {
         asList("foo", "bar"),
         "create", // correct goal method name
         PRIVATE,
-        emptyList());
+        emptyList(),
+        false);
 
     // use SimpleParameter because the builder module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW);

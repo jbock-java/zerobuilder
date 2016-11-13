@@ -183,23 +183,26 @@ public final class DtoGoalDetails {
     public final List<TypeVariableName> typeParameters;
     public final String methodName;
     public final TypeName goalType;
+    public final boolean instance;
 
     private StaticMethodGoalDetails(TypeName goalType, String name,
                                     List<String> parameterNames,
                                     String methodName,
-                                    Access access, List<TypeVariableName> typeParameters) {
+                                    Access access, List<TypeVariableName> typeParameters, boolean instance) {
       super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
+      this.instance = instance;
     }
 
     public static StaticMethodGoalDetails create(TypeName goalType,
                                                  String name,
                                                  List<String> parameterNames,
                                                  String methodName,
-                                                 Access access, List<TypeVariableName> typeParameters) {
-      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters);
+                                                 Access access, List<TypeVariableName> typeParameters,
+                                                 boolean instance) {
+      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters, instance);
     }
 
     @Override
