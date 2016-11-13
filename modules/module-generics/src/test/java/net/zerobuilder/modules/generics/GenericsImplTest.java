@@ -11,17 +11,23 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
+import static net.zerobuilder.modules.generics.GenericsImpl.basicInvoke;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 public class GenericsImplTest {
+
+  private CodeBlock invoke(List<TypeSpec> typeSpecs) {
+    return basicInvoke(typeSpecs).stream().collect(joinCodeBlocks(", "));
+  }
 
   @Test
   public void invoke1() {
     List<TypeSpec> typeSpecs = Stream.of("DefaultValue")
         .map(this::typeSpec)
         .collect(toList());
-    CodeBlock block = GenericsImpl.invoke(typeSpecs);
+    CodeBlock block = invoke(typeSpecs);
     assertThat(block, is(CodeBlock.builder().add("defaultValue").build()));
   }
 
@@ -30,7 +36,7 @@ public class GenericsImplTest {
     List<TypeSpec> typeSpecs = Stream.of("Key", "DefaultValue")
         .map(this::typeSpec)
         .collect(toList());
-    CodeBlock block = GenericsImpl.invoke(typeSpecs);
+    CodeBlock block = invoke(typeSpecs);
     assertThat(block, is(CodeBlock.builder().add("key, defaultValue").build()));
   }
 
@@ -39,7 +45,7 @@ public class GenericsImplTest {
     List<TypeSpec> typeSpecs = Stream.of("Source", "Key", "DefaultValue")
         .map(this::typeSpec)
         .collect(toList());
-    CodeBlock block = GenericsImpl.invoke(typeSpecs);
+    CodeBlock block = invoke(typeSpecs);
     assertThat(block, is(CodeBlock.builder().add("keyImpl.source, key, defaultValue").build()));
   }
 
@@ -48,7 +54,7 @@ public class GenericsImplTest {
     List<TypeSpec> typeSpecs = Stream.of("Foo", "Source", "Key", "DefaultValue")
         .map(this::typeSpec)
         .collect(toList());
-    CodeBlock block = GenericsImpl.invoke(typeSpecs);
+    CodeBlock block = invoke(typeSpecs);
     assertThat(block, is(CodeBlock.builder().add("keyImpl.sourceImpl.foo, keyImpl.source, key, defaultValue").build()));
   }
 

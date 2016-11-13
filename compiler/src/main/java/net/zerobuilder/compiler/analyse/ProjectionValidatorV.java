@@ -128,18 +128,10 @@ final class ProjectionValidatorV {
         .stream()
         .map(parameter -> TmpSimpleParameter.create(parameter, goalAnnotation.apply(goal)))
         .collect(toList());
-    Optional<TmpSimpleParameter> any = parameters.stream()
-        .filter(p -> p.annotation.isPresent())
-        .filter(p -> p.annotation.get().value() >= 0)
-        .findAny();
-    if (any.isPresent()) {
-      // TODO allow shuffle
-      throw new ValidationException("Changing parameter order is not allowed in generic goal",
-          any.get().element);
-    }
+    List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
     return SimpleStaticGoalDescription.create(
         goal.details, thrownTypes(executableElement.apply(goal)),
-        transform(parameters, parameter -> parameter.parameter));
+        transform(shuffled, parameter -> parameter.parameter));
   }
 
   private static ProjectedRegularGoalDescription createGoalDescription(RegularProjectableGoalElement goal,

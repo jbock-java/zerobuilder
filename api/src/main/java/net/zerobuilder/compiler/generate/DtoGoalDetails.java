@@ -184,7 +184,9 @@ public final class DtoGoalDetails {
     public final String methodName;
     public final TypeName goalType;
 
-    private StaticMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
+    private StaticMethodGoalDetails(TypeName goalType, String name,
+                                    List<String> parameterNames,
+                                    String methodName,
                                     Access access, List<TypeVariableName> typeParameters) {
       super(name, parameterNames, access);
       this.goalType = goalType;

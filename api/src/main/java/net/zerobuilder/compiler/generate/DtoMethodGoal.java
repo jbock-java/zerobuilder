@@ -72,6 +72,7 @@ public final class DtoMethodGoal {
   public static final class SimpleStaticMethodGoalContext extends SimpleRegularGoalContext {
 
     public final List<SimpleRegularStep> steps;
+    private final int[] ranking;
 
     SimpleStaticMethodGoalContext(
         GoalContext context,
@@ -83,6 +84,20 @@ public final class DtoMethodGoal {
       this.context = context;
       this.steps = steps;
       this.parameters = parameters;
+      this.ranking = rank(parameters, details.parameterNames);
+    }
+
+    private static int[] rank(List<SimpleParameter> parameters, List<String> parameterNames) {
+      String[] a = new String[parameters.size()];
+      for (int i = 0; i < parameters.size(); i++) {
+        a[i] = parameters.get(i).name;
+      }
+      String[] b = parameterNames.toArray(new String[parameterNames.size()]);
+      return ZeroUtil.createRanking(a, b);
+    }
+
+    public <E> List<E> unrank(List<E> ranked) {
+      return ZeroUtil.applyRanking(ranking, ranked);
     }
 
     public final DtoContext.GoalContext context;

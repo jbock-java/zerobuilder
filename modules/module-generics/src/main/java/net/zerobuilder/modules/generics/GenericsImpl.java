@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -84,7 +85,12 @@ final class GenericsImpl {
         statement("return new $T(this, $N)", next, parameter);
   }
 
-  static CodeBlock invoke(List<TypeSpec> stepSpecs) {
+  CodeBlock invoke(List<TypeSpec> stepSpecs) {
+    List<CodeBlock> blocks = basicInvoke(stepSpecs);
+    return goal.unrank(blocks).stream().collect(joinCodeBlocks(", "));
+  }
+
+  static List<CodeBlock> basicInvoke(List<TypeSpec> stepSpecs) {
     return IntStream.range(0, stepSpecs.size())
         .mapToObj(i -> {
           CodeBlock.Builder block = CodeBlock.builder();
@@ -100,7 +106,7 @@ final class GenericsImpl {
           block.add("$N", parameter);
           return block.build();
         })
-        .collect(joinCodeBlocks(", "));
+        .collect(toList());
   }
 
   private MethodSpec createConstructor(List<FieldSpec> fields) {

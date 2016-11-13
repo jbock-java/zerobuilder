@@ -135,9 +135,7 @@ final class ProjectionValidator {
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
       ProjectedParameter regularParameter =
-//          projectionInfo.isPresent() ?
           DtoRegularParameter.create(name, type, nullPolicy, projectionInfo);
-//              DtoRegularParameter.create(name, type, nullPolicy);
       return new TmpProjectedParameter(parameter, ofNullable(stepAnnotation), regularParameter);
     }
   }

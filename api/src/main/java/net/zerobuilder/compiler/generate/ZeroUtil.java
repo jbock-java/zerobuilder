@@ -7,7 +7,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import com.sun.org.apache.bcel.internal.classfile.Code;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -314,6 +312,42 @@ public final class ZeroUtil {
       return ((ParameterizedTypeName) type).rawType.simpleName();
     }
     throw new IllegalArgumentException("unknown kind: " + type);
+  }
+
+  static <E> int[] createRanking(E[] a, E[] b) {
+    if (a.length != b.length) {
+      throw new IllegalArgumentException("a.length != b.length");
+    }
+    int[] pos = new int[a.length];
+    for (int i = 0; i < a.length; i++) {
+      if (b[i].equals(a[i])) {
+        pos[i] = i;
+      } else {
+        pos[i] = indexOf(b, a[i]);
+      }
+    }
+    return pos;
+  }
+
+  private static <E> int indexOf(E[] b, E el) {
+    for (int i = 0; i < b.length; i++) {
+      if (b[i].equals(el)) {
+        return i;
+      }
+    }
+    throw new IllegalArgumentException("not found: " + el);
+  }
+
+  static <E> List<E> applyRanking(int[] ranking, List<E> input) {
+    if (input.size() != ranking.length) {
+      throw new IllegalArgumentException("input.size() != ranking.length");
+    }
+    List<E> result = new ArrayList(input.size());
+    for (int i = 0; i < input.size(); i++)
+      result.add(null);
+    for (int i = 0; i < input.size(); i++)
+      result.set(ranking[i], input.get(i));
+    return result;
   }
 
   private ZeroUtil() {
