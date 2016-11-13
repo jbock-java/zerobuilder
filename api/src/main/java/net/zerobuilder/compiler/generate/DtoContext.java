@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import java.util.function.Supplier;
@@ -33,9 +34,9 @@ public final class DtoContext {
 
     /**
      * The class that contains the goal method(s) or constructor(s).
-     * Only used in regular goals.
+     * This is either a {@link ClassName} or a {@link ParameterizedTypeName}.
      */
-    public final ClassName type;
+    public final TypeName type;
 
     /**
      * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.

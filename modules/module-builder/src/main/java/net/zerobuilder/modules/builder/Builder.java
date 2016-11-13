@@ -4,6 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
@@ -33,6 +34,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -92,8 +94,8 @@ public final class Builder extends Module {
             if (method.context.lifecycle == REUSE_INSTANCES) {
               return constructor();
             }
-            ClassName type = method.context.type;
-            ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
+            TypeName type = method.context.type;
+            ParameterSpec parameter = parameterSpec(type, downcase(rawClassName(type).get().simpleName()));
             return constructorBuilder()
                 .addParameter(parameter)
                 .addStatement("this.$N = $N", method.instanceField(), parameter)

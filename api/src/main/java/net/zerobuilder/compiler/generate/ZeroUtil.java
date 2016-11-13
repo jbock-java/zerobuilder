@@ -7,6 +7,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeVariableName;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
@@ -32,6 +33,8 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 public final class ZeroUtil {
+
+  private static final TypeVariableName[] NO_TYPEVARNAME = new TypeVariableName[0];
 
   public static final class ClassNames {
 
@@ -348,6 +351,13 @@ public final class ZeroUtil {
     for (int i = 0; i < input.size(); i++)
       result.set(ranking[i], input.get(i));
     return result;
+  }
+
+  public static TypeName parameterizedTypeName(ClassName raw, List<TypeVariableName> typeVars) {
+    if (typeVars.isEmpty()) {
+      return raw;
+    }
+    return ParameterizedTypeName.get(raw, typeVars.toArray(NO_TYPEVARNAME));
   }
 
   private ZeroUtil() {

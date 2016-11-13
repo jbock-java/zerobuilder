@@ -2,7 +2,6 @@ package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
@@ -17,11 +16,10 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class GenericsContract {
-
-  static final TypeVariableName[] NO_TYPEVARNAME = new TypeVariableName[0];
 
   static List<TypeSpec> stepInterfaces(SimpleStaticMethodGoalContext goal,
                                        List<List<TypeVariableName>> typeParams,
@@ -59,9 +57,7 @@ final class GenericsContract {
     ClassName rawNext = goal.context.generatedType
         .nestedClass(upcase(goal.details.name() + "Builder"))
         .nestedClass(upcase(goal.parameters.get(i + 1).name));
-    return typeParams.get(i + 1).isEmpty() ?
-        rawNext :
-        ParameterizedTypeName.get(rawNext, typeParams.get(i + 1).toArray(NO_TYPEVARNAME));
+    return parameterizedTypeName(rawNext, typeParams.get(i + 1));
   }
 
   static ClassName contractType(SimpleStaticMethodGoalContext goal) {

@@ -31,9 +31,9 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
-import static net.zerobuilder.modules.generics.GenericsContract.NO_TYPEVARNAME;
 
 final class GenericsImpl {
 
@@ -51,10 +51,8 @@ final class GenericsImpl {
       MethodSpec method = stepSpec.methodSpecs.get(0);
       ParameterSpec parameter = method.parameters.get(0);
       List<FieldSpec> fields = fields(stepSpecs, i, typeParams);
-      TypeName superinterface = stepSpec.typeVariables.isEmpty() ?
-          contract.nestedClass(stepSpec.name) :
-          ParameterizedTypeName.get(contract.nestedClass(stepSpec.name),
-              stepSpec.typeVariables.toArray(NO_TYPEVARNAME));
+      TypeName superinterface = parameterizedTypeName(contract.nestedClass(stepSpec.name),
+          stepSpec.typeVariables);
       builder.set(i, classBuilder(stepSpec.name + "Impl")
           .addFields(fields)
           .addSuperinterface(superinterface)
@@ -153,10 +151,8 @@ final class GenericsImpl {
       return singletonList(parameterField(stepSpecs.get(0)));
     }
     TypeSpec stepSpec = stepSpecs.get(i - 1);
-    TypeName implType = typeParams.get(i - 1).isEmpty() ?
-        impl.nestedClass(stepSpec.name + "Impl") :
-        ParameterizedTypeName.get(impl.nestedClass(stepSpec.name + "Impl"),
-            typeParams.get(i - 1).toArray(NO_TYPEVARNAME));
+    TypeName implType = parameterizedTypeName(impl.nestedClass(stepSpec.name + "Impl"),
+        typeParams.get(i - 1));
     return asList(
         FieldSpec.builder(implType, downcase(stepSpec.name) + "Impl",
             PRIVATE, FINAL)

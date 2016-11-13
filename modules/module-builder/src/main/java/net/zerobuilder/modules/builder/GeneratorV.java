@@ -21,6 +21,7 @@ import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUS
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.builder.Builder.cacheField;
 import static net.zerobuilder.modules.builder.Builder.implType;
@@ -35,7 +36,7 @@ final class GeneratorV {
         .addModifiers(abstractRegularDetails.access(STATIC));
     GoalContext context = goal.context();
     ParameterSpec varInstance = parameterSpec(context.type,
-        downcase(context.type.simpleName()));
+        downcase(rawClassName(context.type).get().simpleName()));
     CodeBlock returnBlock = returnBlock(varInstance).apply(goal);
     method.addCode(returnBlock);
     if (goal.isInstance()) {

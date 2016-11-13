@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
@@ -21,6 +20,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 
 public final class DtoMethodGoal {
 
@@ -123,8 +123,8 @@ public final class DtoMethodGoal {
 
   private static Supplier<FieldSpec> memoizeInstanceField(GoalContext context) {
     return memoize(() -> {
-      ClassName type = context.type;
-      String name = '_' + downcase(type.simpleName());
+      TypeName type = context.type;
+      String name = '_' + downcase(rawClassName(type).get().simpleName());
       return context.lifecycle == REUSE_INSTANCES
           ? fieldSpec(type, name, PRIVATE)
           : fieldSpec(type, name, PRIVATE, FINAL);
