@@ -78,8 +78,8 @@ public final class DtoRegularGoal {
   private static final Function<SimpleRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
       regularGoalContextCases(
           constructor -> constructor.steps,
-          method -> method.methodSteps(),
-          staticMethod -> staticMethod.methodSteps());
+          method -> method.steps,
+          staticMethod -> staticMethod.steps);
 
   private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
       regularGoalContextCases(

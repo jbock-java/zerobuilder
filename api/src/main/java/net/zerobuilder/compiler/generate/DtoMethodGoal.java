@@ -7,6 +7,7 @@ import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -76,20 +77,17 @@ public final class DtoMethodGoal {
         GoalContext context,
         StaticMethodGoalDetails details,
         List<SimpleRegularStep> steps,
-        List<TypeName> thrownTypes) {
+        List<TypeName> thrownTypes, List<SimpleParameter> parameters) {
       super(thrownTypes);
       this.details = details;
       this.context = context;
       this.steps = steps;
+      this.parameters = parameters;
     }
 
     public final DtoContext.GoalContext context;
     public final StaticMethodGoalDetails details;
-
-    List<SimpleRegularStep> methodSteps() {
-      return steps;
-    }
-
+    public final List<SimpleParameter> parameters;
 
     @Override
     public final <R> R acceptRegular(DtoRegularGoal.RegularGoalContextCases<R> cases) {

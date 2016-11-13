@@ -83,7 +83,7 @@ final class GoalContextFactory {
       }
       @Override
       public SimpleRegularGoalContext staticMethod(StaticMethodGoalDetails details) {
-        return new SimpleStaticMethodGoalContext(context, details, steps, simple.thrownTypes);
+        return new SimpleStaticMethodGoalContext(context, details, steps, simple.thrownTypes, simple.parameters);
       }
       @Override
       public SimpleRegularGoalContext constructor(ConstructorGoalDetails details) {
@@ -101,7 +101,7 @@ final class GoalContextFactory {
         context,
         simple.parameters,
         simpleRegularFactory);
-    return new SimpleStaticMethodGoalContext(context, simple.details, steps, simple.thrownTypes);
+    return new SimpleStaticMethodGoalContext(context, simple.details, steps, simple.thrownTypes, simple.parameters);
   }
 
 

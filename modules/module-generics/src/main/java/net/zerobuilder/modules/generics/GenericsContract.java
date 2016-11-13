@@ -7,8 +7,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
-import net.zerobuilder.compiler.generate.DtoStep;
+import net.zerobuilder.compiler.generate.DtoRegularParameter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,19 +23,13 @@ final class GenericsContract {
 
   static final TypeVariableName[] NO_TYPEVARNAME = new TypeVariableName[0];
 
-  private static ClassName nextType(DtoStep.AbstractStep step) {
-    return step.context.generatedType
-        .nestedClass(upcase(step.goalDetails.name() + "Builder"))
-        .nestedClass(step.nextStep.get().thisType);
-  }
-
   static List<TypeSpec> stepInterfaces(SimpleStaticMethodGoalContext goal,
                                        List<List<TypeVariableName>> typeParams,
                                        List<List<TypeVariableName>> methodParams) {
     ArrayList<TypeSpec> builder = new ArrayList<>();
-    for (int i = 0; i < goal.steps.size(); i++) {
-      SimpleRegularStep step = goal.steps.get(i);
-      builder.add(TypeSpec.interfaceBuilder(step.thisType)
+    for (int i = 0; i < goal.parameters.size(); i++) {
+      DtoRegularParameter.SimpleParameter parameter = goal.parameters.get(i);
+      builder.add(TypeSpec.interfaceBuilder(upcase(parameter.name))
           .addTypeVariables(typeParams.get(i))
           .addMethod(nextStep(goal,
               typeParams,
@@ -48,20 +41,24 @@ final class GenericsContract {
   }
 
   private static MethodSpec nextStep(SimpleStaticMethodGoalContext goal, List<List<TypeVariableName>> typeParams, List<List<TypeVariableName>> methodParams, int i) {
-    SimpleRegularStep step = goal.steps.get(i);
-    return MethodSpec.methodBuilder(downcase(step.thisType))
+    DtoRegularParameter.SimpleParameter parameter = goal.parameters.get(i);
+    return MethodSpec.methodBuilder(downcase(parameter.name))
         .addTypeVariables(methodParams.get(i))
         .addModifiers(PUBLIC, ABSTRACT)
-        .returns(nextStepType(typeParams, step, i))
-        .addParameter(parameterSpec(step.parameter.type, step.parameter.name))
+        .returns(nextStepType(goal, typeParams, i))
+        .addParameter(parameterSpec(parameter.type, parameter.name))
         .build();
   }
 
-  private static TypeName nextStepType(List<List<TypeVariableName>> typeParams, SimpleRegularStep step, int i) {
-    if (!step.nextStep.isPresent()) {
-      return step.goalDetails.type();
+  private static TypeName nextStepType(SimpleStaticMethodGoalContext goal,
+                                       List<List<TypeVariableName>> typeParams,
+                                       int i) {
+    if (i == typeParams.size() - 1) {
+      return goal.details.goalType;
     }
-    ClassName rawNext = nextType(step);
+    ClassName rawNext = goal.context.generatedType
+        .nestedClass(upcase(goal.details.name() + "Builder"))
+        .nestedClass(upcase(goal.parameters.get(i + 1).name));
     return typeParams.get(i + 1).isEmpty() ?
         rawNext :
         ParameterizedTypeName.get(rawNext, typeParams.get(i + 1).toArray(NO_TYPEVARNAME));
@@ -80,8 +77,8 @@ final class GenericsContract {
   }
 
   static List<TypeName> stepTypes(SimpleStaticMethodGoalContext goal) {
-    List<TypeName> builder = new ArrayList<>(goal.steps.size() + 1);
-    goal.steps.stream().map(step -> step.parameter.type).forEach(builder::add);
+    List<TypeName> builder = new ArrayList<>(goal.parameters.size() + 1);
+    goal.parameters.stream().map(step -> step.type).forEach(builder::add);
     builder.add(goal.details.goalType);
     return builder;
   }
