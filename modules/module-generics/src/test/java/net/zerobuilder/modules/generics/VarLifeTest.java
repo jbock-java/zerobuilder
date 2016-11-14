@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 public class VarLifeTest {
 
+  private static final TypeVariableName S = TypeVariableName.get("S");
   private static final TypeVariableName K = TypeVariableName.get("K");
   private static final TypeVariableName V = TypeVariableName.get("V");
 
@@ -68,5 +69,13 @@ public class VarLifeTest {
     assertThat(expand, is(asList(v, s)));
     List<List<TypeVariableName>> life = varLifes(asList(s, k, v), asList(k, v));
     assertThat(life, is(asList(singletonList(k), asList(s, v))));
+  }
+
+  @Test
+  public void testGenericInstance() {
+    List<List<TypeVariableName>> life = varLifes(asList(S, K, V), asList(S, K, V, map(K, V)));
+    assertThat(methodParams(life), is(asList(singletonList(S), singletonList(K), singletonList(V))));
+    assertThat(typeParams(life), is(asList(emptyList(), singletonList(S), singletonList(K))));
+    assertThat(implTypeParams(life), is(asList(emptyList(), singletonList(S), asList(S, K))));
   }
 }
