@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static net.zerobuilder.NullPolicy.ALLOW;
@@ -85,6 +86,7 @@ public class TrickyGenericsBuilderTest {
         "getList",
         PRIVATE,
         asList(K, V),
+        emptyList(),
         false);
 
     // use SimpleParameter because the generics module doesn't need projections

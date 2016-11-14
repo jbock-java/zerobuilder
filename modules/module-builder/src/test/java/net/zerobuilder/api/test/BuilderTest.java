@@ -74,6 +74,7 @@ public class BuilderTest {
         "create", // correct goal method name
         PRIVATE,
         emptyList(),
+        emptyList(),
         false);
 
     // use SimpleParameter because the builder module doesn't need projections

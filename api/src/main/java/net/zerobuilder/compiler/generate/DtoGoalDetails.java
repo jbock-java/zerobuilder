@@ -181,6 +181,7 @@ public final class DtoGoalDetails {
   public static final class StaticMethodGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {
     public final List<TypeVariableName> typeParameters;
+    public final List<TypeVariableName> instanceTypeParameters;
     public final String methodName;
     public final TypeName goalType;
     public final boolean instance;
@@ -188,11 +189,18 @@ public final class DtoGoalDetails {
     private StaticMethodGoalDetails(TypeName goalType, String name,
                                     List<String> parameterNames,
                                     String methodName,
-                                    Access access, List<TypeVariableName> typeParameters, boolean instance) {
+                                    Access access,
+                                    List<TypeVariableName> typeParameters,
+                                    List<TypeVariableName> instanceTypeParameters,
+                                    boolean instance) {
       super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
+      if (!instance && !instanceTypeParameters.isEmpty()) {
+        throw new IllegalArgumentException("static goals don't have instancetype parameters");
+      }
+      this.instanceTypeParameters = instanceTypeParameters;
       this.instance = instance;
     }
 
@@ -200,9 +208,12 @@ public final class DtoGoalDetails {
                                                  String name,
                                                  List<String> parameterNames,
                                                  String methodName,
-                                                 Access access, List<TypeVariableName> typeParameters,
+                                                 Access access,
+                                                 List<TypeVariableName> typeParameters,
+                                                 List<TypeVariableName> instanceTypeParameters,
                                                  boolean instance) {
-      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters, instance);
+      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters,
+          instanceTypeParameters, instance);
     }
 
     @Override

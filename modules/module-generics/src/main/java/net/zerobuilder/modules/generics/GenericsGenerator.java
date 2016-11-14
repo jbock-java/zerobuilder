@@ -18,6 +18,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -94,6 +95,7 @@ final class GenericsGenerator {
       builder.addParameter(instance);
       builder.addCode(nullCheck(instance));
     }
+    builder.addTypeVariables(goal.details.instanceTypeParameters);
     builder.addCode(goal.details.instance ?
         statement("return new $T($N)", implType.nestedClass(stepImpls.get(0).name), instance) :
         statement("return $T.$L", implType, downcase(stepImpls.get(0).name)));
@@ -103,10 +105,21 @@ final class GenericsGenerator {
   }
 
   static GenericsGenerator create(SimpleStaticMethodGoalContext goal) {
-    List<List<TypeVariableName>> lifes = varLifes(goal.details.typeParameters, stepTypes(goal));
-    List<List<TypeVariableName>> typeParams = typeParams(lifes);
-    List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes);
-    List<List<TypeVariableName>> methodParams = methodParams(lifes);
+    List<List<TypeVariableName>> lifes = varLifes(
+        concat(goal.details.instanceTypeParameters, goal.details.typeParameters),
+        stepTypes(goal));
+    List<List<TypeVariableName>> typeParams = typeParams(lifes, goal.details.instanceTypeParameters);
+    List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes, goal.details.instanceTypeParameters);
+    List<List<TypeVariableName>> methodParams = methodParams(lifes, goal.details.instanceTypeParameters);
+    if (typeParams.size() != goal.parameters.size()) {
+      throw new IllegalStateException("typeParams: " + typeParams + ", " + goal.parameterNames());
+    }
+    if (implTypeParams.size() != goal.parameters.size()) {
+      throw new IllegalStateException("implTypeParams: " + implTypeParams + ", " + goal.parameterNames());
+    }
+    if (methodParams.size() != goal.parameters.size()) {
+      throw new IllegalStateException("methodParams: " + methodParams + ", " + goal.parameterNames());
+    }
     List<TypeSpec> stepSpecs = stepInterfaces(goal, typeParams, methodParams);
     return new GenericsGenerator(stepSpecs, methodParams, implTypeParams, goal);
   }

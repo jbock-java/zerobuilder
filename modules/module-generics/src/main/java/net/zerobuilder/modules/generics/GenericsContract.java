@@ -24,7 +24,7 @@ final class GenericsContract {
   static List<TypeSpec> stepInterfaces(SimpleStaticMethodGoalContext goal,
                                        List<List<TypeVariableName>> typeParams,
                                        List<List<TypeVariableName>> methodParams) {
-    ArrayList<TypeSpec> builder = new ArrayList<>();
+    List<TypeSpec> builder = new ArrayList<>();
     for (int i = 0; i < goal.parameters.size(); i++) {
       DtoRegularParameter.SimpleParameter parameter = goal.parameters.get(i);
       builder.add(TypeSpec.interfaceBuilder(upcase(parameter.name))
@@ -51,7 +51,7 @@ final class GenericsContract {
   private static TypeName nextStepType(SimpleStaticMethodGoalContext goal,
                                        List<List<TypeVariableName>> typeParams,
                                        int i) {
-    if (i == typeParams.size() - 1) {
+    if (i == goal.parameters.size() - 1) {
       return goal.details.goalType;
     }
     ClassName rawNext = goal.context.generatedType

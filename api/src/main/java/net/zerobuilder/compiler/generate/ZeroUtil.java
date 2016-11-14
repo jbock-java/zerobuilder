@@ -30,6 +30,7 @@ import static java.lang.Character.isUpperCase;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
 public final class ZeroUtil {
@@ -159,21 +160,27 @@ public final class ZeroUtil {
   }
 
   public static <P> List<P> reverse(List<P> list) {
-    ArrayList<P> reversed = new ArrayList<>(list.size());
+    List<P> reversed = new ArrayList<>(list.size());
     reversed.addAll(list);
     Collections.reverse(reversed);
     return reversed;
   }
 
-  public static <P> List<P> concat(P first, List<P> list) {
-    ArrayList<P> builder = new ArrayList<>(list.size() + 1);
+  public static <P> List<P> concat(P first, List<? extends P> list) {
+    List<P> builder = new ArrayList<>(list.size() + 1);
     builder.add(first);
     builder.addAll(list);
     return builder;
   }
 
-  public static <P> List<P> concat(List<P> left, List<P> right) {
-    ArrayList<P> builder = new ArrayList<>(left.size() + right.size());
+  public static <P> List<P> concat(List<? extends P> left, List<? extends P> right) {
+    if (left.isEmpty()) {
+      return unmodifiableList(right);
+    }
+    if (right.isEmpty()) {
+      return unmodifiableList(left);
+    }
+    List<P> builder = new ArrayList<>(left.size() + right.size());
     builder.addAll(left);
     builder.addAll(right);
     return builder;

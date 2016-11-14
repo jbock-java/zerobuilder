@@ -5,6 +5,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
+import net.zerobuilder.compiler.common.LessTypes;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
@@ -21,9 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
@@ -319,7 +320,7 @@ final class DtoGoalElement {
             ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
                 name, parameterNames, goalOption.access) :
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                emptyList(), !element.getModifiers().contains(STATIC));
+                emptyList(), emptyList(), !element.getModifiers().contains(STATIC));
     return new RegularProjectableGoalElement(element, details);
   }
 
@@ -328,22 +329,29 @@ final class DtoGoalElement {
                                                               List<String> parameterNames, ModuledOption goalOption) {
     List<TypeVariableName> typeParameters = element.getTypeParameters().stream()
         .map(TypeVariableName::get)
-        .collect(Collectors.toList());
+        .collect(toList());
     if (element.getKind() == CONSTRUCTOR) {
       ConstructorGoalDetails details = ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
           name, parameterNames, goalOption.access);
       return new RegularGoalElement(element, details);
     }
+    boolean isStatic = element.getModifiers().contains(STATIC);
     if (!element.getTypeParameters().isEmpty()) {
       StaticMethodGoalDetails details = StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-          typeParameters, !element.getModifiers().contains(STATIC));
+          typeParameters,
+          isStatic ? emptyList() :
+              asTypeElement(element.getEnclosingElement().asType()).getTypeParameters()
+                  .stream().map(TypeVariableName::get).collect(toList()),
+          !isStatic);
       return new RegularStaticGoalElement(element, details);
     }
     AbstractRegularDetails details =
-        element.getModifiers().contains(STATIC) ?
+        isStatic ?
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                typeParameters, !element.getModifiers().contains(STATIC)) :
+                typeParameters,
+                emptyList(),
+                false) :
             InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);
     return new RegularGoalElement(element, details);
   }

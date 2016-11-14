@@ -4,12 +4,10 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptyList;
 import static net.zerobuilder.modules.generics.GenericsUtil.references;
 import static net.zerobuilder.modules.generics.GenericsUtil.typeVars;
 
@@ -18,10 +16,10 @@ final class VarLife {
   private static final Supplier<Stream<List<TypeVariableName>>> emptyLists =
       () -> Stream.generate(ArrayList::new);
 
-  static List<List<TypeVariableName>> methodParams(List<List<TypeVariableName>> varLifes) {
+  static List<List<TypeVariableName>> methodParams(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start) {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
-    List<TypeVariableName> previous = emptyList();
+    List<TypeVariableName> previous = start;
     for (int i = 0; i < varLifes.size() - 1; i++) {
       List<TypeVariableName> typeNames = varLifes.get(i);
       for (TypeVariableName typeName : typeNames) {
@@ -34,10 +32,10 @@ final class VarLife {
     return builder;
   }
 
-  static List<List<TypeVariableName>> typeParams(List<List<TypeVariableName>> varLifes) {
+  static List<List<TypeVariableName>> typeParams(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start) {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
-    List<TypeVariableName> previous = emptyList();
+    List<TypeVariableName> previous = start;
     List<TypeVariableName> later = new ArrayList<>();
     for (int i = 0; i < varLifes.size() - 1; i++) {
       builder.get(i).addAll(later);
@@ -56,10 +54,11 @@ final class VarLife {
     return builder;
   }
 
-  static List<List<TypeVariableName>> implTypeParams(List<List<TypeVariableName>> varLifes) {
+  static List<List<TypeVariableName>> implTypeParams(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start) {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeVariableName> seen = new ArrayList<>();
+    seen.addAll(start);
     for (int i = 0; i < varLifes.size() - 1; i++) {
       builder.get(i).addAll(seen);
       for (TypeVariableName typeName : varLifes.get(i)) {
