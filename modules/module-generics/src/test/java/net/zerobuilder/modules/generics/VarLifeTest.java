@@ -65,8 +65,8 @@ public class VarLifeTest {
     TypeVariableName k = TypeVariableName.get("K");
     TypeVariableName v = TypeVariableName.get("V", s);
     List<TypeVariableName> expand = expand(singletonList(v));
-    System.out.println(expand);
+    assertThat(expand, is(asList(v, s)));
     List<List<TypeVariableName>> life = varLifes(asList(s, k, v), asList(k, v));
-    System.out.println(life);
+    assertThat(life, is(asList(singletonList(k), asList(s, v))));
   }
 }

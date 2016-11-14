@@ -45,7 +45,7 @@ public final class DtoContext {
      */
     public final Supplier<FieldSpec> cache;
 
-    private GoalContext(ContextLifecycle lifecycle, ClassName type, ClassName generatedType) {
+    private GoalContext(ContextLifecycle lifecycle, TypeName type, ClassName generatedType) {
       this.lifecycle = lifecycle;
       this.type = type;
       this.generatedType = generatedType;
@@ -62,7 +62,7 @@ public final class DtoContext {
    * @param contextLifecycle lifecycle setting
    * @return a GoalContext
    */
-  public static GoalContext createContext(ClassName type,
+  public static GoalContext createContext(TypeName type,
                                           ClassName generatedType,
                                           ContextLifecycle contextLifecycle) {
     return new GoalContext(contextLifecycle, type, generatedType);

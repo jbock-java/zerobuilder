@@ -1,6 +1,8 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
@@ -46,6 +48,8 @@ import static net.zerobuilder.compiler.analyse.Utilities.peer;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.common.LessElements.asExecutable;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 
 public final class Analyser {
 
@@ -58,8 +62,9 @@ public final class Analyser {
     ContextLifecycle lifecycle = tel.getAnnotation(Builders.class).recycle()
         ? ContextLifecycle.REUSE_INSTANCES
         : ContextLifecycle.NEW_INSTANCE;
-    ClassName type = ClassName.get(tel);
-    ClassName generatedType = peer(type, "Builders");
+    TypeName type = parameterizedTypeName(ClassName.get(tel),
+        transform(tel.getTypeParameters(), TypeVariableName::get));
+    ClassName generatedType = peer(rawClassName(type).get(), "Builders");
     GoalContext context = createContext(type, generatedType, lifecycle);
     List<? extends AbstractGoalElement> goals = goals(tel);
     checkNameConflict(goals);
