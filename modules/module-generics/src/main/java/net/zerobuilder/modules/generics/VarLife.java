@@ -4,10 +4,12 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static java.util.Collections.singletonList;
 import static net.zerobuilder.modules.generics.GenericsUtil.references;
 import static net.zerobuilder.modules.generics.GenericsUtil.typeVars;
 
@@ -71,12 +73,14 @@ final class VarLife {
   }
 
 
-  static List<List<TypeVariableName>> varLifes(List<TypeVariableName> typeParameters, List<TypeName> steps) {
+  static List<List<TypeVariableName>> varLifes(List<TypeVariableName> typeParameters,
+                                               List<TypeName> steps,
+                                               List<TypeVariableName> dependents) {
     List<List<TypeVariableName>> builder = new ArrayList<>(steps.size());
     emptyLists.get().limit(steps.size()).forEach(builder::add);
     List<TypeVariableName> expanded = expand(typeParameters);
     for (TypeVariableName typeParameter : expanded) {
-      int start = varLifeStart(typeParameter, steps);
+      int start = varLifeStart(typeParameter, steps, dependents);
       if (start >= 0) {
         int end = varLifeEnd(typeParameter, steps);
         for (int i = start; i <= end; i++) {
@@ -100,7 +104,30 @@ final class VarLife {
     return builder;
   }
 
-  static int varLifeStart(TypeName typeParameter, List<TypeName> steps) {
+  static List<TypeVariableName> dependents(List<TypeVariableName> init, List<TypeVariableName> typeParameters) {
+    List<TypeVariableName> builder = new ArrayList<>(typeParameters.size());
+    builder.addAll(init);
+    for (TypeVariableName type : typeParameters) {
+      List<TypeVariableName> expanded = expand(singletonList(type));
+      for (TypeVariableName t : expanded) {
+        if (init.contains(t)) {
+          if (!builder.contains(type)) {
+            builder.add(type);
+          }
+        }
+      }
+    }
+    return builder;
+  }
+
+  static int varLifeStart(TypeName typeParameter, List<TypeName> steps, List<TypeVariableName> dependents) {
+    for (TypeVariableName type : dependents) {
+      for (TypeName step : steps) {
+        if (references(step, type)) {
+          return 0;
+        }
+      }
+    }
     for (int i = 0; i < steps.size(); i++) {
       TypeName step = steps.get(i);
       if (references(step, typeParameter)) {

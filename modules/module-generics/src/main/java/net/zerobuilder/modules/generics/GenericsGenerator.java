@@ -27,6 +27,7 @@ import static net.zerobuilder.modules.generics.GenericsContract.contractType;
 import static net.zerobuilder.modules.generics.GenericsContract.implType;
 import static net.zerobuilder.modules.generics.GenericsContract.stepInterfaces;
 import static net.zerobuilder.modules.generics.GenericsContract.stepTypes;
+import static net.zerobuilder.modules.generics.VarLife.dependents;
 import static net.zerobuilder.modules.generics.VarLife.implTypeParams;
 import static net.zerobuilder.modules.generics.VarLife.methodParams;
 import static net.zerobuilder.modules.generics.VarLife.typeParams;
@@ -107,19 +108,12 @@ final class GenericsGenerator {
   static GenericsGenerator create(SimpleStaticMethodGoalContext goal) {
     List<List<TypeVariableName>> lifes = varLifes(
         concat(goal.details.instanceTypeParameters, goal.details.typeParameters),
-        stepTypes(goal));
-    List<List<TypeVariableName>> typeParams = typeParams(lifes, goal.details.instanceTypeParameters);
-    List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes, goal.details.instanceTypeParameters);
-    List<List<TypeVariableName>> methodParams = methodParams(lifes, goal.details.instanceTypeParameters);
-    if (typeParams.size() != goal.parameters.size()) {
-      throw new IllegalStateException("typeParams: " + typeParams + ", " + goal.parameterNames());
-    }
-    if (implTypeParams.size() != goal.parameters.size()) {
-      throw new IllegalStateException("implTypeParams: " + implTypeParams + ", " + goal.parameterNames());
-    }
-    if (methodParams.size() != goal.parameters.size()) {
-      throw new IllegalStateException("methodParams: " + methodParams + ", " + goal.parameterNames());
-    }
+        stepTypes(goal),
+        goal.details.instanceTypeParameters);
+    List<TypeVariableName> dependents = dependents(goal.details.instanceTypeParameters, goal.details.typeParameters);
+    List<List<TypeVariableName>> typeParams = typeParams(lifes, dependents);
+    List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes, dependents);
+    List<List<TypeVariableName>> methodParams = methodParams(lifes, dependents);
     List<TypeSpec> stepSpecs = stepInterfaces(goal, typeParams, methodParams);
     return new GenericsGenerator(stepSpecs, methodParams, implTypeParams, goal);
   }
