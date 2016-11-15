@@ -15,6 +15,7 @@ import java.util.List;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -107,8 +108,9 @@ final class GenericsGenerator {
   }
 
   static GenericsGenerator create(SimpleStaticMethodGoalContext goal) {
-    List<TypeVariableName> dependents = dependents(goal.details.instanceTypeParameters,
-        stepTypes(goal));
+    List<TypeVariableName> dependents = goal.details.type == DetailsType.INSTANCE ?
+        dependents(goal.details.instanceTypeParameters, stepTypes(goal)) :
+        emptyList();
     List<List<TypeVariableName>> lifes = varLifes(
         concat(goal.details.instanceTypeParameters, goal.details.typeParameters),
         stepTypes(goal),
