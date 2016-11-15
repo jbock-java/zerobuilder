@@ -132,3 +132,7 @@
 
 * ref tracking via boolean (recycle) (issues-3)
 * free memory (recycle) (issues-1)
+
+### 2016-11-03 zerobuilder 1.521 released
+
+* add generics support for instance goals and static goals (issues-2)

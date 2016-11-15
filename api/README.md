@@ -17,6 +17,6 @@ See tests in [module-builder](../modules/module-builder) and [module-updater](..
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder-api</artifactId>
-    <version>1.512</version>
+    <version>1.521</version>
 </dependency>
 ````
