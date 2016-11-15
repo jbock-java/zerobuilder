@@ -81,6 +81,20 @@ final class GenericsUtil {
     return false;
   }
 
+  static List<TypeVariableName> referenced(TypeName type, List<TypeVariableName> options) {
+    List<TypeVariableName> builder = new ArrayList<>();
+    TypeWalk walk = new TypeWalk(type);
+    while (walk.hasNext()) {
+      TypeName next = walk.next();
+      if (options.contains(next)) {
+        if (!builder.contains(next)) {
+          builder.add((TypeVariableName) next);
+        }
+      }
+    }
+    return builder;
+  }
+
   static List<TypeVariableName> typeVars(TypeVariableName type) {
     if (type.bounds.isEmpty()) {
       return singletonList(type);

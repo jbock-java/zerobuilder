@@ -39,9 +39,17 @@ public class GenericsUtilTest {
   }
 
   @Test
-  public void testReferencesHard() throws Exception {
+  public void testReferencesS_V() throws Exception {
     TypeVariableName s = TypeVariableName.get("S", String.class);
     TypeVariableName v = TypeVariableName.get("V", s);
     assertTrue(references(v, s));
+  }
+
+  @Test
+  public void testReferencesS_V_K() throws Exception {
+    TypeVariableName s = TypeVariableName.get("S", String.class);
+    TypeVariableName v = TypeVariableName.get("V", s);
+    TypeVariableName k = TypeVariableName.get("K", v);
+    assertTrue(references(k, s));
   }
 }

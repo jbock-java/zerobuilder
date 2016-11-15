@@ -110,7 +110,8 @@ final class GenericsGenerator {
         concat(goal.details.instanceTypeParameters, goal.details.typeParameters),
         stepTypes(goal),
         goal.details.instanceTypeParameters);
-    List<TypeVariableName> dependents = dependents(goal.details.instanceTypeParameters, goal.details.typeParameters);
+    List<TypeVariableName> dependents = dependents(goal.details.instanceTypeParameters, goal.details.typeParameters,
+        stepTypes(goal));
     List<List<TypeVariableName>> typeParams = typeParams(lifes, dependents);
     List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes, dependents);
     List<List<TypeVariableName>> methodParams = methodParams(lifes, dependents);

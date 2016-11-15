@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
+import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
+import static net.zerobuilder.modules.generics.GenericsUtil.referenced;
 import static net.zerobuilder.modules.generics.GenericsUtil.references;
 import static net.zerobuilder.modules.generics.GenericsUtil.typeVars;
 
@@ -104,20 +106,37 @@ final class VarLife {
     return builder;
   }
 
-  static List<TypeVariableName> dependents(List<TypeVariableName> init, List<TypeVariableName> typeParameters) {
+  static List<TypeVariableName> dependents(List<TypeVariableName> init,
+                                           List<TypeVariableName> typeParameters,
+                                           List<TypeName> parameters) {
     List<TypeVariableName> builder = new ArrayList<>(typeParameters.size());
     builder.addAll(init);
-    for (TypeVariableName type : typeParameters) {
-      List<TypeVariableName> expanded = expand(singletonList(type));
-      for (TypeVariableName t : expanded) {
-        if (init.contains(t)) {
-          if (!builder.contains(type)) {
-            builder.add(type);
+    List<TypeVariableName> options = concat(init, typeParameters);
+    for (TypeName type : parameters) {
+      for (TypeVariableName initParam : init) {
+        boolean references = references(type, initParam);
+        if (references) {
+          List<TypeVariableName> referenced = referenced(type, options);
+          for (TypeVariableName typeVariableName : referenced) {
+            if (referencesAny(typeVariableName, init)) {
+              if (!builder.contains(typeVariableName)) {
+                builder.add(typeVariableName);
+              }
+            }
           }
         }
       }
     }
     return builder;
+  }
+
+  private static boolean referencesAny(TypeVariableName typeVariableName, List<TypeVariableName> type) {
+    for (TypeVariableName variableName : type) {
+      if (references(typeVariableName, variableName)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   static int varLifeStart(TypeName typeParameter, List<TypeName> steps, List<TypeVariableName> dependents) {
