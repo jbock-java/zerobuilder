@@ -4,11 +4,10 @@
 
   <groupId>de.github.h908714124</groupId>
   <artifactId>zerobuilder-examples-jaxb2</artifactId>
-  <version>${revision}</version>
+  <version>0-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <revision>0-SNAPSHOT</revision>
   </properties>
 
   <build>
@@ -44,7 +43,7 @@
           <dependency>
             <groupId>com.github.h908714124</groupId>
             <artifactId>zerobuilder</artifactId>
-            <version>${revision}</version>
+            <version>${project.version}</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -66,7 +65,7 @@
     <dependency>
       <groupId>com.github.h908714124</groupId>
       <artifactId>zerobuilder</artifactId>
-      <version>${revision}</version>
+      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
 

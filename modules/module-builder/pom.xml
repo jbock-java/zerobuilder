@@ -13,18 +13,17 @@
 
   <groupId>com.github.h908714124</groupId>
   <artifactId>zerobuilder-module-builder</artifactId>
-  <version>${revision}</version>
+  <version>0-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <revision>0-SNAPSHOT</revision>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.github.h908714124</groupId>
       <artifactId>zerobuilder-api</artifactId>
-      <version>${revision}</version>
+      <version>${project.version}</version>
     </dependency>
 
     <!-- Test -->

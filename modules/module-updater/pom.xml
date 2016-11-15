@@ -13,18 +13,17 @@
 
   <groupId>com.github.h908714124</groupId>
   <artifactId>zerobuilder-module-updater</artifactId>
-  <version>${revision}</version>
+  <version>0-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <revision>0-SNAPSHOT</revision>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.github.h908714124</groupId>
       <artifactId>zerobuilder-api</artifactId>
-      <version>${revision}</version>
+      <version>${project.version}</version>
     </dependency>
 
     <!-- Test -->
@@ -41,7 +40,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.5.1</version>
+        <version>3.6.0</version>
         <configuration>
           <source>8</source>
           <target>8</target>
