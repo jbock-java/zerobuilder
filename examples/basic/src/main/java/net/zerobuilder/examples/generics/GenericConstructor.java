@@ -4,20 +4,17 @@ import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
 import java.util.AbstractMap;
-import java.util.Map;
 
 @Builders
-final class GenericConstructor<S extends String, T extends S> {
-
-  private final Map.Entry<S, T> entry;
-
-  GenericConstructor(Map.Entry<S, T> entry) {
-    this.entry = entry;
-  }
+final class GenericConstructor<K, V> extends AbstractMap.SimpleEntry<K, V> {
 
   @Goal
-  static <S extends String, T extends S> GenericConstructor<S, T> create(S ess, T tee) {
-    return new GenericConstructor(new AbstractMap.SimpleEntry(ess, tee));
+  GenericConstructor(K key, V value) {
+    super(key, value);
   }
 
+  @Goal(name = "create")
+  static <S, T> GenericConstructor<S, T> create(S key, T value) {
+    return new GenericConstructor(key, value);
+  }
 }

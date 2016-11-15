@@ -107,12 +107,12 @@ final class GenericsGenerator {
   }
 
   static GenericsGenerator create(SimpleStaticMethodGoalContext goal) {
+    List<TypeVariableName> dependents = dependents(goal.details.instanceTypeParameters,
+        stepTypes(goal));
     List<List<TypeVariableName>> lifes = varLifes(
         concat(goal.details.instanceTypeParameters, goal.details.typeParameters),
         stepTypes(goal),
-        goal.details.instanceTypeParameters);
-    List<TypeVariableName> dependents = dependents(goal.details.instanceTypeParameters,
-        stepTypes(goal));
+        dependents);
     List<List<TypeVariableName>> typeParams = typeParams(lifes, dependents);
     List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes, dependents);
     List<List<TypeVariableName>> methodParams = methodParams(lifes, dependents);

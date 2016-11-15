@@ -333,24 +333,28 @@ final class DtoGoalElement {
     List<TypeVariableName> typeParameters = element.getTypeParameters().stream()
         .map(TypeVariableName::get)
         .collect(toList());
+    boolean isStatic = element.getModifiers().contains(STATIC);
+    List<TypeVariableName> parentParameters = asTypeElement(element.getEnclosingElement().asType()).getTypeParameters()
+        .stream().map(TypeVariableName::get).collect(toList());
+    if (!element.getTypeParameters().isEmpty()
+        || (element.getKind() == CONSTRUCTOR && !parentParameters.isEmpty())) {
+      StaticMethodGoalDetails details = StaticMethodGoalDetails.create(goalType,
+          name, parameterNames, methodName, goalOption.access, typeParameters,
+          isStatic ?
+              emptyList() :
+              parentParameters,
+          isStatic ?
+              DetailsType.STATIC :
+              element.getKind() == CONSTRUCTOR ?
+                  DetailsType.CONSTRUCTOR :
+                  DetailsType.INSTANCE);
+      return new RegularStaticGoalElement(element, details);
+    }
     if (element.getKind() == CONSTRUCTOR) {
       ConstructorGoalDetails details = ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
           name, parameterNames, goalOption.access);
       return new RegularGoalElement(element, details);
-    }
-    boolean isStatic = element.getModifiers().contains(STATIC);
-    if (!element.getTypeParameters().isEmpty()) {
-      StaticMethodGoalDetails details = StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-          typeParameters,
-          isStatic ?
-              emptyList() :
-              asTypeElement(element.getEnclosingElement().asType()).getTypeParameters()
-                  .stream().map(TypeVariableName::get).collect(toList()),
-          isStatic ?
-              DetailsType.STATIC :
-              DetailsType.INSTANCE);
-      return new RegularStaticGoalElement(element, details);
     }
     AbstractRegularDetails details =
         isStatic ?

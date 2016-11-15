@@ -13,9 +13,4 @@ public class MapEntry {
   static <K, V> Map.Entry<K, V> entry(K key, V value) {
     return new AbstractMap.SimpleEntry(key, value);
   }
-
-  @Goal(name = "sentry")
-  static <K extends String, V extends K> Map.Entry<K, V> sentry(K key, V value) {
-    return new AbstractMap.SimpleEntry(key, value);
-  }
 }

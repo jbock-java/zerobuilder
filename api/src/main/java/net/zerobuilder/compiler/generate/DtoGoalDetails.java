@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.STATIC;
 
 public final class DtoGoalDetails {
 
@@ -209,8 +210,8 @@ public final class DtoGoalDetails {
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
-      if (type != INSTANCE && !instanceTypeParameters.isEmpty()) {
-        throw new IllegalArgumentException("only instance goal have instancetype parameters");
+      if (type == STATIC && !instanceTypeParameters.isEmpty()) {
+        throw new IllegalArgumentException("static goal cannot have instancetype parameters");
       }
       this.instanceTypeParameters = instanceTypeParameters;
       this.type = type;
