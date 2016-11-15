@@ -24,6 +24,7 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.STATIC;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -75,7 +76,7 @@ public class BuilderTest {
         PRIVATE,
         emptyList(),
         emptyList(),
-        false);
+        STATIC);
 
     // use SimpleParameter because the builder module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW);

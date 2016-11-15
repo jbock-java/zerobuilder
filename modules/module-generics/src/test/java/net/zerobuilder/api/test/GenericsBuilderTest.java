@@ -11,6 +11,7 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleRegularDescri
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleStaticGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
@@ -85,7 +86,7 @@ public class GenericsBuilderTest {
         PRIVATE,
         asList(K, V),
         emptyList(),
-        false);
+        DetailsType.STATIC);
 
     // use SimpleParameter because the generics module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("keys", LIST_OF_K, ALLOW);

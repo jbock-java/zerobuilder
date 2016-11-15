@@ -27,6 +27,7 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.STATIC;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -61,7 +62,7 @@ public class VoidTest {
     String goalName = "Void";
     StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
         TypeName.VOID, goalName, singletonList("message"),
-        "doUpdate", PRIVATE, emptyList(), emptyList(), false);
+        "doUpdate", PRIVATE, emptyList(), emptyList(), STATIC);
 
     SimpleParameter parameter = DtoRegularParameter.create("message", STRING, ALLOW);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(

@@ -5,10 +5,10 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 
 import java.util.ArrayList;
@@ -84,7 +84,7 @@ final class GenericsImpl {
       return builder.add(fullInvoke(stepSpecs)).build();
     }
     ClassName next = impl.nestedClass(stepSpecs.get(i + 1).name + "Impl");
-    return i == 0 && !goal.details.instance ?
+    return i == 0 && goal.details.type != DetailsType.INSTANCE ?
         builder.addStatement("return new $T($N)", next, parameter).build() :
         builder.addStatement("return new $T(this, $N)", next, parameter).build();
   }
@@ -94,13 +94,17 @@ final class GenericsImpl {
     CodeBlock invoke = goal.unshuffle(blocks)
         .stream()
         .collect(joinCodeBlocks(", "));
-    return goal.details.instance ?
+    return goal.details.type == DetailsType.INSTANCE ?
         statement("return $L.$L($L)",
             instance(stepSpecs),
             goal.details.methodName, invoke) :
-        statement("return $T.$L($L)",
-            rawClassName(goal.context.type).get(),
-            goal.details.methodName, invoke);
+        goal.details.type == DetailsType.CONSTRUCTOR ?
+            statement("return new $T($L)",
+                rawClassName(goal.context.type).get(),
+                invoke) :
+            statement("return $T.$L($L)",
+                rawClassName(goal.context.type).get(),
+                goal.details.methodName, invoke);
   }
 
   static CodeBlock instance(List<TypeSpec> stepSpecs) {
@@ -143,12 +147,12 @@ final class GenericsImpl {
 
   private List<FieldSpec> fields(List<TypeSpec> stepSpecs, int i, List<List<TypeVariableName>> typeParams) {
     if (i == 0) {
-      return goal.details.instance ?
+      return goal.details.type == DetailsType.INSTANCE ?
           singletonList(FieldSpec.builder(goal.context.type, "instance",
               PRIVATE, FINAL).build()) :
           emptyList();
     }
-    if (i == 1 && !goal.details.instance) {
+    if (i == 1 && goal.details.type != DetailsType.INSTANCE) {
       return singletonList(parameterField(stepSpecs.get(0)));
     }
     TypeSpec stepSpec = stepSpecs.get(i - 1);

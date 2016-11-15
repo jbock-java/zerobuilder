@@ -17,6 +17,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.Optional.empty;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.INSTANCE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.asPredicate;
 
 public final class DtoRegularGoal {
@@ -73,7 +74,7 @@ public final class DtoRegularGoal {
       asPredicate(regularGoalContextCases(
           constructor -> false,
           instance -> true,
-          simple -> simple.details.instance));
+          simple -> simple.details.type == INSTANCE));
 
   private static final Function<SimpleRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
       regularGoalContextCases(

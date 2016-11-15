@@ -5,7 +5,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.Goal;
-import net.zerobuilder.compiler.common.LessTypes;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
@@ -14,6 +13,7 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -320,7 +320,10 @@ final class DtoGoalElement {
             ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
                 name, parameterNames, goalOption.access) :
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                emptyList(), emptyList(), !element.getModifiers().contains(STATIC));
+                emptyList(), emptyList(),
+                element.getModifiers().contains(STATIC) ?
+                    DetailsType.STATIC :
+                    DetailsType.INSTANCE);
     return new RegularProjectableGoalElement(element, details);
   }
 
@@ -340,10 +343,13 @@ final class DtoGoalElement {
     if (!element.getTypeParameters().isEmpty()) {
       StaticMethodGoalDetails details = StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
           typeParameters,
-          isStatic ? emptyList() :
+          isStatic ?
+              emptyList() :
               asTypeElement(element.getEnclosingElement().asType()).getTypeParameters()
                   .stream().map(TypeVariableName::get).collect(toList()),
-          !isStatic);
+          isStatic ?
+              DetailsType.STATIC :
+              DetailsType.INSTANCE);
       return new RegularStaticGoalElement(element, details);
     }
     AbstractRegularDetails details =
@@ -351,7 +357,7 @@ final class DtoGoalElement {
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
                 typeParameters,
                 emptyList(),
-                false) :
+                DetailsType.STATIC) :
             InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);
     return new RegularGoalElement(element, details);
   }

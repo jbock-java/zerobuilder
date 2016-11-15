@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 final class GenericsUtil {
@@ -67,9 +68,13 @@ final class GenericsUtil {
     }
   }
 
+  private static boolean maybeTypevars(TypeName type) {
+    return type instanceof ParameterizedTypeName
+        || type instanceof TypeVariableName;
+  }
+
   static boolean references(TypeName type, TypeName test) {
-    if (!(type instanceof ParameterizedTypeName
-        || type instanceof TypeVariableName)) {
+    if (!maybeTypevars(type)) {
       return type.equals(test);
     }
     TypeWalk walk = new TypeWalk(type);
@@ -81,12 +86,15 @@ final class GenericsUtil {
     return false;
   }
 
-  static List<TypeVariableName> referenced(TypeName type, List<TypeVariableName> options) {
+  static List<TypeVariableName> extractTypeVars(TypeName type) {
+    if (!maybeTypevars(type)) {
+      return emptyList();
+    }
     List<TypeVariableName> builder = new ArrayList<>();
     TypeWalk walk = new TypeWalk(type);
     while (walk.hasNext()) {
       TypeName next = walk.next();
-      if (options.contains(next)) {
+      if (next instanceof TypeVariableName) {
         if (!builder.contains(next)) {
           builder.add((TypeVariableName) next);
         }
@@ -95,7 +103,7 @@ final class GenericsUtil {
     return builder;
   }
 
-  static List<TypeVariableName> typeVars(TypeVariableName type) {
+  static List<TypeVariableName> extractTypeVars(TypeVariableName type) {
     if (type.bounds.isEmpty()) {
       return singletonList(type);
     } else {

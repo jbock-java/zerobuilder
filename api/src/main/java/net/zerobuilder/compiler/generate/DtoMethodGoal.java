@@ -71,6 +71,10 @@ public final class DtoMethodGoal {
     }
   }
 
+  /**
+   *  <em>The name is misleading</em>
+   *  This class is also handling instance goal, and will handle constructor goal soon.
+   */
   public static final class SimpleStaticMethodGoalContext extends SimpleRegularGoalContext {
 
     public final List<SimpleRegularStep> steps;

@@ -75,7 +75,7 @@ public class VarLifeTest {
   @Test
   public void testGenericInstance() {
     List<TypeName> parameters = asList(S, K, V, map(K, V));
-    List<TypeVariableName> dependents = dependents(singletonList(S), asList(S, K, V), parameters);
+    List<TypeVariableName> dependents = dependents(singletonList(S), parameters);
     List<List<TypeVariableName>> life = varLifes(asList(S, K, V), parameters, dependents);
     assertThat(typeParams(life, dependents), is(asList(singletonList(S), asList(K, V), asList(K, V))));
     assertThat(methodParams(life, dependents), is(asList(asList(K, V), emptyList(), emptyList())));
@@ -86,8 +86,7 @@ public class VarLifeTest {
   public void testDependentsS_V() {
     TypeVariableName S = TypeVariableName.get("S", String.class);
     TypeVariableName V = TypeVariableName.get("V", S);
-    assertThat(dependents(singletonList(S), asList(S, V), asList(S, V)), is(asList(S, V)));
-    assertThat(dependents(singletonList(S), asList(S, K), asList(S, V)), is(singletonList(S)));
+    assertThat(dependents(singletonList(S), asList(S, V)), is(asList(S, V)));
   }
 
   @Test
@@ -96,7 +95,6 @@ public class VarLifeTest {
     TypeVariableName V = TypeVariableName.get("V", S);
     List<TypeVariableName> dependents = dependents(
         singletonList(S),
-        asList(S, K, V),
         asList(K, V, map(K, V)));
     assertThat(dependents, is(asList(S, V)));
   }
@@ -107,7 +105,7 @@ public class VarLifeTest {
     TypeVariableName V = TypeVariableName.get("V", S);
     List<TypeVariableName> typeParameters = asList(S, K, V);
     List<TypeName> parameters = asList(K, V, map(K, V));
-    List<TypeVariableName> dependents = dependents(singletonList(S), typeParameters, parameters);
+    List<TypeVariableName> dependents = dependents(singletonList(S), parameters);
     List<List<TypeVariableName>> life = varLifes(typeParameters, parameters, dependents);
     assertThat(life, is(asList(asList(S, K, V), asList(S, K, V), asList(S, K, V))));
     assertThat(typeParams(life, dependents), is(asList(asList(S, V), asList(K, S, V))));

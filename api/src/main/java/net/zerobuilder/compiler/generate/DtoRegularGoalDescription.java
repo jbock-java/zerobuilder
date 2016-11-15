@@ -100,6 +100,7 @@ public final class DtoRegularGoalDescription {
   }
 
   /**
+   * <em>The name is misleading</em>
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
   public static final class SimpleStaticGoalDescription {

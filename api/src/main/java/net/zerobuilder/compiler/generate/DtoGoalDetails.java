@@ -8,6 +8,8 @@ import javax.lang.model.element.Modifier;
 import java.util.List;
 import java.util.function.Function;
 
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.INSTANCE;
+
 public final class DtoGoalDetails {
 
   public interface AbstractGoalDetails {
@@ -178,13 +180,23 @@ public final class DtoGoalDetails {
     }
   }
 
+
+  /**
+   * <em>The name is misleading</em>
+   * Describes static method or instance method or constructor.
+   */
   public static final class StaticMethodGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {
+
+    public enum DetailsType {
+      CONSTRUCTOR, STATIC, INSTANCE
+    }
+
     public final List<TypeVariableName> typeParameters;
     public final List<TypeVariableName> instanceTypeParameters;
     public final String methodName;
     public final TypeName goalType;
-    public final boolean instance;
+    public final DetailsType type;
 
     private StaticMethodGoalDetails(TypeName goalType, String name,
                                     List<String> parameterNames,
@@ -192,16 +204,16 @@ public final class DtoGoalDetails {
                                     Access access,
                                     List<TypeVariableName> typeParameters,
                                     List<TypeVariableName> instanceTypeParameters,
-                                    boolean instance) {
+                                    DetailsType type) {
       super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
-      if (!instance && !instanceTypeParameters.isEmpty()) {
-        throw new IllegalArgumentException("static goals don't have instancetype parameters");
+      if (type != INSTANCE && !instanceTypeParameters.isEmpty()) {
+        throw new IllegalArgumentException("only instance goal have instancetype parameters");
       }
       this.instanceTypeParameters = instanceTypeParameters;
-      this.instance = instance;
+      this.type = type;
     }
 
     public static StaticMethodGoalDetails create(TypeName goalType,
@@ -211,9 +223,9 @@ public final class DtoGoalDetails {
                                                  Access access,
                                                  List<TypeVariableName> typeParameters,
                                                  List<TypeVariableName> instanceTypeParameters,
-                                                 boolean instance) {
+                                                 DetailsType type) {
       return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters,
-          instanceTypeParameters, instance);
+          instanceTypeParameters, type);
     }
 
     @Override

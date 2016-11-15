@@ -7,6 +7,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 
 import java.util.List;
@@ -62,7 +63,7 @@ final class GenericsGenerator {
     ClassName firstImplType = implType.nestedClass(stepImpls.get(0).name);
     TypeSpec.Builder builder = classBuilder(implType)
         .addModifiers(PRIVATE, STATIC, FINAL);
-    if (!goal.details.instance) {
+    if (goal.details.type != DetailsType.INSTANCE) {
       builder.addField(FieldSpec.builder(firstImplType,
           downcase(firstImplType.simpleName()), PRIVATE, STATIC, FINAL)
           .initializer("new $T()", firstImplType).build());
@@ -92,12 +93,12 @@ final class GenericsGenerator {
     MethodSpec.Builder builder = methodBuilder(goal.details.name + "Builder")
         .addModifiers(goal.details.access(STATIC))
         .returns(contractType.nestedClass(stepSpecs.get(0).name));
-    if (goal.details.instance) {
+    if (goal.details.type == DetailsType.INSTANCE) {
       builder.addParameter(instance);
       builder.addCode(nullCheck(instance));
     }
     builder.addTypeVariables(goal.details.instanceTypeParameters);
-    builder.addCode(goal.details.instance ?
+    builder.addCode(goal.details.type == DetailsType.INSTANCE ?
         statement("return new $T($N)", implType.nestedClass(stepImpls.get(0).name), instance) :
         statement("return $T.$L", implType, downcase(stepImpls.get(0).name)));
     return new DtoGeneratorOutput.BuilderMethod(
@@ -110,7 +111,7 @@ final class GenericsGenerator {
         concat(goal.details.instanceTypeParameters, goal.details.typeParameters),
         stepTypes(goal),
         goal.details.instanceTypeParameters);
-    List<TypeVariableName> dependents = dependents(goal.details.instanceTypeParameters, goal.details.typeParameters,
+    List<TypeVariableName> dependents = dependents(goal.details.instanceTypeParameters,
         stepTypes(goal));
     List<List<TypeVariableName>> typeParams = typeParams(lifes, dependents);
     List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes, dependents);

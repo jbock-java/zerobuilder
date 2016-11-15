@@ -4,16 +4,12 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static java.util.Collections.singletonList;
-import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
-import static net.zerobuilder.modules.generics.GenericsUtil.referenced;
+import static net.zerobuilder.modules.generics.GenericsUtil.extractTypeVars;
 import static net.zerobuilder.modules.generics.GenericsUtil.references;
-import static net.zerobuilder.modules.generics.GenericsUtil.typeVars;
 
 final class VarLife {
 
@@ -96,7 +92,7 @@ final class VarLife {
   static List<TypeVariableName> expand(List<TypeVariableName> typeParameters) {
     List<TypeVariableName> builder = new ArrayList<>(typeParameters.size());
     for (TypeVariableName type : typeParameters) {
-      List<TypeVariableName> types = typeVars(type);
+      List<TypeVariableName> types = extractTypeVars(type);
       for (TypeVariableName t : types) {
         if (!builder.contains(t)) {
           builder.add(t);
@@ -107,22 +103,14 @@ final class VarLife {
   }
 
   static List<TypeVariableName> dependents(List<TypeVariableName> init,
-                                           List<TypeVariableName> typeParameters,
                                            List<TypeName> parameters) {
-    List<TypeVariableName> builder = new ArrayList<>(typeParameters.size());
+    List<TypeVariableName> builder = new ArrayList<>();
     builder.addAll(init);
-    List<TypeVariableName> options = concat(init, typeParameters);
     for (TypeName type : parameters) {
-      for (TypeVariableName initParam : init) {
-        boolean references = references(type, initParam);
-        if (references) {
-          List<TypeVariableName> referenced = referenced(type, options);
-          for (TypeVariableName typeVariableName : referenced) {
-            if (referencesAny(typeVariableName, init)) {
-              if (!builder.contains(typeVariableName)) {
-                builder.add(typeVariableName);
-              }
-            }
+      for (TypeVariableName t : extractTypeVars(type)) {
+        if (referencesAny(t, init)) {
+          if (!builder.contains(t)) {
+            builder.add(t);
           }
         }
       }
@@ -130,7 +118,7 @@ final class VarLife {
     return builder;
   }
 
-  private static boolean referencesAny(TypeVariableName typeVariableName, List<TypeVariableName> type) {
+  private static boolean referencesAny(TypeName typeVariableName, List<TypeVariableName> type) {
     for (TypeVariableName variableName : type) {
       if (references(typeVariableName, variableName)) {
         return true;
