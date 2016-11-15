@@ -11,10 +11,13 @@ final class GenericConstructor<S extends String, T extends S> {
 
   private final Map.Entry<S, T> entry;
 
-  // TODO make it work
-//  @Goal
-  GenericConstructor(S ess, T tee) {
-    entry = new AbstractMap.SimpleEntry(ess, tee);
+  GenericConstructor(Map.Entry<S, T> entry) {
+    this.entry = entry;
+  }
+
+  @Goal
+  static <S extends String, T extends S> GenericConstructor<S, T> create(S ess, T tee) {
+    return new GenericConstructor(new AbstractMap.SimpleEntry(ess, tee));
   }
 
 }

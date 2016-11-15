@@ -7,7 +7,13 @@ import java.io.IOException;
 
 // goal with declared exceptions
 @Builders
-final class Throw {
+final class Throw<S> {
+
+  final S string;
+
+  Throw(S string) {
+    this.string = string;
+  }
 
   @Goal
   static void doUpdate(String message) throws IOException {

@@ -37,6 +37,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -198,10 +199,10 @@ final class BuilderV {
       builder.addStatement("this._currently_in_use = false");
     }
     if (VOID.equals(type)) {
-      builder.addStatement("$T.$N($L)", goal.context.type,
+      builder.addStatement("$T.$N($L)", rawClassName(goal.context.type).get(),
           method, goal.invocationParameters());
     } else {
-      builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.context.type,
+      builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, rawClassName(goal.context.type).get(),
           method, goal.invocationParameters());
     }
     builder.add(free(goal.steps));

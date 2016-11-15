@@ -32,6 +32,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
@@ -98,7 +99,7 @@ final class GenericsImpl {
             instance(stepSpecs),
             goal.details.methodName, invoke) :
         statement("return $T.$L($L)",
-            goal.context.type,
+            rawClassName(goal.context.type).get(),
             goal.details.methodName, invoke);
   }
 
