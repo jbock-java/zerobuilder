@@ -23,6 +23,6 @@ Also, there are probably <em>too many</em> types.
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder-api</artifactId>
-    <version>1.521</version>
+    <version>1.522</version>
 </dependency>
 ````
