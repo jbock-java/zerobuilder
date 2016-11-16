@@ -9,11 +9,9 @@ import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpSimpleParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleStaticGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
@@ -26,7 +24,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -36,6 +33,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.ABSTRACT_CONSTRUCTOR;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GENERIC_UPDATE;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.executableElement;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalAnnotation;
@@ -124,6 +122,10 @@ final class ProjectionValidatorV {
   };
 
   static SimpleStaticGoalDescription validateGenerics(RegularStaticGoalElement goal) {
+    if (goal.goalAnnotation.updater()) {
+      throw new ValidationException(GENERIC_UPDATE,
+          goal.executableElement);
+    }
     List<TmpSimpleParameter> parameters = executableElement.apply(goal).getParameters()
         .stream()
         .map(parameter -> TmpSimpleParameter.create(parameter, goalAnnotation.apply(goal)))

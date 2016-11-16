@@ -28,7 +28,7 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_TYPE_PARAMS_HERE;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.GENERIC_UPDATE;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDATER;
 import static net.zerobuilder.compiler.analyse.Utilities.downcase;
@@ -312,8 +312,8 @@ final class DtoGoalElement {
   private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType, String name,
                                                               String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
-    if (!element.getTypeParameters().isEmpty()) {
-      throw new ValidationException(NO_TYPE_PARAMS_HERE, element);
+    if (hasTypevars(element)) {
+      throw new ValidationException(GENERIC_UPDATE, element);
     }
     ProjectableDetails details =
         element.getKind() == CONSTRUCTOR ?
@@ -327,6 +327,17 @@ final class DtoGoalElement {
     return new RegularProjectableGoalElement(element, details);
   }
 
+  private static boolean hasTypevars(ExecutableElement element) {
+    if (!element.getTypeParameters().isEmpty()) {
+      return true;
+    }
+    if (element.getModifiers().contains(STATIC)) {
+      return false;
+    }
+    return !asTypeElement(element.getEnclosingElement().asType())
+        .getTypeParameters().isEmpty();
+  }
+
   private static AbstractRegularGoalElement createBuilderGoal(ExecutableElement element, TypeName goalType, String name,
                                                               String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
@@ -336,8 +347,7 @@ final class DtoGoalElement {
     boolean isStatic = element.getModifiers().contains(STATIC);
     List<TypeVariableName> parentParameters = asTypeElement(element.getEnclosingElement().asType()).getTypeParameters()
         .stream().map(TypeVariableName::get).collect(toList());
-    if (!element.getTypeParameters().isEmpty()
-        || (element.getKind() == CONSTRUCTOR && !parentParameters.isEmpty())) {
+    if (hasTypevars(element)) {
       StaticMethodGoalDetails details = StaticMethodGoalDetails.create(goalType,
           name, parameterNames, methodName, goalOption.access, typeParameters,
           isStatic ?

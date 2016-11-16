@@ -40,6 +40,7 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_DEFAULT_CO
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_PRIVATE_CLASS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.TYPE_PARAMS_BEAN;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.accessorPair;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nullPolicy;
@@ -155,6 +156,9 @@ final class ProjectionValidatorB {
     }
     if (beanType.getModifiers().contains(ABSTRACT)) {
       throw new ValidationException(BEAN_ABSTRACT_CLASS, beanType);
+    }
+    if (!beanType.getTypeParameters().isEmpty()) {
+      throw new ValidationException(TYPE_PARAMS_BEAN, beanType);
     }
     return beanType;
   }
