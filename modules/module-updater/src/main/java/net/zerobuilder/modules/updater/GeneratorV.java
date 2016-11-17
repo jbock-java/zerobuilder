@@ -31,15 +31,14 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.goalDetails;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.steps;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.updater.Updater.cacheField;
 import static net.zerobuilder.modules.updater.Updater.implType;
@@ -146,8 +145,8 @@ final class GeneratorV {
   }
 
   private static CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {
-    GoalContext context = goal.context();
-    if (context.lifecycle == REUSE_INSTANCES) {
+    if (goal.mayReuse()) {
+      GoalContext context = goal.context();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
       FieldSpec cache = context.cache.get();
       FieldSpec updaterField = cacheField(goal);

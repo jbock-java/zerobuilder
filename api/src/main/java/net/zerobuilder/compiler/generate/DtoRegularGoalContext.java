@@ -34,6 +34,11 @@ final class DtoRegularGoalContext {
     return goal -> goal.acceptRegular(cases);
   }
 
+  static final Function<RegularGoalContext, Boolean> mayReuse =
+      regularGoalContextCases(
+          DtoRegularGoal.mayReuse,
+          DtoProjectedRegularGoalContext.mayReuse);
+
   static <R> Function<RegularGoalContext, R> regularGoalContextCases(
       Function<? super SimpleRegularGoalContext, ? extends R> simpleFunction,
       Function<? super ProjectedRegularGoalContext, ? extends R> projectedFunction) {

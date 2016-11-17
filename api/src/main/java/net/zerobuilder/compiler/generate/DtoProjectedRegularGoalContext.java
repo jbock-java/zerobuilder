@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
@@ -12,6 +13,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContex
 import java.util.List;
 import java.util.function.Function;
 
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 
 public final class DtoProjectedRegularGoalContext {
@@ -36,7 +38,7 @@ public final class DtoProjectedRegularGoalContext {
     }
 
     @Override
-    <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {
+    public final <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {
       return cases.projected(this);
     }
 
@@ -44,6 +46,14 @@ public final class DtoProjectedRegularGoalContext {
       return CodeBlock.of(String.join(", ", goalDetails.apply(this).parameterNames));
     }
   }
+
+  static final Function<ProjectedRegularGoalContext, Boolean> mayReuse =
+      projectedRegularGoalContextCases(
+          method -> method.context.lifecycle == REUSE_INSTANCES
+              && method.details.typeParameters.isEmpty()
+              && method.details.instanceTypeParameters.isEmpty(),
+          constructor -> constructor.context.lifecycle == REUSE_INSTANCES
+              && constructor.details.instanceTypeParameters.isEmpty());
 
   static <R> Function<ProjectedRegularGoalContext, R> asFunction(ProjectedRegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegularProjected(cases);

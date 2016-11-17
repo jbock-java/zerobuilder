@@ -30,7 +30,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.context;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.goalType;
@@ -40,8 +39,8 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
@@ -93,10 +92,10 @@ public final class Updater extends ProjectedModule {
           Updater.regularConstructor,
           bean -> constructorBuilder()
               .addModifiers(PRIVATE)
-              .addExceptions(bean.context.lifecycle == REUSE_INSTANCES
+              .addExceptions(bean.mayReuse()
                   ? Collections.emptyList()
                   : bean.thrownTypes)
-              .addCode(bean.context.lifecycle == REUSE_INSTANCES
+              .addCode(bean.mayReuse()
                   ? emptyCodeBlock
                   : statement("this.$N = new $T()", bean.bean(), bean.type()))
               .build());
@@ -111,7 +110,7 @@ public final class Updater extends ProjectedModule {
     TypeName type = goal.details.goalType;
     ParameterSpec varGoal = parameterSpec(type, '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.mayReuse()) {
       builder.addStatement("this._currently_in_use = false");
     }
     return builder
@@ -127,7 +126,7 @@ public final class Updater extends ProjectedModule {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(type.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.mayReuse()) {
       builder.addStatement("this._currently_in_use = false");
     }
     return builder
@@ -150,11 +149,11 @@ public final class Updater extends ProjectedModule {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(type.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.mayReuse()) {
       builder.addStatement("this._currently_in_use = false");
     }
     builder.addStatement("$T $N = this.$N", varGoal.type, varGoal, goal.bean());
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.mayReuse()) {
       builder.addStatement("this.$N = null", goal.bean());
     }
     return builder.addStatement("return $N", varGoal).build();

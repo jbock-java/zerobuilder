@@ -24,7 +24,6 @@ import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.steps;
 import static net.zerobuilder.compiler.generate.DtoStep.always;
@@ -40,7 +39,7 @@ final class UpdaterV {
   static final Function<ProjectedRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
     List<FieldSpec> builder = new ArrayList<>();
-    if (goal.context().lifecycle == REUSE_INSTANCES) {
+    if (goal.mayReuse()) {
       builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
     }
     for (ProjectedRegularStep step : steps.apply(goal)) {

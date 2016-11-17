@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableList;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularGoalContextCases;
 
@@ -27,6 +28,10 @@ public final class DtoGoalContext {
 
     public final String name() {
       return goalName.apply(this);
+    }
+
+    public final Boolean mayReuse() {
+      return mayReuse.apply(this);
     }
 
     final AbstractGoalDetails details() {
@@ -118,6 +123,11 @@ public final class DtoGoalContext {
                   method -> method.details.name,
                   constructor -> constructor.details.name)),
           bean -> bean.details.name);
+
+  private static final Function<AbstractGoalContext, Boolean> mayReuse =
+      goalCases(
+          DtoRegularGoalContext.mayReuse,
+          bean -> bean.context.lifecycle == REUSE_INSTANCES);
 
   static final Function<AbstractGoalContext, List<? extends AbstractStep>> abstractSteps =
       goalCases(

@@ -26,7 +26,6 @@ import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
@@ -37,7 +36,7 @@ import static net.zerobuilder.modules.updater.Updater.implType;
 final class UpdaterB {
 
   final static Function<BeanGoalContext, List<FieldSpec>> fieldsB =
-      goal -> goal.context().lifecycle == REUSE_INSTANCES ?
+      goal -> goal.mayReuse() ?
           asList(
               fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
               goal.bean()) :

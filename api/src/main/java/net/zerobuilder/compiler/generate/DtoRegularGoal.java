@@ -17,6 +17,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.Optional.empty;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.INSTANCE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.asPredicate;
 
@@ -69,6 +70,16 @@ public final class DtoRegularGoal {
           constructor -> constructor.details,
           method -> method.details,
           staticMethod -> staticMethod.details);
+
+  static final Function<SimpleRegularGoalContext, Boolean> mayReuse =
+      regularGoalContextCases(
+          constructor -> constructor.context.lifecycle == REUSE_INSTANCES
+              && constructor.details.instanceTypeParameters.isEmpty()
+              && constructor.details.instanceTypeParameters.isEmpty(),
+          method -> method.context.lifecycle == REUSE_INSTANCES,
+          staticMethod -> staticMethod.context.lifecycle == REUSE_INSTANCES
+              && staticMethod.details.instanceTypeParameters.isEmpty()
+              && staticMethod.details.typeParameters.isEmpty());
 
   private static final Predicate<SimpleRegularGoalContext> isInstance =
       asPredicate(regularGoalContextCases(
