@@ -17,7 +17,7 @@ It has two different use cases:
 
 This is a standard Java &ge; 7 annotation processor.
 The generated code has no runtime dependencies.
-After compilation, the annotated source does not depend on zerobuilder; see
+After compilation, the annotated source does not depend on zerobuilder; all its annotations have
 [RetentionPolicy.SOURCE](https://docs.oracle.com/javase/7/docs/api/java/lang/annotation/RetentionPolicy.html#SOURCE).
 
 Maven compiler plugin version `3.5.1` or greater is recommended.
