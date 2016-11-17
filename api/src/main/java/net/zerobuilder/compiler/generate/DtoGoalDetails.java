@@ -8,7 +8,6 @@ import javax.lang.model.element.Modifier;
 import java.util.List;
 import java.util.function.Function;
 
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.STATIC;
 
 public final class DtoGoalDetails {
@@ -123,16 +122,18 @@ public final class DtoGoalDetails {
       implements ProjectableDetails, AbstractGoalDetails {
 
     public final ClassName goalType;
+    public final List<TypeVariableName> instanceTypeParameters;
 
     private ConstructorGoalDetails(ClassName goalType, String name, List<String> parameterNames,
-                                   Access access) {
+                                   Access access, List<TypeVariableName> instanceTypeParameters) {
       super(name, parameterNames, access);
       this.goalType = goalType;
+      this.instanceTypeParameters = instanceTypeParameters;
     }
 
     public static ConstructorGoalDetails create(ClassName goalType, String name, List<String> parameterNames,
-                                                Access access) {
-      return new ConstructorGoalDetails(goalType, name, parameterNames, access);
+                                                Access access, List<TypeVariableName> instanceTypeParameters) {
+      return new ConstructorGoalDetails(goalType, name, parameterNames, access, instanceTypeParameters);
     }
 
     @Override

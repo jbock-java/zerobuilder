@@ -28,7 +28,6 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GENERIC_UPDATE;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDATER;
 import static net.zerobuilder.compiler.analyse.Utilities.downcase;
@@ -312,20 +311,29 @@ final class DtoGoalElement {
   private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType, String name,
                                                               String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
-    if (hasTypevars(element)) {
-      throw new ValidationException(GENERIC_UPDATE, element);
-    }
     ProjectableDetails details =
         element.getKind() == CONSTRUCTOR ?
             ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
-                name, parameterNames, goalOption.access) :
+                name, parameterNames, goalOption.access, instanceTypevars(element)) :
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                emptyList(), emptyList(),
+                methodTypevars(element), instanceTypevars(element),
                 element.getModifiers().contains(STATIC) ?
                     DetailsType.STATIC :
                     DetailsType.INSTANCE);
     return new RegularProjectableGoalElement(element, details);
   }
+
+  private static List<TypeVariableName> instanceTypevars(ExecutableElement element) {
+    return asTypeElement(element.getEnclosingElement().asType()).getTypeParameters()
+        .stream().map(TypeVariableName::get).collect(toList());
+  }
+
+  private static List<TypeVariableName> methodTypevars(ExecutableElement element) {
+    return element.getTypeParameters().stream()
+        .map(TypeVariableName::get)
+        .collect(toList());
+  }
+
 
   private static boolean hasTypevars(ExecutableElement element) {
     if (!element.getTypeParameters().isEmpty()) {
@@ -341,18 +349,13 @@ final class DtoGoalElement {
   private static AbstractRegularGoalElement createBuilderGoal(ExecutableElement element, TypeName goalType, String name,
                                                               String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
-    List<TypeVariableName> typeParameters = element.getTypeParameters().stream()
-        .map(TypeVariableName::get)
-        .collect(toList());
     boolean isStatic = element.getModifiers().contains(STATIC);
-    List<TypeVariableName> parentParameters = asTypeElement(element.getEnclosingElement().asType()).getTypeParameters()
-        .stream().map(TypeVariableName::get).collect(toList());
     if (hasTypevars(element)) {
       StaticMethodGoalDetails details = StaticMethodGoalDetails.create(goalType,
-          name, parameterNames, methodName, goalOption.access, typeParameters,
+          name, parameterNames, methodName, goalOption.access, methodTypevars(element),
           isStatic ?
               emptyList() :
-              parentParameters,
+              instanceTypevars(element),
           isStatic ?
               DetailsType.STATIC :
               element.getKind() == CONSTRUCTOR ?
@@ -363,13 +366,13 @@ final class DtoGoalElement {
     if (element.getKind() == CONSTRUCTOR) {
       ConstructorGoalDetails details = ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
-          name, parameterNames, goalOption.access);
+          name, parameterNames, goalOption.access, instanceTypevars(element));
       return new RegularGoalElement(element, details);
     }
     AbstractRegularDetails details =
         isStatic ?
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                typeParameters,
+                methodTypevars(element),
                 emptyList(),
                 DetailsType.STATIC) :
             InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);

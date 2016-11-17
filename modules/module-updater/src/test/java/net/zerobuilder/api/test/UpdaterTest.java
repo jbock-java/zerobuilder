@@ -19,6 +19,7 @@ import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.Collections;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PUBLIC;
@@ -61,7 +62,8 @@ public class UpdaterTest {
     String goalName = "myGoal";
     ConstructorGoalDetails details = ConstructorGoalDetails.create(
         TYPE, goalName, singletonList("foo"),
-        PUBLIC);
+        PUBLIC,
+        emptyList());
 
     // use ProjectedParameter because the updater module requires projections
     ProjectedParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW,
