@@ -1,5 +1,7 @@
 # A flexible builder scheme
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder)
+
 This project generates some variants of the builder pattern.
 It has two different use cases:
 
@@ -36,14 +38,3 @@ The core functionality is available as a separate library. See [api](api).
 
 Because using the generated builders has zero impact on garbage collection, if the `recycle` option is used.
 In this case, the intermediate builder objects are stored in `ThreadLocal` instances and reused.
-
-### Maven
-
-````xml
-<dependency>
-    <groupId>com.github.h908714124</groupId>
-    <artifactId>zerobuilder</artifactId>
-    <version>1.522</version>
-    <scope>provided</scope>
-</dependency>
-````

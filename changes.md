@@ -137,7 +137,11 @@
 
 * add generics support for instance goals and static goals (issues-2)
 
-### 2016-11-03 zerobuilder 1.521 released
+### 2016-11-16 zerobuilder 1.522 released
 
 * fix bugs in goals with type parameters
 * allow constructor + type parameters (issues-2)
+
+### 2016-11-18 zerobuilder 1.523 released
+
+* allow generic update (issues-2)
