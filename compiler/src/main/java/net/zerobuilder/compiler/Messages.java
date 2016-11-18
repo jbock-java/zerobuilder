@@ -80,9 +80,6 @@ public final class Messages {
     public static final String TYPE_PARAMS_BEAN =
         "Type parameters are not allowed in bean goals.";
 
-    public static final String GENERIC_UPDATE =
-        "Update is not available for goals with type variables.";
-
     private ErrorMessages() {
       throw new UnsupportedOperationException("no instances");
     }

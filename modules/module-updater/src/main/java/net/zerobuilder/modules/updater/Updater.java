@@ -8,7 +8,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal;
@@ -40,6 +40,8 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -51,10 +53,10 @@ public final class Updater extends ProjectedModule {
   private static final Function<ProjectedGoal, List<FieldSpec>> fields =
       projectedGoalCases(UpdaterV.fieldsV, UpdaterB.fieldsB);
 
-  private static final Function<ProjectedGoal, List<MethodSpec>> updateMethods =
-      projectedGoalCases(UpdaterV.updateMethodsV, UpdaterB.updateMethodsB);
+  private static final Function<ProjectedGoal, List<MethodSpec>> stepMethods =
+      projectedGoalCases(UpdaterV.stepMethodsV, UpdaterB.stepMethodsB);
 
-  private static final Function<ProjectedGoal, DtoGeneratorOutput.BuilderMethod> goalToUpdater =
+  private static final Function<ProjectedGoal, BuilderMethod> updaterMethod =
       projectedGoalCases(GeneratorV::updaterMethodV, GeneratorB::updaterMethodB);
 
   private MethodSpec buildMethod(ProjectedGoal goal) {
@@ -66,20 +68,21 @@ public final class Updater extends ProjectedModule {
   }
 
   private TypeSpec defineUpdater(ProjectedGoal projectedGoal) {
-    return classBuilder(implType(projectedGoal))
+    return classBuilder(rawClassName(implType(projectedGoal)).get())
         .addFields(fields.apply(projectedGoal))
-        .addMethods(updateMethods.apply(projectedGoal))
+        .addMethods(stepMethods.apply(projectedGoal))
+        .addTypeVariables(DtoProjectedGoal.instanceTypeParameters.apply(projectedGoal))
         .addMethod(buildMethod(projectedGoal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(updaterConstructor.apply(projectedGoal))
         .build();
   }
 
-  static ClassName implType(ProjectedGoal projectedGoal) {
+  static TypeName implType(ProjectedGoal projectedGoal) {
     AbstractGoalContext goal = goalContext(projectedGoal);
     String implName = upcase(goal.name()) + upcase(moduleName);
-    return context.apply(goal)
-        .generatedType.nestedClass(implName);
+    return parameterizedTypeName(context.apply(goal)
+        .generatedType.nestedClass(implName), DtoProjectedGoal.instanceTypeParameters.apply(projectedGoal));
   }
 
   private static final Function<ProjectedRegularGoalContext, MethodSpec> regularConstructor =
@@ -122,9 +125,9 @@ public final class Updater extends ProjectedModule {
   }
 
   private CodeBlock constructorCall(ProjectedConstructorGoalContext goal) {
-    ClassName type = goal.details.goalType;
+    TypeName type = goal.details.goalType;
     ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(type.simpleName()));
+        '_' + downcase(rawClassName(type).get().simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.mayReuse()) {
       builder.addStatement("this._currently_in_use = false");
@@ -159,8 +162,8 @@ public final class Updater extends ProjectedModule {
     return builder.addStatement("return $N", varGoal).build();
   }
 
-  private final Function<ProjectedGoal, CodeBlock> invoke
-      = projectedGoalCases(regularInvoke, this::returnBean);
+  private final Function<ProjectedGoal, CodeBlock> invoke =
+      projectedGoalCases(regularInvoke, this::returnBean);
 
   static AbstractGoalContext goalContext(ProjectedGoal goal) {
     return DtoProjectedGoal.goalContext.apply(goal);
@@ -171,8 +174,8 @@ public final class Updater extends ProjectedModule {
   }
 
   static FieldSpec cacheField(ProjectedGoal projectedGoal) {
-    ClassName type = implType(projectedGoal);
-    return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
+    TypeName type = implType(projectedGoal);
+    return FieldSpec.builder(type, downcase(rawClassName(type).get().simpleName()), PRIVATE)
         .initializer("new $T()", type)
         .build();
   }
@@ -180,7 +183,7 @@ public final class Updater extends ProjectedModule {
   @Override
   protected ModuleOutput process(ProjectedGoal goal) {
     return new ModuleOutput(
-        goalToUpdater.apply(goal),
+        updaterMethod.apply(goal),
         singletonList(defineUpdater(goal)),
         singletonList(cacheField(goal)));
   }

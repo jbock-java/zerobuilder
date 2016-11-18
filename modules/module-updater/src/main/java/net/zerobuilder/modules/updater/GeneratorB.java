@@ -145,7 +145,7 @@ final class GeneratorB {
   }
 
   private static ParameterSpec updaterInstance(BeanGoalContext goal) {
-    ClassName updaterType = implType(goal);
+    TypeName updaterType = implType(goal);
     return parameterSpec(updaterType, "updater");
   }
   private GeneratorB() {

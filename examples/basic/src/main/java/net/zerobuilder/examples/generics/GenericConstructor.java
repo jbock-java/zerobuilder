@@ -8,7 +8,7 @@ import java.util.AbstractMap;
 @Builders
 final class GenericConstructor<K, V> extends AbstractMap.SimpleEntry<K, V> {
 
-  @Goal
+  @Goal(updater = true)
   GenericConstructor(K key, V value) {
     super(key, value);
   }

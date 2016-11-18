@@ -33,7 +33,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.ABSTRACT_CONSTRUCTOR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.GENERIC_UPDATE;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.executableElement;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalAnnotation;
@@ -122,10 +121,6 @@ final class ProjectionValidatorV {
   };
 
   static SimpleStaticGoalDescription validateGenerics(RegularStaticGoalElement goal) {
-    if (goal.goalAnnotation.updater()) {
-      throw new ValidationException(GENERIC_UPDATE,
-          goal.executableElement);
-    }
     List<TmpSimpleParameter> parameters = executableElement.apply(goal).getParameters()
         .stream()
         .map(parameter -> TmpSimpleParameter.create(parameter, goalAnnotation.apply(goal)))

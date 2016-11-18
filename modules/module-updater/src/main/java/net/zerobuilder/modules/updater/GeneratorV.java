@@ -1,6 +1,5 @@
 package net.zerobuilder.modules.updater;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -32,6 +31,7 @@ import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.goalDetails;
+import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.instanceTypeParameters;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.steps;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
@@ -55,6 +55,7 @@ final class GeneratorV {
     MethodSpec method = methodBuilder(Updater.methodName(goal))
         .addExceptions(thrownByProjections(goal))
         .addParameter(toBuilderParameter(goal))
+        .addTypeVariables(instanceTypeParameters.apply(goal))
         .returns(updater.type)
         .addCode(nullCheckingBlock(goal))
         .addCode(initVarUpdater(goal, updater))
@@ -164,7 +165,7 @@ final class GeneratorV {
   }
 
   private static ParameterSpec varUpdater(ProjectedRegularGoalContext goal) {
-    ClassName updaterType = implType(goal);
+    TypeName updaterType = implType(goal);
     return parameterSpec(updaterType, "updater");
   }
 

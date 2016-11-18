@@ -36,26 +36,24 @@ import static net.zerobuilder.modules.updater.Updater.implType;
 
 final class UpdaterV {
 
-  static final Function<ProjectedRegularGoalContext, List<FieldSpec>> fieldsV
-      = goal -> {
-    List<FieldSpec> builder = new ArrayList<>();
-    if (goal.mayReuse()) {
-      builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
-    }
-    for (ProjectedRegularStep step : steps.apply(goal)) {
-      String name = step.regularParameter().name;
-      TypeName type = step.regularParameter().type;
-      builder.add(fieldSpec(type, name, PRIVATE));
-    }
-    return builder;
-  };
+  static final Function<ProjectedRegularGoalContext, List<FieldSpec>> fieldsV =
+      goal -> {
+        List<FieldSpec> builder = new ArrayList<>();
+        if (goal.mayReuse()) {
+          builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
+        }
+        for (ProjectedRegularStep step : steps.apply(goal)) {
+          String name = step.regularParameter().name;
+          TypeName type = step.regularParameter().type;
+          builder.add(fieldSpec(type, name, PRIVATE));
+        }
+        return builder;
+      };
 
-  static final Function<ProjectedRegularGoalContext, List<MethodSpec>> updateMethodsV
-      = goal ->
-      steps.apply(goal).stream()
+  static final Function<ProjectedRegularGoalContext, List<MethodSpec>> stepMethodsV =
+      goal -> steps.apply(goal).stream()
           .map(updateMethods(goal))
           .collect(flatList());
-
 
   private static Function<AbstractRegularStep, List<MethodSpec>> updateMethods(ProjectedRegularGoalContext goal) {
     return step -> Stream.concat(

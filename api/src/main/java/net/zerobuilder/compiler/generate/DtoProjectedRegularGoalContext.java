@@ -2,7 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
+import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
@@ -124,9 +124,15 @@ public final class DtoProjectedRegularGoalContext {
           method -> method.details,
           constructor -> constructor.details);
 
-  public static final Function<ProjectedRegularGoalContext, List<ProjectedRegularStep>> steps = DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
-      method -> method.steps,
-      constructor -> constructor.steps);
+  public static final Function<ProjectedRegularGoalContext, List<TypeVariableName>> instanceTypeParameters =
+      projectedRegularGoalContextCases(
+          method -> method.details.instanceTypeParameters,
+          constructor -> constructor.details.instanceTypeParameters);
+
+  public static final Function<ProjectedRegularGoalContext, List<ProjectedRegularStep>> steps =
+      DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
+          method -> method.steps,
+          constructor -> constructor.steps);
 
   private DtoProjectedRegularGoalContext() {
     throw new UnsupportedOperationException("no instances");

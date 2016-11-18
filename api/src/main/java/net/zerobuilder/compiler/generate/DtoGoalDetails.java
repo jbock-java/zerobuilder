@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.STATIC;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
 public final class DtoGoalDetails {
 
@@ -121,13 +122,13 @@ public final class DtoGoalDetails {
   public static final class ConstructorGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {
 
-    public final ClassName goalType;
+    public final TypeName goalType;
     public final List<TypeVariableName> instanceTypeParameters;
 
     private ConstructorGoalDetails(ClassName goalType, String name, List<String> parameterNames,
                                    Access access, List<TypeVariableName> instanceTypeParameters) {
       super(name, parameterNames, access);
-      this.goalType = goalType;
+      this.goalType = parameterizedTypeName(goalType, instanceTypeParameters);
       this.instanceTypeParameters = instanceTypeParameters;
     }
 
