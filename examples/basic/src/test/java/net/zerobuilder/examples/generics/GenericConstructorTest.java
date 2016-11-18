@@ -2,6 +2,8 @@ package net.zerobuilder.examples.generics;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 import static net.zerobuilder.examples.generics.GenericConstructorBuilders.genericConstructorBuilder;
 import static net.zerobuilder.examples.generics.GenericConstructorBuilders.genericConstructorUpdater;
 import static org.hamcrest.core.Is.is;
@@ -10,7 +12,7 @@ import static org.junit.Assert.assertThat;
 public class GenericConstructorTest {
 
   @Test
-  public void testConstructor() {
+  public void testConstructor() throws IOException {
     GenericConstructor<String, Integer> entry = genericConstructorBuilder()
         .key("a")
         .value(2);

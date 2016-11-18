@@ -24,7 +24,6 @@ import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.STATIC;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -59,13 +58,13 @@ public class BuilderTest {
 
     // create goal context
     DtoContext.GoalContext goalContext = createContext(
-        TYPE, // type that contains the goal method; in this case, this is the same as the goal type
+        TYPE, // type that contains the goal method
         GENERATED_TYPE, // the type we want to generate; it will contain all the generated code
         NEW_INSTANCE // forbid caching of builder instances
     );
 
     // create goal details
-    String goalName = "myGoal"; // free choice, but should be a valid java identifier
+    String goalName = "myGoal";
     StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
         TYPE, // return type of the goal method
         // names of generated classes and methods are based on this
@@ -74,9 +73,7 @@ public class BuilderTest {
         asList("foo", "bar"),
         "create", // correct goal method name
         PRIVATE,
-        emptyList(),
-        emptyList(),
-        STATIC);
+        emptyList());
 
     // use SimpleParameter because the builder module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW);

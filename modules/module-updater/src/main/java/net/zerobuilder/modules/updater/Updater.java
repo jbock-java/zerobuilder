@@ -18,13 +18,13 @@ import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.Projecte
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -59,9 +59,15 @@ public final class Updater extends ProjectedModule {
   private static final Function<ProjectedGoal, BuilderMethod> updaterMethod =
       projectedGoalCases(GeneratorV::updaterMethodV, GeneratorB::updaterMethodB);
 
+  private static final Function<ProjectedGoal, List<TypeName>> thrownInDone =
+      projectedGoalCases(
+          regular -> regular.thrownTypes,
+          bean -> emptyList());
+
   private MethodSpec buildMethod(ProjectedGoal goal) {
     return methodBuilder("done")
         .addModifiers(PUBLIC)
+        .addExceptions(thrownInDone.apply(goal))
         .returns(goalType.apply(goal))
         .addCode(invoke.apply(goal))
         .build();
@@ -96,7 +102,7 @@ public final class Updater extends ProjectedModule {
           bean -> constructorBuilder()
               .addModifiers(PRIVATE)
               .addExceptions(bean.mayReuse()
-                  ? Collections.emptyList()
+                  ? emptyList()
                   : bean.thrownTypes)
               .addCode(bean.mayReuse()
                   ? emptyCodeBlock

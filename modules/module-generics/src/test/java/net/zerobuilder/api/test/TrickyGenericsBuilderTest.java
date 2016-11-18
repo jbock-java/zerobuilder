@@ -6,12 +6,11 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoContext;
-import net.zerobuilder.compiler.generate.DtoDescriptionInput.SimpleRegularDescriptionInput;
+import net.zerobuilder.compiler.generate.DtoDescriptionInput.RegularSimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleStaticGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.Generator;
@@ -26,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static net.zerobuilder.NullPolicy.ALLOW;
@@ -86,15 +84,13 @@ public class TrickyGenericsBuilderTest {
         asList("source", "key", "defaultValue"),
         "getList",
         PRIVATE,
-        asList(K, V),
-        emptyList(),
-        DetailsType.STATIC);
+        asList(K, V));
 
     // use SimpleParameter because the generics module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("source", MAP_K_LIST_V, ALLOW);
     SimpleParameter barParameter = DtoRegularParameter.create("key", K, ALLOW);
     SimpleParameter tarParameter = DtoRegularParameter.create("defaultValue", V, ALLOW);
-    SimpleStaticGoalDescription description = SimpleStaticGoalDescription.create(
+    SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
         details,
         Collections.emptyList(), // the goal method declares no exceptions
         // step order; not necessarily the order of the goal parameters
@@ -102,7 +98,7 @@ public class TrickyGenericsBuilderTest {
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(
-        goalContext, singletonList(new SimpleRegularDescriptionInput(new GenericsBuilder(), description)));
+        goalContext, singletonList(new RegularSimpleDescriptionInput(new GenericsBuilder(), description)));
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);

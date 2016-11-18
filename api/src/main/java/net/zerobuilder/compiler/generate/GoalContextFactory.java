@@ -17,7 +17,6 @@ import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.SimpleRegularGoalInput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
@@ -33,12 +32,10 @@ import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.Projecte
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleStaticGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
-import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.ArrayList;
@@ -77,32 +74,20 @@ final class GoalContextFactory {
         context,
         simple.parameters,
         simpleRegularFactory);
-    return simple.details.accept(new RegularGoalDetailsCases<SimpleRegularGoalContext>() {
+    return simple.details.accept(new RegularGoalDetailsCases<SimpleRegularGoalContext, Void>() {
       @Override
-      public SimpleRegularGoalContext method(InstanceMethodGoalDetails details) {
+      public SimpleRegularGoalContext method(InstanceMethodGoalDetails details, Void _null) {
         return new InstanceMethodGoalContext(context, details, steps, simple.thrownTypes);
       }
       @Override
-      public SimpleRegularGoalContext staticMethod(StaticMethodGoalDetails details) {
+      public SimpleRegularGoalContext staticMethod(StaticMethodGoalDetails details, Void _null) {
         return new SimpleStaticMethodGoalContext(context, details, steps, simple.thrownTypes, simple.parameters);
       }
       @Override
-      public SimpleRegularGoalContext constructor(ConstructorGoalDetails details) {
+      public SimpleRegularGoalContext constructor(ConstructorGoalDetails details, Void _null) {
         return new SimpleConstructorGoalContext(context, details, steps, simple.thrownTypes);
       }
-    });
-  }
-
-  private static SimpleStaticMethodGoalContext prepareSimpleRegular(
-      DtoContext.GoalContext context,
-      SimpleStaticGoalDescription simple) {
-    List<SimpleRegularStep> steps = steps(
-        simple.details,
-        simple.thrownTypes,
-        context,
-        simple.parameters,
-        simpleRegularFactory);
-    return new SimpleStaticMethodGoalContext(context, simple.details, steps, simple.thrownTypes, simple.parameters);
+    }, null);
   }
 
   private static ProjectedGoal prepareProjectedRegular(
@@ -225,10 +210,6 @@ final class GoalContextFactory {
                     context, regular),
                 bean -> GoalContextFactory.prepareBean(
                     context, bean)).apply(description)),
-        (module, description) -> new SimpleRegularGoalInput(
-            module,
-            GoalContextFactory.prepareSimpleRegular(
-                context, description)),
         (module, description) -> new RegularSimpleGoalInput(
             module,
             GoalContextFactory.prepareRegular(

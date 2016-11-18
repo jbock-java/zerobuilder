@@ -25,7 +25,6 @@ import static java.util.Arrays.asList;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
@@ -65,9 +64,7 @@ final class GeneratorB {
           .map(function)
           .collect(flatList()));
     }
-    if (goal.context.lifecycle == NEW_INSTANCE) {
-      thrownTypes.addAll(goal.thrownTypes);
-    }
+    thrownTypes.addAll(goal.thrownTypes);
     return thrownTypes;
   }
 

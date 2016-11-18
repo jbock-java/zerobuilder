@@ -111,7 +111,7 @@ public final class DtoRegularStep {
       this.collectionInfo = collectionInfo;
     }
 
-    static SimpleRegularStep create(String thisType,
+    public static SimpleRegularStep create(String thisType,
                                     Optional<? extends AbstractRegularStep> nextType,
                                     AbstractGoalDetails goalDetails,
                                     GoalContext context,

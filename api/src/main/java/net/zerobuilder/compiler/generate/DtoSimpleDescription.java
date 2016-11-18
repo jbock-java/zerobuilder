@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleStaticGoalDescription;
 
 import java.util.function.Function;
 

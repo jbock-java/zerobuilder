@@ -3,7 +3,6 @@ package net.zerobuilder.compiler.analyse;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularProjectableGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularStaticGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpSimpleParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
@@ -11,9 +10,7 @@ import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleStaticGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
-import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -106,7 +103,7 @@ final class ProjectionValidatorV {
     return getLocalAndInheritedMethods(type, LOOKS_LIKE_PROJECTION);
   }
 
-  static final Function<RegularGoalElement, SimpleDescription> validateBuilder
+  static final Function<RegularGoalElement, SimpleRegularGoalDescription> validateBuilder
       = goal -> {
     List<TmpSimpleParameter> parameters = executableElement.apply(goal).getParameters()
         .stream()
@@ -119,17 +116,6 @@ final class ProjectionValidatorV {
         thrownTypes,
         transform(shuffled, parameter -> parameter.parameter));
   };
-
-  static SimpleStaticGoalDescription validateGenerics(RegularStaticGoalElement goal) {
-    List<TmpSimpleParameter> parameters = executableElement.apply(goal).getParameters()
-        .stream()
-        .map(parameter -> TmpSimpleParameter.create(parameter, goalAnnotation.apply(goal)))
-        .collect(toList());
-    List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
-    return SimpleStaticGoalDescription.create(
-        goal.details, thrownTypes(executableElement.apply(goal)),
-        transform(shuffled, parameter -> parameter.parameter));
-  }
 
   private static ProjectedRegularGoalDescription createGoalDescription(RegularProjectableGoalElement goal,
                                                                        List<TmpProjectedParameter> parameters) {

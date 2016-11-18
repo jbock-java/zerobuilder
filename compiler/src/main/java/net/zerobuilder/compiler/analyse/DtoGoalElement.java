@@ -13,9 +13,9 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
@@ -23,11 +23,12 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
+import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.INSTANCE_UDPATE;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDATER;
 import static net.zerobuilder.compiler.analyse.Utilities.downcase;
@@ -52,7 +53,6 @@ final class DtoGoalElement {
 
   interface RegularGoalElementCases<R> {
     R general(RegularGoalElement regular);
-    R staticMethod(RegularStaticGoalElement regular);
     R projectable(RegularProjectableGoalElement projectable);
   }
 
@@ -66,16 +66,11 @@ final class DtoGoalElement {
 
   static <R> Function<AbstractRegularGoalElement, R> regularGoalElementCases(
       Function<? super RegularGoalElement, ? extends R> generalFunction,
-      Function<? super RegularStaticGoalElement, ? extends R> staticFunction,
       Function<? super RegularProjectableGoalElement, ? extends R> projectableFunction) {
     return asFunction(new RegularGoalElementCases<R>() {
       @Override
       public R general(RegularGoalElement regular) {
         return generalFunction.apply(regular);
-      }
-      @Override
-      public R staticMethod(RegularStaticGoalElement regularStatic) {
-        return staticFunction.apply(regularStatic);
       }
       @Override
       public R projectable(RegularProjectableGoalElement projectable) {
@@ -87,7 +82,6 @@ final class DtoGoalElement {
   static final Function<AbstractRegularGoalElement, ExecutableElement> executableElement =
       regularGoalElementCases(
           general -> general.executableElement,
-          regularStatic -> regularStatic.executableElement,
           projectable -> projectable.executableElement);
 
   static <R> Function<AbstractGoalElement, R> goalElementCases(
@@ -110,14 +104,12 @@ final class DtoGoalElement {
       goalElementCases(
           regularGoalElementCases(
               general -> general.goalAnnotation,
-              regularStatic -> regularStatic.goalAnnotation,
               projectable -> projectable.goalAnnotation),
           bean -> bean.goalAnnotation);
 
   private static final Function<AbstractRegularGoalElement, AbstractGoalDetails> abstractDetails =
       regularGoalElementCases(
           general -> general.details,
-          regularStatic -> regularStatic.details,
           projectable -> projectable.details);
 
   static final Function<AbstractGoalElement, String> goalName =
@@ -129,7 +121,6 @@ final class DtoGoalElement {
       goalElementCases(
           regularGoalElementCases(
               regular -> regular.executableElement,
-              regularStatic -> regularStatic.executableElement,
               projected -> projected.executableElement),
           bean -> bean.beanType);
 
@@ -158,28 +149,6 @@ final class DtoGoalElement {
     @Override
     public <R> R accept(RegularGoalElementCases<R> cases) {
       return cases.general(this);
-    }
-  }
-
-  static final class RegularStaticGoalElement implements AbstractRegularGoalElement {
-    final StaticMethodGoalDetails details;
-    final ExecutableElement executableElement;
-    final Goal goalAnnotation;
-
-    private RegularStaticGoalElement(ExecutableElement element, StaticMethodGoalDetails details) {
-      this.goalAnnotation = element.getAnnotation(Goal.class);
-      this.details = details;
-      this.executableElement = element;
-    }
-
-    @Override
-    public <R> R accept(GoalElementCases<R> goalElementCases) {
-      return goalElementCases.regularGoal(this);
-    }
-
-    @Override
-    public <R> R accept(RegularGoalElementCases<R> cases) {
-      return cases.staticMethod(this);
     }
   }
 
@@ -311,15 +280,16 @@ final class DtoGoalElement {
   private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType, String name,
                                                               String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
+    if (element.getKind() == METHOD
+        && !element.getModifiers().contains(STATIC)) {
+      throw new ValidationException(INSTANCE_UDPATE, element);
+    }
     ProjectableDetails details =
         element.getKind() == CONSTRUCTOR ?
             ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
                 name, parameterNames, goalOption.access, instanceTypevars(element)) :
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                methodTypevars(element), instanceTypevars(element),
-                element.getModifiers().contains(STATIC) ?
-                    DetailsType.STATIC :
-                    DetailsType.INSTANCE);
+                methodTypevars(element));
     return new RegularProjectableGoalElement(element, details);
   }
 
@@ -334,35 +304,9 @@ final class DtoGoalElement {
         .collect(toList());
   }
 
-
-  private static boolean hasTypevars(ExecutableElement element) {
-    if (!element.getTypeParameters().isEmpty()) {
-      return true;
-    }
-    if (element.getModifiers().contains(STATIC)) {
-      return false;
-    }
-    return !asTypeElement(element.getEnclosingElement().asType())
-        .getTypeParameters().isEmpty();
-  }
-
   private static AbstractRegularGoalElement createBuilderGoal(ExecutableElement element, TypeName goalType, String name,
                                                               String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
-    boolean isStatic = element.getModifiers().contains(STATIC);
-    if (hasTypevars(element)) {
-      StaticMethodGoalDetails details = StaticMethodGoalDetails.create(goalType,
-          name, parameterNames, methodName, goalOption.access, methodTypevars(element),
-          isStatic ?
-              emptyList() :
-              instanceTypevars(element),
-          isStatic ?
-              DetailsType.STATIC :
-              element.getKind() == CONSTRUCTOR ?
-                  DetailsType.CONSTRUCTOR :
-                  DetailsType.INSTANCE);
-      return new RegularStaticGoalElement(element, details);
-    }
     if (element.getKind() == CONSTRUCTOR) {
       ConstructorGoalDetails details = ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
@@ -370,12 +314,11 @@ final class DtoGoalElement {
       return new RegularGoalElement(element, details);
     }
     AbstractRegularDetails details =
-        isStatic ?
+        element.getModifiers().contains(STATIC) ?
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                methodTypevars(element),
-                emptyList(),
-                DetailsType.STATIC) :
-            InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access);
+                methodTypevars(element)) :
+            InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
+                methodTypevars(element), instanceTypevars(element));
     return new RegularGoalElement(element, details);
   }
 

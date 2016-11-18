@@ -8,26 +8,26 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.VOID;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.nCopies;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.REJECT;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -40,18 +40,19 @@ final class GenericsImpl {
 
   private final ClassName impl;
   private final ClassName contract;
-  private final SimpleStaticMethodGoalContext goal;
+  private final SimpleRegularGoalContext goal;
 
   List<TypeSpec> stepImpls(List<TypeSpec> stepSpecs,
                            List<List<TypeVariableName>> methodParams,
                            List<List<TypeVariableName>> typeParams) {
     List<TypeSpec> builder = new ArrayList<>(stepSpecs.size());
     builder.addAll(nCopies(stepSpecs.size(), null));
+    ImplFields implFields = new ImplFields(impl, goal, stepSpecs, typeParams);
     for (int i = 0; i < stepSpecs.size(); i++) {
       TypeSpec stepSpec = stepSpecs.get(i);
       MethodSpec method = stepSpec.methodSpecs.get(0);
       ParameterSpec parameter = method.parameters.get(0);
-      List<FieldSpec> fields = fields(stepSpecs, i, typeParams);
+      List<FieldSpec> fields = implFields.fields.apply(goal.regularDetails(), i);
       TypeName superinterface = parameterizedTypeName(contract.nestedClass(stepSpec.name),
           stepSpec.typeVariables);
       builder.set(i, classBuilder(stepSpec.name + "Impl")
@@ -66,6 +67,7 @@ final class GenericsImpl {
               .addModifiers(PUBLIC)
               .returns(method.returnType)
               .addCode(getCodeBlock(stepSpecs, i, parameter))
+              .addExceptions(i == goal.steps().size() - 1 ? goal.thrownTypes : emptyList())
               .build())
           .addModifiers(PRIVATE, STATIC, FINAL)
           .build());
@@ -76,17 +78,15 @@ final class GenericsImpl {
 
   private CodeBlock getCodeBlock(List<TypeSpec> stepSpecs, int i, ParameterSpec parameter) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.parameters.get(i).nullPolicy == REJECT
-        && !goal.parameters.get(i).type.isPrimitive()) {
+    if (goal.steps().get(i).abstractParameter().nullPolicy == REJECT
+        && !goal.steps().get(i).abstractParameter().type.isPrimitive()) {
       builder.add(nullCheck(parameter.name, parameter.name));
     }
     if (i == stepSpecs.size() - 1) {
       return builder.add(fullInvoke(stepSpecs)).build();
     }
     ClassName next = impl.nestedClass(stepSpecs.get(i + 1).name + "Impl");
-    return i == 0 && goal.details.type != DetailsType.INSTANCE ?
-        builder.addStatement("return new $T($N)", next, parameter).build() :
-        builder.addStatement("return new $T(this, $N)", next, parameter).build();
+    return builder.addStatement("return new $T(this, $N)", next, parameter).build();
   }
 
   private CodeBlock fullInvoke(List<TypeSpec> stepSpecs) {
@@ -94,17 +94,20 @@ final class GenericsImpl {
     CodeBlock invoke = goal.unshuffle(blocks)
         .stream()
         .collect(joinCodeBlocks(", "));
-    return goal.details.type == DetailsType.INSTANCE ?
-        statement("return $L.$L($L)",
-            instance(stepSpecs),
-            goal.details.methodName, invoke) :
-        goal.details.type == DetailsType.CONSTRUCTOR ?
-            statement("return new $T($L)",
-                rawClassName(goal.context.type).get(),
-                invoke) :
-            statement("return $T.$L($L)",
-                rawClassName(goal.context.type).get(),
-                goal.details.methodName, invoke);
+    return regularDetailsCases(
+        constructor -> statement("return new $T($L)",
+            rawClassName(goal.context().type).get(), invoke),
+        staticMethod -> CodeBlock.builder()
+            .add(staticMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))
+            .addStatement("$T.$L($L)",
+                rawClassName(goal.context().type).get(),
+                staticMethod.methodName, invoke).build(),
+        instanceMethod -> CodeBlock.builder()
+            .add(instanceMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))
+            .addStatement("$L.$L($L)",
+                instance(stepSpecs),
+                instanceMethod.methodName, invoke).build())
+        .apply(goal.regularDetails());
   }
 
   static CodeBlock instance(List<TypeSpec> stepSpecs) {
@@ -145,34 +148,7 @@ final class GenericsImpl {
         .build();
   }
 
-  private List<FieldSpec> fields(List<TypeSpec> stepSpecs, int i, List<List<TypeVariableName>> typeParams) {
-    if (i == 0) {
-      return goal.details.type == DetailsType.INSTANCE ?
-          singletonList(FieldSpec.builder(goal.context.type, "instance",
-              PRIVATE, FINAL).build()) :
-          emptyList();
-    }
-    if (i == 1 && goal.details.type != DetailsType.INSTANCE) {
-      return singletonList(parameterField(stepSpecs.get(0)));
-    }
-    TypeSpec stepSpec = stepSpecs.get(i - 1);
-    TypeName implType = parameterizedTypeName(impl.nestedClass(stepSpec.name + "Impl"),
-        typeParams.get(i - 1));
-    return asList(
-        FieldSpec.builder(implType, downcase(stepSpec.name) + "Impl",
-            PRIVATE, FINAL)
-            .build(),
-        parameterField(stepSpec));
-  }
-
-  private FieldSpec parameterField(TypeSpec type) {
-    MethodSpec method = type.methodSpecs.get(0);
-    ParameterSpec parameter = method.parameters.get(0);
-    return FieldSpec.builder(parameter.type, parameter.name, PRIVATE, FINAL)
-        .build();
-  }
-
-  GenericsImpl(ClassName impl, ClassName contract, SimpleStaticMethodGoalContext goal) {
+  GenericsImpl(ClassName impl, ClassName contract, SimpleRegularGoalContext goal) {
     this.impl = impl;
     this.contract = contract;
     this.goal = goal;

@@ -15,8 +15,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
-import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;
-import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
@@ -27,8 +25,8 @@ public final class DtoMethodGoal {
   public static final class InstanceMethodGoalContext extends SimpleRegularGoalContext {
     public final List<SimpleRegularStep> steps;
 
-    InstanceMethodGoalContext(
-        DtoContext.GoalContext context,
+    public InstanceMethodGoalContext(
+        GoalContext context,
         InstanceMethodGoalDetails details,
         List<SimpleRegularStep> steps,
         List<TypeName> thrownTypes) {
@@ -71,17 +69,11 @@ public final class DtoMethodGoal {
     }
   }
 
-  /**
-   * <em>The name is misleading</em>
-   * This class is also handling instance goal, and will handle constructor goal soon.
-   * <p>
-   * TODO this should only handle static goal, not constructor or instance
-   */
   public static final class SimpleStaticMethodGoalContext extends SimpleRegularGoalContext {
 
     public final List<SimpleRegularStep> steps;
 
-    SimpleStaticMethodGoalContext(
+    public SimpleStaticMethodGoalContext(
         GoalContext context,
         StaticMethodGoalDetails details,
         List<SimpleRegularStep> steps,
@@ -92,20 +84,6 @@ public final class DtoMethodGoal {
       this.context = context;
       this.steps = steps;
       this.parameters = parameters;
-    }
-
-    private static int[] createUnshuffle(List<SimpleParameter> parameters, List<String> parameterNames) {
-      String[] a = new String[parameters.size()];
-      for (int i = 0; i < parameters.size(); i++) {
-        a[i] = parameters.get(i).name;
-      }
-      String[] b = parameterNames.toArray(new String[parameterNames.size()]);
-      return createRanking(a, b);
-    }
-
-    public <E> List<E> unshuffle(List<E> shuffled) {
-      int[] unshuffle = createUnshuffle(parameters, details.parameterNames);
-      return applyRanking(unshuffle, shuffled);
     }
 
     public final DtoContext.GoalContext context;

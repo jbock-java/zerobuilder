@@ -6,9 +6,10 @@ import com.squareup.javapoet.TypeVariableName;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.STATIC;
+import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
 public final class DtoGoalDetails {
@@ -32,18 +33,51 @@ public final class DtoGoalDetails {
     R bean(BeanGoalDetails details);
   }
 
-  interface RegularGoalDetailsCases<R> {
-    R method(InstanceMethodGoalDetails details);
-    R staticMethod(StaticMethodGoalDetails details);
-    R constructor(ConstructorGoalDetails details);
+  interface RegularGoalDetailsCases<R, P> {
+    R method(InstanceMethodGoalDetails details, P p);
+    R staticMethod(StaticMethodGoalDetails details, P p);
+    R constructor(ConstructorGoalDetails details, P p);
   }
 
   public static <R> Function<AbstractGoalDetails, R> asFunction(AbstractGoalDetailsCases<R> cases) {
     return details -> details.acceptAbstract(cases);
   }
 
-  public static <R> Function<AbstractRegularDetails, R> asFunction(RegularGoalDetailsCases<R> cases) {
-    return details -> details.accept(cases);
+  public static <R, P> BiFunction<AbstractRegularDetails, P, R> asFunction(RegularGoalDetailsCases<R, P> cases) {
+    return (details, p) -> details.accept(cases, p);
+  }
+
+  public static <R, P> BiFunction<AbstractRegularDetails, P, R> regularDetailsCases(
+      BiFunction<ConstructorGoalDetails, P, R> constructorFunction,
+      BiFunction<StaticMethodGoalDetails, P, R> staticFunction,
+      BiFunction<InstanceMethodGoalDetails, P, R> instanceFunction) {
+    return asFunction(new RegularGoalDetailsCases<R, P>() {
+      @Override
+      public R method(InstanceMethodGoalDetails details, P p) {
+        return instanceFunction.apply(details, p);
+      }
+      @Override
+      public R staticMethod(StaticMethodGoalDetails details, P p) {
+        return staticFunction.apply(details, p);
+      }
+      @Override
+      public R constructor(ConstructorGoalDetails details, P p) {
+        return constructorFunction.apply(details, p);
+      }
+    });
+  }
+
+
+  public static <R> Function<AbstractRegularDetails, R> regularDetailsCases(
+      Function<ConstructorGoalDetails, R> constructorFunction,
+      Function<StaticMethodGoalDetails, R> staticFunction,
+      Function<InstanceMethodGoalDetails, R> instanceFunction) {
+    BiFunction<AbstractRegularDetails, Void, R> biFunction =
+        regularDetailsCases(
+            (x, _null) -> constructorFunction.apply(x),
+            (x, _null) -> staticFunction.apply(x),
+            (x, _null) -> instanceFunction.apply(x));
+    return details -> biFunction.apply(details, null);
   }
 
   public interface ProjectableDetails extends AbstractGoalDetails {
@@ -116,7 +150,7 @@ public final class DtoGoalDetails {
       return cases.regular(this);
     }
 
-    abstract <R> R accept(RegularGoalDetailsCases<R> cases);
+    abstract <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p);
   }
 
   public static final class ConstructorGoalDetails extends AbstractRegularDetails
@@ -143,8 +177,8 @@ public final class DtoGoalDetails {
     }
 
     @Override
-    <R> R accept(RegularGoalDetailsCases<R> cases) {
-      return cases.constructor(this);
+    <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p) {
+      return cases.constructor(this, p);
     }
 
     @Override
@@ -156,20 +190,29 @@ public final class DtoGoalDetails {
   public static final class InstanceMethodGoalDetails extends AbstractRegularDetails {
     public final String methodName;
     public final TypeName goalType;
+    public final List<TypeVariableName> typeParameters;
+    public final List<TypeVariableName> instanceTypeParameters;
+
 
     private InstanceMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
-                                      Access access) {
+                                      Access access,
+                                      List<TypeVariableName> typeParameters,
+                                      List<TypeVariableName> instanceTypeParameters) {
       super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
+      this.typeParameters = typeParameters;
+      this.instanceTypeParameters = instanceTypeParameters;
     }
 
     public static InstanceMethodGoalDetails create(TypeName goalType,
                                                    String name,
                                                    List<String> parameterNames,
                                                    String methodName,
-                                                   Access access) {
-      return new InstanceMethodGoalDetails(goalType, name, parameterNames, methodName, access);
+                                                   Access access,
+                                                   List<TypeVariableName> typeParameters,
+                                                   List<TypeVariableName> instanceTypeParameters) {
+      return new InstanceMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters, instanceTypeParameters);
     }
 
     @Override
@@ -178,47 +221,31 @@ public final class DtoGoalDetails {
     }
 
     @Override
-    <R> R accept(RegularGoalDetailsCases<R> cases) {
-      return cases.method(this);
+    <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p) {
+      return cases.method(this, p);
     }
   }
 
 
   /**
-   * <em>The name is misleading</em>
-   * Describes static method or instance method or constructor.
-   * <p>
-   * TODO this should only handle static goal, not constructor or instance
+   * Describes static method goal.
    */
   public static final class StaticMethodGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {
 
-    public enum DetailsType {
-      CONSTRUCTOR, STATIC, INSTANCE
-    }
-
     public final List<TypeVariableName> typeParameters;
-    public final List<TypeVariableName> instanceTypeParameters;
     public final String methodName;
     public final TypeName goalType;
-    public final DetailsType type;
 
     private StaticMethodGoalDetails(TypeName goalType, String name,
                                     List<String> parameterNames,
                                     String methodName,
                                     Access access,
-                                    List<TypeVariableName> typeParameters,
-                                    List<TypeVariableName> instanceTypeParameters,
-                                    DetailsType type) {
+                                    List<TypeVariableName> typeParameters) {
       super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
-      if (type == STATIC && !instanceTypeParameters.isEmpty()) {
-        throw new IllegalArgumentException("static goal cannot have instancetype parameters");
-      }
-      this.instanceTypeParameters = instanceTypeParameters;
-      this.type = type;
     }
 
     public static StaticMethodGoalDetails create(TypeName goalType,
@@ -226,11 +253,8 @@ public final class DtoGoalDetails {
                                                  List<String> parameterNames,
                                                  String methodName,
                                                  Access access,
-                                                 List<TypeVariableName> typeParameters,
-                                                 List<TypeVariableName> instanceTypeParameters,
-                                                 DetailsType type) {
-      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters,
-          instanceTypeParameters, type);
+                                                 List<TypeVariableName> typeParameters) {
+      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters);
     }
 
     @Override
@@ -239,8 +263,8 @@ public final class DtoGoalDetails {
     }
 
     @Override
-    <R> R accept(RegularGoalDetailsCases<R> cases) {
-      return cases.staticMethod(this);
+    <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p) {
+      return cases.staticMethod(this, p);
     }
 
     @Override
@@ -280,6 +304,11 @@ public final class DtoGoalDetails {
     }
   }
 
+  public static final Function<AbstractRegularDetails, List<TypeVariableName>> instanceTypeParameters =
+      regularDetailsCases(
+          constructor -> constructor.instanceTypeParameters,
+          staticMethod -> emptyList(),
+          instanceMethod -> instanceMethod.instanceTypeParameters);
   public static final Function<AbstractGoalDetails, TypeName> goalType
       = asFunction(new AbstractGoalDetailsCases<TypeName>() {
     @Override

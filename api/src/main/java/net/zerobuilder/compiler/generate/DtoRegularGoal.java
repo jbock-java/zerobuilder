@@ -8,6 +8,7 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
@@ -18,8 +19,10 @@ import java.util.function.Predicate;
 
 import static java.util.Optional.empty;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails.DetailsType.INSTANCE;
+import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.asPredicate;
+import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class DtoRegularGoal {
 
@@ -31,8 +34,8 @@ public final class DtoRegularGoal {
     }
 
     public abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
-    abstract List<String> parameterNames();
-    abstract TypeName type();
+    public abstract List<String> parameterNames();
+    public abstract TypeName type();
 
     public final AbstractRegularDetails regularDetails() {
       return goalDetails.apply(this);
@@ -51,8 +54,23 @@ public final class DtoRegularGoal {
     }
 
     @Override
-    final <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {
+    public final <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {
       return cases.simple(this);
+    }
+
+    private static int[] createUnshuffle(List<AbstractRegularParameter> parameters, List<String> parameterNames) {
+      String[] a = new String[parameters.size()];
+      for (int i = 0; i < parameters.size(); i++) {
+        a[i] = parameters.get(i).name;
+      }
+      String[] b = parameterNames.toArray(new String[parameterNames.size()]);
+      return createRanking(a, b);
+    }
+
+    public <E> List<E> unshuffle(List<E> shuffled) {
+      List<AbstractRegularParameter> parameters = transform(regularSteps(), step -> step.regularParameter());
+      int[] unshuffle = createUnshuffle(parameters, parameterNames());
+      return applyRanking(unshuffle, shuffled);
     }
 
     @Override
@@ -65,35 +83,40 @@ public final class DtoRegularGoal {
     }
   }
 
-  static final Function<SimpleRegularGoalContext, AbstractRegularDetails> goalDetails =
+  public static final Function<SimpleRegularGoalContext, AbstractRegularDetails> goalDetails =
       regularGoalContextCases(
           constructor -> constructor.details,
           method -> method.details,
           staticMethod -> staticMethod.details);
 
-  static final Function<SimpleRegularGoalContext, Boolean> mayReuse =
+  public static final Function<SimpleRegularGoalContext, Boolean> mayReuse =
       regularGoalContextCases(
           constructor -> constructor.context.lifecycle == REUSE_INSTANCES
               && constructor.details.instanceTypeParameters.isEmpty()
               && constructor.details.instanceTypeParameters.isEmpty(),
           method -> method.context.lifecycle == REUSE_INSTANCES,
           staticMethod -> staticMethod.context.lifecycle == REUSE_INSTANCES
-              && staticMethod.details.instanceTypeParameters.isEmpty()
               && staticMethod.details.typeParameters.isEmpty());
 
-  private static final Predicate<SimpleRegularGoalContext> isInstance =
+  public static final Predicate<SimpleRegularGoalContext> isInstance =
       asPredicate(regularGoalContextCases(
           constructor -> false,
-          instance -> true,
-          simple -> simple.details.type == INSTANCE));
+          instanceMethod -> true,
+          staticMethod -> false));
 
-  private static final Function<SimpleRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
+  public static final Function<SimpleRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
       regularGoalContextCases(
           constructor -> constructor.steps,
-          method -> method.steps,
+          instanceMethod -> instanceMethod.steps,
           staticMethod -> staticMethod.steps);
 
-  private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
+  public static final Function<SimpleRegularGoalContext, List<TypeName>> stepTypes =
+      regularGoalContextCases(
+          constructor -> transform(constructor.steps, step -> step.parameter.type),
+          instanceMethod -> transform(instanceMethod.steps, step -> step.parameter.type),
+          staticMethod -> transform(staticMethod.steps, step -> step.parameter.type));
+
+  public static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
       regularGoalContextCases(
           constructor -> empty(),
           method -> Optional.of(method.instanceField()),
@@ -105,7 +128,7 @@ public final class DtoRegularGoal {
     R staticMethod(SimpleStaticMethodGoalContext goal);
   }
 
-  static <R> Function<SimpleRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
+  public static <R> Function<SimpleRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegular(cases);
   }
 

@@ -27,11 +27,11 @@ public class VarLifeTest {
   private static final TypeVariableName K = TypeVariableName.get("K");
   private static final TypeVariableName V = TypeVariableName.get("V");
 
-  private static TypeName listOf(TypeName v) {
+  public static TypeName listOf(TypeName v) {
     return ParameterizedTypeName.get(ClassName.get(List.class), v);
   }
 
-  private static TypeName map(TypeName k, TypeName v) {
+  public static TypeName map(TypeName k, TypeName v) {
     return ParameterizedTypeName.get(ClassName.get(Map.class), k, v);
   }
 

@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler;
 
 import com.google.common.collect.ImmutableList;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.tools.JavaFileObject;
@@ -14,7 +13,7 @@ import static net.zerobuilder.compiler.test_util.GeneratedLines.GENERATED_ANNOTA
 public class GenericsTest {
 
   @Test
-  public void instance() {
+  public void staticMethod() {
     JavaFileObject cube = forSourceLines("cube.Fuchur",
         "package cube;",
         "import net.zerobuilder.*;",
@@ -66,15 +65,16 @@ public class GenericsTest {
         "      ",
         "      @Override",
         "      public <K> MapBuilder.Value<K> keys(List<K> keys) {",
-        "        return new ValueImpl(keys);",
+        "        return new ValueImpl(this, keys);",
         "      }",
         "    }",
         "",
         "    private static final class ValueImpl<K> implements MapBuilder.Value<K> {",
-        "",
+        "      private final KeysImpl keysImpl;",
         "      private final List<K> keys;",
         "",
-        "      private ValueImpl(List<K> keys) {",
+        "      private ValueImpl(KeysImpl keysImpl, List<K> keys) {",
+        "        this.keysImpl = keysImpl;",
         "        this.keys = keys;",
         "      }",
         "",

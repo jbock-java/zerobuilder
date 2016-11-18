@@ -43,6 +43,9 @@ public final class Messages {
     public static final String STEP_DUPLICATE =
         "Step position is specified twice.";
 
+    public static final String INSTANCE_UDPATE =
+        "Instance methods can not have an updater.";
+
     public static final String DUPLICATE_GOAL_NAME =
         "There is another goal with this name. " +
             "Goal name conflicts can be resolved with the @Goal(name = ...) attribute.";
