@@ -75,7 +75,9 @@ public final class Generator {
       goalInputCases(
           simple -> simple.module.process(simple.goal),
           projected -> projected.module.process(projected.goal),
-          regular -> regular.module.process(regular.goal));
+          regular -> regular.module.process(regular.goal),
+          regularSimple -> regularSimple.module.process(regularSimple.goal));
+
 
   private Generator() {
     throw new UnsupportedOperationException("no instances");

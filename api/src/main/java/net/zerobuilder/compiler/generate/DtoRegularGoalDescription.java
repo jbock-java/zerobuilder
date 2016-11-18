@@ -56,7 +56,7 @@ public final class DtoRegularGoalDescription {
       this.thrownTypes = thrownTypes;
     }
 
-    abstract <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases);
+    public abstract <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases);
   }
 
 
@@ -89,7 +89,7 @@ public final class DtoRegularGoalDescription {
     }
 
     @Override
-    <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases) {
+    public <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases) {
       return cases.acceptSimple(this);
     }
 
@@ -102,7 +102,10 @@ public final class DtoRegularGoalDescription {
   /**
    * <em>The name is misleading</em>
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
+   *
+   * @deprecated use {@link SimpleRegularGoalDescription} instead
    */
+  @Deprecated
   public static final class SimpleStaticGoalDescription {
 
     final List<SimpleParameter> parameters;

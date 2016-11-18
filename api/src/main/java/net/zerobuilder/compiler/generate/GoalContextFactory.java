@@ -16,6 +16,7 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.SimpleRegularGoalInput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
@@ -67,7 +68,7 @@ final class GoalContextFactory {
     return new BeanGoalContext(context, goal.details, steps, goal.thrownTypes);
   }
 
-  private static SimpleGoal prepareRegular(
+  private static SimpleRegularGoalContext prepareRegular(
       GoalContext context,
       SimpleRegularGoalDescription simple) {
     List<SimpleRegularStep> steps = steps(
@@ -103,7 +104,6 @@ final class GoalContextFactory {
         simpleRegularFactory);
     return new SimpleStaticMethodGoalContext(context, simple.details, steps, simple.thrownTypes, simple.parameters);
   }
-
 
   private static ProjectedGoal prepareProjectedRegular(
       DtoContext.GoalContext context,
@@ -228,6 +228,10 @@ final class GoalContextFactory {
         (module, description) -> new SimpleRegularGoalInput(
             module,
             GoalContextFactory.prepareSimpleRegular(
+                context, description)),
+        (module, description) -> new RegularSimpleGoalInput(
+            module,
+            GoalContextFactory.prepareRegular(
                 context, description)),
         (module, description) -> new ProjectedGoalInput(
             module,

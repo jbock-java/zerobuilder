@@ -187,6 +187,8 @@ public final class DtoGoalDetails {
   /**
    * <em>The name is misleading</em>
    * Describes static method or instance method or constructor.
+   * <p>
+   * TODO this should only handle static goal, not constructor or instance
    */
   public static final class StaticMethodGoalDetails extends AbstractRegularDetails
       implements ProjectableDetails, AbstractGoalDetails {

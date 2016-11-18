@@ -72,8 +72,10 @@ public final class DtoMethodGoal {
   }
 
   /**
-   *  <em>The name is misleading</em>
-   *  This class is also handling instance goal, and will handle constructor goal soon.
+   * <em>The name is misleading</em>
+   * This class is also handling instance goal, and will handle constructor goal soon.
+   * <p>
+   * TODO this should only handle static goal, not constructor or instance
    */
   public static final class SimpleStaticMethodGoalContext extends SimpleRegularGoalContext {
 
@@ -83,7 +85,8 @@ public final class DtoMethodGoal {
         GoalContext context,
         StaticMethodGoalDetails details,
         List<SimpleRegularStep> steps,
-        List<TypeName> thrownTypes, List<SimpleParameter> parameters) {
+        List<TypeName> thrownTypes,
+        List<SimpleParameter> parameters) {
       super(thrownTypes);
       this.details = details;
       this.context = context;

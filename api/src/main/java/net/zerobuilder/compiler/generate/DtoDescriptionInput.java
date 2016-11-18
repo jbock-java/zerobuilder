@@ -3,7 +3,9 @@ package net.zerobuilder.compiler.generate;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularContractModule;
+import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
 import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleStaticGoalDescription;
 import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
@@ -15,6 +17,8 @@ public final class DtoDescriptionInput {
   interface DescriptionInputCases<R> {
     R simple(SimpleDescriptionInput simple);
     R simpleRegular(SimpleRegularDescriptionInput simple);
+    // TODO use regularSimple not simpleRegular
+    R regularSimple(RegularSimpleDescriptionInput simple);
     R projected(ProjectedDescriptionInput projected);
   }
 
@@ -29,6 +33,7 @@ public final class DtoDescriptionInput {
   static <R> Function<DescriptionInput, R> descriptionInputCases(
       BiFunction<Module, SimpleDescription, R> simpleFunction,
       BiFunction<RegularContractModule, SimpleStaticGoalDescription, R> simpleRegularFunction,
+      BiFunction<RegularSimpleModule, SimpleRegularGoalDescription, R> regularSimpleFunction,
       BiFunction<ProjectedModule, ProjectedDescription, R> projectedFunction) {
     return asFunction(new DescriptionInputCases<R>() {
       @Override
@@ -38,6 +43,10 @@ public final class DtoDescriptionInput {
       @Override
       public R simpleRegular(SimpleRegularDescriptionInput simple) {
         return simpleRegularFunction.apply(simple.module, simple.description);
+      }
+      @Override
+      public R regularSimple(RegularSimpleDescriptionInput simple) {
+        return regularSimpleFunction.apply(simple.module, simple.description);
       }
       @Override
       public R projected(ProjectedDescriptionInput projected) {
@@ -60,6 +69,10 @@ public final class DtoDescriptionInput {
     }
   }
 
+  /**
+   * @deprecated use {@link RegularSimpleDescriptionInput} instead
+   */
+  @Deprecated
   public static final class SimpleRegularDescriptionInput implements DescriptionInput {
     final RegularContractModule module;
     final SimpleStaticGoalDescription description;
@@ -85,6 +98,19 @@ public final class DtoDescriptionInput {
     @Override
     public <R> R accept(DescriptionInputCases<R> cases) {
       return cases.projected(this);
+    }
+  }
+
+  public static final class RegularSimpleDescriptionInput implements DescriptionInput {
+    final RegularSimpleModule module;
+    final SimpleRegularGoalDescription description;
+    public RegularSimpleDescriptionInput(RegularSimpleModule module, SimpleRegularGoalDescription description) {
+      this.module = module;
+      this.description = description;
+    }
+    @Override
+    public <R> R accept(DescriptionInputCases<R> cases) {
+      return cases.regularSimple(this);
     }
   }
 
