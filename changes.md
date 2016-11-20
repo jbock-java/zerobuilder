@@ -145,3 +145,8 @@
 ### 2016-11-18 zerobuilder 1.523 released
 
 * allow generic update (issues-2)
+
+### 2016-11-20 zerobuilder 1.524 released
+
+* bugfix: updater was ignoring checked exception
+* bugfix: generics + void
