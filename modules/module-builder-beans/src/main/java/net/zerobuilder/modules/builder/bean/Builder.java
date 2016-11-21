@@ -1,4 +1,4 @@
-package net.zerobuilder.modules.builder;
+package net.zerobuilder.modules.builder.bean;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -35,10 +35,9 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.modules.builder.BuilderV.nextType;
-import static net.zerobuilder.modules.builder.Step.nullCheck;
+import static net.zerobuilder.modules.builder.bean.BeanStep.nextType;
 
-final class BuilderB {
+final class Builder {
 
   static final Function<BeanGoalContext, List<FieldSpec>> fieldsB =
       goal -> goal.context().lifecycle == REUSE_INSTANCES ?
@@ -145,13 +144,13 @@ final class BuilderB {
         .addParameter(parameter)
         .addModifiers(PUBLIC)
         .returns(nextType(step))
-        .addCode(nullCheck.apply(step))
+        .addCode(Step.nullCheck.apply(step))
         .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), parameter)
         .addCode(step.isLast() ? normalReturn(goal) : statement("return this"))
         .build();
   }
 
-  private BuilderB() {
+  private Builder() {
     throw new UnsupportedOperationException("no instances");
   }
 }

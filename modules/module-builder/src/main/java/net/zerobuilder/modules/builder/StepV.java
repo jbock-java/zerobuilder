@@ -4,6 +4,8 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
+import net.zerobuilder.compiler.generate.DtoRegularGoal;
+import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 import net.zerobuilder.compiler.generate.DtoStep;
@@ -26,7 +28,7 @@ import static net.zerobuilder.modules.builder.BuilderV.nextType;
 
 final class StepV {
 
-  static Function<AbstractRegularStep, TypeSpec> regularStepInterface(SimpleGoal goal) {
+  static Function<AbstractRegularStep, TypeSpec> regularStepInterface(SimpleRegularGoalContext goal) {
     return step -> interfaceBuilder(step.thisType)
         .addMethod(regularStepMethod(step, goal))
         .addMethods(presentInstances(emptyCollection(step)))

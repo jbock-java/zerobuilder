@@ -1,10 +1,9 @@
-package net.zerobuilder.modules.builder;
+package net.zerobuilder.modules.builder.bean;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
 import java.util.function.Function;
@@ -13,7 +12,7 @@ import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
-import static net.zerobuilder.modules.builder.StepV.regularStepInterface;
+import static net.zerobuilder.modules.builder.bean.BeanStep.beanStepInterface;
 
 final class Step {
 
@@ -27,8 +26,8 @@ final class Step {
     return nullCheck(name, name);
   });
 
-  static Function<DtoRegularStep.AbstractRegularStep, TypeSpec> asStepInterface(SimpleRegularGoalContext goal) {
-    return regularStepInterface(goal);
+  static Function<AbstractBeanStep, TypeSpec> asStepInterface() {
+    return beanStepInterface;
   }
 
   private Step() {

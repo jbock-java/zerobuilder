@@ -1,4 +1,4 @@
-package net.zerobuilder.modules.builder;
+package net.zerobuilder.modules.builder.bean;
 
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -23,9 +23,9 @@ import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
-import static net.zerobuilder.modules.builder.BuilderV.nextType;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
-final class StepB {
+final class BeanStep {
 
   static final Function<AbstractBeanStep, TypeSpec> beanStepInterface
       = beanStepCases(
@@ -85,7 +85,17 @@ final class StepB {
         .build();
   }
 
-  private StepB() {
+  static TypeName nextType(AbstractBeanStep step) {
+    if (step.nextStep.isPresent()) {
+      return step.context.generatedType
+          .nestedClass(upcase(step.goalDetails.name() + "Builder"))
+          .nestedClass(step.nextStep.get().thisType);
+    }
+    return step.goalDetails.type();
+  }
+
+
+  private BeanStep() {
     throw new UnsupportedOperationException("no instances");
   }
 }

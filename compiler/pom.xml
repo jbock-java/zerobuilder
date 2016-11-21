@@ -35,6 +35,12 @@
 
     <dependency>
       <groupId>com.github.h908714124</groupId>
+      <artifactId>zerobuilder-module-builder-beans</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.h908714124</groupId>
       <artifactId>zerobuilder-module-updater</artifactId>
       <version>${project.version}</version>
     </dependency>

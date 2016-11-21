@@ -1,4 +1,4 @@
-package net.zerobuilder.modules.builder;
+package net.zerobuilder.modules.builder.bean;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -6,11 +6,14 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
+import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -27,41 +30,44 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContex
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
+import static net.zerobuilder.compiler.generate.DtoSimpleGoal.simpleGoalCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.builder.Step.asStepInterface;
+import static net.zerobuilder.modules.builder.bean.Step.asStepInterface;
 
-public final class Builder extends RegularSimpleModule {
+public final class BeanBuilder extends BeanModule {
 
   private static final String moduleName = "builder";
 
-  private List<TypeSpec> stepInterfaces(SimpleRegularGoalContext goal) {
-    return transform(goal.regularSteps(), asStepInterface(goal));
+  private List<TypeSpec> stepInterfaces(BeanGoalContext goal) {
+    return transform(goal.steps, asStepInterface());
   }
 
-  private Function<SimpleRegularGoalContext, List<MethodSpec>> steps =
-      BuilderV.stepsV;
+  private final Function<BeanGoalContext, List<MethodSpec>> steps =
+      Builder.stepsB;
 
-  private final Function<SimpleRegularGoalContext, List<FieldSpec>> fields =
-      BuilderV.fieldsV;
+  private final Function<BeanGoalContext, List<FieldSpec>> fields =
+      Builder.fieldsB;
 
-  private final Function<SimpleRegularGoalContext, BuilderMethod> goalToBuilder =
-      GeneratorV::builderMethodV;
+  private final Function<BeanGoalContext, BuilderMethod> goalToBuilder =
+      Generator::builderMethodB;
 
-  static ClassName implType(SimpleRegularGoalContext goal) {
+  static ClassName implType(SimpleGoal goal) {
     ClassName contract = contractType(goal);
     return contract.peerClass(contract.simpleName() + "Impl");
   }
 
-  static String methodName(SimpleRegularGoalContext goal) {
+  static String methodName(SimpleGoal goal) {
     return name.apply(goal) + upcase(moduleName);
   }
 
-  private TypeSpec defineBuilderImpl(SimpleRegularGoalContext goal) {
+  private TypeSpec defineBuilderImpl(BeanGoalContext goal) {
     return classBuilder(implType(goal))
         .addSuperinterfaces(stepInterfaceTypes(goal))
         .addFields(fields.apply(goal))
@@ -71,7 +77,7 @@ public final class Builder extends RegularSimpleModule {
         .build();
   }
 
-  private TypeSpec defineContract(SimpleRegularGoalContext goal) {
+  private TypeSpec defineContract(BeanGoalContext goal) {
     return classBuilder(contractType(goal))
         .addTypes(stepInterfaces(goal))
         .addModifiers(PUBLIC, STATIC, FINAL)
@@ -98,10 +104,19 @@ public final class Builder extends RegularSimpleModule {
           },
           staticMethod -> constructor());
 
-  private final Function<SimpleRegularGoalContext, MethodSpec> builderConstructor =
-      regularConstructor;
+  private final Function<SimpleGoal, MethodSpec> builderConstructor =
+      simpleGoalCases(
+          regularConstructor,
+          bean -> constructorBuilder()
+              .addExceptions(bean.context.lifecycle == REUSE_INSTANCES
+                  ? Collections.emptyList()
+                  : bean.thrownTypes)
+              .addCode(bean.context.lifecycle == REUSE_INSTANCES
+                  ? emptyCodeBlock
+                  : statement("this.$N = new $T()", bean.bean(), bean.type()))
+              .build());
 
-  static FieldSpec cacheField(SimpleRegularGoalContext goal) {
+  static FieldSpec cacheField(SimpleGoal goal) {
     ClassName type = implType(goal);
     return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
         .initializer("new $T()", type)
@@ -109,18 +124,18 @@ public final class Builder extends RegularSimpleModule {
   }
 
 
-  List<ClassName> stepInterfaceTypes(SimpleRegularGoalContext goal) {
-    return transform(abstractSteps.apply(goal),
-        step -> contractType(goal).nestedClass(step.thisType));
+  List<ClassName> stepInterfaceTypes(SimpleGoal goal) {
+    return transform(abstractSteps.apply(goal), step -> contractType(goal).nestedClass(step.thisType));
   }
 
-  static ClassName contractType(SimpleRegularGoalContext goal) {
+  static ClassName contractType(SimpleGoal goal) {
     String contractName = upcase(name.apply(goal)) + upcase(moduleName);
     return context.apply(goal)
         .generatedType.nestedClass(contractName);
   }
+
   @Override
-  protected ModuleOutput process(SimpleRegularGoalContext goal) {
+  protected ModuleOutput process(BeanGoalContext goal) {
     return new ModuleOutput(
         goalToBuilder.apply(goal),
         asList(
