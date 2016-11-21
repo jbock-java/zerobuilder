@@ -75,7 +75,8 @@ public final class Generator {
       goalInputCases(
           simple -> simple.module.process(simple.goal),
           projected -> projected.module.process(projected.goal),
-          regularSimple -> regularSimple.module.process(regularSimple.goal));
+          regularSimple -> regularSimple.module.process(regularSimple.goal),
+          bean -> bean.module.process(bean.goal));
 
 
   private Generator() {

@@ -1,7 +1,9 @@
 package net.zerobuilder.compiler.generate;
 
+import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
+import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
@@ -18,6 +20,7 @@ public final class DtoGeneratorInput {
     R simple(GoalInput simple);
     R projected(ProjectedGoalInput projected);
     R regularSimple(RegularSimpleGoalInput regularSimple);
+    R bean(BeanGoalInput bean);
   }
 
   static abstract class AbstractGoalInput {
@@ -31,7 +34,8 @@ public final class DtoGeneratorInput {
   static <R> Function<AbstractGoalInput, R> goalInputCases(
       Function<GoalInput, R> simpleFunction,
       Function<ProjectedGoalInput, R> projectedFunction,
-      Function<RegularSimpleGoalInput, R> regularSimpleFunction) {
+      Function<RegularSimpleGoalInput, R> regularSimpleFunction,
+      Function<BeanGoalInput, R> beanFunction) {
     return asFunction(new GoalInputCases<R>() {
       @Override
       public R simple(GoalInput simple) {
@@ -44,6 +48,10 @@ public final class DtoGeneratorInput {
       @Override
       public R regularSimple(RegularSimpleGoalInput regularSimple) {
         return regularSimpleFunction.apply(regularSimple);
+      }
+      @Override
+      public R bean(BeanGoalInput bean) {
+        return beanFunction.apply(bean);
       }
     });
   }
@@ -71,6 +79,19 @@ public final class DtoGeneratorInput {
     @Override
     <R> R accept(GoalInputCases<R> cases) {
       return cases.regularSimple(this);
+    }
+  }
+
+  static final class BeanGoalInput extends AbstractGoalInput {
+    final BeanModule module;
+    final BeanGoalContext goal;
+    BeanGoalInput(BeanModule module, BeanGoalContext goal) {
+      this.module = module;
+      this.goal = goal;
+    }
+    @Override
+    <R> R accept(GoalInputCases<R> cases) {
+      return cases.bean(this);
     }
   }
 

@@ -220,6 +220,9 @@ final class GoalContextFactory {
                 regular -> prepareProjectedRegular(
                     context, regular),
                 bean -> GoalContextFactory.prepareBean(
-                    context, bean)).apply(description)));
+                    context, bean)).apply(description)),
+        (module, bean) -> new DtoGeneratorInput.BeanGoalInput(
+            module, GoalContextFactory.prepareBean(
+            context, bean)));
   }
 }
