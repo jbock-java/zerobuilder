@@ -1,4 +1,4 @@
-package net.zerobuilder.modules.updater;
+package net.zerobuilder.modules.updater.bean;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -31,18 +31,18 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
-import static net.zerobuilder.modules.updater.Updater.implType;
+import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
 
-final class UpdaterB {
+final class Updater {
 
-  final static Function<BeanGoalContext, List<FieldSpec>> fieldsB =
+  final static Function<BeanGoalContext, List<FieldSpec>> fields =
       goal -> goal.mayReuse() ?
           asList(
               fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
               goal.bean()) :
           singletonList(goal.bean());
 
-  final static Function<BeanGoalContext, List<MethodSpec>> stepMethodsB = goal ->
+  final static Function<BeanGoalContext, List<MethodSpec>> stepMethods = goal ->
       goal.steps.stream()
           .map(stepToMethods(goal))
           .collect(flatList());
@@ -137,7 +137,7 @@ final class UpdaterB {
         goal.bean(), step.loneGetter.getter).build();
   }
 
-  private UpdaterB() {
+  private Updater() {
     throw new UnsupportedOperationException("no instances");
   }
 }

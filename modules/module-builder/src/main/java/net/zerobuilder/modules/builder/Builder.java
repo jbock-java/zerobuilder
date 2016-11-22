@@ -35,7 +35,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.Step.asStepInterface;
 
-public final class Builder extends RegularSimpleModule {
+public final class Builder implements RegularSimpleModule {
 
   private static final String moduleName = "builder";
 
@@ -119,8 +119,9 @@ public final class Builder extends RegularSimpleModule {
     return context.apply(goal)
         .generatedType.nestedClass(contractName);
   }
+
   @Override
-  protected ModuleOutput process(SimpleRegularGoalContext goal) {
+  public ModuleOutput process(SimpleRegularGoalContext goal) {
     return new ModuleOutput(
         goalToBuilder.apply(goal),
         asList(

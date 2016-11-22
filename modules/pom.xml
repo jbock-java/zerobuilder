@@ -18,6 +18,7 @@
 	<module>module-builder</module>
         <module>module-builder-beans</module>
         <module>module-updater</module>
+        <module>module-updater-beans</module>
         <module>module-generics</module>
     </modules>
 

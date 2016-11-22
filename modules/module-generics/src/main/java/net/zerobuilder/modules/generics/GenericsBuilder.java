@@ -7,10 +7,10 @@ import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
-public final class GenericsBuilder extends RegularSimpleModule {
+public final class GenericsBuilder implements RegularSimpleModule {
 
   @Override
-  protected ModuleOutput process(SimpleRegularGoalContext goal) {
+  public ModuleOutput process(SimpleRegularGoalContext goal) {
     GenericsGenerator generator = GenericsGenerator.create(goal);
     return new ModuleOutput(
         generator.builderMethod(goal),

@@ -23,7 +23,8 @@ import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
 import net.zerobuilder.modules.builder.Builder;
 import net.zerobuilder.modules.builder.bean.BeanBuilder;
 import net.zerobuilder.modules.generics.GenericsBuilder;
-import net.zerobuilder.modules.updater.Updater;
+import net.zerobuilder.modules.updater.RegularUpdater;
+import net.zerobuilder.modules.updater.bean.BeanUpdater;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -58,7 +59,8 @@ public final class Analyser {
 
   private static final RegularSimpleModule BUILDER = new Builder();
   private static final BeanModule BEAN_BUILDER = new BeanBuilder();
-  private static final ProjectedModule UPDATER = new Updater();
+  private static final ProjectedModule UPDATER = new RegularUpdater();
+  private static final BeanModule BEAN_UPDATER = new BeanUpdater();
   private static final RegularSimpleModule GENERICS = new GenericsBuilder();
 
   public static GeneratorInput analyse(TypeElement tel) throws ValidationException {
@@ -87,7 +89,7 @@ public final class Analyser {
               projected -> new ProjectedDescriptionInput(UPDATER, validateUpdater.apply(projected))),
           bean -> bean.moduleChoice == ModuleChoice.BUILDER ?
               new BeanDescriptionInput(BEAN_BUILDER, validateBean.apply(bean)) :
-              new ProjectedDescriptionInput(UPDATER, validateBean.apply(bean)));
+              new BeanDescriptionInput(BEAN_UPDATER, validateBean.apply(bean)));
 
   /**
    * @param tel a class that carries the {@link net.zerobuilder.Builders} annotation

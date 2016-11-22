@@ -14,7 +14,6 @@ import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoa
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.GoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
@@ -26,9 +25,9 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
@@ -46,8 +45,6 @@ import java.util.function.Function;
 import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionInputCases;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
-import static net.zerobuilder.compiler.generate.DtoProjectedDescription.projectedDescriptionCases;
-import static net.zerobuilder.compiler.generate.DtoSimpleDescription.simpleDescriptionCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.reverse;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
@@ -90,7 +87,7 @@ final class GoalContextFactory {
     }, null);
   }
 
-  private static ProjectedGoal prepareProjectedRegular(
+  private static ProjectedRegularGoalContext prepareProjectedRegular(
       DtoContext.GoalContext context,
       ProjectedRegularGoalDescription description) {
     List<ProjectedRegularStep> steps = steps(
@@ -99,13 +96,13 @@ final class GoalContextFactory {
         context,
         description.parameters,
         projectedRegularFactory);
-    return description.details.accept(new ProjectableDetailsCases<ProjectedGoal>() {
+    return description.details.accept(new ProjectableDetailsCases<ProjectedRegularGoalContext>() {
       @Override
-      public ProjectedGoal constructor(ConstructorGoalDetails constructor) {
+      public ProjectedRegularGoalContext constructor(ConstructorGoalDetails constructor) {
         return new ProjectedConstructorGoalContext(context, constructor, steps, description.thrownTypes);
       }
       @Override
-      public ProjectedGoal method(StaticMethodGoalDetails method) {
+      public ProjectedRegularGoalContext method(StaticMethodGoalDetails method) {
         return new ProjectedMethodGoalContext(context, method, steps, description.thrownTypes);
       }
     });
@@ -203,24 +200,14 @@ final class GoalContextFactory {
 
   static Function<DescriptionInput, AbstractGoalInput> prepare(DtoContext.GoalContext context) {
     return descriptionInputCases(
-        (module, description) -> new GoalInput(
-            module,
-            simpleDescriptionCases(
-                regular -> GoalContextFactory.prepareRegular(
-                    context, regular),
-                bean -> GoalContextFactory.prepareBean(
-                    context, bean)).apply(description)),
         (module, description) -> new RegularSimpleGoalInput(
             module,
             GoalContextFactory.prepareRegular(
                 context, description)),
         (module, description) -> new ProjectedGoalInput(
             module,
-            projectedDescriptionCases(
-                regular -> prepareProjectedRegular(
-                    context, regular),
-                bean -> GoalContextFactory.prepareBean(
-                    context, bean)).apply(description)),
+            prepareProjectedRegular(
+                context, description)),
         (module, bean) -> new DtoGeneratorInput.BeanGoalInput(
             module, GoalContextFactory.prepareBean(
             context, bean)));

@@ -1,4 +1,4 @@
-package net.zerobuilder.modules.updater;
+package net.zerobuilder.modules.updater.bean;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -31,11 +31,11 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.modules.updater.Updater.implType;
+import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
 
-final class GeneratorB {
+final class Generator {
 
-  static BuilderMethod updaterMethodB(BeanGoalContext goal) {
+  static BuilderMethod updaterMethod(BeanGoalContext goal) {
     String name = goal.details.name;
     ClassName type = goal.details.goalType;
     ParameterSpec varUpdater = updaterInstance(goal);
@@ -127,7 +127,7 @@ final class GeneratorB {
     if (goal.mayReuse()) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec updaterField = Updater.cacheField(goal);
+      FieldSpec updaterField = BeanUpdater.cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
           .beginControlFlow("if ($N.$N._currently_in_use)", varContext, updaterField)
@@ -145,7 +145,7 @@ final class GeneratorB {
     TypeName updaterType = implType(goal);
     return parameterSpec(updaterType, "updater");
   }
-  private GeneratorB() {
+  private Generator() {
     throw new UnsupportedOperationException("no instances");
   }
 }

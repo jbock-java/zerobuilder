@@ -4,12 +4,10 @@ import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
-import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.List;
 import java.util.function.Function;
@@ -17,7 +15,6 @@ import java.util.function.Function;
 public final class DtoGeneratorInput {
 
   interface GoalInputCases<R> {
-    R simple(GoalInput simple);
     R projected(ProjectedGoalInput projected);
     R regularSimple(RegularSimpleGoalInput regularSimple);
     R bean(BeanGoalInput bean);
@@ -32,15 +29,10 @@ public final class DtoGeneratorInput {
   }
 
   static <R> Function<AbstractGoalInput, R> goalInputCases(
-      Function<GoalInput, R> simpleFunction,
       Function<ProjectedGoalInput, R> projectedFunction,
       Function<RegularSimpleGoalInput, R> regularSimpleFunction,
       Function<BeanGoalInput, R> beanFunction) {
     return asFunction(new GoalInputCases<R>() {
-      @Override
-      public R simple(GoalInput simple) {
-        return simpleFunction.apply(simple);
-      }
       @Override
       public R projected(ProjectedGoalInput projected) {
         return projectedFunction.apply(projected);
@@ -54,19 +46,6 @@ public final class DtoGeneratorInput {
         return beanFunction.apply(bean);
       }
     });
-  }
-
-  static final class GoalInput extends AbstractGoalInput {
-    final Module module;
-    final SimpleGoal goal;
-    GoalInput(Module module, SimpleGoal goal) {
-      this.module = module;
-      this.goal = goal;
-    }
-    @Override
-    <R> R accept(GoalInputCases<R> cases) {
-      return cases.simple(this);
-    }
   }
 
   static final class RegularSimpleGoalInput extends AbstractGoalInput {
@@ -97,8 +76,8 @@ public final class DtoGeneratorInput {
 
   static final class ProjectedGoalInput extends AbstractGoalInput {
     final ProjectedModule module;
-    final ProjectedGoal goal;
-    ProjectedGoalInput(ProjectedModule module, ProjectedGoal goal) {
+    final ProjectedRegularGoalContext goal;
+    ProjectedGoalInput(ProjectedModule module, ProjectedRegularGoalContext goal) {
       this.module = module;
       this.goal = goal;
     }

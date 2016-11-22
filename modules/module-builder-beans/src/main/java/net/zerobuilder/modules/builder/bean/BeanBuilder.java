@@ -41,7 +41,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.bean.Step.asStepInterface;
 
-public final class BeanBuilder extends BeanModule {
+public final class BeanBuilder implements BeanModule {
 
   private static final String moduleName = "builder";
 
@@ -135,7 +135,7 @@ public final class BeanBuilder extends BeanModule {
   }
 
   @Override
-  protected ModuleOutput process(BeanGoalContext goal) {
+  public ModuleOutput process(BeanGoalContext goal) {
     return new ModuleOutput(
         goalToBuilder.apply(goal),
         asList(

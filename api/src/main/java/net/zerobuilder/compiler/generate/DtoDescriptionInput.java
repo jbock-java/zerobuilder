@@ -2,12 +2,10 @@ package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
-import net.zerobuilder.compiler.generate.DtoModule.Module;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
-import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -15,7 +13,6 @@ import java.util.function.Function;
 public final class DtoDescriptionInput {
 
   interface DescriptionInputCases<R> {
-    R simple(SimpleDescriptionInput simple);
     R regularSimple(RegularSimpleDescriptionInput simple);
     R projected(ProjectedDescriptionInput projected);
     R bean(BeanDescriptionInput bean);
@@ -30,15 +27,10 @@ public final class DtoDescriptionInput {
   }
 
   static <R> Function<DescriptionInput, R> descriptionInputCases(
-      BiFunction<Module, SimpleDescription, R> simpleFunction,
       BiFunction<RegularSimpleModule, SimpleRegularGoalDescription, R> regularSimpleFunction,
-      BiFunction<ProjectedModule, ProjectedDescription, R> projectedFunction,
+      BiFunction<ProjectedModule, ProjectedRegularGoalDescription, R> projectedFunction,
       BiFunction<BeanModule, BeanGoalDescription, R> beanFunction) {
     return asFunction(new DescriptionInputCases<R>() {
-      @Override
-      public R simple(SimpleDescriptionInput simple) {
-        return simpleFunction.apply(simple.module, simple.description);
-      }
       @Override
       public R regularSimple(RegularSimpleDescriptionInput simple) {
         return regularSimpleFunction.apply(simple.module, simple.description);
@@ -52,20 +44,6 @@ public final class DtoDescriptionInput {
         return beanFunction.apply(bean.module, bean.description);
       }
     });
-  }
-
-  public static final class SimpleDescriptionInput implements DescriptionInput {
-    final Module module;
-    final SimpleDescription description;
-    public SimpleDescriptionInput(Module module, SimpleDescription description) {
-      this.module = module;
-      this.description = description;
-    }
-
-    @Override
-    public <R> R accept(DescriptionInputCases<R> cases) {
-      return cases.simple(this);
-    }
   }
 
   public static final class BeanDescriptionInput implements DescriptionInput {
@@ -84,8 +62,8 @@ public final class DtoDescriptionInput {
 
   public static final class ProjectedDescriptionInput implements DescriptionInput {
     final ProjectedModule module;
-    final ProjectedDescription description;
-    public ProjectedDescriptionInput(ProjectedModule module, ProjectedDescription description) {
+    final ProjectedRegularGoalDescription description;
+    public ProjectedDescriptionInput(ProjectedModule module, ProjectedRegularGoalDescription description) {
       this.module = module;
       this.description = description;
     }

@@ -40,19 +40,19 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.modules.updater.Updater.cacheField;
-import static net.zerobuilder.modules.updater.Updater.implType;
+import static net.zerobuilder.modules.updater.RegularUpdater.cacheField;
+import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 
-final class GeneratorV {
+final class Generator {
 
-  private GeneratorV() {
+  private Generator() {
     throw new UnsupportedOperationException("no instances");
   }
 
   static BuilderMethod updaterMethodV(ProjectedRegularGoalContext goal) {
     AbstractRegularDetails details = goalDetails.apply(goal);
     ParameterSpec updater = varUpdater(goal);
-    MethodSpec method = methodBuilder(Updater.methodName(goal))
+    MethodSpec method = methodBuilder(RegularUpdater.methodName(goal))
         .addExceptions(thrownByProjections(goal))
         .addParameter(toBuilderParameter(goal))
         .addTypeVariables(instanceTypeParameters.apply(goal))
