@@ -150,3 +150,7 @@
 
 * bugfix: updater was ignoring checked exception
 * bugfix: generics + void
+
+### 2016-11-23 zerobuilder 1.525 released
+
+* remove emptyFoo convenience (breaking)
