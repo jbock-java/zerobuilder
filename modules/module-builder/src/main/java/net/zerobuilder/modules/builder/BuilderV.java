@@ -8,15 +8,11 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep;
-import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -33,7 +29,6 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContex
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
@@ -72,16 +67,8 @@ final class BuilderV {
 
   static final Function<SimpleRegularGoalContext, List<MethodSpec>> stepsV =
       goal -> goal.regularSteps().stream()
-          .map(step -> regularMethods(step, goal))
-          .collect(flatList());
-
-  private static List<MethodSpec> regularMethods(
-      AbstractRegularStep step, SimpleRegularGoalContext goal) {
-    List<MethodSpec> builder = new ArrayList<>();
-    builder.add(stepMethod(step, goal));
-    builder.addAll(presentInstances(maybeEmptyCollection(step, goal)));
-    return builder;
-  }
+          .map(step -> stepMethod(step, goal))
+          .collect(toList());
 
   private static MethodSpec stepMethod(AbstractRegularStep step, SimpleRegularGoalContext goal) {
     TypeName type = step.regularParameter().type;
@@ -103,21 +90,6 @@ final class BuilderV {
         .build();
   }
 
-  private static Optional<MethodSpec> maybeEmptyCollection(
-      AbstractRegularStep step, SimpleRegularGoalContext goal) {
-    Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
-    if (!maybeEmptyOption.isPresent()) {
-      return Optional.empty();
-    }
-    CollectionInfo collectionInfo = maybeEmptyOption.get();
-    return Optional.of(methodBuilder(collectionInfo.name)
-        .addAnnotation(Override.class)
-        .returns(nextType(step))
-        .addCode(emptyCollectionAssignment(step, goal, collectionInfo))
-        .addModifiers(PUBLIC)
-        .build());
-  }
-
   private static CodeBlock normalAssignment(AbstractRegularStep step, SimpleRegularGoalContext goal) {
     TypeName type = step.regularParameter().type;
     String name = step.regularParameter().name;
@@ -130,16 +102,6 @@ final class BuilderV {
           .addStatement("return this")
           .build();
     }
-  }
-
-  private static CodeBlock emptyCollectionAssignment(AbstractRegularStep step, SimpleRegularGoalContext goal,
-                                                     CollectionInfo collInfo) {
-    return step.isLast() ?
-        goal.acceptRegular(emptyCollectionInvoke(step, collInfo)) :
-        CodeBlock.builder()
-            .addStatement("this.$N = $L", step.field(), collInfo.initializer)
-            .addStatement("return this")
-            .build();
   }
 
   private static final Function<SimpleRegularGoalContext, CodeBlock> regularInvoke =
@@ -219,43 +181,6 @@ final class BuilderV {
         .filter(parameter -> !parameter.type.isPrimitive())
         .map(parameter -> statement("this.$N = null", parameter.name))
         .collect(joinCodeBlocks);
-  }
-
-  private static RegularGoalContextCases<CodeBlock> emptyCollectionInvoke(AbstractRegularStep step,
-                                                                          CollectionInfo collectionInfo) {
-
-
-    return new RegularGoalContextCases<CodeBlock>() {
-      @Override
-      public CodeBlock constructor(SimpleConstructorGoalContext goal) {
-        TypeName type = step.regularParameter().type;
-        String name = step.regularParameter().name;
-        return CodeBlock.builder()
-            .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
-            .add(constructorCall(goal))
-            .build();
-      }
-      //TODO cover
-      @Override
-      public CodeBlock instanceMethod(InstanceMethodGoalContext goal) {
-        TypeName type = step.regularParameter().type;
-        String name = step.regularParameter().name;
-        return CodeBlock.builder()
-            .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
-            .add(instanceCall(goal))
-            .build();
-      }
-      //TODO cover
-      @Override
-      public CodeBlock staticMethod(SimpleStaticMethodGoalContext goal) {
-        TypeName type = step.regularParameter().type;
-        String name = step.regularParameter().name;
-        return CodeBlock.builder()
-            .addStatement("$T $N = $L", type, name, collectionInfo.initializer)
-            .add(staticCall(goal))
-            .build();
-      }
-    };
   }
 
   private BuilderV() {

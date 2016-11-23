@@ -28,7 +28,6 @@ public final class DtoRegularStep {
       super(thisType, nextType, goalDetails, context);
     }
 
-    public abstract Optional<DtoStep.CollectionInfo> collectionInfo();
     public abstract FieldSpec field();
     public abstract AbstractRegularParameter regularParameter();
     public abstract List<TypeName> declaredExceptions();
@@ -44,7 +43,6 @@ public final class DtoRegularStep {
     final List<TypeName> declaredExceptions;
 
     private final Supplier<FieldSpec> field;
-    private final Supplier<Optional<DtoStep.CollectionInfo>> collectionInfo;
 
     private ProjectedRegularStep(String thisType,
                                  Optional<AbstractRegularStep> nextType,
@@ -52,13 +50,11 @@ public final class DtoRegularStep {
                                  GoalContext context,
                                  ProjectedParameter parameter,
                                  List<TypeName> declaredExceptions,
-                                 Supplier<FieldSpec> field,
-                                 Supplier<Optional<DtoStep.CollectionInfo>> collectionInfo) {
+                                 Supplier<FieldSpec> field) {
       super(thisType, nextType, goalDetails, context);
       this.declaredExceptions = declaredExceptions;
       this.parameter = parameter;
       this.field = field;
-      this.collectionInfo = collectionInfo;
     }
 
     static ProjectedRegularStep create(String thisType,
@@ -68,12 +64,7 @@ public final class DtoRegularStep {
                                        ProjectedParameter parameter,
                                        List<TypeName> declaredExceptions) {
       return new ProjectedRegularStep(thisType, Optional.ofNullable(nextType.orElse(null)), goalDetails, context, parameter, declaredExceptions,
-          memoizeField(parameter), memoizeCollectionInfo(parameter));
-    }
-
-    @Override
-    public Optional<DtoStep.CollectionInfo> collectionInfo() {
-      return collectionInfo.get();
+          memoizeField(parameter));
     }
 
     @Override
@@ -96,33 +87,25 @@ public final class DtoRegularStep {
 
     public final SimpleParameter parameter;
     private final Supplier<FieldSpec> field;
-    private final Supplier<Optional<DtoStep.CollectionInfo>> collectionInfo;
 
     private SimpleRegularStep(String thisType,
                               Optional<AbstractRegularStep> nextType,
                               AbstractGoalDetails goalDetails,
                               DtoContext.GoalContext context,
                               SimpleParameter parameter,
-                              Supplier<FieldSpec> field,
-                              Supplier<Optional<DtoStep.CollectionInfo>> collectionInfo) {
+                              Supplier<FieldSpec> field) {
       super(thisType, nextType, goalDetails, context);
       this.parameter = parameter;
       this.field = field;
-      this.collectionInfo = collectionInfo;
     }
 
     public static SimpleRegularStep create(String thisType,
-                                    Optional<? extends AbstractRegularStep> nextType,
-                                    AbstractGoalDetails goalDetails,
-                                    GoalContext context,
-                                    SimpleParameter parameter) {
+                                           Optional<? extends AbstractRegularStep> nextType,
+                                           AbstractGoalDetails goalDetails,
+                                           GoalContext context,
+                                           SimpleParameter parameter) {
       return new SimpleRegularStep(thisType, Optional.ofNullable(nextType.orElse(null)), goalDetails, context, parameter,
-          memoizeField(parameter), memoizeCollectionInfo(parameter));
-    }
-
-    @Override
-    public Optional<DtoStep.CollectionInfo> collectionInfo() {
-      return collectionInfo.get();
+          memoizeField(parameter));
     }
 
     @Override
@@ -139,12 +122,6 @@ public final class DtoRegularStep {
     public List<TypeName> declaredExceptions() {
       return emptyList();
     }
-  }
-
-  private static Supplier<Optional<DtoStep.CollectionInfo>> memoizeCollectionInfo(
-      AbstractRegularParameter parameter) {
-    return memoize(() ->
-        DtoStep.CollectionInfo.create(parameter.type, parameter.name));
   }
 
   private static Supplier<FieldSpec> memoizeField(AbstractRegularParameter parameter) {

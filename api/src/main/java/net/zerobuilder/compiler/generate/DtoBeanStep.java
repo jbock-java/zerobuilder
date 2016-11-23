@@ -8,7 +8,6 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
-import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +15,6 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class DtoBeanStep {
 
@@ -90,12 +88,6 @@ public final class DtoBeanStep {
       return new AccessorPairStep(thisType, nextType, goalDetails, context, accessorPair);
     }
 
-    public Optional<CollectionInfo> emptyOption() {
-      String name = accessorPair.name();
-      return CollectionInfo.create(accessorPair.type, name);
-    }
-
-
     public ParameterSpec parameter() {
       return parameterSpec(accessorPair.type, accessorPair.name());
     }
@@ -108,17 +100,14 @@ public final class DtoBeanStep {
 
   public static final class LoneGetterStep extends AbstractBeanStep {
     public final LoneGetter loneGetter;
-    public final String emptyMethod;
 
     private LoneGetterStep(String thisType,
                            Optional<? extends AbstractStep> nextType,
                            AbstractGoalDetails goalDetails,
                            GoalContext context,
-                           LoneGetter loneGetter,
-                           String emptyMethod) {
+                           LoneGetter loneGetter) {
       super(thisType, nextType, goalDetails, context);
       this.loneGetter = loneGetter;
-      this.emptyMethod = emptyMethod;
     }
 
     static LoneGetterStep create(String thisType,
@@ -126,8 +115,7 @@ public final class DtoBeanStep {
                                  AbstractGoalDetails goalDetails,
                                  DtoContext.GoalContext context,
                                  LoneGetter loneGetter) {
-      String emptyMethod = "empty" + upcase(loneGetter.name());
-      return new LoneGetterStep(thisType, nextType, goalDetails, context, loneGetter, emptyMethod);
+      return new LoneGetterStep(thisType, nextType, goalDetails, context, loneGetter);
     }
 
     @Override

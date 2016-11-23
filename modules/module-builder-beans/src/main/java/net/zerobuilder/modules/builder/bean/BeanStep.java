@@ -8,9 +8,7 @@ import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
 import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
 import net.zerobuilder.compiler.generate.DtoParameter;
-import net.zerobuilder.compiler.generate.DtoStep;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -22,21 +20,18 @@ import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class BeanStep {
 
   static final Function<AbstractBeanStep, TypeSpec> beanStepInterface
       = beanStepCases(
-      step -> interfaceBuilder(step.thisType)
-          .addMethod(regularMethod(step))
-          .addMethods(presentInstances(emptyCollection(step)))
+      accessorPair -> interfaceBuilder(accessorPair.thisType)
+          .addMethod(regularMethod(accessorPair))
           .addModifiers(PUBLIC)
           .build(),
-      step -> interfaceBuilder(step.thisType)
-          .addMethod(iterateCollection(step))
-          .addMethod(emptyCollection(step))
+      loneGetter -> interfaceBuilder(loneGetter.thisType)
+          .addMethod(iterateCollection(loneGetter))
           .addModifiers(PUBLIC)
           .build());
 
@@ -48,27 +43,6 @@ final class BeanStep {
         .returns(nextType(step))
         .addParameter(parameterSpec(type, name))
         .addExceptions(step.accessorPair.setterThrownTypes)
-        .addModifiers(PUBLIC, ABSTRACT)
-        .build();
-  }
-
-  private static Optional<MethodSpec> emptyCollection(AccessorPairStep step) {
-    Optional<DtoStep.CollectionInfo> maybeEmptyOption = step.emptyOption();
-    if (!maybeEmptyOption.isPresent()) {
-      return Optional.empty();
-    }
-    DtoStep.CollectionInfo collectionInfo = maybeEmptyOption.get();
-    return Optional.of(methodBuilder(collectionInfo.name)
-        .returns(nextType(step))
-        .addExceptions(step.accessorPair.setterThrownTypes)
-        .addModifiers(PUBLIC, ABSTRACT)
-        .build());
-  }
-
-  private static MethodSpec emptyCollection(LoneGetterStep step) {
-    return methodBuilder(step.emptyMethod)
-        .returns(nextType(step))
-        .addExceptions(step.loneGetter.getterThrownTypes)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
   }

@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.examples.beans.more.MoreBeans_AccessBuilders.accessBuilder;
 import static net.zerobuilder.examples.beans.more.MoreBeans_AccessBuilders.accessUpdater;
@@ -107,17 +108,17 @@ public class MoreBeansTest {
 
   @Test
   public void ignoreTest() {
-    Ignorify nothing = ignorifyBuilder().emptyThings();
+    Ignorify nothing = ignorifyBuilder().things(emptyList());
     Ignorify something = ignorifyUpdater(nothing)
         .things(singletonList(singletonList("a")))
         .done();
     Ignorify nothing2 = ignorifyUpdater(nothing)
-        .emptyThings()
+        .things(emptyList())
         .done();
     assertThat(nothing.getThings().size(), is(0));
     assertThat(something.getThings().size(), is(1));
     assertThat(something.getThings().get(0),
-        is((Iterable<String>) singletonList("a")));
+        is(singletonList("a")));
     assertThat(nothing2.getThings().size(), is(0));
   }
 

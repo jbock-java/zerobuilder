@@ -2,14 +2,9 @@ package net.zerobuilder.examples.beans;
 
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.unmodifiableCollection;
 import static net.zerobuilder.examples.beans.EmptyBeanConvenienceBuilders.emptyBeanConvenienceBuilder;
 import static net.zerobuilder.examples.beans.EmptyBeanConvenienceBuilders.emptyBeanConvenienceUpdater;
 import static org.hamcrest.core.Is.is;
@@ -20,17 +15,17 @@ public class EmptyBeanConvenienceTest {
   @Test
   public void getThings() throws Exception {
     EmptyBeanConvenience empty = emptyBeanConvenienceBuilder()
-        .emptyCollection()
-        .emptyIterables()
-        .emptySets()
-        .emptyStrings()
-        .emptyThings();
+        .collection(emptyList())
+        .iterables(emptyList())
+        .sets(emptySet())
+        .strings(emptyList())
+        .things(emptyList());
     EmptyBeanConvenience notEmpty = emptyBeanConvenienceUpdater(empty)
         .strings(singletonList(""))
         .things(singletonList(""))
         .collection(singletonList(singletonList("")))
-        .emptyIterables()
-        .emptySets()
+        .iterables(emptyList())
+        .sets(emptySet())
         .done();
     assertThat(empty.getStrings().size(), is(0));
     assertThat(empty.getThings().size(), is(0));

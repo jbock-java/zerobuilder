@@ -10,14 +10,11 @@ import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.Projecte
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 import net.zerobuilder.compiler.generate.DtoStep;
-import net.zerobuilder.compiler.generate.DtoStep.CollectionInfo;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.BOOLEAN;
@@ -29,9 +26,7 @@ import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.s
 import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 
 final class Updater {
@@ -53,28 +48,10 @@ final class Updater {
   static final Function<ProjectedRegularGoalContext, List<MethodSpec>> stepMethodsV =
       goal -> steps.apply(goal).stream()
           .map(updateMethods(goal))
-          .collect(flatList());
+          .collect(toList());
 
-  private static Function<AbstractRegularStep, List<MethodSpec>> updateMethods(ProjectedRegularGoalContext goal) {
-    return step -> Stream.concat(
-        Stream.of(normalUpdate(goal, step)),
-        presentInstances(emptyCollection(goal, step)).stream())
-        .collect(toList());
-  }
-
-  private static Optional<MethodSpec> emptyCollection(ProjectedRegularGoalContext goal, AbstractRegularStep step) {
-    Optional<CollectionInfo> maybeEmptyOption = step.collectionInfo();
-    if (!maybeEmptyOption.isPresent()) {
-      return Optional.empty();
-    }
-    CollectionInfo collectionInfo = maybeEmptyOption.get();
-    return Optional.of(methodBuilder(collectionInfo.name)
-        .returns(implType(goal))
-        .addStatement("this.$N = $L",
-            step.field(), collectionInfo.initializer)
-        .addStatement("return this")
-        .addModifiers(PUBLIC)
-        .build());
+  private static Function<AbstractRegularStep, MethodSpec> updateMethods(ProjectedRegularGoalContext goal) {
+    return step -> normalUpdate(goal, step);
   }
 
   private static MethodSpec normalUpdate(ProjectedRegularGoalContext goal, AbstractRegularStep step) {
