@@ -9,8 +9,7 @@ import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
-import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.List;
@@ -53,10 +52,6 @@ public final class DtoRegularGoal {
       return isInstance.test(this);
     }
 
-    public final List<? extends AbstractRegularStep> regularSteps() {
-      return regularSteps.apply(this);
-    }
-
     public final Optional<FieldSpec> maybeField() {
       return maybeField.apply(this);
     }
@@ -66,7 +61,7 @@ public final class DtoRegularGoal {
       return cases.simple(this);
     }
 
-    private static int[] createUnshuffle(List<AbstractRegularParameter> parameters, List<String> parameterNames) {
+    private static int[] createUnshuffle(List<SimpleParameter> parameters, List<String> parameterNames) {
       String[] a = new String[parameters.size()];
       for (int i = 0; i < parameters.size(); i++) {
         a[i] = parameters.get(i).name;
@@ -76,8 +71,7 @@ public final class DtoRegularGoal {
     }
 
     public <E> List<E> unshuffle(List<E> shuffled) {
-      List<AbstractRegularParameter> parameters = transform(regularSteps(), step -> step.regularParameter());
-      int[] unshuffle = createUnshuffle(parameters, parameterNames());
+      int[] unshuffle = createUnshuffle(description().parameters(), parameterNames());
       return applyRanking(unshuffle, shuffled);
     }
 
@@ -112,17 +106,11 @@ public final class DtoRegularGoal {
           instanceMethod -> true,
           staticMethod -> false));
 
-  public static final Function<SimpleRegularGoalContext, List<? extends AbstractRegularStep>> regularSteps =
-      regularGoalContextCases(
-          constructor -> constructor.steps,
-          instanceMethod -> instanceMethod.steps,
-          staticMethod -> staticMethod.steps);
-
   public static final Function<SimpleRegularGoalContext, List<TypeName>> stepTypes =
       regularGoalContextCases(
-          constructor -> transform(constructor.steps, step -> step.parameter.type),
-          instanceMethod -> transform(instanceMethod.steps, step -> step.parameter.type),
-          staticMethod -> transform(staticMethod.steps, step -> step.parameter.type));
+          constructor -> transform(constructor.description().parameters(), step -> step.type),
+          instanceMethod -> transform(instanceMethod.description().parameters(), step -> step.type),
+          staticMethod -> transform(staticMethod.description().parameters(), step -> step.type));
 
   public static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
       regularGoalContextCases(

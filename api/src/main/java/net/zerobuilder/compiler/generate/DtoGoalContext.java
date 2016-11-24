@@ -6,12 +6,9 @@ import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
-import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Collections.unmodifiableList;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalContext.regularGoalContextCases;
@@ -21,10 +18,6 @@ public final class DtoGoalContext {
   public static abstract class AbstractGoalContext {
 
     abstract <R> R accept(GoalCases<R> cases);
-
-    public final List<? extends AbstractStep> steps() {
-      return abstractSteps.apply(this);
-    }
 
     public final String name() {
       return goalName.apply(this);
@@ -128,18 +121,6 @@ public final class DtoGoalContext {
       goalCases(
           DtoRegularGoalContext.mayReuse,
           bean -> bean.context.lifecycle == REUSE_INSTANCES);
-
-  static final Function<AbstractGoalContext, List<? extends AbstractStep>> abstractSteps =
-      goalCases(
-          regularGoalContextCases(
-              DtoRegularGoal.regularGoalContextCases(
-                  constructor -> constructor.steps,
-                  method -> method.steps,
-                  staticMethod -> staticMethod.steps),
-              projectedRegularGoalContextCases(
-                  method -> method.steps,
-                  constructor -> constructor.steps)),
-          bean -> unmodifiableList(bean.steps));
 
   private DtoGoalContext() {
     throw new UnsupportedOperationException("no instances");

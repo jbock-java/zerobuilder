@@ -4,35 +4,24 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
-import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
 import java.util.List;
-
-import static java.util.Collections.unmodifiableList;
 
 public final class DtoConstructorGoal {
 
   public static final class SimpleConstructorGoalContext
       extends DtoRegularGoal.SimpleRegularGoalContext {
 
-    public final List<SimpleRegularStep> steps;
     public final GoalContext context;
     public final ConstructorGoalDetails details;
 
     SimpleConstructorGoalContext(DtoContext.GoalContext context,
                                  ConstructorGoalDetails details,
-                                 List<SimpleRegularStep> steps,
-                                 DtoRegularGoalDescription.SimpleRegularGoalDescription description) {
+                                 SimpleRegularGoalDescription description) {
       super(description);
       this.context = context;
       this.details = details;
-      this.steps = steps;
-    }
-
-    final List<AbstractRegularStep> constructorSteps() {
-      return unmodifiableList(steps);
     }
 
     @Override

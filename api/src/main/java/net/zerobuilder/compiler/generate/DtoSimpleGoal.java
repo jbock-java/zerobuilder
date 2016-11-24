@@ -55,14 +55,6 @@ public final class DtoSimpleGoal {
               staticMethod -> staticMethod.details.name),
           bean -> bean.details.name);
 
-  public static final Function<SimpleGoal, List<? extends AbstractStep>> abstractSteps =
-      simpleGoalCases(
-          DtoRegularGoal.regularGoalContextCases(
-              constructor -> constructor.steps,
-              method -> method.steps,
-              staticMethod -> staticMethod.steps),
-          bean -> unmodifiableList(bean.steps));
-
   private DtoSimpleGoal() {
     throw new UnsupportedOperationException("no instances");
   }
