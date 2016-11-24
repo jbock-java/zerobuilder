@@ -1,132 +1,189 @@
 package net.zerobuilder.modules.builder;
 
-import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
+import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
+import net.zerobuilder.compiler.generate.DtoStep;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
-import static com.squareup.javapoet.MethodSpec.constructorBuilder;
-import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static com.squareup.javapoet.TypeName.BOOLEAN;
+import static com.squareup.javapoet.TypeName.VOID;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static javax.lang.model.element.Modifier.FINAL;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
-import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
+import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.builder.Step.asStepInterface;
+import static net.zerobuilder.modules.builder.Step.nullCheck;
 
-public final class Builder implements RegularSimpleModule {
+final class Builder {
 
-  private static final String moduleName = "builder";
-
-  private List<TypeSpec> stepInterfaces(SimpleRegularGoalContext goal) {
-    return transform(goal.regularSteps(), asStepInterface(goal));
+  static TypeName nextType(DtoStep.AbstractStep step) {
+    if (step.nextStep.isPresent()) {
+      return step.context.generatedType
+          .nestedClass(upcase(step.goalDetails.name() + "Builder"))
+          .nestedClass(step.nextStep.get().thisType);
+    }
+    return step.goalDetails.type();
   }
 
-  private Function<SimpleRegularGoalContext, List<MethodSpec>> steps =
-      BuilderV.stepsV;
+  static final Function<SimpleRegularGoalContext, List<FieldSpec>> fieldsV
+      = goal -> {
+    List<? extends AbstractRegularStep> steps = goal.regularSteps();
+    return asList(
+        presentInstances(goal.maybeField()).stream(),
+        goal.context().lifecycle == REUSE_INSTANCES ?
+            Stream.of(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
+            Stream.<FieldSpec>empty(),
+        steps.stream()
+            .limit(steps.size() - 1)
+            .map(AbstractRegularStep::field))
+        .stream()
+        .flatMap(identity())
+        .collect(toList());
+  };
 
-  private final Function<SimpleRegularGoalContext, List<FieldSpec>> fields =
-      BuilderV.fieldsV;
+  static final Function<SimpleRegularGoalContext, List<MethodSpec>> stepsV =
+      goal -> goal.regularSteps().stream()
+          .map(step -> stepMethod(step, goal))
+          .collect(toList());
 
-  private final Function<SimpleRegularGoalContext, BuilderMethod> goalToBuilder =
-      GeneratorV::builderMethodV;
-
-  static ClassName implType(SimpleRegularGoalContext goal) {
-    ClassName contract = contractType(goal);
-    return contract.peerClass(contract.simpleName() + "Impl");
-  }
-
-  static String methodName(SimpleRegularGoalContext goal) {
-    return name.apply(goal) + upcase(moduleName);
-  }
-
-  private TypeSpec defineBuilderImpl(SimpleRegularGoalContext goal) {
-    return classBuilder(implType(goal))
-        .addSuperinterfaces(stepInterfaceTypes(goal))
-        .addFields(fields.apply(goal))
-        .addMethod(builderConstructor.apply(goal))
-        .addMethods(steps.apply(goal))
-        .addModifiers(PRIVATE, STATIC, FINAL)
+  private static MethodSpec stepMethod(AbstractRegularStep step, SimpleRegularGoalContext goal) {
+    TypeName type = step.regularParameter().type;
+    String name = step.regularParameter().name;
+    ParameterSpec parameter = parameterSpec(type, name);
+    List<TypeName> thrownTypes = step.declaredExceptions();
+    if (step.isLast()) {
+      thrownTypes = concat(thrownTypes, goal.thrownTypes);
+    }
+    TypeName nextType = nextType(step);
+    return methodBuilder(step.regularParameter().name)
+        .addAnnotation(Override.class)
+        .addParameter(parameter)
+        .returns(nextType)
+        .addCode(nullCheck.apply(step))
+        .addCode(normalAssignment(step, goal))
+        .addModifiers(PUBLIC)
+        .addExceptions(thrownTypes)
         .build();
   }
 
-  private TypeSpec defineContract(SimpleRegularGoalContext goal) {
-    return classBuilder(contractType(goal))
-        .addTypes(stepInterfaces(goal))
-        .addModifiers(PUBLIC, STATIC, FINAL)
-        .addMethod(constructorBuilder()
-            .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
-            .addModifiers(PRIVATE)
-            .build())
-        .build();
+  private static CodeBlock normalAssignment(AbstractRegularStep step, SimpleRegularGoalContext goal) {
+    TypeName type = step.regularParameter().type;
+    String name = step.regularParameter().name;
+    ParameterSpec parameter = parameterSpec(type, name);
+    if (step.isLast()) {
+      return regularInvoke.apply(goal);
+    } else {
+      return CodeBlock.builder()
+          .addStatement("this.$N = $N", step.field(), parameter)
+          .addStatement("return this")
+          .build();
+    }
   }
 
-  private static final Function<SimpleRegularGoalContext, MethodSpec> regularConstructor =
+  private static final Function<SimpleRegularGoalContext, CodeBlock> regularInvoke =
       regularGoalContextCases(
-          constructor -> constructor(),
-          method -> {
-            if (method.context.lifecycle == REUSE_INSTANCES) {
-              return constructor();
-            }
-            TypeName type = method.context.type;
-            ParameterSpec parameter = parameterSpec(type, downcase(rawClassName(type).get().simpleName()));
-            return constructorBuilder()
-                .addParameter(parameter)
-                .addStatement("this.$N = $N", method.instanceField(), parameter)
-                .build();
-          },
-          staticMethod -> constructor());
+          Builder::constructorCall,
+          Builder::instanceCall,
+          Builder::staticCall);
 
-  private final Function<SimpleRegularGoalContext, MethodSpec> builderConstructor =
-      regularConstructor;
-
-  static FieldSpec cacheField(SimpleRegularGoalContext goal) {
-    ClassName type = implType(goal);
-    return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
-        .initializer("new $T()", type)
+  private static CodeBlock constructorCall(SimpleConstructorGoalContext goal) {
+    TypeName type = goal.type();
+    ParameterSpec varGoal = parameterSpec(type,
+        '_' + downcase(simpleName(type)));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    return builder
+        .addStatement("$T $N = new $T($L)", varGoal.type, varGoal, goal.type(), goal.invocationParameters())
+        .add(free(goal.steps))
+        .addStatement("return $N", varGoal)
         .build();
   }
 
-
-  List<ClassName> stepInterfaceTypes(SimpleRegularGoalContext goal) {
-    return transform(abstractSteps.apply(goal),
-        step -> contractType(goal).nestedClass(step.thisType));
+  private static CodeBlock instanceCall(InstanceMethodGoalContext goal) {
+    TypeName type = goal.type();
+    String method = goal.details.methodName;
+    ParameterSpec varGoal = parameterSpec(type,
+        '_' + downcase(simpleName(type)));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    if (VOID.equals(type)) {
+      builder.addStatement("this.$N.$N($L)", goal.instanceField(),
+          method, goal.invocationParameters());
+    } else {
+      builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type, varGoal, goal.instanceField(),
+          method, goal.invocationParameters());
+    }
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this.$N = null", goal.instanceField());
+    }
+    builder.add(free(goal.steps));
+    if (!VOID.equals(type)) {
+      builder.addStatement("return $N", varGoal);
+    }
+    return builder.build();
   }
 
-  static ClassName contractType(SimpleRegularGoalContext goal) {
-    String contractName = upcase(name.apply(goal)) + upcase(moduleName);
-    return context.apply(goal)
-        .generatedType.nestedClass(contractName);
+  private static CodeBlock staticCall(SimpleStaticMethodGoalContext goal) {
+    TypeName type = goal.type();
+    String method = goal.details.methodName;
+    ParameterSpec varGoal = parameterSpec(type,
+        '_' + downcase(simpleName(type)));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    if (VOID.equals(type)) {
+      builder.addStatement("$T.$N($L)", rawClassName(goal.context.type).get(),
+          method, goal.invocationParameters());
+    } else {
+      builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, rawClassName(goal.context.type).get(),
+          method, goal.invocationParameters());
+    }
+    builder.add(free(goal.steps));
+    if (!VOID.equals(type)) {
+      builder.addStatement("return $N", varGoal);
+    }
+    return builder.build();
   }
 
-  @Override
-  public ModuleOutput process(SimpleRegularGoalContext goal) {
-    return new ModuleOutput(
-        goalToBuilder.apply(goal),
-        asList(
-            defineBuilderImpl(goal),
-            defineContract(goal)),
-        singletonList(cacheField(goal)));
+  private static CodeBlock free(List<? extends AbstractRegularStep> steps) {
+    return steps.stream()
+        .limit(steps.size() - 1)
+        .map(step -> step.regularParameter())
+        .filter(parameter -> !parameter.type.isPrimitive())
+        .map(parameter -> statement("this.$N = null", parameter.name))
+        .collect(joinCodeBlocks);
+  }
+
+  private Builder() {
+    throw new UnsupportedOperationException("no instances");
   }
 }

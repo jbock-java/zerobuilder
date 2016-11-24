@@ -20,7 +20,7 @@ import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
-import net.zerobuilder.modules.builder.Builder;
+import net.zerobuilder.modules.builder.RegularBuilder;
 import net.zerobuilder.modules.builder.bean.BeanBuilder;
 import net.zerobuilder.modules.generics.GenericsBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
@@ -57,7 +57,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 
 public final class Analyser {
 
-  private static final RegularSimpleModule BUILDER = new Builder();
+  private static final RegularSimpleModule BUILDER = new RegularBuilder();
   private static final BeanModule BEAN_BUILDER = new BeanBuilder();
   private static final ProjectedModule UPDATER = new RegularUpdater();
   private static final BeanModule BEAN_UPDATER = new BeanUpdater();

@@ -13,7 +13,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegular
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.Generator;
-import net.zerobuilder.modules.builder.Builder;
+import net.zerobuilder.modules.builder.RegularBuilder;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ public class VoidTest {
   private static final ClassName STRING = ClassName.get(String.class);
   private static final ClassName IO_EXCEPTION = ClassName.get(IOException.class);
 
-  private static final Builder MODULE_BUILDER = new Builder();
+  private static final RegularBuilder MODULE_BUILDER = new RegularBuilder();
 
   /**
    * <p>The goal method is &quot;doUpdate&quot;, see below.

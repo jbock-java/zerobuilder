@@ -23,16 +23,16 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.modules.builder.Builder.cacheField;
-import static net.zerobuilder.modules.builder.Builder.implType;
+import static net.zerobuilder.modules.builder.RegularBuilder.cacheField;
+import static net.zerobuilder.modules.builder.RegularBuilder.implType;
 
-final class GeneratorV {
+final class Generator {
 
   static BuilderMethod builderMethodV(SimpleRegularGoalContext goal) {
     AbstractRegularDetails abstractRegularDetails = goal.regularDetails();
     List<? extends AbstractRegularStep> steps = goal.regularSteps();
-    MethodSpec.Builder method = methodBuilder(Builder.methodName(goal))
-        .returns(Builder.contractType(goal).nestedClass(steps.get(0).thisType))
+    MethodSpec.Builder method = methodBuilder(RegularBuilder.methodName(goal))
+        .returns(RegularBuilder.contractType(goal).nestedClass(steps.get(0).thisType))
         .addModifiers(abstractRegularDetails.access(STATIC));
     GoalContext context = goal.context();
     ParameterSpec varInstance = parameterSpec(context.type,
@@ -48,9 +48,9 @@ final class GeneratorV {
 
   private static Function<SimpleRegularGoalContext, CodeBlock> returnBlock(ParameterSpec varInstance) {
     return regularGoalContextCases(
-        GeneratorV::returnRegular,
+        Generator::returnRegular,
         method -> returnInstanceMethod(method, varInstance),
-        GeneratorV::returnRegular);
+        Generator::returnRegular);
   }
 
   private static CodeBlock returnRegular(SimpleRegularGoalContext goal) {
@@ -97,7 +97,7 @@ final class GeneratorV {
     return parameterSpec(type, downcase(type.simpleName()));
   }
 
-  private GeneratorV() {
+  private Generator() {
     throw new UnsupportedOperationException("no instances");
   }
 }

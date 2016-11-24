@@ -11,7 +11,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegular
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.Generator;
-import net.zerobuilder.modules.builder.Builder;
+import net.zerobuilder.modules.builder.RegularBuilder;
 import org.junit.Test;
 
 import javax.lang.model.element.Modifier;
@@ -39,7 +39,7 @@ public class BuilderTest {
   // the type we wish to generate; in this case, a nested type
   private static final ClassName GENERATED_TYPE = ClassName.get(BuilderTest.class)
       .nestedClass("MyTypeBuilders");
-  public static final Builder MODULE_BUILDER = new Builder();
+  public static final RegularBuilder MODULE_BUILDER = new RegularBuilder();
 
   /**
    * <p>We want to generate a builder for {@code MyType#create(String, Integer)}
