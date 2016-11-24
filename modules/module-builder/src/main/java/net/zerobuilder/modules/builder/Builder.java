@@ -9,26 +9,27 @@ import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoa
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
-import net.zerobuilder.compiler.generate.DtoStep;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.function.IntFunction;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static com.squareup.javapoet.TypeName.VOID;
 import static java.util.Arrays.asList;
-import static java.util.function.Function.identity;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
@@ -40,65 +41,65 @@ import static net.zerobuilder.modules.builder.Step.nullCheck;
 
 final class Builder {
 
-  static TypeName nextType(DtoStep.AbstractStep step) {
-    if (step.nextStep.isPresent()) {
-      return step.context.generatedType
-          .nestedClass(upcase(step.goalDetails.name() + "Builder"))
-          .nestedClass(step.nextStep.get().thisType);
+  static TypeName nextType(int i, SimpleRegularGoalContext goal) {
+    if (i < goal.description().parameters().size() - 1) {
+      return goal.context().generatedType
+          .nestedClass(upcase(goal.regularDetails().name() + "Builder"))
+          .nestedClass(upcase(goal.description().parameters().get(i + 1).name));
     }
-    return step.goalDetails.type();
+    return goal.regularDetails().type();
   }
 
   static final Function<SimpleRegularGoalContext, List<FieldSpec>> fieldsV
       = goal -> {
-    List<? extends AbstractRegularStep> steps = goal.regularSteps();
+    List<SimpleParameter> steps = goal.description().parameters();
     return asList(
-        presentInstances(goal.maybeField()).stream(),
+        presentInstances(goal.maybeField()),
         goal.context().lifecycle == REUSE_INSTANCES ?
-            Stream.of(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
-            Stream.<FieldSpec>empty(),
+            singletonList(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
+            Collections.<FieldSpec>emptyList(),
         steps.stream()
             .limit(steps.size() - 1)
-            .map(AbstractRegularStep::field))
+            .map(parameter -> fieldSpec(parameter.type, parameter.name, PRIVATE))
+            .collect(toList()))
         .stream()
-        .flatMap(identity())
-        .collect(toList());
+        .collect(flatList());
   };
 
-  static final Function<SimpleRegularGoalContext, List<MethodSpec>> stepsV =
-      goal -> goal.regularSteps().stream()
-          .map(step -> stepMethod(step, goal))
-          .collect(toList());
+  static IntFunction<MethodSpec> stepsV(SimpleRegularGoalContext goal) {
+    return i -> stepMethod(i, goal);
+  }
 
-  private static MethodSpec stepMethod(AbstractRegularStep step, SimpleRegularGoalContext goal) {
-    TypeName type = step.regularParameter().type;
-    String name = step.regularParameter().name;
+  private static MethodSpec stepMethod(int i, SimpleRegularGoalContext goal) {
+    SimpleParameter step = goal.description().parameters().get(i);
+    TypeName type = step.type;
+    String name = step.name;
     ParameterSpec parameter = parameterSpec(type, name);
-    List<TypeName> thrownTypes = step.declaredExceptions();
-    if (step.isLast()) {
-      thrownTypes = concat(thrownTypes, goal.thrownTypes);
-    }
-    TypeName nextType = nextType(step);
-    return methodBuilder(step.regularParameter().name)
+    List<TypeName> thrownTypes = i < goal.description().parameters().size() - 1 ?
+        emptyList() :
+        goal.thrownTypes;
+    TypeName nextType = nextType(i, goal);
+    return methodBuilder(step.name)
         .addAnnotation(Override.class)
         .addParameter(parameter)
         .returns(nextType)
         .addCode(nullCheck.apply(step))
-        .addCode(normalAssignment(step, goal))
+        .addCode(normalAssignment(i, goal))
         .addModifiers(PUBLIC)
         .addExceptions(thrownTypes)
         .build();
   }
 
-  private static CodeBlock normalAssignment(AbstractRegularStep step, SimpleRegularGoalContext goal) {
-    TypeName type = step.regularParameter().type;
-    String name = step.regularParameter().name;
+  private static CodeBlock normalAssignment(int i, SimpleRegularGoalContext goal) {
+    SimpleParameter step = goal.description().parameters().get(i);
+    TypeName type = step.type;
+    String name = step.name;
     ParameterSpec parameter = parameterSpec(type, name);
-    if (step.isLast()) {
+    if (i == goal.description().parameters().size() - 1) {
       return regularInvoke.apply(goal);
     } else {
       return CodeBlock.builder()
-          .addStatement("this.$N = $N", step.field(), parameter)
+          .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
           .addStatement("return this")
           .build();
     }
@@ -120,7 +121,7 @@ final class Builder {
     }
     return builder
         .addStatement("$T $N = new $T($L)", varGoal.type, varGoal, goal.type(), goal.invocationParameters())
-        .add(free(goal.steps))
+        .add(free(goal.description().parameters()))
         .addStatement("return $N", varGoal)
         .build();
   }
@@ -144,7 +145,7 @@ final class Builder {
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this.$N = null", goal.instanceField());
     }
-    builder.add(free(goal.steps));
+    builder.add(free(goal.description().parameters()));
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);
     }
@@ -167,17 +168,16 @@ final class Builder {
       builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, rawClassName(goal.context.type).get(),
           method, goal.invocationParameters());
     }
-    builder.add(free(goal.steps));
+    builder.add(free(goal.description().parameters()));
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);
     }
     return builder.build();
   }
 
-  private static CodeBlock free(List<? extends AbstractRegularStep> steps) {
+  private static CodeBlock free(List<SimpleParameter> steps) {
     return steps.stream()
         .limit(steps.size() - 1)
-        .map(step -> step.regularParameter())
         .filter(parameter -> !parameter.type.isPrimitive())
         .map(parameter -> statement("this.$N = null", parameter.name))
         .collect(joinCodeBlocks);

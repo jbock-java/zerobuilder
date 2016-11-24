@@ -13,18 +13,19 @@ import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
@@ -33,18 +34,23 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.builder.Step.asStepInterface;
+import static net.zerobuilder.modules.builder.Step.regularStepInterface;
 
 public final class RegularBuilder implements RegularSimpleModule {
 
   private static final String moduleName = "builder";
 
   private List<TypeSpec> stepInterfaces(SimpleRegularGoalContext goal) {
-    return transform(goal.regularSteps(), asStepInterface(goal));
+    return IntStream.range(0, goal.description().parameters().size())
+        .mapToObj(regularStepInterface(goal))
+        .collect(toList());
   }
 
-  private Function<SimpleRegularGoalContext, List<MethodSpec>> steps =
-      Builder.stepsV;
+  private List<MethodSpec> steps(SimpleRegularGoalContext goal) {
+    return IntStream.range(0, goal.description().parameters().size())
+        .mapToObj(Builder.stepsV(goal))
+        .collect(toList());
+  }
 
   private final Function<SimpleRegularGoalContext, List<FieldSpec>> fields =
       Builder.fieldsV;
@@ -66,7 +72,7 @@ public final class RegularBuilder implements RegularSimpleModule {
         .addSuperinterfaces(stepInterfaceTypes(goal))
         .addFields(fields.apply(goal))
         .addMethod(builderConstructor.apply(goal))
-        .addMethods(steps.apply(goal))
+        .addMethods(steps(goal))
         .addModifiers(PRIVATE, STATIC, FINAL)
         .build();
   }
@@ -110,8 +116,8 @@ public final class RegularBuilder implements RegularSimpleModule {
 
 
   List<ClassName> stepInterfaceTypes(SimpleRegularGoalContext goal) {
-    return transform(abstractSteps.apply(goal),
-        step -> contractType(goal).nestedClass(step.thisType));
+    return transform(goal.description().parameters(),
+        step -> contractType(goal).nestedClass(upcase(step.name)));
   }
 
   static ClassName contractType(SimpleRegularGoalContext goal) {
