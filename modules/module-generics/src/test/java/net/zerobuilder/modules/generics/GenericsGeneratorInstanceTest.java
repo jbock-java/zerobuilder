@@ -10,10 +10,7 @@ import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import org.junit.Test;
-
-import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -73,13 +70,9 @@ public class GenericsGeneratorInstanceTest {
     SimpleParameter keyParameter = DtoRegularParameter.create("key", K, ALLOW);
     SimpleParameter valueParameter = DtoRegularParameter.create("value", V, ALLOW);
 
-    SimpleRegularStep valueStep = SimpleRegularStep.create("Value", Optional.empty(), details, goalContext, valueParameter);
-    SimpleRegularStep keyStep = SimpleRegularStep.create("Key", Optional.of(valueStep), details, goalContext, keyParameter);
-
     InstanceMethodGoalContext goal = new InstanceMethodGoalContext(
         goalContext,
         details,
-        asList(keyStep, valueStep),
         SimpleRegularGoalDescription.create(details, emptyList(), asList(keyParameter, valueParameter)));
 
     GenericsGenerator generator = GenericsGenerator.create(goal);

@@ -6,7 +6,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +17,6 @@ import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.simpleGoalCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -27,21 +25,20 @@ import static net.zerobuilder.modules.builder.Builder.nextType;
 
 final class Step {
 
-  static IntFunction<TypeSpec> regularStepInterface(SimpleRegularGoalContext goal) {
+  static IntFunction<TypeSpec> stepInterface(SimpleRegularGoalContext goal) {
     return i -> interfaceBuilder(upcase(goal.description().parameters().get(i).name))
-        .addMethod(regularStepMethod(i, goal))
+        .addMethod(stepMethod(i, goal))
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static MethodSpec regularStepMethod(int i, SimpleRegularGoalContext goal) {
+  private static MethodSpec stepMethod(int i, SimpleRegularGoalContext goal) {
     SimpleParameter parameter = goal.description().parameters().get(i);
     String name = parameterName.apply(parameter);
     TypeName type = parameter.type;
-    List<TypeName> thrownTypes = i == goal.description().parameters().size() ?
+    List<TypeName> thrownTypes = i == goal.description().parameters().size() - 1 ?
         goal.thrownTypes :
         Collections.emptyList();
-
     return methodBuilder(name)
         .returns(nextType(i, goal))
         .addParameter(parameterSpec(type, name))
@@ -49,11 +46,6 @@ final class Step {
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
   }
-
-  private static final Function<SimpleGoal, List<TypeName>> thrownTypes =
-      simpleGoalCases(
-          regular -> regular.thrownTypes,
-          bean -> Collections.emptyList());
 
   static final Function<SimpleParameter, CodeBlock> nullCheck
       = parameter -> {

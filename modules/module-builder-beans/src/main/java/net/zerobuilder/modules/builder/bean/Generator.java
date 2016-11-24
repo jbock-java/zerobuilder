@@ -23,7 +23,7 @@ final class Generator {
   static BuilderMethod builderMethodB(BeanGoalContext goal) {
     String name = goal.details.name;
     MethodSpec method = methodBuilder(BeanBuilder.methodName(goal))
-        .returns(BeanBuilder.contractType(goal).nestedClass(goal.steps().get(0).thisType))
+        .returns(BeanBuilder.contractType(goal).nestedClass(goal.steps.get(0).thisType))
         .addModifiers(goal.details.access(STATIC))
         .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()

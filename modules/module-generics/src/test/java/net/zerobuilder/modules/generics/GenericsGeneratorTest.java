@@ -62,13 +62,9 @@ public class GenericsGeneratorTest {
     SimpleParameter keysParameter = DtoRegularParameter.create("keys", LIST_OF_K, ALLOW);
     SimpleParameter valueParameter = DtoRegularParameter.create("value", V, ALLOW);
 
-    SimpleRegularStep valueStep = SimpleRegularStep.create("Value", Optional.empty(), details, goalContext, valueParameter);
-    SimpleRegularStep keysStep = SimpleRegularStep.create("Keys", Optional.of(valueStep), details, goalContext, keysParameter);
-
     SimpleStaticMethodGoalContext goal = new SimpleStaticMethodGoalContext(
         goalContext,
         details,
-        asList(keysStep, valueStep),
         DtoRegularGoalDescription.SimpleRegularGoalDescription.create(details, emptyList(), asList(keysParameter, valueParameter)));
 
     GenericsGenerator generator = GenericsGenerator.create(goal);

@@ -34,7 +34,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.builder.Step.regularStepInterface;
+import static net.zerobuilder.modules.builder.Step.stepInterface;
 
 public final class RegularBuilder implements RegularSimpleModule {
 
@@ -42,21 +42,21 @@ public final class RegularBuilder implements RegularSimpleModule {
 
   private List<TypeSpec> stepInterfaces(SimpleRegularGoalContext goal) {
     return IntStream.range(0, goal.description().parameters().size())
-        .mapToObj(regularStepInterface(goal))
+        .mapToObj(stepInterface(goal))
         .collect(toList());
   }
 
   private List<MethodSpec> steps(SimpleRegularGoalContext goal) {
     return IntStream.range(0, goal.description().parameters().size())
-        .mapToObj(Builder.stepsV(goal))
+        .mapToObj(Builder.steps(goal))
         .collect(toList());
   }
 
   private final Function<SimpleRegularGoalContext, List<FieldSpec>> fields =
-      Builder.fieldsV;
+      Builder.fields;
 
   private final Function<SimpleRegularGoalContext, BuilderMethod> goalToBuilder =
-      Generator::builderMethodV;
+      Generator::builderMethod;
 
   static ClassName implType(SimpleRegularGoalContext goal) {
     ClassName contract = contractType(goal);

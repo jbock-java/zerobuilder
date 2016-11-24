@@ -67,7 +67,9 @@ final class GenericsImpl {
               .addModifiers(PUBLIC)
               .returns(method.returnType)
               .addCode(getCodeBlock(stepSpecs, i, parameter))
-              .addExceptions(i == goal.steps().size() - 1 ? goal.thrownTypes : emptyList())
+              .addExceptions(i == goal.description().parameters().size() - 1 ?
+                  goal.thrownTypes :
+                  emptyList())
               .build())
           .addModifiers(PRIVATE, STATIC, FINAL)
           .build());
@@ -78,8 +80,8 @@ final class GenericsImpl {
 
   private CodeBlock getCodeBlock(List<TypeSpec> stepSpecs, int i, ParameterSpec parameter) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.steps().get(i).abstractParameter().nullPolicy == REJECT
-        && !goal.steps().get(i).abstractParameter().type.isPrimitive()) {
+    if (goal.description().parameters().get(i).nullPolicy == REJECT
+        && !goal.description().parameters().get(i).type.isPrimitive()) {
       builder.add(nullCheck(parameter.name, parameter.name));
     }
     if (i == stepSpecs.size() - 1) {

@@ -3,15 +3,11 @@ package net.zerobuilder.modules.builder.bean;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,16 +22,10 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.abstractSteps;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
 import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.simpleGoalCases;
-import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -58,12 +48,12 @@ public final class BeanBuilder implements BeanModule {
   private final Function<BeanGoalContext, BuilderMethod> goalToBuilder =
       Generator::builderMethodB;
 
-  static ClassName implType(SimpleGoal goal) {
+  static ClassName implType(BeanGoalContext goal) {
     ClassName contract = contractType(goal);
     return contract.peerClass(contract.simpleName() + "Impl");
   }
 
-  static String methodName(SimpleGoal goal) {
+  static String methodName(BeanGoalContext goal) {
     return name.apply(goal) + upcase(moduleName);
   }
 
@@ -88,35 +78,17 @@ public final class BeanBuilder implements BeanModule {
         .build();
   }
 
-  private static final Function<SimpleRegularGoalContext, MethodSpec> regularConstructor =
-      regularGoalContextCases(
-          constructor -> constructor(),
-          method -> {
-            if (method.context.lifecycle == REUSE_INSTANCES) {
-              return constructor();
-            }
-            TypeName type = method.context.type;
-            ParameterSpec parameter = parameterSpec(type, downcase(rawClassName(type).get().simpleName()));
-            return constructorBuilder()
-                .addParameter(parameter)
-                .addStatement("this.$N = $N", method.instanceField(), parameter)
-                .build();
-          },
-          staticMethod -> constructor());
+  private final Function<BeanGoalContext, MethodSpec> builderConstructor =
+      bean -> constructorBuilder()
+          .addExceptions(bean.context.lifecycle == REUSE_INSTANCES
+              ? Collections.emptyList()
+              : bean.thrownTypes)
+          .addCode(bean.context.lifecycle == REUSE_INSTANCES
+              ? emptyCodeBlock
+              : statement("this.$N = new $T()", bean.bean(), bean.type()))
+          .build();
 
-  private final Function<SimpleGoal, MethodSpec> builderConstructor =
-      simpleGoalCases(
-          regularConstructor,
-          bean -> constructorBuilder()
-              .addExceptions(bean.context.lifecycle == REUSE_INSTANCES
-                  ? Collections.emptyList()
-                  : bean.thrownTypes)
-              .addCode(bean.context.lifecycle == REUSE_INSTANCES
-                  ? emptyCodeBlock
-                  : statement("this.$N = new $T()", bean.bean(), bean.type()))
-              .build());
-
-  static FieldSpec cacheField(SimpleGoal goal) {
+  static FieldSpec cacheField(BeanGoalContext goal) {
     ClassName type = implType(goal);
     return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
         .initializer("new $T()", type)
@@ -124,11 +96,11 @@ public final class BeanBuilder implements BeanModule {
   }
 
 
-  List<ClassName> stepInterfaceTypes(SimpleGoal goal) {
-    return transform(abstractSteps.apply(goal), step -> contractType(goal).nestedClass(step.thisType));
+  List<ClassName> stepInterfaceTypes(BeanGoalContext goal) {
+    return transform(goal.steps, step -> contractType(goal).nestedClass(step.thisType));
   }
 
-  static ClassName contractType(SimpleGoal goal) {
+  static ClassName contractType(BeanGoalContext goal) {
     String contractName = upcase(name.apply(goal)) + upcase(moduleName);
     return context.apply(goal)
         .generatedType.nestedClass(contractName);

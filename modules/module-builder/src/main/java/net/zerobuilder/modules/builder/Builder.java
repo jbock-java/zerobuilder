@@ -50,7 +50,7 @@ final class Builder {
     return goal.regularDetails().type();
   }
 
-  static final Function<SimpleRegularGoalContext, List<FieldSpec>> fieldsV
+  static final Function<SimpleRegularGoalContext, List<FieldSpec>> fields
       = goal -> {
     List<SimpleParameter> steps = goal.description().parameters();
     return asList(
@@ -66,7 +66,7 @@ final class Builder {
         .collect(flatList());
   };
 
-  static IntFunction<MethodSpec> stepsV(SimpleRegularGoalContext goal) {
+  static IntFunction<MethodSpec> steps(SimpleRegularGoalContext goal) {
     return i -> stepMethod(i, goal);
   }
 

@@ -7,8 +7,7 @@ import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoRegularGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
-import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,10 +27,9 @@ final class GenericsContract {
                                        List<List<TypeVariableName>> typeParams,
                                        List<List<TypeVariableName>> methodParams) {
     List<TypeSpec> builder = new ArrayList<>();
-    List<? extends AbstractRegularStep> steps = goal.regularSteps();
+    List<SimpleParameter> steps = goal.description().parameters();
     for (int i = 0; i < steps.size(); i++) {
-      AbstractRegularStep step = steps.get(i);
-      AbstractRegularParameter parameter = step.regularParameter();
+      SimpleParameter parameter = steps.get(i);
       builder.add(TypeSpec.interfaceBuilder(upcase(parameter.name))
           .addTypeVariables(typeParams.get(i))
           .addMethod(nextStep(goal,
@@ -44,14 +42,15 @@ final class GenericsContract {
   }
 
   private static MethodSpec nextStep(SimpleRegularGoalContext goal, List<List<TypeVariableName>> typeParams, List<List<TypeVariableName>> methodParams, int i) {
-    List<? extends AbstractRegularStep> steps = goal.regularSteps();
-    AbstractRegularStep step = steps.get(i);
-    AbstractRegularParameter parameter = step.regularParameter();
+    List<SimpleParameter> steps = goal.description().parameters();
+    SimpleParameter parameter = steps.get(i);
     return MethodSpec.methodBuilder(downcase(parameter.name))
         .addTypeVariables(methodParams.get(i))
         .addModifiers(PUBLIC, ABSTRACT)
         .returns(nextStepType(goal, typeParams, i))
-        .addExceptions(i == goal.steps().size() - 1 ? goal.thrownTypes : emptyList())
+        .addExceptions(i == goal.description().parameters().size() - 1 ?
+            goal.thrownTypes :
+            emptyList())
         .addParameter(parameterSpec(parameter.type, parameter.name))
         .build();
   }
@@ -59,14 +58,14 @@ final class GenericsContract {
   private static TypeName nextStepType(SimpleRegularGoalContext goal,
                                        List<List<TypeVariableName>> typeParams,
                                        int i) {
-    List<? extends AbstractRegularStep> steps = goal.regularSteps();
-    if (i == goal.steps().size() - 1) {
+    if (i == goal.description().parameters().size() - 1) {
       return goal.regularDetails().type();
     }
-    AbstractRegularStep step = steps.get(i + 1);
+    List<SimpleParameter> steps = goal.description().parameters();
+    SimpleParameter step = steps.get(i + 1);
     ClassName rawNext = goal.context().generatedType
         .nestedClass(upcase(goal.regularDetails().name() + "Builder"))
-        .nestedClass(upcase(step.regularParameter().name));
+        .nestedClass(upcase(step.name));
     return parameterizedTypeName(rawNext, typeParams.get(i + 1));
   }
 
