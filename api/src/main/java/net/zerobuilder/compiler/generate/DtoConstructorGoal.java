@@ -4,6 +4,7 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 
@@ -23,8 +24,8 @@ public final class DtoConstructorGoal {
     SimpleConstructorGoalContext(DtoContext.GoalContext context,
                                  ConstructorGoalDetails details,
                                  List<SimpleRegularStep> steps,
-                                 List<TypeName> thrownTypes) {
-      super(thrownTypes);
+                                 DtoRegularGoalDescription.SimpleRegularGoalDescription description) {
+      super(description);
       this.context = context;
       this.details = details;
       this.steps = steps;

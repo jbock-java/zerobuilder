@@ -8,6 +8,7 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
@@ -29,8 +30,15 @@ public final class DtoRegularGoal {
   public static abstract class SimpleRegularGoalContext
       extends RegularGoalContext implements SimpleGoal {
 
-    SimpleRegularGoalContext(List<TypeName> thrownTypes) {
-      super(thrownTypes);
+    SimpleRegularGoalContext(SimpleRegularGoalDescription description) {
+      super(description.thrownTypes);
+      this.description = description;
+    }
+
+    private final SimpleRegularGoalDescription description;
+
+    public final SimpleRegularGoalDescription description() {
+      return description;
     }
 
     public abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);

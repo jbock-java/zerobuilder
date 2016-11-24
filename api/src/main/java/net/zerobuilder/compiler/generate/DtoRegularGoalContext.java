@@ -12,6 +12,9 @@ final class DtoRegularGoalContext {
 
   public static abstract class RegularGoalContext extends AbstractGoalContext {
 
+    /**
+     * FIXME remove redundant field
+     */
     public final List<TypeName> thrownTypes;
 
     RegularGoalContext(List<TypeName> thrownTypes) {

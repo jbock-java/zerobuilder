@@ -7,6 +7,7 @@ import net.zerobuilder.api.test.GenericsBuilderTest;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
@@ -79,7 +80,7 @@ public class GenericsGeneratorInstanceTest {
         goalContext,
         details,
         asList(keyStep, valueStep),
-        emptyList());
+        SimpleRegularGoalDescription.create(details, emptyList(), asList(keyParameter, valueParameter)));
 
     GenericsGenerator generator = GenericsGenerator.create(goal);
     assertThat(generator.methodParams, is(asList(singletonList(K), emptyList())));

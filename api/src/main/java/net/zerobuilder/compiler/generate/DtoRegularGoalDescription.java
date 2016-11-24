@@ -44,10 +44,14 @@ public final class DtoRegularGoalDescription {
   }
 
   public static abstract class AbstractRegularGoalDescription {
-    final AbstractRegularDetails details;
+    private final AbstractRegularDetails details;
     final List<TypeName> thrownTypes;
-    final List<AbstractRegularParameter> parameters() {
+    final List<AbstractRegularParameter> abstractParameters() {
       return abstractParameters.apply(this);
+    }
+
+    public final AbstractRegularDetails details() {
+      return details;
     }
 
     protected AbstractRegularGoalDescription(AbstractRegularDetails details, List<TypeName> thrownTypes) {
@@ -71,7 +75,11 @@ public final class DtoRegularGoalDescription {
   public static final class SimpleRegularGoalDescription extends AbstractRegularGoalDescription
       implements SimpleDescription {
 
-    final List<SimpleParameter> parameters;
+    private final List<SimpleParameter> parameters;
+
+    public List<SimpleParameter> parameters() {
+      return parameters;
+    }
 
     private SimpleRegularGoalDescription(AbstractRegularDetails details,
                                          List<TypeName> thrownTypes,

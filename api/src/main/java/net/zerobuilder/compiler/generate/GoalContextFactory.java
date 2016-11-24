@@ -66,23 +66,23 @@ final class GoalContextFactory {
       GoalContext context,
       SimpleRegularGoalDescription simple) {
     List<SimpleRegularStep> steps = steps(
-        simple.details,
+        simple.details(),
         simple.thrownTypes,
         context,
-        simple.parameters,
+        simple.parameters(),
         simpleRegularFactory);
-    return simple.details.accept(new RegularGoalDetailsCases<SimpleRegularGoalContext, Void>() {
+    return simple.details().accept(new RegularGoalDetailsCases<SimpleRegularGoalContext, Void>() {
       @Override
       public SimpleRegularGoalContext method(InstanceMethodGoalDetails details, Void _null) {
-        return new InstanceMethodGoalContext(context, details, steps, simple.thrownTypes);
+        return new InstanceMethodGoalContext(context, details, steps, simple);
       }
       @Override
       public SimpleRegularGoalContext staticMethod(StaticMethodGoalDetails details, Void _null) {
-        return new SimpleStaticMethodGoalContext(context, details, steps, simple.thrownTypes, simple.parameters);
+        return new SimpleStaticMethodGoalContext(context, details, steps, simple);
       }
       @Override
       public SimpleRegularGoalContext constructor(ConstructorGoalDetails details, Void _null) {
-        return new SimpleConstructorGoalContext(context, details, steps, simple.thrownTypes);
+        return new SimpleConstructorGoalContext(context, details, steps, simple);
       }
     }, null);
   }
