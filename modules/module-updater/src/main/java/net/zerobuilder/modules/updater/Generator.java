@@ -40,11 +40,7 @@ import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 
 final class Generator {
 
-  private Generator() {
-    throw new UnsupportedOperationException("no instances");
-  }
-
-  static BuilderMethod updaterMethodV(ProjectedRegularGoalContext goal) {
+  static BuilderMethod updaterMethod(ProjectedRegularGoalContext goal) {
     AbstractRegularDetails details = goalDetails.apply(goal);
     ParameterSpec updater = varUpdater(goal);
     MethodSpec method = methodBuilder(RegularUpdater.methodName(goal))
@@ -170,5 +166,9 @@ final class Generator {
         .map(List::stream)
         .flatMap(identity())
         .collect(toSet());
+  }
+
+  private Generator() {
+    throw new UnsupportedOperationException("no instances");
   }
 }

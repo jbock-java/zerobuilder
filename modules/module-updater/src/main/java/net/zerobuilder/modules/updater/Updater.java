@@ -26,24 +26,24 @@ import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 
 final class Updater {
 
-  static final Function<ProjectedRegularGoalContext, List<FieldSpec>> fieldsV =
-      goal -> {
-        List<FieldSpec> builder = new ArrayList<>();
-        if (goal.mayReuse()) {
-          builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
-        }
-        for (ProjectedParameter step : goal.description().parameters()) {
-          String name = step.name;
-          TypeName type = step.type;
-          builder.add(fieldSpec(type, name, PRIVATE));
-        }
-        return builder;
-      };
+  static List<FieldSpec> fields(ProjectedRegularGoalContext goal) {
+    List<FieldSpec> builder = new ArrayList<>();
+    if (goal.mayReuse()) {
+      builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
+    }
+    for (ProjectedParameter step : goal.description().parameters()) {
+      String name = step.name;
+      TypeName type = step.type;
+      builder.add(fieldSpec(type, name, PRIVATE));
+    }
+    return builder;
+  }
 
-  static final Function<ProjectedRegularGoalContext, List<MethodSpec>> stepMethodsV =
-      goal -> goal.description().parameters().stream()
-          .map(updateMethods(goal))
-          .collect(toList());
+  static List<MethodSpec> stepMethods(ProjectedRegularGoalContext goal) {
+    return goal.description().parameters().stream()
+        .map(updateMethods(goal))
+        .collect(toList());
+  }
 
   private static Function<ProjectedParameter, MethodSpec> updateMethods(ProjectedRegularGoalContext goal) {
     return step -> normalUpdate(goal, step);
@@ -56,21 +56,20 @@ final class Updater {
     return methodBuilder(name)
         .returns(implType(goal))
         .addParameter(parameter)
-        .addCode(nullCheck.apply(step))
+        .addCode(nullCheck(step))
         .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static final Function<ProjectedParameter, CodeBlock> nullCheck =
-      parameter -> {
-        if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
-          return emptyCodeBlock;
-        }
-        String name = parameterName.apply(parameter);
-        return ZeroUtil.nullCheck(name, name);
-      };
+  private static CodeBlock nullCheck(ProjectedParameter parameter) {
+    if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
+      return emptyCodeBlock;
+    }
+    String name = parameterName.apply(parameter);
+    return ZeroUtil.nullCheck(name, name);
+  }
 
   private Updater() {
     throw new UnsupportedOperationException("no instances");
