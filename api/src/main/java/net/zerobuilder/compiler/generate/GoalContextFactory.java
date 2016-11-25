@@ -85,19 +85,19 @@ final class GoalContextFactory {
       DtoContext.GoalContext context,
       ProjectedRegularGoalDescription description) {
     List<ProjectedRegularStep> steps = steps(
-        description.details,
-        description.thrownTypes,
+        description.details(),
+        description.thrownTypes(),
         context,
-        description.parameters,
+        description.parameters(),
         projectedRegularFactory);
-    return description.details.accept(new ProjectableDetailsCases<ProjectedRegularGoalContext>() {
+    return description.details().accept(new ProjectableDetailsCases<ProjectedRegularGoalContext>() {
       @Override
       public ProjectedRegularGoalContext constructor(ConstructorGoalDetails constructor) {
-        return new ProjectedConstructorGoalContext(context, constructor, steps, description.thrownTypes);
+        return new ProjectedConstructorGoalContext(context, constructor, steps, description);
       }
       @Override
       public ProjectedRegularGoalContext method(StaticMethodGoalDetails method) {
-        return new ProjectedMethodGoalContext(context, method, steps, description.thrownTypes);
+        return new ProjectedMethodGoalContext(context, method, steps, description);
       }
     });
   }

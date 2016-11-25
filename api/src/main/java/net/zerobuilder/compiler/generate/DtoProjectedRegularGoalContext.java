@@ -9,6 +9,7 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
 import java.util.List;
 import java.util.function.Function;
@@ -27,8 +28,15 @@ public final class DtoProjectedRegularGoalContext {
   public static abstract class ProjectedRegularGoalContext extends RegularGoalContext
       implements ProjectedGoal {
 
-    ProjectedRegularGoalContext(List<TypeName> thrownTypes) {
+    private final ProjectedRegularGoalDescription description;
+
+    public ProjectedRegularGoalDescription description() {
+      return description;
+    }
+
+    ProjectedRegularGoalContext(List<TypeName> thrownTypes, ProjectedRegularGoalDescription description) {
       super(thrownTypes);
+      this.description = description;
     }
 
     abstract <R> R acceptRegularProjected(ProjectedRegularGoalContextCases<R> cases);
@@ -83,8 +91,8 @@ public final class DtoProjectedRegularGoalContext {
         DtoContext.GoalContext context,
         StaticMethodGoalDetails details,
         List<ProjectedRegularStep> steps,
-        List<TypeName> thrownTypes) {
-      super(thrownTypes);
+        ProjectedRegularGoalDescription description) {
+      super(description.thrownTypes(), description);
       this.context = context;
       this.details = details;
       this.steps = steps;
@@ -106,8 +114,8 @@ public final class DtoProjectedRegularGoalContext {
     ProjectedConstructorGoalContext(DtoContext.GoalContext context,
                                     ConstructorGoalDetails details,
                                     List<ProjectedRegularStep> steps,
-                                    List<TypeName> thrownTypes) {
-      super(thrownTypes);
+                                    ProjectedRegularGoalDescription description) {
+      super(description.thrownTypes(), description);
       this.context = context;
       this.details = details;
       this.steps = steps;

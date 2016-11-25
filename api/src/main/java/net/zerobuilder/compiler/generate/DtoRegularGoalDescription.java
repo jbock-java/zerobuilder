@@ -111,10 +111,21 @@ public final class DtoRegularGoalDescription {
    */
   public static final class ProjectedRegularGoalDescription
       implements ProjectedDescription {
-    final List<ProjectedParameter> parameters;
-    final ProjectableDetails details;
-    final List<TypeName> thrownTypes;
+    private final List<ProjectedParameter> parameters;
+    private ProjectableDetails details;
+    private List<TypeName> thrownTypes;
 
+    public List<ProjectedParameter> parameters() {
+      return parameters;
+    }
+
+    public ProjectableDetails details() {
+      return details;
+    }
+
+    public List<TypeName> thrownTypes() {
+      return thrownTypes;
+    }
 
     private ProjectedRegularGoalDescription(ProjectableDetails details,
                                             List<TypeName> thrownTypes,
