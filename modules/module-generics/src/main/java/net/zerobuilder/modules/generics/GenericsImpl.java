@@ -12,6 +12,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -121,22 +122,27 @@ final class GenericsImpl {
     return builder.add("instance").build();
   }
 
+  private static IntFunction<CodeBlock> invokeFn(List<TypeSpec> stepSpecs) {
+    return i -> {
+      CodeBlock.Builder block = CodeBlock.builder();
+      for (int j = stepSpecs.size() - 3; j >= i; j--) {
+        TypeSpec type = stepSpecs.get(j + 1);
+        MethodSpec method = type.methodSpecs.get(0);
+        ParameterSpec parameter = method.parameters.get(0);
+        block.add("$N", parameter).add("Impl.");
+      }
+      TypeSpec type = stepSpecs.get(i);
+      MethodSpec method = type.methodSpecs.get(0);
+      ParameterSpec parameter = method.parameters.get(0);
+      block.add("$N", parameter);
+      return block.build();
+    };
+  }
+
   static List<CodeBlock> basicInvoke(List<TypeSpec> stepSpecs) {
+    IntFunction<CodeBlock> invokeFn = invokeFn(stepSpecs);
     return IntStream.range(0, stepSpecs.size())
-        .mapToObj(i -> {
-          CodeBlock.Builder block = CodeBlock.builder();
-          for (int j = stepSpecs.size() - 3; j >= i; j--) {
-            TypeSpec type = stepSpecs.get(j + 1);
-            MethodSpec method = type.methodSpecs.get(0);
-            ParameterSpec parameter = method.parameters.get(0);
-            block.add("$N", parameter).add("Impl.");
-          }
-          TypeSpec type = stepSpecs.get(i);
-          MethodSpec method = type.methodSpecs.get(0);
-          ParameterSpec parameter = method.parameters.get(0);
-          block.add("$N", parameter);
-          return block.build();
-        })
+        .mapToObj(invokeFn)
         .collect(toList());
   }
 

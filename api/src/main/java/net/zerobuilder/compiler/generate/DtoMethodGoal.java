@@ -8,7 +8,6 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import static javax.lang.model.element.Modifier.FINAL;
@@ -27,7 +26,7 @@ public final class DtoMethodGoal {
         GoalContext context,
         InstanceMethodGoalDetails details,
         SimpleRegularGoalDescription description) {
-      super(description);
+      super(description, createUnshuffle(description.parameters(), details.parameterNames));
       this.details = details;
       this.context = context;
       this.instanceField = memoizeInstanceField(context);
@@ -51,11 +50,6 @@ public final class DtoMethodGoal {
     }
 
     @Override
-    public final List<String> parameterNames() {
-      return details.parameterNames;
-    }
-
-    @Override
     public final TypeName type() {
       return details.goalType;
     }
@@ -67,7 +61,7 @@ public final class DtoMethodGoal {
         GoalContext context,
         StaticMethodGoalDetails details,
         SimpleRegularGoalDescription description) {
-      super(description);
+      super(description, createUnshuffle(description.parameters(), details.parameterNames));
       this.details = details;
       this.context = context;
     }
@@ -78,11 +72,6 @@ public final class DtoMethodGoal {
     @Override
     public final <R> R acceptRegular(DtoRegularGoal.RegularGoalContextCases<R> cases) {
       return cases.staticMethod(this);
-    }
-
-    @Override
-    public final List<String> parameterNames() {
-      return details.parameterNames;
     }
 
     @Override

@@ -22,6 +22,7 @@ import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUS
 import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.asPredicate;
 import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
+import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class DtoRegularGoal {
@@ -29,9 +30,10 @@ public final class DtoRegularGoal {
   public static abstract class SimpleRegularGoalContext
       extends RegularGoalContext implements SimpleGoal {
 
-    SimpleRegularGoalContext(SimpleRegularGoalDescription description) {
+    SimpleRegularGoalContext(SimpleRegularGoalDescription description, int[] ranking) {
       super(description.thrownTypes);
       this.description = description;
+      this.ranking = ranking;
     }
 
     private final SimpleRegularGoalDescription description;
@@ -41,7 +43,7 @@ public final class DtoRegularGoal {
     }
 
     public abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
-    public abstract List<String> parameterNames();
+    private final int[] ranking;
     public abstract TypeName type();
 
     public final AbstractRegularDetails regularDetails() {
@@ -61,7 +63,7 @@ public final class DtoRegularGoal {
       return cases.simple(this);
     }
 
-    private static int[] createUnshuffle(List<SimpleParameter> parameters, List<String> parameterNames) {
+    static int[] createUnshuffle(List<SimpleParameter> parameters, List<String> parameterNames) {
       String[] a = new String[parameters.size()];
       for (int i = 0; i < parameters.size(); i++) {
         a[i] = parameters.get(i).name;
@@ -71,8 +73,7 @@ public final class DtoRegularGoal {
     }
 
     public <E> List<E> unshuffle(List<E> shuffled) {
-      int[] unshuffle = createUnshuffle(description().parameters(), parameterNames());
-      return applyRanking(unshuffle, shuffled);
+      return applyRanking(ranking, shuffled);
     }
 
     @Override
@@ -81,7 +82,11 @@ public final class DtoRegularGoal {
     }
 
     public final CodeBlock invocationParameters() {
-      return CodeBlock.of(String.join(", ", parameterNames()));
+      List<SimpleParameter> unshuffled = unshuffle(description.parameters());
+      return unshuffled.stream()
+          .map(parameter -> parameter.name)
+          .map(CodeBlock::of)
+          .collect(joinCodeBlocks(", "));
     }
   }
 

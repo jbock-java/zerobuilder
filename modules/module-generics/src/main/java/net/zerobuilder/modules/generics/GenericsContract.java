@@ -82,7 +82,7 @@ final class GenericsContract {
   }
 
   static List<TypeName> stepTypes(SimpleRegularGoalContext goal) {
-    List<TypeName> builder = new ArrayList<>(goal.parameterNames().size() + 1);
+    List<TypeName> builder = new ArrayList<>(goal.description().parameters().size() + 1);
     DtoRegularGoal.stepTypes.apply(goal).forEach(builder::add);
     builder.add(goal.regularDetails().type());
     return builder;

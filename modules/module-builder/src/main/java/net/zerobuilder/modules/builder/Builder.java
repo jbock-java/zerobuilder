@@ -67,27 +67,25 @@ final class Builder {
   };
 
   static IntFunction<MethodSpec> steps(SimpleRegularGoalContext goal) {
-    return i -> stepMethod(i, goal);
-  }
-
-  private static MethodSpec stepMethod(int i, SimpleRegularGoalContext goal) {
-    SimpleParameter step = goal.description().parameters().get(i);
-    TypeName type = step.type;
-    String name = step.name;
-    ParameterSpec parameter = parameterSpec(type, name);
-    List<TypeName> thrownTypes = i < goal.description().parameters().size() - 1 ?
-        emptyList() :
-        goal.thrownTypes;
-    TypeName nextType = nextType(i, goal);
-    return methodBuilder(step.name)
-        .addAnnotation(Override.class)
-        .addParameter(parameter)
-        .returns(nextType)
-        .addCode(nullCheck.apply(step))
-        .addCode(normalAssignment(i, goal))
-        .addModifiers(PUBLIC)
-        .addExceptions(thrownTypes)
-        .build();
+    return i -> {
+      SimpleParameter step = goal.description().parameters().get(i);
+      TypeName type = step.type;
+      String name = step.name;
+      ParameterSpec parameter = parameterSpec(type, name);
+      List<TypeName> thrownTypes = i < goal.description().parameters().size() - 1 ?
+          emptyList() :
+          goal.thrownTypes;
+      TypeName nextType = nextType(i, goal);
+      return methodBuilder(step.name)
+          .addAnnotation(Override.class)
+          .addParameter(parameter)
+          .returns(nextType)
+          .addCode(nullCheck.apply(step))
+          .addCode(normalAssignment(i, goal))
+          .addModifiers(PUBLIC)
+          .addExceptions(thrownTypes)
+          .build();
+    };
   }
 
   private static CodeBlock normalAssignment(int i, SimpleRegularGoalContext goal) {

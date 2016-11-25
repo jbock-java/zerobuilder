@@ -19,7 +19,7 @@ public final class DtoConstructorGoal {
     SimpleConstructorGoalContext(DtoContext.GoalContext context,
                                  ConstructorGoalDetails details,
                                  SimpleRegularGoalDescription description) {
-      super(description);
+      super(description, createUnshuffle(description.parameters(), details.parameterNames));
       this.context = context;
       this.details = details;
     }
@@ -27,11 +27,6 @@ public final class DtoConstructorGoal {
     @Override
     public final <R> R acceptRegular(RegularGoalContextCases<R> cases) {
       return cases.constructor(this);
-    }
-
-    @Override
-    public final List<String> parameterNames() {
-      return details.parameterNames;
     }
 
     @Override
