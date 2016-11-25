@@ -8,12 +8,10 @@ import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoProjectedParameter.AbstractProjectedParameter;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import static com.squareup.javapoet.ClassName.OBJECT;
 import static net.zerobuilder.compiler.generate.ZeroUtil.distinctFrom;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 import static net.zerobuilder.compiler.generate.ZeroUtil.onlyTypeArgument;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
@@ -30,23 +28,18 @@ public final class DtoBeanParameter {
 
     public final List<TypeName> getterThrownTypes;
 
-    private final Supplier<String> name;
+    private final String name;
 
     private AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy, List<TypeName> getterThrownTypes) {
       super(type, nullPolicy);
       this.getter = getter;
       this.getterThrownTypes = getterThrownTypes;
-      this.name = memoizeName(getter);
-    }
-
-    private static Supplier<String> memoizeName(String getter) {
-      return memoize(() ->
-          downcase(getter.substring(getter.startsWith("is") ? 2 : 3)));
+      this.name = downcase(getter.substring(getter.startsWith("is") ? 2 : 3));
     }
 
     @Override
     public final String name() {
-      return name.get();
+      return name;
     }
 
     public abstract <R> R accept(BeanParameterCases<R> cases);
@@ -70,21 +63,17 @@ public final class DtoBeanParameter {
 
     public final List<TypeName> setterThrownTypes;
 
-    private final Supplier<String> setterName;
+    private final String setterName;
 
     private AccessorPair(TypeName type, String getter, NullPolicy nullPolicy,
                          List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {
       super(type, getter, nullPolicy, getterThrownTypes);
       this.setterThrownTypes = setterThrownTypes;
-      this.setterName = memoizeSetterName(name());
-    }
-
-    private static Supplier<String> memoizeSetterName(String name) {
-      return memoize(() -> "set" + upcase(name));
+      this.setterName = "set" + upcase(name());
     }
 
     public String setterName() {
-      return setterName.get();
+      return setterName;
     }
 
     @Override
