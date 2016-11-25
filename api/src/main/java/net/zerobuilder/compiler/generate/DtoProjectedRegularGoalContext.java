@@ -16,7 +16,6 @@ import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
 
 public final class DtoProjectedRegularGoalContext {
 
@@ -83,19 +82,16 @@ public final class DtoProjectedRegularGoalContext {
   }
 
   public static final class ProjectedMethodGoalContext extends ProjectedRegularGoalContext {
-    public final List<ProjectedRegularStep> steps;
     public final DtoContext.GoalContext context;
     public final StaticMethodGoalDetails details;
 
     ProjectedMethodGoalContext(
         DtoContext.GoalContext context,
         StaticMethodGoalDetails details,
-        List<ProjectedRegularStep> steps,
         ProjectedRegularGoalDescription description) {
       super(description.thrownTypes(), description);
       this.context = context;
       this.details = details;
-      this.steps = steps;
     }
 
     @Override
@@ -109,16 +105,13 @@ public final class DtoProjectedRegularGoalContext {
 
     public final DtoContext.GoalContext context;
     public final ConstructorGoalDetails details;
-    public final List<ProjectedRegularStep> steps;
 
     ProjectedConstructorGoalContext(DtoContext.GoalContext context,
                                     ConstructorGoalDetails details,
-                                    List<ProjectedRegularStep> steps,
                                     ProjectedRegularGoalDescription description) {
       super(description.thrownTypes(), description);
       this.context = context;
       this.details = details;
-      this.steps = steps;
     }
 
     @Override
@@ -136,11 +129,6 @@ public final class DtoProjectedRegularGoalContext {
       projectedRegularGoalContextCases(
           staticMethod -> emptyList(),
           constructor -> constructor.details.instanceTypeParameters);
-
-  public static final Function<ProjectedRegularGoalContext, List<ProjectedRegularStep>> steps =
-      DtoProjectedRegularGoalContext.projectedRegularGoalContextCases(
-          staticMethod -> staticMethod.steps,
-          constructor -> constructor.steps);
 
   private DtoProjectedRegularGoalContext() {
     throw new UnsupportedOperationException("no instances");

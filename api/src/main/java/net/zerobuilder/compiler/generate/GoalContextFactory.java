@@ -93,11 +93,11 @@ final class GoalContextFactory {
     return description.details().accept(new ProjectableDetailsCases<ProjectedRegularGoalContext>() {
       @Override
       public ProjectedRegularGoalContext constructor(ConstructorGoalDetails constructor) {
-        return new ProjectedConstructorGoalContext(context, constructor, steps, description);
+        return new ProjectedConstructorGoalContext(context, constructor, description);
       }
       @Override
       public ProjectedRegularGoalContext method(StaticMethodGoalDetails method) {
-        return new ProjectedMethodGoalContext(context, method, steps, description);
+        return new ProjectedMethodGoalContext(context, method, description);
       }
     });
   }

@@ -5,11 +5,8 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoParameter;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
-import net.zerobuilder.compiler.generate.DtoRegularStep.ProjectedRegularStep;
-import net.zerobuilder.compiler.generate.DtoStep;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.ArrayList;
@@ -22,8 +19,6 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
-import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.steps;
-import static net.zerobuilder.compiler.generate.DtoStep.always;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -37,46 +32,45 @@ final class Updater {
         if (goal.mayReuse()) {
           builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
         }
-        for (ProjectedRegularStep step : steps.apply(goal)) {
-          String name = step.regularParameter().name;
-          TypeName type = step.regularParameter().type;
+        for (ProjectedParameter step : goal.description().parameters()) {
+          String name = step.name;
+          TypeName type = step.type;
           builder.add(fieldSpec(type, name, PRIVATE));
         }
         return builder;
       };
 
   static final Function<ProjectedRegularGoalContext, List<MethodSpec>> stepMethodsV =
-      goal -> steps.apply(goal).stream()
+      goal -> goal.description().parameters().stream()
           .map(updateMethods(goal))
           .collect(toList());
 
-  private static Function<AbstractRegularStep, MethodSpec> updateMethods(ProjectedRegularGoalContext goal) {
+  private static Function<ProjectedParameter, MethodSpec> updateMethods(ProjectedRegularGoalContext goal) {
     return step -> normalUpdate(goal, step);
   }
 
-  private static MethodSpec normalUpdate(ProjectedRegularGoalContext goal, AbstractRegularStep step) {
-    String name = step.regularParameter().name;
-    TypeName type = step.regularParameter().type;
+  private static MethodSpec normalUpdate(ProjectedRegularGoalContext goal, ProjectedParameter step) {
+    String name = step.name;
+    TypeName type = step.type;
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
         .returns(implType(goal))
         .addParameter(parameter)
         .addCode(nullCheck.apply(step))
-        .addStatement("this.$N = $N", step.field(), parameter)
+        .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static final Function<DtoStep.AbstractStep, CodeBlock> nullCheck =
-      always(step -> {
-        DtoParameter.AbstractParameter parameter = step.abstractParameter();
+  private static final Function<ProjectedParameter, CodeBlock> nullCheck =
+      parameter -> {
         if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
           return emptyCodeBlock;
         }
         String name = parameterName.apply(parameter);
         return ZeroUtil.nullCheck(name, name);
-      });
+      };
 
   private Updater() {
     throw new UnsupportedOperationException("no instances");

@@ -56,10 +56,6 @@ public final class DtoRegularParameter {
       this.name = name;
     }
 
-    public final Optional<ProjectionInfo> projectionInfo() {
-      return projectionInfo.apply(this);
-    }
-
     @Override
     public final String name() {
       return name;
@@ -75,7 +71,7 @@ public final class DtoRegularParameter {
 
   public static final class ProjectedParameter extends AbstractRegularParameter implements AbstractProjectedParameter {
 
-    final ProjectionInfo projectionInfo;
+    public final ProjectionInfo projectionInfo;
 
     private ProjectedParameter(String name, TypeName type, NullPolicy nullPolicy, ProjectionInfo projectionInfo) {
       super(name, type, nullPolicy);

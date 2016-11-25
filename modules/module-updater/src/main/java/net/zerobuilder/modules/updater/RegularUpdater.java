@@ -13,7 +13,7 @@ import net.zerobuilder.compiler.generate.DtoProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularStep.AbstractRegularStep;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 
 import java.util.List;
 import java.util.function.Function;
@@ -91,7 +91,7 @@ public final class RegularUpdater implements ProjectedModule {
     return builder
         .addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.context.type,
             method, goal.invocationParameters())
-        .add(free(goal.steps))
+        .add(free(goal.description().parameters()))
         .addStatement("return $N", varGoal)
         .build();
   }
@@ -106,14 +106,13 @@ public final class RegularUpdater implements ProjectedModule {
     }
     return builder
         .addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, goal.invocationParameters())
-        .add(free(goal.steps))
+        .add(free(goal.description().parameters()))
         .addStatement("return $N", varGoal)
         .build();
   }
 
-  private CodeBlock free(List<? extends AbstractRegularStep> steps) {
+  private CodeBlock free(List<ProjectedParameter> steps) {
     return steps.stream()
-        .map(step -> step.regularParameter())
         .filter(parameter -> !parameter.type.isPrimitive())
         .map(parameter -> statement("this.$N = null", parameter.name))
         .collect(joinCodeBlocks);
