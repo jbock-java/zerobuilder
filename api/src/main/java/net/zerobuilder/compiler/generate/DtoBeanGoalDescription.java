@@ -17,9 +17,13 @@ public final class DtoBeanGoalDescription {
   public static final class BeanGoalDescription
       implements ProjectedDescription, SimpleDescription {
 
-    final BeanGoalDetails details;
-    final List<AbstractBeanParameter> parameters;
-    final List<TypeName> thrownTypes;
+    public final BeanGoalDetails details;
+    private final List<AbstractBeanParameter> parameters;
+    public final List<TypeName> thrownTypes;
+
+    public List<AbstractBeanParameter> parameters() {
+      return parameters;
+    }
 
     private BeanGoalDescription(BeanGoalDetails details,
                                 List<AbstractBeanParameter> parameters,

@@ -10,10 +10,7 @@ import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalCon
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-import net.zerobuilder.compiler.generate.DtoRegularStep.SimpleRegularStep;
 import org.junit.Test;
-
-import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;

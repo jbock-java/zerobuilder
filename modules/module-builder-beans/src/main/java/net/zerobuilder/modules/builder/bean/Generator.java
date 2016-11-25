@@ -17,17 +17,18 @@ import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUS
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class Generator {
 
   static BuilderMethod builderMethodB(BeanGoalContext goal) {
     String name = goal.details.name;
     MethodSpec method = methodBuilder(BeanBuilder.methodName(goal))
-        .returns(BeanBuilder.contractType(goal).nestedClass(goal.steps.get(0).thisType))
+        .returns(BeanBuilder.contractType(goal).nestedClass(upcase(goal.description().parameters().get(0).name())))
         .addModifiers(goal.details.access(STATIC))
         .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
-            : goal.thrownTypes)
+            : goal.description().thrownTypes)
         .addCode(returnBuilder(goal))
         .build();
     return new BuilderMethod(name, method);

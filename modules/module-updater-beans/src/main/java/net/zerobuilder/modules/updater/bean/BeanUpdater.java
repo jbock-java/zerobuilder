@@ -83,7 +83,7 @@ public final class BeanUpdater implements BeanModule {
               .addModifiers(PRIVATE)
               .addExceptions(bean.mayReuse()
                   ? emptyList()
-                  : bean.thrownTypes)
+                  : bean.description().thrownTypes)
               .addCode(bean.mayReuse()
                   ? emptyCodeBlock
                   : statement("this.$N = new $T()", bean.bean(), bean.type()))

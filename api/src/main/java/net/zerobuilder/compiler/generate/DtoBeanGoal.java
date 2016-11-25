@@ -2,25 +2,20 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
+import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
 import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 
 public final class DtoBeanGoal {
 
@@ -28,11 +23,14 @@ public final class DtoBeanGoal {
       implements ProjectedGoal, SimpleGoal {
 
     public final GoalContext context;
-    public final List<AbstractBeanStep> steps;
     public final BeanGoalDetails details;
-    public final List<TypeName> thrownTypes;
+    private final BeanGoalDescription description;
 
-    private final Supplier<FieldSpec> bean;
+    public BeanGoalDescription description() {
+      return description;
+    }
+
+    private final FieldSpec bean;
 
     /**
      * A instanceField that holds an instance of the bean type.
@@ -40,27 +38,23 @@ public final class DtoBeanGoal {
      * @return instanceField spec
      */
     public FieldSpec bean() {
-      return bean.get();
+      return bean;
     }
 
-    BeanGoalContext(DtoContext.GoalContext context,
+    BeanGoalContext(GoalContext context,
                     BeanGoalDetails details,
-                    List<AbstractBeanStep> steps,
-                    List<TypeName> thrownTypes) {
+                    BeanGoalDescription description) {
       this.context = context;
+      this.description = description;
       this.bean = beanSupplier(details.goalType, context);
-      this.steps = steps;
       this.details = details;
-      this.thrownTypes = thrownTypes;
     }
 
-    private static Supplier<FieldSpec> beanSupplier(ClassName type, DtoContext.GoalContext context) {
-      return memoize(() -> {
-        String name = downcase(type.simpleName());
-        return context.lifecycle == REUSE_INSTANCES
-            ? fieldSpec(type, name, PRIVATE)
-            : fieldSpec(type, name, PRIVATE, FINAL);
-      });
+    private static FieldSpec beanSupplier(ClassName type, DtoContext.GoalContext context) {
+      String name = downcase(type.simpleName());
+      return context.lifecycle == REUSE_INSTANCES
+          ? fieldSpec(type, name, PRIVATE)
+          : fieldSpec(type, name, PRIVATE, FINAL);
     }
 
     public ClassName type() {

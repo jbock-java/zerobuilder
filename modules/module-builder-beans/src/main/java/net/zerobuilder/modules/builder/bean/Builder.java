@@ -6,12 +6,13 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
-import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
-import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.BOOLEAN;
@@ -21,7 +22,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
+import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
@@ -41,18 +42,19 @@ final class Builder {
           singletonList(goal.bean());
 
   static final Function<BeanGoalContext, List<MethodSpec>> stepsB =
-      goal -> goal.steps.stream()
-          .map(stepToMethods(goal))
+      goal -> IntStream.range(0, goal.description().parameters().size())
+          .mapToObj(i -> stepToMethods(i, goal)
+              .apply(goal.description().parameters().get(i)))
           .collect(toList());
 
-  static Function<AbstractBeanStep, MethodSpec> stepToMethods(
-      BeanGoalContext goal) {
-    return beanStepCases(
-        step -> regularStep(step, goal),
-        step -> iterateCollection(step, goal));
+  private static Function<AbstractBeanParameter, MethodSpec> stepToMethods(
+      int i, BeanGoalContext goal) {
+    return beanParameterCases(
+        accessorPair -> regularStep(accessorPair, i, goal),
+        loneGetter -> iterateCollection(loneGetter, i, goal));
   }
 
-  static CodeBlock normalReturn(BeanGoalContext goal) {
+  private static CodeBlock normalReturn(BeanGoalContext goal) {
     ParameterSpec varBean = parameterSpec(goal.type(),
         '_' + downcase(goal.details.goalType.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
@@ -66,39 +68,43 @@ final class Builder {
     return builder.addStatement("return $N", varBean).build();
   }
 
-  static MethodSpec iterateCollection(LoneGetterStep step, BeanGoalContext goal) {
-    String name = step.loneGetter.name();
+  private static MethodSpec iterateCollection(LoneGetter step, int i, BeanGoalContext goal) {
+    String name = step.name();
     ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
-        subtypeOf(step.loneGetter.iterationType()));
+        subtypeOf(step.iterationType()));
     ParameterSpec parameter = parameterSpec(iterable, name);
-    ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
+    ParameterSpec iterationVar = step.iterationVar(parameter);
     return methodBuilder(name)
         .addAnnotation(Override.class)
-        .returns(nextType(step))
-        .addExceptions(step.loneGetter.getterThrownTypes)
+        .returns(nextType(i, goal))
+        .addExceptions(step.getterThrownTypes)
         .addParameter(parameter)
         .addCode(nullCheck(parameter))
         .beginControlFlow("for ($T $N : $N)",
             iterationVar.type, iterationVar, parameter)
         .addStatement("this.$N.$L().add($N)", goal.bean(),
-            step.loneGetter.getter, iterationVar)
+            step.getter, iterationVar)
         .endControlFlow()
-        .addCode(step.isLast() ? normalReturn(goal) : statement("return this"))
+        .addCode(i == goal.description().parameters().size() - 1 ?
+            normalReturn(goal) :
+            statement("return this"))
         .addModifiers(PUBLIC)
         .build();
   }
 
-  static MethodSpec regularStep(AccessorPairStep step, BeanGoalContext goal) {
-    ParameterSpec parameter = step.parameter();
-    return methodBuilder(step.accessorPair.name())
+  private static MethodSpec regularStep(AccessorPair step, int i, BeanGoalContext goal) {
+    ParameterSpec parameter = parameterSpec(step.type, step.name());
+    return methodBuilder(step.name())
         .addAnnotation(Override.class)
-        .addExceptions(step.accessorPair.setterThrownTypes)
+        .addExceptions(step.setterThrownTypes)
         .addParameter(parameter)
         .addModifiers(PUBLIC)
-        .returns(nextType(step))
+        .returns(nextType(i, goal))
         .addCode(Step.nullCheck.apply(step))
-        .addStatement("this.$N.$L($N)", goal.bean(), step.accessorPair.setterName(), parameter)
-        .addCode(step.isLast() ? normalReturn(goal) : statement("return this"))
+        .addStatement("this.$N.$L($N)", goal.bean(), step.setterName(), parameter)
+        .addCode(i == goal.description().parameters().size() - 1 ?
+            normalReturn(goal) :
+            statement("return this"))
         .build();
   }
 

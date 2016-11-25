@@ -12,11 +12,13 @@ import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -29,14 +31,16 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.builder.bean.Step.asStepInterface;
+import static net.zerobuilder.modules.builder.bean.BeanStep.beanStepInterface;
 
 public final class BeanBuilder implements BeanModule {
 
   private static final String moduleName = "builder";
 
   private List<TypeSpec> stepInterfaces(BeanGoalContext goal) {
-    return transform(goal.steps, asStepInterface());
+    return IntStream.range(0, goal.description().parameters().size())
+        .mapToObj(beanStepInterface(goal))
+        .collect(toList());
   }
 
   private final Function<BeanGoalContext, List<MethodSpec>> steps =
@@ -82,7 +86,7 @@ public final class BeanBuilder implements BeanModule {
       bean -> constructorBuilder()
           .addExceptions(bean.context.lifecycle == REUSE_INSTANCES
               ? Collections.emptyList()
-              : bean.thrownTypes)
+              : bean.description().thrownTypes)
           .addCode(bean.context.lifecycle == REUSE_INSTANCES
               ? emptyCodeBlock
               : statement("this.$N = new $T()", bean.bean(), bean.type()))
@@ -97,7 +101,8 @@ public final class BeanBuilder implements BeanModule {
 
 
   List<ClassName> stepInterfaceTypes(BeanGoalContext goal) {
-    return transform(goal.steps, step -> contractType(goal).nestedClass(step.thisType));
+    return transform(goal.description().parameters(),
+        step -> contractType(goal).nestedClass(upcase(step.name())));
   }
 
   static ClassName contractType(BeanGoalContext goal) {

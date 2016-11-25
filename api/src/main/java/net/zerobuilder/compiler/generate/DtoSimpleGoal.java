@@ -2,12 +2,8 @@ package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoStep.AbstractStep;
 
-import java.util.List;
 import java.util.function.Function;
-
-import static java.util.Collections.unmodifiableList;
 
 public final class DtoSimpleGoal {
 

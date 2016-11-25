@@ -7,7 +7,9 @@ import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoProjectedParameter.AbstractProjectedParameter;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import static com.squareup.javapoet.ClassName.OBJECT;
 import static net.zerobuilder.compiler.generate.ZeroUtil.distinctFrom;
@@ -19,7 +21,43 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class DtoBeanParameter {
 
-  public static abstract class AbstractBeanParameter extends AbstractParameter implements AbstractProjectedParameter {
+  public interface BeanParameterCases<R> {
+    R accessorPair(AccessorPair pair);
+    R loneGetter(LoneGetter getter);
+  }
+
+  public static <R> Function<AbstractBeanParameter, R> asFunction(BeanParameterCases<R> cases) {
+    return parameter -> parameter.accept(cases);
+  }
+
+  public static <R> Function<AbstractBeanParameter, R> beanParameterCases(
+      Function<AccessorPair, R> accessorPairFunction,
+      Function<LoneGetter, R> loneGetterFunction) {
+    return asFunction(new BeanParameterCases<R>() {
+      @Override
+      public R accessorPair(AccessorPair pair) {
+        return accessorPairFunction.apply(pair);
+      }
+      @Override
+      public R loneGetter(LoneGetter getter) {
+        return loneGetterFunction.apply(getter);
+      }
+    });
+  }
+
+  private static final Function<AbstractBeanParameter, List<TypeName>> getterThrownTypes =
+      beanParameterCases(
+          accessorPair -> accessorPair.getterThrownTypes,
+          loneGetter -> loneGetter.getterThrownTypes);
+
+  private static final Function<AbstractBeanParameter, List<TypeName>> setterThrownTypes =
+      beanParameterCases(
+          accessorPair -> accessorPair.setterThrownTypes,
+          loneGetter -> Collections.emptyList());
+
+
+  public static abstract class AbstractBeanParameter extends AbstractParameter
+      implements AbstractProjectedParameter {
 
     /**
      * Name of the getter method (could start with {@code "is"})
@@ -37,6 +75,14 @@ public final class DtoBeanParameter {
       this.name = downcase(getter.substring(getter.startsWith("is") ? 2 : 3));
     }
 
+    public final List<TypeName> getterThrownTypes() {
+      return DtoBeanParameter.getterThrownTypes.apply(this);
+    }
+
+    public final List<TypeName> setterThrownTypes() {
+      return DtoBeanParameter.setterThrownTypes.apply(this);
+    }
+
     @Override
     public final String name() {
       return name;
@@ -52,11 +98,6 @@ public final class DtoBeanParameter {
     public final <R> R acceptProjected(DtoProjectedParameter.ProjectedParameterCases<R> cases) {
       return cases.projectedBean(this);
     }
-  }
-
-  interface BeanParameterCases<R> {
-    R accessorPair(AccessorPair pair);
-    R loneGetter(LoneGetter getter);
   }
 
   public static final class AccessorPair extends AbstractBeanParameter {

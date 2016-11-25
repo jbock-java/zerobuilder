@@ -7,10 +7,9 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.generate.DtoBeanStep.AbstractBeanStep;
-import net.zerobuilder.compiler.generate.DtoBeanStep.AccessorPairStep;
-import net.zerobuilder.compiler.generate.DtoBeanStep.LoneGetterStep;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
@@ -24,7 +23,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.Arrays.asList;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
-import static net.zerobuilder.compiler.generate.DtoBeanStep.beanStepCases;
+import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
@@ -45,11 +44,11 @@ final class Generator {
         .returns(implType(goal))
         .addExceptions(thrownTypes(goal,
             asList(
-                AbstractBeanStep::getterThrownTypes,
-                AbstractBeanStep::setterThrownTypes)))
-        .addCode(goal.steps.stream().map(nullChecks(goal)).collect(joinCodeBlocks))
+                AbstractBeanParameter::getterThrownTypes,
+                AbstractBeanParameter::setterThrownTypes)))
+        .addCode(goal.description().parameters().stream().map(nullChecks(goal)).collect(joinCodeBlocks))
         .addCode(initVarUpdater(goal, varUpdater))
-        .addCode(goal.steps.stream().map(copy(goal)).collect(joinCodeBlocks))
+        .addCode(goal.description().parameters().stream().map(copy(goal)).collect(joinCodeBlocks))
         .addStatement("return $N", varUpdater)
         .addModifiers(modifiers)
         .build();
@@ -57,57 +56,57 @@ final class Generator {
   }
 
   private static Set<TypeName> thrownTypes(BeanGoalContext goal,
-                                           List<Function<AbstractBeanStep, List<TypeName>>> functions) {
+                                           List<Function<AbstractBeanParameter, List<TypeName>>> functions) {
     Set<TypeName> thrownTypes = new HashSet<>();
-    for (Function<AbstractBeanStep, List<TypeName>> function : functions) {
-      thrownTypes.addAll(goal.steps.stream()
+    for (Function<AbstractBeanParameter, List<TypeName>> function : functions) {
+      thrownTypes.addAll(goal.description().parameters().stream()
           .map(function)
           .collect(flatList()));
     }
-    thrownTypes.addAll(goal.thrownTypes);
+    thrownTypes.addAll(goal.description().thrownTypes);
     return thrownTypes;
   }
 
-  private static Function<AbstractBeanStep, CodeBlock> copy(BeanGoalContext goal) {
-    return beanStepCases(
-        step -> copyRegular(goal, step),
-        step -> copyCollection(goal, step));
+  private static Function<AbstractBeanParameter, CodeBlock> copy(BeanGoalContext goal) {
+    return beanParameterCases(
+        accessorPair -> copyRegular(goal, accessorPair),
+        loneGetter -> copyCollection(goal, loneGetter));
   }
 
-  private static Function<AbstractBeanStep, CodeBlock> nullChecks(BeanGoalContext goal) {
-    return beanStepCases(
-        step -> step.accessorPair.nullPolicy == ALLOW
+  private static Function<AbstractBeanParameter, CodeBlock> nullChecks(BeanGoalContext goal) {
+    return beanParameterCases(
+        accessorPair -> accessorPair.nullPolicy == ALLOW
             ? emptyCodeBlock
-            : nullCheck(goal, step.accessorPair),
-        step -> nullCheck(goal, step.loneGetter));
+            : nullCheck(goal, accessorPair),
+        loneGetter -> nullCheck(goal, loneGetter));
   }
 
-  private static CodeBlock copyCollection(BeanGoalContext goal, LoneGetterStep step) {
+  private static CodeBlock copyCollection(BeanGoalContext goal, LoneGetter step) {
     ClassName type = goal.details.goalType;
     ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
-    ParameterSpec iterationVar = step.loneGetter.iterationVar(parameter);
+    ParameterSpec iterationVar = step.iterationVar(parameter);
     return CodeBlock.builder()
         .beginControlFlow("for ($T $N : $N.$N())",
             iterationVar.type, iterationVar, parameter,
-            step.loneGetter.getter)
+            step.getter)
         .addStatement("$N.$N.$N().add($N)", updaterInstance(goal),
             downcase(type.simpleName()),
-            step.loneGetter.getter,
+            step.getter,
             iterationVar)
         .endControlFlow()
         .build();
   }
 
-  private static CodeBlock copyRegular(BeanGoalContext goal, AccessorPairStep step) {
+  private static CodeBlock copyRegular(BeanGoalContext goal, DtoBeanParameter.AccessorPair step) {
     ClassName type = goal.details.goalType;
     ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
     ParameterSpec updater = updaterInstance(goal);
     return CodeBlock.builder()
         .addStatement("$N.$N.$L($N.$N())", updater,
             goal.bean(),
-            step.accessorPair.setterName(),
+            step.setterName(),
             parameter,
-            step.accessorPair.getter)
+            step.getter)
         .build();
   }
 
