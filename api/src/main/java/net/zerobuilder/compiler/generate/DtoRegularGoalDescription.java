@@ -14,7 +14,6 @@ import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescriptionC
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Collections.unmodifiableList;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.parameterNames;
 
 public final class DtoRegularGoalDescription {
@@ -45,9 +44,10 @@ public final class DtoRegularGoalDescription {
 
   public static abstract class AbstractRegularGoalDescription {
     private final AbstractRegularDetails details;
-    final List<TypeName> thrownTypes;
-    final List<AbstractRegularParameter> abstractParameters() {
-      return abstractParameters.apply(this);
+    private final List<TypeName> thrownTypes;
+
+    public final List<TypeName> thrownTypes() {
+      return thrownTypes;
     }
 
     public final AbstractRegularDetails details() {
@@ -61,13 +61,6 @@ public final class DtoRegularGoalDescription {
 
     public abstract <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases);
   }
-
-
-  private static final Function<AbstractRegularGoalDescription, List<AbstractRegularParameter>> abstractParameters =
-      regularGoalDescriptionCases(
-          simple -> unmodifiableList(simple.parameters),
-          projected -> unmodifiableList(projected.parameters));
-
 
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
@@ -112,8 +105,8 @@ public final class DtoRegularGoalDescription {
   public static final class ProjectedRegularGoalDescription
       implements ProjectedDescription {
     private final List<ProjectedParameter> parameters;
-    private ProjectableDetails details;
-    private List<TypeName> thrownTypes;
+    private final ProjectableDetails details;
+    private final List<TypeName> thrownTypes;
 
     public List<ProjectedParameter> parameters() {
       return parameters;

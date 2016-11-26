@@ -27,16 +27,8 @@ public final class DtoGoalContext {
       return mayReuse.apply(this);
     }
 
-    final AbstractGoalDetails details() {
-      return abstractGoalDetails.apply(this);
-    }
-
     public final GoalContext context() {
       return context.apply(this);
-    }
-
-    final TypeName goalType() {
-      return goalType.apply(this);
     }
   }
 

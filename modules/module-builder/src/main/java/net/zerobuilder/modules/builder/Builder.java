@@ -74,7 +74,7 @@ final class Builder {
       ParameterSpec parameter = parameterSpec(type, name);
       List<TypeName> thrownTypes = i < goal.description().parameters().size() - 1 ?
           emptyList() :
-          goal.thrownTypes;
+          goal.description().thrownTypes();
       TypeName nextType = nextType(i, goal);
       return methodBuilder(step.name)
           .addAnnotation(Override.class)

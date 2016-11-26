@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
@@ -33,8 +32,7 @@ public final class DtoProjectedRegularGoalContext {
       return description;
     }
 
-    ProjectedRegularGoalContext(List<TypeName> thrownTypes, ProjectedRegularGoalDescription description) {
-      super(thrownTypes);
+    ProjectedRegularGoalContext(ProjectedRegularGoalDescription description) {
       this.description = description;
     }
 
@@ -89,7 +87,7 @@ public final class DtoProjectedRegularGoalContext {
         DtoContext.GoalContext context,
         StaticMethodGoalDetails details,
         ProjectedRegularGoalDescription description) {
-      super(description.thrownTypes(), description);
+      super(description);
       this.context = context;
       this.details = details;
     }
@@ -109,7 +107,7 @@ public final class DtoProjectedRegularGoalContext {
     ProjectedConstructorGoalContext(DtoContext.GoalContext context,
                                     ConstructorGoalDetails details,
                                     ProjectedRegularGoalDescription description) {
-      super(description.thrownTypes(), description);
+      super(description);
       this.context = context;
       this.details = details;
     }

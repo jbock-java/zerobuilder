@@ -27,7 +27,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.context;
-import static net.zerobuilder.compiler.generate.DtoProjectedGoal.goalType;
 import static net.zerobuilder.compiler.generate.DtoProjectedGoal.projectedGoalCases;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
@@ -48,7 +47,7 @@ public final class BeanUpdater implements BeanModule {
   private MethodSpec buildMethod(BeanGoalContext goal) {
     return methodBuilder("done")
         .addModifiers(PUBLIC)
-        .returns(goalType.apply(goal))
+        .returns(goal.details.type())
         .addCode(invoke.apply(goal))
         .build();
   }

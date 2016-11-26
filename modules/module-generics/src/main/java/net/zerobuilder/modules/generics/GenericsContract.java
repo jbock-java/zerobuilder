@@ -49,7 +49,7 @@ final class GenericsContract {
         .addModifiers(PUBLIC, ABSTRACT)
         .returns(nextStepType(goal, typeParams, i))
         .addExceptions(i == goal.description().parameters().size() - 1 ?
-            goal.thrownTypes :
+            goal.description().thrownTypes() :
             emptyList())
         .addParameter(parameterSpec(parameter.type, parameter.name))
         .build();

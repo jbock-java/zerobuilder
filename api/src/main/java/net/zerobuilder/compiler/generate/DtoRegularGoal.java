@@ -31,7 +31,6 @@ public final class DtoRegularGoal {
       extends RegularGoalContext implements SimpleGoal {
 
     SimpleRegularGoalContext(SimpleRegularGoalDescription description, int[] ranking) {
-      super(description.thrownTypes);
       this.description = description;
       this.ranking = ranking;
     }

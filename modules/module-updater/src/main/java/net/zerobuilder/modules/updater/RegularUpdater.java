@@ -26,7 +26,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import static net.zerobuilder.compiler.generate.DtoGoalContext.context;
-import static net.zerobuilder.compiler.generate.DtoProjectedGoal.goalType;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.instanceTypeParameters;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
@@ -47,8 +46,8 @@ public final class RegularUpdater implements ProjectedModule {
   private MethodSpec buildMethod(ProjectedRegularGoalContext goal) {
     return methodBuilder("done")
         .addModifiers(PUBLIC)
-        .addExceptions(goal.thrownTypes)
-        .returns(goalType.apply(goal))
+        .addExceptions(goal.description().thrownTypes())
+        .returns(goal.description().details().type())
         .addCode(regularInvoke.apply(goal))
         .build();
   }

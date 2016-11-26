@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
@@ -56,9 +55,6 @@ public final class DtoProjectedGoal {
       projectedGoalCases(
           DtoProjectedRegularGoalContext.instanceTypeParameters,
           bean -> emptyList());
-
-  public static final Function<ProjectedGoal, TypeName> goalType =
-      restrict(AbstractGoalContext::goalType);
 
   static final Function<ProjectedGoal, DtoContext.GoalContext> context =
       restrict(AbstractGoalContext::context);

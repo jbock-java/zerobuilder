@@ -37,7 +37,7 @@ final class Step {
     String name = parameterName.apply(parameter);
     TypeName type = parameter.type;
     List<TypeName> thrownTypes = i == goal.description().parameters().size() - 1 ?
-        goal.thrownTypes :
+        goal.description().thrownTypes() :
         Collections.emptyList();
     return methodBuilder(name)
         .returns(nextType(i, goal))

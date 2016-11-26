@@ -69,7 +69,7 @@ final class GenericsImpl {
               .returns(method.returnType)
               .addCode(getCodeBlock(stepSpecs, i, parameter))
               .addExceptions(i == goal.description().parameters().size() - 1 ?
-                  goal.thrownTypes :
+                  goal.description().thrownTypes() :
                   emptyList())
               .build())
           .addModifiers(PRIVATE, STATIC, FINAL)
