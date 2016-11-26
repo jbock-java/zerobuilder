@@ -154,3 +154,7 @@
 ### 2016-11-23 zerobuilder 1.525 released
 
 * remove emptyFoo convenience (breaking)
+
+### 2016-11-26 zerobuilder 1.526 released
+
+* bugfix generic instance
