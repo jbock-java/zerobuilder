@@ -24,8 +24,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -44,10 +42,10 @@ public final class BeanBuilder implements BeanModule {
   }
 
   private final Function<BeanGoalContext, List<MethodSpec>> steps =
-      Builder.stepsB;
+      Builder.steps;
 
   private final Function<BeanGoalContext, List<FieldSpec>> fields =
-      Builder.fieldsB;
+      Builder.fields;
 
   private final Function<BeanGoalContext, BuilderMethod> goalToBuilder =
       Generator::builderMethodB;
@@ -58,7 +56,7 @@ public final class BeanBuilder implements BeanModule {
   }
 
   static String methodName(BeanGoalContext goal) {
-    return name.apply(goal) + upcase(moduleName);
+    return goal.details.name + upcase(moduleName);
   }
 
   private TypeSpec defineBuilderImpl(BeanGoalContext goal) {
@@ -106,9 +104,8 @@ public final class BeanBuilder implements BeanModule {
   }
 
   static ClassName contractType(BeanGoalContext goal) {
-    String contractName = upcase(name.apply(goal)) + upcase(moduleName);
-    return context.apply(goal)
-        .generatedType.nestedClass(contractName);
+    String contractName = upcase(goal.details.name) + upcase(moduleName);
+    return goal.context.generatedType.nestedClass(contractName);
   }
 
   @Override

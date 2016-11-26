@@ -8,7 +8,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
@@ -24,8 +23,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import static net.zerobuilder.compiler.generate.DtoGoalContext.context;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.instanceTypeParameters;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
@@ -56,7 +53,7 @@ public final class RegularUpdater implements ProjectedModule {
     return classBuilder(rawClassName(implType(projectedGoal)).get())
         .addFields(Updater.fields(projectedGoal))
         .addMethods(Updater.stepMethods(projectedGoal))
-        .addTypeVariables(DtoProjectedGoal.instanceTypeParameters.apply(projectedGoal))
+        .addTypeVariables(instanceTypeParameters.apply(projectedGoal))
         .addMethod(buildMethod(projectedGoal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(RegularUpdater.regularConstructor.apply(projectedGoal))
@@ -64,9 +61,10 @@ public final class RegularUpdater implements ProjectedModule {
   }
 
   static TypeName implType(ProjectedRegularGoalContext goal) {
-    String implName = upcase(goal.name()) + upcase(moduleName);
-    return parameterizedTypeName(context.apply(goal)
-        .generatedType.nestedClass(implName), instanceTypeParameters.apply(goal));
+    String implName = upcase(goal.description().details().name()) + upcase(moduleName);
+    return parameterizedTypeName(
+        goal.context().generatedType.nestedClass(implName),
+        instanceTypeParameters.apply(goal));
   }
 
   private static final Function<ProjectedRegularGoalContext, MethodSpec> regularConstructor =
@@ -117,8 +115,8 @@ public final class RegularUpdater implements ProjectedModule {
         .collect(joinCodeBlocks);
   }
 
-  static String methodName(AbstractGoalContext goal) {
-    return goal.name() + upcase(moduleName);
+  static String methodName(ProjectedRegularGoalContext goal) {
+    return goal.description().details().name() + upcase(moduleName);
   }
 
   static FieldSpec cacheField(ProjectedRegularGoalContext projectedGoal) {

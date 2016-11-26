@@ -23,7 +23,6 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
@@ -34,14 +33,14 @@ import static net.zerobuilder.modules.builder.bean.BeanStep.nextType;
 
 final class Builder {
 
-  static final Function<BeanGoalContext, List<FieldSpec>> fieldsB =
-      goal -> goal.context().lifecycle == REUSE_INSTANCES ?
+  static final Function<BeanGoalContext, List<FieldSpec>> fields =
+      goal -> goal.mayReuse() ?
           asList(
               fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
               goal.bean()) :
           singletonList(goal.bean());
 
-  static final Function<BeanGoalContext, List<MethodSpec>> stepsB =
+  static final Function<BeanGoalContext, List<MethodSpec>> steps =
       goal -> IntStream.range(0, goal.description().parameters().size())
           .mapToObj(i -> stepToMethods(i, goal)
               .apply(goal.description().parameters().get(i)))
@@ -58,11 +57,11 @@ final class Builder {
     ParameterSpec varBean = parameterSpec(goal.type(),
         '_' + downcase(goal.details.goalType.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.mayReuse()) {
       builder.addStatement("this._currently_in_use = false");
     }
     builder.addStatement("$T $N = this.$N", varBean.type, varBean, goal.bean());
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.mayReuse()) {
       builder.addStatement("this.$N = null", goal.bean());
     }
     return builder.addStatement("return $N", varBean).build();
@@ -70,9 +69,9 @@ final class Builder {
 
   private static MethodSpec iterateCollection(LoneGetter step, int i, BeanGoalContext goal) {
     String name = step.name();
-    ParameterizedTypeName iterable = ParameterizedTypeName.get(ITERABLE,
+    ParameterizedTypeName it = ParameterizedTypeName.get(ITERABLE,
         subtypeOf(step.iterationType()));
-    ParameterSpec parameter = parameterSpec(iterable, name);
+    ParameterSpec parameter = parameterSpec(it, name);
     ParameterSpec iterationVar = step.iterationVar(parameter);
     return methodBuilder(name)
         .addAnnotation(Override.class)

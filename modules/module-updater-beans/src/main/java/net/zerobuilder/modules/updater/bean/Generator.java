@@ -122,7 +122,7 @@ final class Generator {
   }
 
   private static CodeBlock initVarUpdater(BeanGoalContext goal, ParameterSpec varUpdater) {
-    DtoContext.GoalContext context = goal.context();
+    DtoContext.GoalContext context = goal.context;
     if (goal.mayReuse()) {
       FieldSpec cache = context.cache.get();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");

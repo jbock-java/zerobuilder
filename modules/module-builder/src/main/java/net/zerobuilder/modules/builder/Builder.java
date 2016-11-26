@@ -44,10 +44,10 @@ final class Builder {
   static TypeName nextType(int i, SimpleRegularGoalContext goal) {
     if (i < goal.description().parameters().size() - 1) {
       return goal.context().generatedType
-          .nestedClass(upcase(goal.regularDetails().name() + "Builder"))
+          .nestedClass(upcase(goal.description().details().name() + "Builder"))
           .nestedClass(upcase(goal.description().parameters().get(i + 1).name));
     }
-    return goal.regularDetails().type();
+    return goal.description().details().type();
   }
 
   static final Function<SimpleRegularGoalContext, List<FieldSpec>> fields

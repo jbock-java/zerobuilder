@@ -7,9 +7,6 @@ import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
-import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -19,8 +16,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 
 public final class DtoBeanGoal {
 
-  public static final class BeanGoalContext extends AbstractGoalContext
-      implements ProjectedGoal, SimpleGoal {
+  public static final class BeanGoalContext extends AbstractGoalContext {
 
     public final GoalContext context;
     public final BeanGoalDetails details;
@@ -31,6 +27,10 @@ public final class DtoBeanGoal {
     }
 
     private final FieldSpec bean;
+
+    public final Boolean mayReuse() {
+      return context.lifecycle == REUSE_INSTANCES;
+    }
 
     /**
      * A instanceField that holds an instance of the bean type.
@@ -63,16 +63,6 @@ public final class DtoBeanGoal {
 
     <R> R accept(GoalCases<R> cases) {
       return cases.beanGoal(this);
-    }
-
-    @Override
-    public <R> R acceptProjected(ProjectedGoalCases<R> cases) {
-      return cases.bean(this);
-    }
-
-    @Override
-    public <R> R acceptSimple(DtoSimpleGoal.SimpleGoalCases<R> cases) {
-      return cases.bean(this);
     }
   }
 

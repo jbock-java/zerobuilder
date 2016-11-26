@@ -15,7 +15,6 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
@@ -59,32 +58,31 @@ final class GenericsContract {
                                        List<List<TypeVariableName>> typeParams,
                                        int i) {
     if (i == goal.description().parameters().size() - 1) {
-      return goal.regularDetails().type();
+      return goal.description().details().type();
     }
     List<SimpleParameter> steps = goal.description().parameters();
     SimpleParameter step = steps.get(i + 1);
     ClassName rawNext = goal.context().generatedType
-        .nestedClass(upcase(goal.regularDetails().name() + "Builder"))
+        .nestedClass(upcase(goal.description().details().name() + "Builder"))
         .nestedClass(upcase(step.name));
     return parameterizedTypeName(rawNext, typeParams.get(i + 1));
   }
 
   static ClassName contractType(SimpleRegularGoalContext goal) {
-    String contractName = upcase(goal.regularDetails().name) + "Builder";
-    return context.apply(goal)
+    String contractName = upcase(goal.description().details().name) + "Builder";
+    return goal.context()
         .generatedType.nestedClass(contractName);
   }
 
   static ClassName implType(SimpleRegularGoalContext goal) {
-    String contractName = upcase(goal.regularDetails().name) + "BuilderImpl";
-    return context.apply(goal)
-        .generatedType.nestedClass(contractName);
+    String contractName = upcase(goal.description().details().name) + "BuilderImpl";
+    return goal.context().generatedType.nestedClass(contractName);
   }
 
   static List<TypeName> stepTypes(SimpleRegularGoalContext goal) {
     List<TypeName> builder = new ArrayList<>(goal.description().parameters().size() + 1);
     DtoRegularGoal.stepTypes.apply(goal).forEach(builder::add);
-    builder.add(goal.regularDetails().type());
+    builder.add(goal.description().details().type());
     return builder;
   }
 }

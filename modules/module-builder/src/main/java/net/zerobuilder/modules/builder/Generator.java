@@ -30,7 +30,7 @@ import static net.zerobuilder.modules.builder.RegularBuilder.implType;
 final class Generator {
 
   static BuilderMethod builderMethod(SimpleRegularGoalContext goal) {
-    AbstractRegularDetails abstractRegularDetails = goal.regularDetails();
+    AbstractRegularDetails abstractRegularDetails = goal.description().details();
     List<SimpleParameter> steps = goal.description().parameters();
     MethodSpec.Builder method = methodBuilder(RegularBuilder.methodName(goal))
         .returns(RegularBuilder.contractType(goal).nestedClass(upcase(steps.get(0).name)))
@@ -43,7 +43,7 @@ final class Generator {
     if (goal.isInstance()) {
       method.addParameter(varInstance);
     }
-    return new BuilderMethod(goal.name(), method.build());
+    return new BuilderMethod(goal.description().details().name, method.build());
   }
 
   private static Function<SimpleRegularGoalContext, CodeBlock> returnBlock(ParameterSpec varInstance) {

@@ -5,8 +5,6 @@ import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoal;
-import net.zerobuilder.compiler.generate.DtoProjectedGoal.ProjectedGoalCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
@@ -23,8 +21,7 @@ public final class DtoProjectedRegularGoalContext {
     R constructor(ProjectedConstructorGoalContext constructor);
   }
 
-  public static abstract class ProjectedRegularGoalContext extends RegularGoalContext
-      implements ProjectedGoal {
+  public static abstract class ProjectedRegularGoalContext extends RegularGoalContext {
 
     private final ProjectedRegularGoalDescription description;
 
@@ -37,11 +34,6 @@ public final class DtoProjectedRegularGoalContext {
     }
 
     abstract <R> R acceptRegularProjected(ProjectedRegularGoalContextCases<R> cases);
-
-    @Override
-    public final <R> R acceptProjected(ProjectedGoalCases<R> cases) {
-      return cases.regular(this);
-    }
 
     @Override
     public final <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {

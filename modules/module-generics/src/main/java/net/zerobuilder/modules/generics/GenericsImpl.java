@@ -53,7 +53,7 @@ final class GenericsImpl {
       TypeSpec stepSpec = stepSpecs.get(i);
       MethodSpec method = stepSpec.methodSpecs.get(0);
       ParameterSpec parameter = method.parameters.get(0);
-      List<FieldSpec> fields = implFields.fields.apply(goal.regularDetails(), i);
+      List<FieldSpec> fields = implFields.fields.apply(goal.description().details(), i);
       TypeName superinterface = parameterizedTypeName(contract.nestedClass(stepSpec.name),
           stepSpec.typeVariables);
       builder.set(i, classBuilder(stepSpec.name + "Impl")
@@ -110,7 +110,7 @@ final class GenericsImpl {
             .addStatement("$L.$L($L)",
                 instance(stepSpecs),
                 instanceMethod.methodName, invoke).build())
-        .apply(goal.regularDetails());
+        .apply(goal.description().details());
   }
 
   static CodeBlock instance(List<TypeSpec> stepSpecs) {

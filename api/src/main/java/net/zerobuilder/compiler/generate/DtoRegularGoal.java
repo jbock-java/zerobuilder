@@ -4,13 +4,11 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-import net.zerobuilder.compiler.generate.DtoSimpleGoal.SimpleGoal;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +26,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 public final class DtoRegularGoal {
 
   public static abstract class SimpleRegularGoalContext
-      extends RegularGoalContext implements SimpleGoal {
+      extends RegularGoalContext {
 
     SimpleRegularGoalContext(SimpleRegularGoalDescription description, int[] ranking) {
       this.description = description;
@@ -44,10 +42,6 @@ public final class DtoRegularGoal {
     public abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
     private final int[] ranking;
     public abstract TypeName type();
-
-    public final AbstractRegularDetails regularDetails() {
-      return goalDetails.apply(this);
-    }
 
     public final boolean isInstance() {
       return isInstance.test(this);
@@ -75,11 +69,6 @@ public final class DtoRegularGoal {
       return applyRanking(ranking, shuffled);
     }
 
-    @Override
-    public final <R> R acceptSimple(DtoSimpleGoal.SimpleGoalCases<R> cases) {
-      return cases.regular(this);
-    }
-
     public final CodeBlock invocationParameters() {
       List<SimpleParameter> unshuffled = unshuffle(description.parameters());
       return unshuffled.stream()
@@ -88,12 +77,6 @@ public final class DtoRegularGoal {
           .collect(joinCodeBlocks(", "));
     }
   }
-
-  public static final Function<SimpleRegularGoalContext, AbstractRegularDetails> goalDetails =
-      regularGoalContextCases(
-          constructor -> constructor.details,
-          method -> method.details,
-          staticMethod -> staticMethod.details);
 
   public static final Function<SimpleRegularGoalContext, Boolean> mayReuse =
       regularGoalContextCases(

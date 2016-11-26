@@ -26,8 +26,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.context;
-import static net.zerobuilder.compiler.generate.DtoSimpleGoal.name;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -64,7 +62,7 @@ public final class RegularBuilder implements RegularSimpleModule {
   }
 
   static String methodName(SimpleRegularGoalContext goal) {
-    return name.apply(goal) + upcase(moduleName);
+    return goal.description().details().name + upcase(moduleName);
   }
 
   private TypeSpec defineBuilderImpl(SimpleRegularGoalContext goal) {
@@ -121,9 +119,8 @@ public final class RegularBuilder implements RegularSimpleModule {
   }
 
   static ClassName contractType(SimpleRegularGoalContext goal) {
-    String contractName = upcase(name.apply(goal)) + upcase(moduleName);
-    return context.apply(goal)
-        .generatedType.nestedClass(contractName);
+    String contractName = upcase(goal.description().details().name) + upcase(moduleName);
+    return goal.context().generatedType.nestedClass(contractName);
   }
 
   @Override

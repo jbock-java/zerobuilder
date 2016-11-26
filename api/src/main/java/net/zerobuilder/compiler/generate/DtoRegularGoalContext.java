@@ -6,9 +6,19 @@ import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext
 
 import java.util.function.Function;
 
+import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
+
 final class DtoRegularGoalContext {
 
   public static abstract class RegularGoalContext extends AbstractGoalContext {
+
+    public final Boolean mayReuse() {
+      return mayReuse.apply(this);
+    }
+
+    public final DtoContext.GoalContext context() {
+      return context.apply(this);
+    }
 
     abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
     @Override
@@ -46,6 +56,15 @@ final class DtoRegularGoalContext {
     });
   }
 
+  private static final Function<RegularGoalContext, DtoContext.GoalContext> context =
+      regularGoalContextCases(
+          DtoRegularGoal.regularGoalContextCases(
+              constructor -> constructor.context,
+              method -> method.context,
+              staticMethod -> staticMethod.context),
+          projectedRegularGoalContextCases(
+              method -> method.context,
+              constructor -> constructor.context));
 
   private DtoRegularGoalContext() {
     throw new UnsupportedOperationException("no instances");
