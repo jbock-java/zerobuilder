@@ -22,7 +22,7 @@ public class InstanceTest {
   @Test
   public void ventry() throws Exception {
     Instance<String> instance = new Instance<>("");
-    Map.Entry entry = InstanceBuilders.ventryBuilder(instance)
+    Map.Entry<String, String> entry = InstanceBuilders.ventryBuilder(instance)
         .value("1");
     assertThat(entry.getKey(), is("1"));
     assertThat(entry.getValue(), is("1"));

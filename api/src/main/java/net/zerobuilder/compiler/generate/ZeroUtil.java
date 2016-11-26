@@ -35,8 +35,6 @@ import static java.util.stream.Collectors.toList;
 
 public final class ZeroUtil {
 
-  private static final TypeVariableName[] NO_TYPEVARNAME = new TypeVariableName[0];
-
   public static final class ClassNames {
 
     public static final ClassName COLLECTION = ClassName.get(Collection.class);
@@ -364,7 +362,7 @@ public final class ZeroUtil {
     if (typeVars.isEmpty()) {
       return raw;
     }
-    return ParameterizedTypeName.get(raw, typeVars.toArray(NO_TYPEVARNAME));
+    return ParameterizedTypeName.get(raw, typeVars.toArray(new TypeVariableName[typeVars.size()]));
   }
 
   private ZeroUtil() {

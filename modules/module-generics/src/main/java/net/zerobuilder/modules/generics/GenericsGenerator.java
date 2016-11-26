@@ -31,6 +31,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.generics.GenericsContract.contractType;
 import static net.zerobuilder.modules.generics.GenericsContract.implType;
@@ -109,7 +110,9 @@ final class GenericsGenerator {
     ParameterSpec instance = parameterSpec(goal.context().type, "instance");
     MethodSpec.Builder builder = methodBuilder(goal.regularDetails().name + "Builder")
         .addModifiers(goal.regularDetails().access(STATIC))
-        .returns(contractType.nestedClass(stepSpecs.get(0).name));
+        .returns(parameterizedTypeName(
+            contractType.nestedClass(stepSpecs.get(0).name),
+            stepSpecs.get(0).typeVariables));
     builder.addCode(regularDetailsCases(
         constructor -> emptyCodeBlock,
         staticMethod -> emptyCodeBlock,
@@ -121,7 +124,7 @@ final class GenericsGenerator {
             staticMethod -> Collections.<ParameterSpec>emptyList(),
             instanceMethod -> singletonList(instance)
         ).apply(goal.regularDetails()));
-    builder.addTypeVariables(DtoGoalDetails.instanceTypeParameters.apply(goal.regularDetails()));
+    builder.addTypeVariables(stepSpecs.get(0).typeVariables);
     builder.addCode(regularDetailsCases(
         constructor -> statement("return $T.$L", implType, downcase(stepImpls.get(0).name)),
         staticMethod -> statement("return $T.$L", implType, downcase(stepImpls.get(0).name)),
