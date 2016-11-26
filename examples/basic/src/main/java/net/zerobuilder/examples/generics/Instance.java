@@ -19,4 +19,9 @@ final class Instance<S extends String> {
   <K, V extends S> Map.Entry<K, V> entry(K key, V value) {
     return new AbstractMap.SimpleEntry(key, String.valueOf(prefix) + value);
   }
+
+  @Goal(name = "ventry")
+  <V extends S> Map.Entry<V, V> ventry(V value) {
+    return new AbstractMap.SimpleEntry(value, value);
+  }
 }
