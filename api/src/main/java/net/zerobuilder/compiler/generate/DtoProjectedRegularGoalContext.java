@@ -5,7 +5,6 @@ import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
 import java.util.List;
@@ -21,7 +20,7 @@ public final class DtoProjectedRegularGoalContext {
     R constructor(ProjectedConstructorGoalContext constructor);
   }
 
-  public static abstract class ProjectedRegularGoalContext extends RegularGoalContext {
+  public static abstract class ProjectedRegularGoalContext {
 
     private final ProjectedRegularGoalDescription description;
 
@@ -29,23 +28,32 @@ public final class DtoProjectedRegularGoalContext {
       return description;
     }
 
+    public final Boolean mayReuse() {
+      return mayReuse.apply(this);
+    }
+
     ProjectedRegularGoalContext(ProjectedRegularGoalDescription description) {
       this.description = description;
     }
 
-    abstract <R> R acceptRegularProjected(ProjectedRegularGoalContextCases<R> cases);
-
-    @Override
-    public final <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {
-      return cases.projected(this);
+    public final DtoContext.GoalContext context() {
+      return context.apply(this);
     }
+
+    abstract <R> R acceptRegularProjected(ProjectedRegularGoalContextCases<R> cases);
 
     public final CodeBlock invocationParameters() {
       return CodeBlock.of(String.join(", ", goalDetails.apply(this).parameterNames));
     }
   }
 
-  static final Function<ProjectedRegularGoalContext, Boolean> mayReuse =
+  private static final Function<ProjectedRegularGoalContext, DtoContext.GoalContext> context =
+      projectedRegularGoalContextCases(
+          method -> method.context,
+          constructor -> constructor.context);
+
+
+  private static final Function<ProjectedRegularGoalContext, Boolean> mayReuse =
       projectedRegularGoalContextCases(
           staticMethod -> staticMethod.context.lifecycle == REUSE_INSTANCES
               && staticMethod.details.typeParameters.isEmpty(),

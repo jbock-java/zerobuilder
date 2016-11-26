@@ -4,8 +4,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.AbstractGoalContext;
-import net.zerobuilder.compiler.generate.DtoGoalContext.GoalCases;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 
 import static javax.lang.model.element.Modifier.FINAL;
@@ -16,7 +14,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 
 public final class DtoBeanGoal {
 
-  public static final class BeanGoalContext extends AbstractGoalContext {
+  public static final class BeanGoalContext {
 
     public final GoalContext context;
     public final BeanGoalDetails details;
@@ -59,10 +57,6 @@ public final class DtoBeanGoal {
 
     public ClassName type() {
       return details.goalType;
-    }
-
-    <R> R accept(GoalCases<R> cases) {
-      return cases.beanGoal(this);
     }
   }
 

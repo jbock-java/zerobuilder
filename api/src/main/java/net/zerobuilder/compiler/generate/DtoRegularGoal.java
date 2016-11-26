@@ -1,32 +1,26 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoalContext.RegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static java.util.Optional.empty;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.asPredicate;
 import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
-import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class DtoRegularGoal {
 
-  public static abstract class SimpleRegularGoalContext
-      extends RegularGoalContext {
+  public static abstract class SimpleRegularGoalContext {
 
     SimpleRegularGoalContext(SimpleRegularGoalDescription description, int[] ranking) {
       this.description = description;
@@ -43,17 +37,12 @@ public final class DtoRegularGoal {
     private final int[] ranking;
     public abstract TypeName type();
 
+    public final GoalContext context() {
+      return context.apply(this);
+    }
+
     public final boolean isInstance() {
       return isInstance.test(this);
-    }
-
-    public final Optional<FieldSpec> maybeField() {
-      return maybeField.apply(this);
-    }
-
-    @Override
-    public final <R> R acceptRegular(DtoRegularGoalContext.RegularGoalContextCases<R> cases) {
-      return cases.simple(this);
     }
 
     static int[] createUnshuffle(List<SimpleParameter> parameters, List<String> parameterNames) {
@@ -78,34 +67,19 @@ public final class DtoRegularGoal {
     }
   }
 
-  public static final Function<SimpleRegularGoalContext, Boolean> mayReuse =
-      regularGoalContextCases(
-          constructor -> constructor.context.lifecycle == REUSE_INSTANCES
-              && constructor.details.instanceTypeParameters.isEmpty()
-              && constructor.details.instanceTypeParameters.isEmpty(),
-          method -> method.context.lifecycle == REUSE_INSTANCES,
-          staticMethod -> staticMethod.context.lifecycle == REUSE_INSTANCES
-              && staticMethod.details.typeParameters.isEmpty());
-
-  public static final Predicate<SimpleRegularGoalContext> isInstance =
+  private static final Predicate<SimpleRegularGoalContext> isInstance =
       asPredicate(regularGoalContextCases(
           constructor -> false,
           instanceMethod -> true,
           staticMethod -> false));
 
-  public static final Function<SimpleRegularGoalContext, List<TypeName>> stepTypes =
+  private static final Function<SimpleRegularGoalContext, GoalContext> context =
       regularGoalContextCases(
-          constructor -> transform(constructor.description().parameters(), step -> step.type),
-          instanceMethod -> transform(instanceMethod.description().parameters(), step -> step.type),
-          staticMethod -> transform(staticMethod.description().parameters(), step -> step.type));
+          constructor -> constructor.context,
+          instanceMethod -> instanceMethod.context,
+          staticMethod -> staticMethod.context);
 
-  public static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
-      regularGoalContextCases(
-          constructor -> empty(),
-          method -> Optional.of(method.instanceField()),
-          staticMethod -> empty());
-
-  public interface RegularGoalContextCases<R> {
+  interface RegularGoalContextCases<R> {
     R constructor(SimpleConstructorGoalContext goal);
     R instanceMethod(InstanceMethodGoalContext goal);
     R staticMethod(SimpleStaticMethodGoalContext goal);

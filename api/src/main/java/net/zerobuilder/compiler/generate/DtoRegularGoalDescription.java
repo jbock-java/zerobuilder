@@ -3,44 +3,15 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetails;
-import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescription;
-import net.zerobuilder.compiler.generate.DtoProjectedDescription.ProjectedDescriptionCases;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescription;
-import net.zerobuilder.compiler.generate.DtoSimpleDescription.SimpleDescriptionCases;
 
 import java.util.List;
-import java.util.function.Function;
 
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.parameterNames;
 
 public final class DtoRegularGoalDescription {
-
-  interface AbstractRegularGoalDescriptionCases<R> {
-    R acceptSimple(SimpleRegularGoalDescription simple);
-    R acceptProjected(ProjectedRegularGoalDescription projected);
-  }
-
-  static <R> Function<AbstractRegularGoalDescription, R> asFunction(AbstractRegularGoalDescriptionCases<R> cases) {
-    return description -> description.acceptRegularGoalDescription(cases);
-  }
-
-  static <R> Function<AbstractRegularGoalDescription, R> regularGoalDescriptionCases(
-      Function<SimpleRegularGoalDescription, ? extends R> simpleFunction,
-      Function<ProjectedRegularGoalDescription, ? extends R> projectedFunction) {
-    return asFunction(new AbstractRegularGoalDescriptionCases<R>() {
-      @Override
-      public R acceptSimple(SimpleRegularGoalDescription simple) {
-        return simpleFunction.apply(simple);
-      }
-      @Override
-      public R acceptProjected(ProjectedRegularGoalDescription projected) {
-        return projectedFunction.apply(projected);
-      }
-    });
-  }
 
   public static abstract class AbstractRegularGoalDescription {
     private final AbstractRegularDetails details;
@@ -58,15 +29,12 @@ public final class DtoRegularGoalDescription {
       this.details = details;
       this.thrownTypes = thrownTypes;
     }
-
-    public abstract <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases);
   }
 
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
-  public static final class SimpleRegularGoalDescription extends AbstractRegularGoalDescription
-      implements SimpleDescription {
+  public static final class SimpleRegularGoalDescription extends AbstractRegularGoalDescription {
 
     private final List<SimpleParameter> parameters;
 
@@ -87,23 +55,12 @@ public final class DtoRegularGoalDescription {
       checkParameterNames(details.parameterNames, parameters);
       return new SimpleRegularGoalDescription(details, thrownTypes, parameters);
     }
-
-    @Override
-    public <R> R acceptRegularGoalDescription(AbstractRegularGoalDescriptionCases<R> cases) {
-      return cases.acceptSimple(this);
-    }
-
-    @Override
-    public <R> R acceptSimple(SimpleDescriptionCases<R> cases) {
-      return cases.regular(this);
-    }
   }
 
   /**
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
-  public static final class ProjectedRegularGoalDescription
-      implements ProjectedDescription {
+  public static final class ProjectedRegularGoalDescription {
     private final List<ProjectedParameter> parameters;
     private final ProjectableDetails details;
     private final List<TypeName> thrownTypes;
@@ -133,11 +90,6 @@ public final class DtoRegularGoalDescription {
                                                          List<ProjectedParameter> parameters) {
       checkParameterNames(parameterNames.apply(details), parameters);
       return new ProjectedRegularGoalDescription(details, thrownTypes, parameters);
-    }
-
-    @Override
-    public <R> R acceptProjected(ProjectedDescriptionCases<R> cases) {
-      return cases.regular(this);
     }
   }
 

@@ -5,7 +5,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.compiler.generate.DtoRegularGoal;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
@@ -25,7 +24,7 @@ final class GenericsContract {
   static List<TypeSpec> stepInterfaces(SimpleRegularGoalContext goal,
                                        List<List<TypeVariableName>> typeParams,
                                        List<List<TypeVariableName>> methodParams) {
-    List<TypeSpec> builder = new ArrayList<>();
+    List<TypeSpec> builder = new ArrayList<>(goal.description().parameters().size());
     List<SimpleParameter> steps = goal.description().parameters();
     for (int i = 0; i < steps.size(); i++) {
       SimpleParameter parameter = steps.get(i);
@@ -81,7 +80,8 @@ final class GenericsContract {
 
   static List<TypeName> stepTypes(SimpleRegularGoalContext goal) {
     List<TypeName> builder = new ArrayList<>(goal.description().parameters().size() + 1);
-    DtoRegularGoal.stepTypes.apply(goal).forEach(builder::add);
+    goal.description().parameters().stream().map(step -> step.type)
+        .forEach(builder::add);
     builder.add(goal.description().details().type());
     return builder;
   }

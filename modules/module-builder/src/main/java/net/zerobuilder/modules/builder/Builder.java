@@ -13,6 +13,7 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
@@ -22,6 +23,7 @@ import static com.squareup.javapoet.TypeName.VOID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -50,11 +52,17 @@ final class Builder {
     return goal.description().details().type();
   }
 
+  private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
+      regularGoalContextCases(
+          constructor -> empty(),
+          method -> Optional.of(method.instanceField()),
+          staticMethod -> empty());
+
   static final Function<SimpleRegularGoalContext, List<FieldSpec>> fields
       = goal -> {
     List<SimpleParameter> steps = goal.description().parameters();
     return asList(
-        presentInstances(goal.maybeField()),
+        presentInstances(maybeField.apply(goal)),
         goal.context().lifecycle == REUSE_INSTANCES ?
             singletonList(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
             Collections.<FieldSpec>emptyList(),
