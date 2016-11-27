@@ -90,9 +90,9 @@ public final class DtoRegularGoal {
   }
 
   public static <R> Function<SimpleRegularGoalContext, R> regularGoalContextCases(
-      Function<SimpleConstructorGoalContext, R> constructor,
-      Function<InstanceMethodGoalContext, R> instanceMethod,
-      Function<SimpleStaticMethodGoalContext, R> staticMethod) {
+      Function<? super SimpleConstructorGoalContext, ? extends R> constructor,
+      Function<? super InstanceMethodGoalContext, ? extends R> instanceMethod,
+      Function<? super SimpleStaticMethodGoalContext, ? extends R> staticMethod) {
     return asFunction(new RegularGoalContextCases<R>() {
       @Override
       public R constructor(SimpleConstructorGoalContext goal) {

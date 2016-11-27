@@ -26,8 +26,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.NullPolicy.ALLOW;
-import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.goalDetails;
-import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.instanceTypeParameters;
+import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
@@ -40,22 +39,29 @@ import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 
 final class Generator {
 
-  static BuilderMethod updaterMethod(ProjectedRegularGoalContext goal) {
-    AbstractRegularDetails details = goalDetails.apply(goal);
-    ParameterSpec updater = varUpdater(goal);
-    MethodSpec method = methodBuilder(RegularUpdater.methodName(goal))
-        .addExceptions(thrownByProjections(goal))
-        .addParameter(toBuilderParameter(goal))
-        .addTypeVariables(instanceTypeParameters.apply(goal))
-        .returns(updater.type)
-        .addCode(nullCheckingBlock(goal))
-        .addCode(initVarUpdater(goal, updater))
-        .addCode(copyBlock(goal))
-        .addStatement("return $N", updater)
-        .addModifiers(details.access(STATIC))
-        .build();
-    return new BuilderMethod(details.name, method);
-  }
+  private static final Function<ProjectedRegularGoalContext, BuilderMethod> normalGoalMethod =
+      goal -> {
+        AbstractRegularDetails details = goal.details();
+        ParameterSpec updater = varUpdater(goal);
+        MethodSpec method = methodBuilder(RegularUpdater.methodName(goal))
+            .addExceptions(thrownByProjections(goal))
+            .addParameter(toBuilderParameter(goal))
+            .addTypeVariables(goal.instanceTypeParameters())
+            .returns(updater.type)
+            .addCode(nullCheckingBlock(goal))
+            .addCode(initVarUpdater(goal, updater))
+            .addCode(copyBlock(goal))
+            .addStatement("return $N", updater)
+            .addModifiers(details.access(STATIC))
+            .build();
+        return new BuilderMethod(details.name, method);
+      };
+
+  static final Function<ProjectedRegularGoalContext, BuilderMethod> goalMethod =
+      projectedRegularGoalContextCases(
+          normalGoalMethod,
+          normalGoalMethod,
+          normalGoalMethod);
 
   private static CodeBlock copyBlock(ProjectedRegularGoalContext goal) {
     return goal.description().parameters().stream()
@@ -130,7 +136,7 @@ final class Generator {
   }
 
   private static ParameterSpec toBuilderParameter(ProjectedRegularGoalContext goal) {
-    AbstractRegularDetails details = goalDetails.apply(goal);
+    AbstractRegularDetails details = goal.details();
     TypeName goalType = details.type();
     return parameterSpec(goalType, downcase(simpleName(goalType)));
   }

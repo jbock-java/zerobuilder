@@ -4,6 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
@@ -17,6 +18,7 @@ public final class DtoProjectedRegularGoalContext {
 
   interface ProjectedRegularGoalContextCases<R> {
     R staticMethod(ProjectedMethodGoalContext staticMethod);
+    R instanceMethod(ProjectedInstanceMethodGoalContext instanceMethod);
     R constructor(ProjectedConstructorGoalContext constructor);
   }
 
@@ -40,6 +42,14 @@ public final class DtoProjectedRegularGoalContext {
       return context.apply(this);
     }
 
+    public final AbstractRegularDetails details() {
+      return goalDetails.apply(this);
+    }
+
+    public final List<TypeVariableName> instanceTypeParameters() {
+      return instanceTypeParameters.apply(this);
+    }
+
     abstract <R> R acceptRegularProjected(ProjectedRegularGoalContextCases<R> cases);
 
     public final CodeBlock invocationParameters() {
@@ -49,7 +59,8 @@ public final class DtoProjectedRegularGoalContext {
 
   private static final Function<ProjectedRegularGoalContext, DtoContext.GoalContext> context =
       projectedRegularGoalContextCases(
-          method -> method.context,
+          staticMethod -> staticMethod.context,
+          instanceMethod -> instanceMethod.context,
           constructor -> constructor.context);
 
 
@@ -57,6 +68,8 @@ public final class DtoProjectedRegularGoalContext {
       projectedRegularGoalContextCases(
           staticMethod -> staticMethod.context.lifecycle == REUSE_INSTANCES
               && staticMethod.details.typeParameters.isEmpty(),
+          instanceMethod -> instanceMethod.context.lifecycle == REUSE_INSTANCES
+              && instanceMethod.details.typeParameters.isEmpty(),
           constructor -> constructor.context.lifecycle == REUSE_INSTANCES
               && constructor.details.instanceTypeParameters.isEmpty());
 
@@ -66,11 +79,16 @@ public final class DtoProjectedRegularGoalContext {
 
   public static <R> Function<ProjectedRegularGoalContext, R> projectedRegularGoalContextCases(
       Function<? super ProjectedMethodGoalContext, ? extends R> methodFunction,
+      Function<? super ProjectedInstanceMethodGoalContext, ? extends R> instanceMethodFunction,
       Function<? super ProjectedConstructorGoalContext, ? extends R> constructorFunction) {
     return asFunction(new ProjectedRegularGoalContextCases<R>() {
       @Override
       public R staticMethod(ProjectedMethodGoalContext staticMethod) {
         return methodFunction.apply(staticMethod);
+      }
+      @Override
+      public R instanceMethod(ProjectedInstanceMethodGoalContext instanceMethod) {
+        return instanceMethodFunction.apply(instanceMethod);
       }
       @Override
       public R constructor(ProjectedConstructorGoalContext constructor) {
@@ -98,6 +116,25 @@ public final class DtoProjectedRegularGoalContext {
     }
   }
 
+  public static final class ProjectedInstanceMethodGoalContext extends ProjectedRegularGoalContext {
+    public final DtoContext.GoalContext context;
+    public final InstanceMethodGoalDetails details;
+
+    ProjectedInstanceMethodGoalContext(
+        DtoContext.GoalContext context,
+        InstanceMethodGoalDetails details,
+        ProjectedRegularGoalDescription description) {
+      super(description);
+      this.context = context;
+      this.details = details;
+    }
+
+    @Override
+    public <R> R acceptRegularProjected(ProjectedRegularGoalContextCases<R> cases) {
+      return cases.instanceMethod(this);
+    }
+  }
+
   public static final class ProjectedConstructorGoalContext
       extends ProjectedRegularGoalContext {
 
@@ -118,14 +155,16 @@ public final class DtoProjectedRegularGoalContext {
     }
   }
 
-  public static final Function<ProjectedRegularGoalContext, AbstractRegularDetails> goalDetails =
+  private static final Function<ProjectedRegularGoalContext, AbstractRegularDetails> goalDetails =
       projectedRegularGoalContextCases(
           staticMethod -> staticMethod.details,
+          instanceMethod -> instanceMethod.details,
           constructor -> constructor.details);
 
-  public static final Function<ProjectedRegularGoalContext, List<TypeVariableName>> instanceTypeParameters =
+  private static final Function<ProjectedRegularGoalContext, List<TypeVariableName>> instanceTypeParameters =
       projectedRegularGoalContextCases(
           staticMethod -> emptyList(),
+          instanceMethod -> instanceMethod.details.instanceTypeParameters,
           constructor -> constructor.details.instanceTypeParameters);
 
   private DtoProjectedRegularGoalContext() {

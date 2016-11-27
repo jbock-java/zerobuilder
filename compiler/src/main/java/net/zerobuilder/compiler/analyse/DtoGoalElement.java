@@ -19,7 +19,6 @@ import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
@@ -121,12 +120,6 @@ final class DtoGoalElement {
               regular -> regular.executableElement,
               projected -> projected.executableElement),
           bean -> bean.beanType);
-
-  private static final Function<AbstractGoalElement, Boolean> fnIsRegular =
-      goalElementCases(regular -> true, bean -> false);
-
-  static final Predicate<AbstractGoalElement> isRegular =
-      el -> fnIsRegular.apply(el);
 
   static final class RegularGoalElement implements AbstractRegularGoalElement {
     final AbstractRegularDetails details;
