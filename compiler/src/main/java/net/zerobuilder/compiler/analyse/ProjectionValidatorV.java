@@ -12,7 +12,6 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegu
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -25,6 +24,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toList;
+import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -54,7 +54,9 @@ final class ProjectionValidatorV {
 
   static final Function<RegularProjectableGoalElement, ProjectedRegularGoalDescription> validateUpdater =
       goal -> {
-        TypeElement type = asTypeElement(goal.executableElement.getEnclosingElement().asType());
+        TypeElement type = asTypeElement(goal.executableElement.getKind() == CONSTRUCTOR ?
+            goal.executableElement.getEnclosingElement().asType() :
+            goal.executableElement.getReturnType());
         validateType(goal, type);
         Map<String, ExecutableElement> methods = projectionCandidates(type);
         Map<String, VariableElement> fields = fields(type);
@@ -82,7 +84,7 @@ final class ProjectionValidatorV {
 
   private static void validateType(RegularProjectableGoalElement goal,
                                    TypeElement type) {
-    if (goal.executableElement.getKind() == ElementKind.CONSTRUCTOR
+    if (goal.executableElement.getKind() == CONSTRUCTOR
         && type.getModifiers().contains(ABSTRACT)) {
       throw new ValidationException(ABSTRACT_CONSTRUCTOR, goal.executableElement);
     }

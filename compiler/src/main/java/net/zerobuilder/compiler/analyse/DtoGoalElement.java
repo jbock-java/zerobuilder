@@ -22,10 +22,8 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
-import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.AccessLevel.UNSPECIFIED;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.INSTANCE_UDPATE;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDATER;
 import static net.zerobuilder.compiler.analyse.Utilities.downcase;
@@ -271,16 +269,16 @@ final class DtoGoalElement {
   private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType, String name,
                                                               String methodName,
                                                               List<String> parameterNames, ModuledOption goalOption) {
-    if (element.getKind() == METHOD
-        && !element.getModifiers().contains(STATIC)) {
-      throw new ValidationException(INSTANCE_UDPATE, element);
+    if (element.getKind() == CONSTRUCTOR) {
+      return new RegularProjectableGoalElement(element, ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
+          name, parameterNames, goalOption.access, instanceTypevars(element)));
     }
     AbstractRegularDetails details =
-        element.getKind() == CONSTRUCTOR ?
-            ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
-                name, parameterNames, goalOption.access, instanceTypevars(element)) :
+        element.getModifiers().contains(STATIC) ?
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                methodTypevars(element));
+                methodTypevars(element)) :
+            InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
+                methodTypevars(element), instanceTypevars(element));
     return new RegularProjectableGoalElement(element, details);
   }
 

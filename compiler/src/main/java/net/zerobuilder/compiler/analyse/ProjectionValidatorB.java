@@ -35,7 +35,6 @@ import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_ABSTRACT_CLASS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIND_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_IGNORE_AND_STEP;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_ACCESSOR_PAIRS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_DEFAULT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_PRIVATE_CLASS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
@@ -90,9 +89,6 @@ final class ProjectionValidatorB {
     List<TmpAccessorPair> builder = getters.stream()
         .map(getter -> tmpAccessorPair(settersByName, goal, getter))
         .collect(Collectors.toList());
-    if (builder.isEmpty()) {
-      throw new ValidationException(BEAN_NO_ACCESSOR_PAIRS, goal.beanType);
-    }
     return createResult(goal, builder);
   };
 

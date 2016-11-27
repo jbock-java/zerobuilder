@@ -16,6 +16,7 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
+import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedInstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
@@ -59,7 +60,7 @@ final class GoalContextFactory {
     return description.details().accept(new RegularGoalDetailsCases<ProjectedRegularGoalContext, Void>() {
       @Override
       public ProjectedRegularGoalContext method(InstanceMethodGoalDetails details, Void _null) {
-        throw new UnsupportedOperationException("todo");
+        return new ProjectedInstanceMethodGoalContext(context, details, description);
       }
       @Override
       public ProjectedRegularGoalContext staticMethod(StaticMethodGoalDetails method, Void _null) {

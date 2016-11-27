@@ -19,6 +19,7 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -35,10 +36,11 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.updater.Generator.goalMethod;
+import static net.zerobuilder.modules.updater.InstanceWorld.factorySpec;
 
 public final class RegularUpdater implements ProjectedModule {
 
-  private static final String moduleName = "updater";
+  static final String moduleName = "updater";
 
   private final Function<ProjectedRegularGoalContext, CodeBlock> regularInvoke =
       projectedRegularGoalContextCases(
@@ -80,11 +82,12 @@ public final class RegularUpdater implements ProjectedModule {
     if (goal.mayReuse()) {
       builder.addStatement("this._currently_in_use = false");
     }
-    return builder
-        .addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.context.type,
-            method, goal.invocationParameters())
-        .add(free(goal.description().parameters()))
-        .addStatement("return $N", varGoal)
+    builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.context.type,
+        method, goal.invocationParameters());
+    if (goal.mayReuse()) {
+      builder.add(free(goal.description().parameters()));
+    }
+    return builder.addStatement("return $N", varGoal)
         .build();
   }
 
@@ -97,9 +100,8 @@ public final class RegularUpdater implements ProjectedModule {
       builder.addStatement("this._currently_in_use = false");
     }
     return builder
-        .addStatement("$T $N = _instance.$N($L)", varGoal.type, varGoal,
+        .addStatement("$T $N = _factory.$N($L)", varGoal.type, varGoal,
             method, goal.invocationParameters())
-        .add(free(goal.description().parameters()))
         .addStatement("return $N", varGoal)
         .build();
   }
@@ -112,10 +114,11 @@ public final class RegularUpdater implements ProjectedModule {
     if (goal.mayReuse()) {
       builder.addStatement("this._currently_in_use = false");
     }
-    return builder
-        .addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, goal.invocationParameters())
-        .add(free(goal.description().parameters()))
-        .addStatement("return $N", varGoal)
+    builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, goal.invocationParameters());
+    if (goal.mayReuse()) {
+      builder.add(free(goal.description().parameters()));
+    }
+    return builder.addStatement("return $N", varGoal)
         .build();
   }
 
@@ -137,11 +140,17 @@ public final class RegularUpdater implements ProjectedModule {
         .build();
   }
 
+  final Function<ProjectedRegularGoalContext, List<TypeSpec>> types =
+      projectedRegularGoalContextCases(
+          staticMethod -> singletonList(defineUpdater(staticMethod)),
+          instanceMethod -> asList(defineUpdater(instanceMethod), factorySpec(instanceMethod)),
+          constructor -> singletonList(defineUpdater(constructor)));
+
   @Override
   public ModuleOutput process(ProjectedRegularGoalContext goal) {
     return new ModuleOutput(
         goalMethod.apply(goal),
-        singletonList(defineUpdater(goal)),
+        types.apply(goal),
         singletonList(cacheField(goal)));
   }
 }

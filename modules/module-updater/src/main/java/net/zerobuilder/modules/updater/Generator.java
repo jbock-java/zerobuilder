@@ -60,16 +60,16 @@ final class Generator {
   static final Function<ProjectedRegularGoalContext, BuilderMethod> goalMethod =
       projectedRegularGoalContextCases(
           normalGoalMethod,
-          normalGoalMethod,
+          InstanceWorld::instanceGoalMethod,
           normalGoalMethod);
 
-  private static CodeBlock copyBlock(ProjectedRegularGoalContext goal) {
+  static CodeBlock copyBlock(ProjectedRegularGoalContext goal) {
     return goal.description().parameters().stream()
         .map(copyField(goal))
         .collect(ZeroUtil.joinCodeBlocks);
   }
 
-  private static CodeBlock nullCheckingBlock(ProjectedRegularGoalContext goal) {
+  static CodeBlock nullCheckingBlock(ProjectedRegularGoalContext goal) {
     ProjectionInfoCases<CodeBlock, ProjectedParameter> nullChecks = nullChecks(goal);
     CodeBlock.Builder builder = CodeBlock.builder();
     for (ProjectedParameter step : goal.description().parameters()) {
@@ -135,13 +135,13 @@ final class Generator {
     };
   }
 
-  private static ParameterSpec toBuilderParameter(ProjectedRegularGoalContext goal) {
+  static ParameterSpec toBuilderParameter(ProjectedRegularGoalContext goal) {
     AbstractRegularDetails details = goal.details();
     TypeName goalType = details.type();
     return parameterSpec(goalType, downcase(simpleName(goalType)));
   }
 
-  private static CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {
+  static CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {
     if (goal.mayReuse()) {
       GoalContext context = goal.context();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
@@ -160,7 +160,7 @@ final class Generator {
     }
   }
 
-  private static ParameterSpec varUpdater(ProjectedRegularGoalContext goal) {
+  static ParameterSpec varUpdater(ProjectedRegularGoalContext goal) {
     TypeName updaterType = implType(goal);
     return parameterSpec(updaterType, "updater");
   }

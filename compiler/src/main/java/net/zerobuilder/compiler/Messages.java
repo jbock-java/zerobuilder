@@ -16,7 +16,7 @@ public final class Messages {
         = " If this is not a POJO, try putting the @Goal annotation on a constructor instead.";
 
     public static final String PRIVATE_METHOD =
-        "The goal may not be private.";
+        "The goal method may not be private.";
 
     public static final String ABSTRACT_CONSTRUCTOR =
         "An abstract class may not have constructor goals." +
@@ -28,10 +28,10 @@ public final class Messages {
     public static final String NESTING_KIND =
         "The @Builders annotation can only be used on top level and non-private static inner classes.";
 
-    public static final String GOAL_NOT_IN_BUILD =
+    static final String GOAL_NOT_IN_BUILD =
         "The @Goal annotation may not appear outside a class that carries the @Builders annotation.";
 
-    public static final String GOAL_WITHOUT_BUILDERS =
+    static final String GOAL_WITHOUT_BUILDERS =
         "A class that carries the @Goal annotation must also carry the @Builders annotation." + POJO_HINT;
 
     public static final String STEP_OUT_OF_BOUNDS =
@@ -40,27 +40,24 @@ public final class Messages {
     public static final String STEP_DUPLICATE =
         "Step position is specified twice.";
 
-    public static final String INSTANCE_UDPATE =
-        "Instance methods can not have an updater.";
-
     public static final String DUPLICATE_GOAL_NAME =
         "There is another goal with this name. " +
             "Goal name conflicts can be resolved with the @Goal(name = ...) attribute.";
 
     public static final String BEAN_NO_DEFAULT_CONSTRUCTOR =
-        "The default constructor may not be private or absent." + POJO_HINT;
+        "A non-private default constructor must exist." + POJO_HINT;
 
     public static final String BEAN_PRIVATE_CLASS =
-        "The annotated class may not be private." + POJO_HINT;
+        "This class may not be private." + POJO_HINT;
 
     public static final String BEAN_ABSTRACT_CLASS =
-        "The annotated class may not be abstract." + POJO_HINT;
+        "This class may not be abstract." + POJO_HINT;
 
     public static final String BEAN_COULD_NOT_FIND_SETTER =
-        "Could not find setter." + POJO_HINT;
+        "Could not find a setter." + POJO_HINT;
 
     public static final String NO_PROJECTION =
-        "Could not find a projection (getter or field).";
+        "Problem while generating an updater: Missing projection.";
 
     public static final String BEAN_IGNORE_AND_STEP =
         "@Ignore and @Step don't make sense together." + POJO_HINT;
@@ -71,11 +68,8 @@ public final class Messages {
     public static final String IGNORE_ON_SETTER =
         "The @Ignore annotation goes on getters, not setters.";
 
-    public static final String BEAN_NO_ACCESSOR_PAIRS =
-        "No accessor pairs found." + POJO_HINT;
-
     public static final String BEAN_SUBGOALS =
-        "Beans may not have subgoals." + POJO_HINT;
+        "Bean goals may not have subgoals." + POJO_HINT;
 
     public static final String TYPE_PARAMS_BEAN =
         "Type parameters are not allowed in bean goals.";

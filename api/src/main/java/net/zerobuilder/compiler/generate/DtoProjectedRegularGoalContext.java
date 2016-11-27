@@ -46,6 +46,10 @@ public final class DtoProjectedRegularGoalContext {
       return goalDetails.apply(this);
     }
 
+    public final boolean isInstance() {
+      return isInstance.apply(this);
+    }
+
     public final List<TypeVariableName> instanceTypeParameters() {
       return instanceTypeParameters.apply(this);
     }
@@ -68,10 +72,15 @@ public final class DtoProjectedRegularGoalContext {
       projectedRegularGoalContextCases(
           staticMethod -> staticMethod.context.lifecycle == REUSE_INSTANCES
               && staticMethod.details.typeParameters.isEmpty(),
-          instanceMethod -> instanceMethod.context.lifecycle == REUSE_INSTANCES
-              && instanceMethod.details.typeParameters.isEmpty(),
+          instanceMethod -> false,
           constructor -> constructor.context.lifecycle == REUSE_INSTANCES
               && constructor.details.instanceTypeParameters.isEmpty());
+
+  private static final Function<ProjectedRegularGoalContext, Boolean> isInstance =
+      projectedRegularGoalContextCases(
+          staticMethod -> false,
+          instanceMethod -> true,
+          constructor -> false);
 
   static <R> Function<ProjectedRegularGoalContext, R> asFunction(ProjectedRegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegularProjected(cases);

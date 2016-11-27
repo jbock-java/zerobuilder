@@ -30,6 +30,9 @@ final class Updater {
     if (goal.mayReuse()) {
       builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
     }
+    if (goal.isInstance()) {
+      builder.add(fieldSpec(goal.context().type, "_factory", PRIVATE));
+    }
     for (ProjectedParameter step : goal.description().parameters()) {
       String name = step.name;
       TypeName type = step.type;
