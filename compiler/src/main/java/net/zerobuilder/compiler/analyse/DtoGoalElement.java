@@ -11,11 +11,9 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
@@ -153,11 +151,11 @@ final class DtoGoalElement {
   }
 
   static final class RegularProjectableGoalElement implements AbstractRegularGoalElement {
-    final ProjectableDetails details;
+    final AbstractRegularDetails details;
     final ExecutableElement executableElement;
     final Goal goalAnnotation;
 
-    private RegularProjectableGoalElement(ExecutableElement element, ProjectableDetails details) {
+    private RegularProjectableGoalElement(ExecutableElement element, AbstractRegularDetails details) {
       this.goalAnnotation = element.getAnnotation(Goal.class);
       this.details = details;
       this.executableElement = element;
@@ -284,7 +282,7 @@ final class DtoGoalElement {
         && !element.getModifiers().contains(STATIC)) {
       throw new ValidationException(INSTANCE_UDPATE, element);
     }
-    ProjectableDetails details =
+    AbstractRegularDetails details =
         element.getKind() == CONSTRUCTOR ?
             ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
                 name, parameterNames, goalOption.access, instanceTypevars(element)) :

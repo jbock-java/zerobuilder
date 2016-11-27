@@ -11,7 +11,6 @@ import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetailsCases;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.RegularGoalDetailsCases;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
@@ -57,30 +56,29 @@ final class GoalContextFactory {
   private static ProjectedRegularGoalContext prepareProjectedRegular(
       DtoContext.GoalContext context,
       ProjectedRegularGoalDescription description) {
-    return description.details().accept(new ProjectableDetailsCases<ProjectedRegularGoalContext>() {
+    return description.details().accept(new RegularGoalDetailsCases<ProjectedRegularGoalContext, Void>() {
       @Override
-      public ProjectedRegularGoalContext constructor(ConstructorGoalDetails constructor) {
-        return new ProjectedConstructorGoalContext(context, constructor, description);
+      public ProjectedRegularGoalContext method(InstanceMethodGoalDetails details, Void _null) {
+        throw new UnsupportedOperationException("todo");
       }
       @Override
-      public ProjectedRegularGoalContext method(StaticMethodGoalDetails method) {
+      public ProjectedRegularGoalContext staticMethod(StaticMethodGoalDetails method, Void _null) {
         return new ProjectedMethodGoalContext(context, method, description);
       }
-    });
+      @Override
+      public ProjectedRegularGoalContext constructor(ConstructorGoalDetails constructor, Void _null) {
+        return new ProjectedConstructorGoalContext(context, constructor, description);
+      }
+    }, null);
   }
 
   static Function<DescriptionInput, AbstractGoalInput> prepare(DtoContext.GoalContext context) {
     return descriptionInputCases(
         (module, description) -> new RegularSimpleGoalInput(
-            module,
-            GoalContextFactory.prepareRegular(
-                context, description)),
+            module, prepareRegular(context, description)),
         (module, description) -> new ProjectedGoalInput(
-            module,
-            prepareProjectedRegular(
-                context, description)),
+            module, prepareProjectedRegular(context, description)),
         (module, bean) -> new BeanGoalInput(
-            module, GoalContextFactory.prepareBean(
-            context, bean)));
+            module, prepareBean(context, bean)));
   }
 }

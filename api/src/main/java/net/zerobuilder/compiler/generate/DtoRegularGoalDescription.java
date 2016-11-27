@@ -2,14 +2,11 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.ProjectableDetails;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import java.util.List;
-
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.parameterNames;
 
 public final class DtoRegularGoalDescription {
 
@@ -62,14 +59,14 @@ public final class DtoRegularGoalDescription {
    */
   public static final class ProjectedRegularGoalDescription {
     private final List<ProjectedParameter> parameters;
-    private final ProjectableDetails details;
+    private final AbstractRegularDetails details;
     private final List<TypeName> thrownTypes;
 
     public List<ProjectedParameter> parameters() {
       return parameters;
     }
 
-    public ProjectableDetails details() {
+    public AbstractRegularDetails details() {
       return details;
     }
 
@@ -77,7 +74,7 @@ public final class DtoRegularGoalDescription {
       return thrownTypes;
     }
 
-    private ProjectedRegularGoalDescription(ProjectableDetails details,
+    private ProjectedRegularGoalDescription(AbstractRegularDetails details,
                                             List<TypeName> thrownTypes,
                                             List<ProjectedParameter> parameters) {
       this.details = details;
@@ -85,10 +82,10 @@ public final class DtoRegularGoalDescription {
       this.parameters = parameters;
     }
 
-    public static ProjectedRegularGoalDescription create(ProjectableDetails details,
+    public static ProjectedRegularGoalDescription create(AbstractRegularDetails details,
                                                          List<TypeName> thrownTypes,
                                                          List<ProjectedParameter> parameters) {
-      checkParameterNames(parameterNames.apply(details), parameters);
+      checkParameterNames(details.parameterNames, parameters);
       return new ProjectedRegularGoalDescription(details, thrownTypes, parameters);
     }
   }

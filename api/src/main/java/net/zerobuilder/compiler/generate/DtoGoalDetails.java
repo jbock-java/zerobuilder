@@ -67,7 +67,6 @@ public final class DtoGoalDetails {
     });
   }
 
-
   public static <R> Function<AbstractRegularDetails, R> regularDetailsCases(
       Function<ConstructorGoalDetails, R> constructorFunction,
       Function<StaticMethodGoalDetails, R> staticFunction,
@@ -79,39 +78,6 @@ public final class DtoGoalDetails {
             (x, _null) -> instanceFunction.apply(x));
     return details -> biFunction.apply(details, null);
   }
-
-  public interface ProjectableDetails extends AbstractGoalDetails {
-    <R> R accept(ProjectableDetailsCases<R> cases);
-  }
-
-  interface ProjectableDetailsCases<R> {
-    R constructor(ConstructorGoalDetails constructor);
-    R method(StaticMethodGoalDetails method);
-  }
-
-  static <R> Function<ProjectableDetails, R> asFunction(ProjectableDetailsCases<R> cases) {
-    return details -> details.accept(cases);
-  }
-
-  static <R> Function<ProjectableDetails, R> projectableDetailsCases(
-      Function<ConstructorGoalDetails, R> constructorFunction,
-      Function<StaticMethodGoalDetails, R> methodFunction) {
-    return asFunction(new ProjectableDetailsCases<R>() {
-      @Override
-      public R constructor(ConstructorGoalDetails constructor) {
-        return constructorFunction.apply(constructor);
-      }
-      @Override
-      public R method(StaticMethodGoalDetails method) {
-        return methodFunction.apply(method);
-      }
-    });
-  }
-
-  static final Function<ProjectableDetails, List<String>> parameterNames =
-      projectableDetailsCases(
-          constructor -> constructor.parameterNames,
-          method -> method.parameterNames);
 
   public static abstract class AbstractRegularDetails implements AbstractGoalDetails {
 
@@ -154,7 +120,7 @@ public final class DtoGoalDetails {
   }
 
   public static final class ConstructorGoalDetails extends AbstractRegularDetails
-      implements ProjectableDetails, AbstractGoalDetails {
+      implements AbstractGoalDetails {
 
     public final TypeName goalType;
     public final List<TypeVariableName> instanceTypeParameters;
@@ -179,11 +145,6 @@ public final class DtoGoalDetails {
     @Override
     <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p) {
       return cases.constructor(this, p);
-    }
-
-    @Override
-    public <R> R accept(ProjectableDetailsCases<R> cases) {
-      return cases.constructor(this);
     }
   }
 
@@ -231,7 +192,7 @@ public final class DtoGoalDetails {
    * Describes static method goal.
    */
   public static final class StaticMethodGoalDetails extends AbstractRegularDetails
-      implements ProjectableDetails, AbstractGoalDetails {
+      implements AbstractGoalDetails {
 
     public final List<TypeVariableName> typeParameters;
     public final String methodName;
@@ -265,11 +226,6 @@ public final class DtoGoalDetails {
     @Override
     <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p) {
       return cases.staticMethod(this, p);
-    }
-
-    @Override
-    public <R> R accept(ProjectableDetailsCases<R> cases) {
-      return cases.method(this);
     }
   }
 
