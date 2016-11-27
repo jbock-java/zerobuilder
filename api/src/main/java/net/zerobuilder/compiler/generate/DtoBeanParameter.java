@@ -5,7 +5,6 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoProjectedParameter.AbstractProjectedParameter;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,8 +55,7 @@ public final class DtoBeanParameter {
           loneGetter -> Collections.emptyList());
 
 
-  public static abstract class AbstractBeanParameter extends AbstractParameter
-      implements AbstractProjectedParameter {
+  public static abstract class AbstractBeanParameter extends AbstractParameter {
 
     /**
      * Name of the getter method (could start with {@code "is"})
@@ -83,21 +81,11 @@ public final class DtoBeanParameter {
       return DtoBeanParameter.setterThrownTypes.apply(this);
     }
 
-    @Override
     public final String name() {
       return name;
     }
 
     public abstract <R> R accept(BeanParameterCases<R> cases);
-    @Override
-    public final <R> R acceptParameter(DtoParameter.ParameterCases<R> cases) {
-      return cases.beanParameter(this);
-    }
-
-    @Override
-    public final <R> R acceptProjected(DtoProjectedParameter.ProjectedParameterCases<R> cases) {
-      return cases.projectedBean(this);
-    }
   }
 
   public static final class AccessorPair extends AbstractBeanParameter {

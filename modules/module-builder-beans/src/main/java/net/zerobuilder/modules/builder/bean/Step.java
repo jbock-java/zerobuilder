@@ -5,7 +5,6 @@ import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 
 import java.util.function.Function;
 
-import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 
@@ -16,7 +15,7 @@ final class Step {
         if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
           return emptyCodeBlock;
         }
-        String name = parameterName.apply(parameter);
+        String name = parameter.name();
         return nullCheck(name, name);
       };
 

@@ -16,7 +16,6 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -34,7 +33,7 @@ final class Step {
 
   private static MethodSpec stepMethod(int i, SimpleRegularGoalContext goal) {
     SimpleParameter parameter = goal.description().parameters().get(i);
-    String name = parameterName.apply(parameter);
+    String name = parameter.name;
     TypeName type = parameter.type;
     List<TypeName> thrownTypes = i == goal.description().parameters().size() - 1 ?
         goal.description().thrownTypes() :
@@ -52,7 +51,7 @@ final class Step {
     if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
       return emptyCodeBlock;
     }
-    String name = parameterName.apply(parameter);
+    String name = parameter.name;
     return nullCheck(name, name);
   };
 

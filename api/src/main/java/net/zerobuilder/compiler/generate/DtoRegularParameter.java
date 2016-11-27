@@ -3,43 +3,9 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
-import net.zerobuilder.compiler.generate.DtoParameter.ParameterCases;
-import net.zerobuilder.compiler.generate.DtoProjectedParameter.AbstractProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
-import java.util.Optional;
-import java.util.function.Function;
-
 public final class DtoRegularParameter {
-
-  interface RegularParameterCases<R> {
-    R simpleParameter(SimpleParameter parameter);
-    R projectedParameter(ProjectedParameter parameter);
-  }
-
-  static <R> Function<AbstractRegularParameter, R> asFunction(RegularParameterCases<R> cases) {
-    return parameter -> parameter.acceptRegularParameter(cases);
-  }
-
-  static <R> Function<AbstractRegularParameter, R> regularParameterCases(
-      Function<SimpleParameter, R> simpleParameter,
-      Function<ProjectedParameter, R> projectedParameter) {
-    return asFunction(new RegularParameterCases<R>() {
-      @Override
-      public R simpleParameter(SimpleParameter parameter) {
-        return simpleParameter.apply(parameter);
-      }
-      @Override
-      public R projectedParameter(ProjectedParameter parameter) {
-        return projectedParameter.apply(parameter);
-      }
-    });
-  }
-
-  private static final Function<AbstractRegularParameter, Optional<ProjectionInfo>> projectionInfo =
-      regularParameterCases(
-          simpleParameter -> Optional.empty(),
-          projectedParameter -> Optional.of(projectedParameter.projectionInfo));
 
   /**
    * Represents one method (or constructor) parameter.
@@ -56,20 +22,12 @@ public final class DtoRegularParameter {
       this.name = name;
     }
 
-    @Override
     public final String name() {
       return name;
     }
-
-    @Override
-    public final <R> R acceptParameter(ParameterCases<R> cases) {
-      return cases.regularParameter(this);
-    }
-
-    public abstract <R> R acceptRegularParameter(RegularParameterCases<R> cases);
   }
 
-  public static final class ProjectedParameter extends AbstractRegularParameter implements AbstractProjectedParameter {
+  public static final class ProjectedParameter extends AbstractRegularParameter {
 
     public final ProjectionInfo projectionInfo;
 
@@ -77,26 +35,11 @@ public final class DtoRegularParameter {
       super(name, type, nullPolicy);
       this.projectionInfo = projectionInfo;
     }
-
-    @Override
-    public <R> R acceptRegularParameter(RegularParameterCases<R> cases) {
-      return cases.projectedParameter(this);
-    }
-
-    @Override
-    public <R> R acceptProjected(DtoProjectedParameter.ProjectedParameterCases<R> cases) {
-      return cases.projectedRegular(this);
-    }
   }
 
   public static final class SimpleParameter extends AbstractRegularParameter {
     private SimpleParameter(String name, TypeName type, NullPolicy nullPolicy) {
       super(name, type, nullPolicy);
-    }
-
-    @Override
-    public <R> R acceptRegularParameter(RegularParameterCases<R> cases) {
-      return cases.simpleParameter(this);
     }
   }
 

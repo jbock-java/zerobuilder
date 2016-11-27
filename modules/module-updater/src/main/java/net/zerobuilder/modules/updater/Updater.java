@@ -18,7 +18,6 @@ import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoParameter.parameterName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -67,7 +66,7 @@ final class Updater {
     if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
       return emptyCodeBlock;
     }
-    String name = parameterName.apply(parameter);
+    String name = parameter.name;
     return ZeroUtil.nullCheck(name, name);
   }
 
