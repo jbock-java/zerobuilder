@@ -17,6 +17,7 @@ import java.util.stream.Collector;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
+import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionInputCases;
 import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
@@ -35,10 +36,17 @@ public final class Generator {
     List<DescriptionInput> goals = generatorInput.goals;
     DtoContext.GoalContext context = generatorInput.context;
     return goals.stream()
+        .filter(goal -> hasParameters.apply(goal))
         .map(prepare(context))
         .map(process)
         .collect(collectOutput(context));
   }
+
+  private static final Function<DescriptionInput, Boolean> hasParameters =
+      descriptionInputCases(
+          (m, regular) -> !regular.parameters().isEmpty(),
+          (m, projected) -> !projected.parameters().isEmpty(),
+          (m, bean) -> !bean.parameters().isEmpty());
 
   private static Collector<ModuleOutput, List<ModuleOutput>, GeneratorOutput> collectOutput(GoalContext context) {
     return listCollector(tmpOutputs ->

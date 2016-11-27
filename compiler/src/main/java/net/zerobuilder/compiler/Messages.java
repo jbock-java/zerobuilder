@@ -25,9 +25,6 @@ public final class Messages {
     public static final String PRIVATE_TYPE =
         "The @Builders annotated class may not be private.";
 
-    public static final String NOT_ENOUGH_PARAMETERS =
-        "The goal must have at least one parameter.";
-
     public static final String NESTING_KIND =
         "The @Builders annotation can only be used on top level and non-private static inner classes.";
 

@@ -40,7 +40,6 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SUBGOALS;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalElementCases;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.regularGoalElementCases;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkAccessLevel;
-import static net.zerobuilder.compiler.analyse.MoreValidations.checkMinParameters;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkNameConflict;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateBuilder;
@@ -75,7 +74,6 @@ public final class Analyser {
     List<? extends AbstractGoalElement> goals = goals(tel);
     checkNameConflict(goals);
     checkAccessLevel(goals);
-    checkMinParameters(goals);
     List<DescriptionInput> descriptions = transform(goals, description);
     return GeneratorInput.create(context, descriptions);
   }
