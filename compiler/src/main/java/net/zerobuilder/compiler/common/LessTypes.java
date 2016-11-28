@@ -9,6 +9,8 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
+import static net.zerobuilder.compiler.common.LessElements.asType;
+
 /**
  * Guava-free versions of some helpers from auto-common.
  */
@@ -18,7 +20,7 @@ public final class LessTypes {
       new SimpleTypeVisitor6<Element, Void>() {
         @Override
         protected Element defaultAction(TypeMirror e, Void p) {
-          throw new IllegalArgumentException(e + "cannot be converted to an Element");
+          return null;
         }
 
         @Override
@@ -38,12 +40,26 @@ public final class LessTypes {
       };
 
   public static TypeElement asTypeElement(TypeMirror mirror) {
-    return LessElements.asType(asElement(mirror));
+    Element element = asElement(mirror);
+    if (element == null) {
+      throw new IllegalArgumentException("not an element: " + mirror);
+    }
+    return asType(element);
   }
 
   private static Element asElement(TypeMirror typeMirror) {
     return typeMirror.accept(AS_ELEMENT_VISITOR, null);
   }
+
+  public static boolean isDeclaredType(TypeMirror mirror) {
+    Element returnType = asElement(mirror);
+    if (returnType == null) {
+      return false;
+    }
+    return returnType.getKind().isClass() ||
+        returnType.getKind().isInterface();
+  }
+
 
   private LessTypes() {
     throw new UnsupportedOperationException("no instances");

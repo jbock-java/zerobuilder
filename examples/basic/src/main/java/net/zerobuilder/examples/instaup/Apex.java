@@ -1,10 +1,10 @@
 package net.zerobuilder.examples.instaup;
 
-final class Apex {
+final class Apex<S extends String> {
   private final String string;
-  final String appendix;
+  final S appendix;
 
-  Apex(String string, String appendix) {
+  Apex(String string, S appendix) {
     this.string = string;
     this.appendix = appendix;
   }

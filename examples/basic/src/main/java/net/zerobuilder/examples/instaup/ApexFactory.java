@@ -12,7 +12,7 @@ final class ApexFactory {
   }
 
   @Goal(builder = false, updater = true)
-  Apex apex(String appendix) {
+  <S extends String> Apex<S> apex(S appendix) {
     return new Apex(string, appendix);
   }
 }

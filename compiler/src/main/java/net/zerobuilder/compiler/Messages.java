@@ -56,7 +56,7 @@ public final class Messages {
     public static final String BEAN_COULD_NOT_FIND_SETTER =
         "Could not find a setter." + POJO_HINT;
 
-    public static final String NO_PROJECTION =
+    public static final String MISSING_PROJECTION =
         "Problem while generating an updater: Missing projection.";
 
     public static final String BEAN_IGNORE_AND_STEP =

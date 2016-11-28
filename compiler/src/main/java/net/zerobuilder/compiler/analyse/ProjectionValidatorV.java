@@ -16,6 +16,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.ABSTRACT;
@@ -30,7 +32,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.ABSTRACT_CONSTRUCTOR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.NO_PROJECTION;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.MISSING_PROJECTION;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.executableElement;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalAnnotation;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter.toValidParameter;
@@ -41,6 +43,7 @@ import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
+import static net.zerobuilder.compiler.common.LessTypes.isDeclaredType;
 
 final class ProjectionValidatorV {
 
@@ -54,9 +57,13 @@ final class ProjectionValidatorV {
 
   static final Function<RegularProjectableGoalElement, ProjectedRegularGoalDescription> validateUpdater =
       goal -> {
-        TypeElement type = asTypeElement(goal.executableElement.getKind() == CONSTRUCTOR ?
+        TypeMirror mirror = goal.executableElement.getKind() == CONSTRUCTOR ?
             goal.executableElement.getEnclosingElement().asType() :
-            goal.executableElement.getReturnType());
+            goal.executableElement.getReturnType();
+        if (!isDeclaredType(mirror)) {
+          return createGoalDescription(goal, emptyList());
+        }
+        TypeElement type = asTypeElement(mirror);
         validateType(goal, type);
         Map<String, ExecutableElement> methods = projectionCandidates(type);
         Map<String, VariableElement> fields = fields(type);
@@ -78,7 +85,7 @@ final class ProjectionValidatorV {
     List<String> possibleNames = Arrays.asList("get" + upcase(name), "is" + upcase(name), name);
     return findKey(methods, possibleNames)
         .map(methodName -> ProjectionMethod.create(methodName, thrownTypes(methods.get(methodName))))
-        .orElseThrow(() -> new ValidationException(NO_PROJECTION, parameter));
+        .orElseThrow(() -> new ValidationException(MISSING_PROJECTION, parameter));
   }
 
 

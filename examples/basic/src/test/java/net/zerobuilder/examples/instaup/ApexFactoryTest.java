@@ -11,8 +11,8 @@ public class ApexFactoryTest {
   @Test
   public void apex() {
     ApexFactory factory = new ApexFactory("a");
-    Apex apex = factory.apex("b");
-    Apex updatedApex = apexUpdater(factory)
+    Apex<String> apex = factory.apex("b");
+    Apex<String> updatedApex = apexUpdater(factory)
         .updater(apex)
         .appendix("c")
         .done();

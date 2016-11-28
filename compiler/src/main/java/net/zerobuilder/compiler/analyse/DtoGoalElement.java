@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -29,6 +30,7 @@ import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDAT
 import static net.zerobuilder.compiler.analyse.Utilities.downcase;
 import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
+import static net.zerobuilder.compiler.common.LessTypes.isDeclaredType;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 
 final class DtoGoalElement {
@@ -278,13 +280,21 @@ final class DtoGoalElement {
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
                 methodTypevars(element)) :
             InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                methodTypevars(element), instanceTypevars(element));
+                methodTypevars(element), returnTypeInstanceTypevars(element));
     return new RegularProjectableGoalElement(element, details);
   }
 
   private static List<TypeVariableName> instanceTypevars(ExecutableElement element) {
-    return asTypeElement(element.getEnclosingElement().asType()).getTypeParameters()
-        .stream().map(TypeVariableName::get).collect(toList());
+    TypeElement type = asTypeElement(element.getEnclosingElement().asType());
+    return transform(type.getTypeParameters(), TypeVariableName::get);
+  }
+
+  private static List<TypeVariableName> returnTypeInstanceTypevars(ExecutableElement element) {
+    if (!isDeclaredType(element.getReturnType())) {
+      return emptyList();
+    }
+    TypeElement type = asTypeElement(element.getReturnType());
+    return transform(type.getTypeParameters(), TypeVariableName::get);
   }
 
   private static List<TypeVariableName> methodTypevars(ExecutableElement element) {
