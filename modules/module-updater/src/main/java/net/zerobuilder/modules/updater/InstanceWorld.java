@@ -22,6 +22,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.updater.Generator.copyBlock;
 import static net.zerobuilder.modules.updater.Generator.initVarUpdater;
 import static net.zerobuilder.modules.updater.Generator.nullCheckingBlock;
+import static net.zerobuilder.modules.updater.Generator.thrownByProjections;
 import static net.zerobuilder.modules.updater.Generator.toBuilderParameter;
 import static net.zerobuilder.modules.updater.Generator.varUpdater;
 import static net.zerobuilder.modules.updater.RegularUpdater.moduleName;
@@ -62,12 +63,14 @@ final class InstanceWorld {
             .addStatement("this._factory = $N", factory)
             .build())
         .addMethod(methodBuilder("updater")
+            .addExceptions(thrownByProjections(goal))
             .addParameter(toBuilderParameter(goal))
             .returns(updater.type)
             .addCode(initVarUpdater(goal, updater))
+            .addStatement("$N._factory = this._factory", updater)
             .addCode(copyBlock(goal))
             .addStatement("return $N", updater)
-            .addModifiers(goal.details.access(STATIC))
+            .addModifiers(goal.details.access())
             .build())
         .addModifiers(PUBLIC, STATIC, FINAL)
         .build();

@@ -165,7 +165,7 @@ final class Generator {
     return parameterSpec(updaterType, "updater");
   }
 
-  private static Set<TypeName> thrownByProjections(ProjectedRegularGoalContext goal) {
+  static Set<TypeName> thrownByProjections(ProjectedRegularGoalContext goal) {
     return goal.description().parameters().stream()
         .map(parameter -> parameter.projectionInfo)
         .map(thrownTypes)
