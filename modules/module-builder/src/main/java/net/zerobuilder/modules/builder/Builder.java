@@ -125,11 +125,11 @@ final class Builder {
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
-    return builder
-        .addStatement("$T $N = new $T($L)", varGoal.type, varGoal, goal.type(), goal.invocationParameters())
-        .add(free(goal.description().parameters()))
-        .addStatement("return $N", varGoal)
-        .build();
+    builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, goal.type(), goal.invocationParameters());
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.add(free(goal.description().parameters()));
+    }
+    return builder.addStatement("return $N", varGoal).build();
   }
 
   private static CodeBlock instanceCall(InstanceMethodGoalContext goal) {
@@ -150,8 +150,8 @@ final class Builder {
     }
     if (goal.context.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this.$N = null", goal.instanceField());
+      builder.add(free(goal.description().parameters()));
     }
-    builder.add(free(goal.description().parameters()));
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);
     }
@@ -174,7 +174,9 @@ final class Builder {
       builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, rawClassName(goal.context.type).get(),
           method, goal.invocationParameters());
     }
-    builder.add(free(goal.description().parameters()));
+    if (goal.context.lifecycle == REUSE_INSTANCES) {
+      builder.add(free(goal.description().parameters()));
+    }
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);
     }
