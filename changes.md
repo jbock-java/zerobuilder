@@ -158,3 +158,8 @@
 ### 2016-11-26 zerobuilder 1.526 released
 
 * bugfix generic instance
+
+### 2016-11-29 zerobuilder 1.531 released
+
+* allow goals with no parameters
+* allow update for instance goals
