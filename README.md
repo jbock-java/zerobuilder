@@ -36,6 +36,7 @@ Note that `updater = true` does not work everywhere.
 
 ### Why zero?
 
-If the `recycle` flag is set, <em>and the goal method does not use any type variables</em>, 
+If the optional `@Builders(recycle = true)` annotation is present on the enclosing type,
+<em>and the goal method does not use any type variables</em>, 
 the generated code will reuse the generated builder/updater instance(s).
-Thus, the project name implies "zero gc".
+Thus, the project name implies "zero garbage collection".
