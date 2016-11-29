@@ -34,7 +34,7 @@ import static net.zerobuilder.modules.builder.bean.BeanStep.nextType;
 final class Builder {
 
   static final Function<BeanGoalContext, List<FieldSpec>> fields =
-      goal -> goal.mayReuse() ?
+      goal -> goal.isReuse() ?
           asList(
               fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
               goal.bean()) :
@@ -57,11 +57,11 @@ final class Builder {
     ParameterSpec varBean = parameterSpec(goal.type(),
         '_' + downcase(goal.details.goalType.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.mayReuse()) {
+    if (goal.isReuse()) {
       builder.addStatement("this._currently_in_use = false");
     }
     builder.addStatement("$T $N = this.$N", varBean.type, varBean, goal.bean());
-    if (goal.mayReuse()) {
+    if (goal.isReuse()) {
       builder.addStatement("this.$N = null", goal.bean());
     }
     return builder.addStatement("return $N", varBean).build();

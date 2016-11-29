@@ -61,10 +61,10 @@ public final class BeanUpdater implements BeanModule {
   private static final Function<BeanGoalContext, MethodSpec> updaterConstructor =
       bean -> constructorBuilder()
           .addModifiers(PRIVATE)
-          .addExceptions(bean.mayReuse()
+          .addExceptions(bean.isReuse()
               ? emptyList()
               : bean.description().thrownTypes)
-          .addCode(bean.mayReuse()
+          .addCode(bean.isReuse()
               ? emptyCodeBlock
               : statement("this.$N = new $T()", bean.bean(), bean.type()))
           .build();
@@ -74,11 +74,11 @@ public final class BeanUpdater implements BeanModule {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(type.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.mayReuse()) {
+    if (goal.isReuse()) {
       builder.addStatement("this._currently_in_use = false");
     }
     builder.addStatement("$T $N = this.$N", varGoal.type, varGoal, goal.bean());
-    if (goal.mayReuse()) {
+    if (goal.isReuse()) {
       builder.addStatement("this.$N = null", goal.bean());
     }
     return builder.addStatement("return $N", varGoal).build();

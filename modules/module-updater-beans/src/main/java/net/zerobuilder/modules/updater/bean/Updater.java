@@ -31,7 +31,7 @@ import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
 final class Updater {
 
   final static Function<BeanGoalContext, List<FieldSpec>> fields =
-      goal -> goal.mayReuse() ?
+      goal -> goal.isReuse() ?
           asList(
               fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
               goal.bean()) :

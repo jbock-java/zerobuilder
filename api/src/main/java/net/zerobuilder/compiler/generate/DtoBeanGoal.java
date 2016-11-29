@@ -26,7 +26,7 @@ public final class DtoBeanGoal {
 
     private final FieldSpec bean;
 
-    public final Boolean mayReuse() {
+    public final boolean isReuse() {
       return context.lifecycle == REUSE_INSTANCES;
     }
 
@@ -48,7 +48,7 @@ public final class DtoBeanGoal {
       this.details = details;
     }
 
-    private static FieldSpec beanSupplier(ClassName type, DtoContext.GoalContext context) {
+    private static FieldSpec beanSupplier(ClassName type, GoalContext context) {
       String name = downcase(type.simpleName());
       return context.lifecycle == REUSE_INSTANCES
           ? fieldSpec(type, name, PRIVATE)

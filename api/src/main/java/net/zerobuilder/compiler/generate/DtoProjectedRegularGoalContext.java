@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 
 public final class DtoProjectedRegularGoalContext {
 
@@ -28,10 +27,6 @@ public final class DtoProjectedRegularGoalContext {
 
     public ProjectedRegularGoalDescription description() {
       return description;
-    }
-
-    public final Boolean mayReuse() {
-      return mayReuse.apply(this);
     }
 
     ProjectedRegularGoalContext(ProjectedRegularGoalDescription description) {
@@ -66,15 +61,6 @@ public final class DtoProjectedRegularGoalContext {
           staticMethod -> staticMethod.context,
           instanceMethod -> instanceMethod.context,
           constructor -> constructor.context);
-
-
-  private static final Function<ProjectedRegularGoalContext, Boolean> mayReuse =
-      projectedRegularGoalContextCases(
-          staticMethod -> staticMethod.context.lifecycle == REUSE_INSTANCES
-              && staticMethod.details.typeParameters.isEmpty(),
-          instanceMethod -> false,
-          constructor -> constructor.context.lifecycle == REUSE_INSTANCES
-              && constructor.details.instanceTypeParameters.isEmpty());
 
   private static final Function<ProjectedRegularGoalContext, Boolean> isInstance =
       projectedRegularGoalContextCases(
