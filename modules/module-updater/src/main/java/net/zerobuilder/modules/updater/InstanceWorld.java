@@ -34,7 +34,7 @@ final class InstanceWorld {
   static DtoGeneratorOutput.BuilderMethod instanceGoalMethod(ProjectedInstanceMethodGoalContext goal) {
     TypeName factoryType = factoryType(goal);
     ParameterSpec parameter = parameterSpec(goal.context.type, "factory");
-    MethodSpec method = methodBuilder(RegularUpdater.methodName(goal))
+    MethodSpec method = methodBuilder(RegularUpdater.methodName(goal) + "Factory")
         .addParameter(parameter)
         .addTypeVariables(new HashSet<>(concat(
             goal.details.instanceTypeParameters,

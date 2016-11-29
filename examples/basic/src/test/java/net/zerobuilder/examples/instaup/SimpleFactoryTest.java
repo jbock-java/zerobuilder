@@ -3,7 +3,7 @@ package net.zerobuilder.examples.instaup;
 import net.zerobuilder.examples.instaup.SimpleFactoryBuilders.SimpleUpdaterFactory;
 import org.junit.Test;
 
-import static net.zerobuilder.examples.instaup.SimpleFactoryBuilders.simpleUpdater;
+import static net.zerobuilder.examples.instaup.SimpleFactoryBuilders.simpleUpdaterFactory;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 public class SimpleFactoryTest {
 
   private final SimpleFactory factory = new SimpleFactory("a");
-  private final SimpleUpdaterFactory updaterFactory = simpleUpdater(factory);
+  private final SimpleUpdaterFactory updaterFactory = simpleUpdaterFactory(factory);
 
   @Test
   public void simple() throws Exception {
