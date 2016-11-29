@@ -280,7 +280,9 @@ final class DtoGoalElement {
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
                 methodTypevars(element)) :
             InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                methodTypevars(element), returnTypeInstanceTypevars(element));
+                methodTypevars(element),
+                instanceTypevars(element),
+                returnTypeInstanceTypevars(element));
     return new RegularProjectableGoalElement(element, details);
   }
 
@@ -317,7 +319,9 @@ final class DtoGoalElement {
             StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
                 methodTypevars(element)) :
             InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                methodTypevars(element), instanceTypevars(element));
+                methodTypevars(element),
+                instanceTypevars(element),
+                returnTypeInstanceTypevars(element));
     return new RegularGoalElement(element, details);
   }
 

@@ -3,16 +3,18 @@ package net.zerobuilder.examples.instaup;
 import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
-@Builders
-final class ApexFactory {
-  private final String string;
+import java.io.IOException;
 
-  ApexFactory(String string) {
+@Builders
+final class ApexFactory<T extends String> {
+  private final T string;
+
+  ApexFactory(T string) {
     this.string = string;
   }
 
   @Goal(builder = false, updater = true)
-  <S extends String> Apex<S> apex(S appendix) {
+  <S extends String> Apex<S> apex(S appendix) throws IOException {
     return new Apex(string, appendix);
   }
 }

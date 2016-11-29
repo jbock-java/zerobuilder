@@ -65,7 +65,8 @@ public class GenericsGeneratorInstanceTest {
         "map",
         PRIVATE,
         asList(K, V),
-        singletonList(S));
+        singletonList(S),
+        asList(K, V));
 
     SimpleParameter keyParameter = DtoRegularParameter.create("key", K, ALLOW);
     SimpleParameter valueParameter = DtoRegularParameter.create("value", V, ALLOW);

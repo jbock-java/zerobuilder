@@ -6,6 +6,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
@@ -14,24 +15,27 @@ import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.Projecte
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
+import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -48,7 +52,7 @@ public final class RegularUpdater implements ProjectedModule {
           this::instanceCall,
           this::constructorCall);
 
-  private final Function<ProjectedRegularGoalContext, MethodSpec> buildMethod =
+  private final Function<ProjectedRegularGoalContext, MethodSpec> doneMethod =
       goal -> methodBuilder("done")
           .addModifiers(PUBLIC)
           .addExceptions(goal.description().thrownTypes())
@@ -57,11 +61,11 @@ public final class RegularUpdater implements ProjectedModule {
           .build();
 
   private TypeSpec defineUpdater(ProjectedRegularGoalContext projectedGoal) {
-    return classBuilder(rawClassName(implType(projectedGoal)).get())
+    return classBuilder(simpleName(implType(projectedGoal)))
         .addFields(Updater.fields(projectedGoal))
         .addMethods(Updater.stepMethods(projectedGoal))
-        .addTypeVariables(projectedGoal.instanceTypeParameters())
-        .addMethod(buildMethod.apply(projectedGoal))
+        .addTypeVariables(implTypeParameters.apply(projectedGoal))
+        .addMethod(doneMethod.apply(projectedGoal))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructor(PRIVATE))
         .build();
@@ -71,8 +75,16 @@ public final class RegularUpdater implements ProjectedModule {
     String implName = upcase(goal.description().details().name()) + upcase(moduleName);
     return parameterizedTypeName(
         goal.context().generatedType.nestedClass(implName),
-        goal.instanceTypeParameters());
+        implTypeParameters.apply(goal));
   }
+
+  private static final Function<ProjectedRegularGoalContext, Collection<TypeVariableName>> implTypeParameters =
+      projectedRegularGoalContextCases(
+          staticMethod -> emptyList(),
+          instanceMethod -> new HashSet<>(concat(
+              instanceMethod.details.instanceTypeParameters,
+              instanceMethod.details.typeParameters)),
+          constructor -> constructor.details.instanceTypeParameters);
 
   private CodeBlock staticCall(ProjectedMethodGoalContext goal) {
     String method = goal.details.methodName;
@@ -109,7 +121,7 @@ public final class RegularUpdater implements ProjectedModule {
   private CodeBlock constructorCall(ProjectedConstructorGoalContext goal) {
     TypeName type = goal.details.goalType;
     ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(rawClassName(type).get().simpleName()));
+        '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.mayReuse()) {
       builder.addStatement("this._currently_in_use = false");
@@ -135,12 +147,12 @@ public final class RegularUpdater implements ProjectedModule {
 
   static FieldSpec cacheField(ProjectedRegularGoalContext projectedGoal) {
     TypeName type = implType(projectedGoal);
-    return FieldSpec.builder(type, downcase(rawClassName(type).get().simpleName()), PRIVATE)
+    return FieldSpec.builder(type, downcase(simpleName(type)), PRIVATE)
         .initializer("new $T()", type)
         .build();
   }
 
-  final Function<ProjectedRegularGoalContext, List<TypeSpec>> types =
+  private final Function<ProjectedRegularGoalContext, List<TypeSpec>> types =
       projectedRegularGoalContextCases(
           staticMethod -> singletonList(defineUpdater(staticMethod)),
           instanceMethod -> asList(defineUpdater(instanceMethod), factorySpec(instanceMethod)),

@@ -151,19 +151,28 @@ public final class DtoGoalDetails {
   public static final class InstanceMethodGoalDetails extends AbstractRegularDetails {
     public final String methodName;
     public final TypeName goalType;
+
+    // typevars of the method
     public final List<TypeVariableName> typeParameters;
+
+    // typevars of the enclosing class
     public final List<TypeVariableName> instanceTypeParameters;
+
+    // typevars of the returned type
+    public final List<TypeVariableName> returnTypeParameters;
 
 
     private InstanceMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
                                       Access access,
                                       List<TypeVariableName> typeParameters,
-                                      List<TypeVariableName> instanceTypeParameters) {
+                                      List<TypeVariableName> instanceTypeParameters,
+                                      List<TypeVariableName> returnTypeParameters) {
       super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
       this.instanceTypeParameters = instanceTypeParameters;
+      this.returnTypeParameters = returnTypeParameters;
     }
 
     public static InstanceMethodGoalDetails create(TypeName goalType,
@@ -172,8 +181,10 @@ public final class DtoGoalDetails {
                                                    String methodName,
                                                    Access access,
                                                    List<TypeVariableName> typeParameters,
-                                                   List<TypeVariableName> instanceTypeParameters) {
-      return new InstanceMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters, instanceTypeParameters);
+                                                   List<TypeVariableName> instanceTypeParameters,
+                                                   List<TypeVariableName> returnTypeParameters) {
+      return new InstanceMethodGoalDetails(goalType, name, parameterNames, methodName,
+          access, typeParameters, instanceTypeParameters, returnTypeParameters);
     }
 
     @Override

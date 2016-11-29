@@ -358,7 +358,7 @@ public final class ZeroUtil {
     return result;
   }
 
-  public static TypeName parameterizedTypeName(ClassName raw, List<TypeVariableName> typeVars) {
+  public static TypeName parameterizedTypeName(ClassName raw, Collection<TypeVariableName> typeVars) {
     if (typeVars.isEmpty()) {
       return raw;
     }
