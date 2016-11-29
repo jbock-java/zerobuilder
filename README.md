@@ -32,6 +32,7 @@ Add a `@Goal` annotation to any non-private method or constructor:
 ````
 
 This will generate a class called `DooBuilders` in the same package.
+Note that `updater = true` does not work everywhere.
 
 ### Why zero?
 
