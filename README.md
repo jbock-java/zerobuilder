@@ -23,7 +23,7 @@ Add a `@Goal` annotation to any non-private method or constructor:
   final class Doo {
     final String foo;
     final String bar;
-    @Goal         
+    @Goal(updater = true)
     Doo(String foo, String bar) {
       this.foo = foo;
       this.bar = bar;
