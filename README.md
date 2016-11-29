@@ -15,26 +15,33 @@ It has two different use cases:
 * Generating data types. This is up to the user, or other tools (see [examples](examples)).
   Thanks for [mentioning us](https://github.com/jodastephen/compare-beangen) though!
 
-### How to use
+### Quick start
 
-This is a standard Java &ge; 7 annotation processor.
-The generated code has no runtime dependencies.
-After compilation, the annotated source does not depend on zerobuilder; all its annotations have
-[RetentionPolicy.SOURCE](https://docs.oracle.com/javase/7/docs/api/java/lang/annotation/RetentionPolicy.html#SOURCE).
+First, add a `@Goal` annotation to any non-private method or constructor:
 
-Maven compiler plugin version `3.5.1` or greater is recommended.
+````java
+  @Goal
+  public String concat(String foo, String bar) {
+    return foo + bar;
+  }
+````
 
-Your IDE may need some initial help, to recognize that `target/generated-sources/annotations`
-contains generated sources.
+Then add a `@Builders` annotation to the enclosing class:
 
-<em>Tip for intellij users:</em> If you do a `mvn install` _before_ opening one of the example projects,
-intellij will recognize `target/generated-sources/annotations` automatically.
+````java
+  @Builders
+  public class Doo {
+    @Goal         
+    public String concat(String foo, String bar) {
+      return foo + bar;
+    }
+  }
+````
 
-### Java API
-
-The core functionality is available as a separate library. See [api](api).
+This will generate a class called `DooBuilders` in the same package.
 
 ### Why zero?
 
-Because using the generated builders has zero impact on garbage collection, if the `recycle` option is used.
-In this case, the intermediate builder objects are stored in `ThreadLocal` instances and reused.
+If the `recycle` flag is set, <em>and the goal method does not use any type variables</em>, 
+the generated code will reuse the generated builder/updater instance(s).
+Thus, the project name implies "zero gc".
