@@ -6,15 +6,15 @@ import net.zerobuilder.Goal;
 import java.io.IOException;
 
 @Builders(recycle = true)
-final class ApexFactory<T extends String> {
-  private final T string;
+final class SimpleFactory {
+  private final String string;
 
-  ApexFactory(T string) {
+  SimpleFactory(String string) {
     this.string = string;
   }
 
   @Goal(builder = false, updater = true)
-  <S extends String> Apex<S> apex(S appendix) throws IOException {
-    return new Apex(string, appendix);
+  Simple simple(String appendix) throws IOException {
+    return new Simple(string, appendix);
   }
 }

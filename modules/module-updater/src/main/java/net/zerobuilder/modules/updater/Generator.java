@@ -17,6 +17,7 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -142,17 +143,17 @@ final class Generator {
   }
 
   static CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {
-    if (goal.mayReuse()) {
+    Optional<FieldSpec> udpaterField = cacheField(goal);
+    if (udpaterField.isPresent()) {
       GoalContext context = goal.context();
       ParameterSpec varContext = parameterSpec(context.generatedType, "context");
       FieldSpec cache = context.cache.get();
-      FieldSpec updaterField = cacheField(goal);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, updaterField)
-          .addStatement("$N.$N = new $T()", varContext, updaterField, varUpdater.type)
+          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, udpaterField.get())
+          .addStatement("$N.$N = new $T()", varContext, udpaterField.get(), varUpdater.type)
           .endControlFlow()
-          .addStatement("$T $N = $N.$N", varUpdater.type, varUpdater, varContext, updaterField)
+          .addStatement("$T $N = $N.$N", varUpdater.type, varUpdater, varContext, udpaterField.get())
           .addStatement("$N._currently_in_use = true", varUpdater)
           .build();
     } else {

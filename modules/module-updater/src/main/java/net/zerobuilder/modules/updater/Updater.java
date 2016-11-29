@@ -22,12 +22,13 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.modules.updater.RegularUpdater.implType;
+import static net.zerobuilder.modules.updater.RegularUpdater.isReusable;
 
 final class Updater {
 
   static List<FieldSpec> fields(ProjectedRegularGoalContext goal) {
     List<FieldSpec> builder = new ArrayList<>();
-    if (goal.mayReuse()) {
+    if (isReusable.apply(goal)) {
       builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
     }
     if (goal.isInstance()) {
