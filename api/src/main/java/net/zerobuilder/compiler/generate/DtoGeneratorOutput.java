@@ -56,7 +56,7 @@ public final class DtoGeneratorOutput {
     final List<BuilderMethod> methods;
     final List<TypeSpec> nestedTypes;
     final List<FieldSpec> fields;
-    final ClassName generatedType;
+    public final ClassName generatedType;
     final ContextLifecycle lifecycle;
 
     private GeneratorOutput(List<BuilderMethod> methods, List<TypeSpec> nestedTypes, List<FieldSpec> fields,

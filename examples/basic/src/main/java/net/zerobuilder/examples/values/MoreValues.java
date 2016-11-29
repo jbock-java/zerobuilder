@@ -5,10 +5,9 @@ import net.zerobuilder.Goal;
 
 import java.io.IOException;
 
-public class MoreValues {
+class MoreValues {
 
   // goal name is a reserved word
-  @Builders
   static class Interface {
     final String foo;
     @Goal(name = "interface")
@@ -48,10 +47,5 @@ public class MoreValues {
     String foo() throws IOException {
       return foo;
     }
-  }
-
-  @Builders
-  @SuppressWarnings("unused")
-  static final class NoGoals {
   }
 }

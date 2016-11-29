@@ -1,12 +1,10 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
 // nested classes
 final class Nesting {
 
-  @Builders
   static class DovesNest {
     final int smallEgg;
     final int regularEgg;
@@ -18,12 +16,10 @@ final class Nesting {
     }
   }
 
-  @Builders
   static class CrowsNest {
     final int largeEgg;
     final int hugeEgg;
 
-    @Builders
     static class LizardsNest {
       final int spottedEgg;
 

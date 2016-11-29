@@ -101,7 +101,6 @@ public class MoreBeans {
   }
 
   // ignore an invalid getter
-  @Builders
   @Goal(updater = true)
   public static class Ignorify {
     private List<Iterable<String>> things;
@@ -131,8 +130,6 @@ public class MoreBeans {
   }
 
   // accessors declare exceptions
-
-  @Builders
   @Goal(updater = true)
   public static class Kaboom {
     private String foo;

@@ -17,23 +17,16 @@ It has two different use cases:
 
 ### Quick start
 
-First, add a `@Goal` annotation to any non-private method or constructor:
+Add a `@Goal` annotation to any non-private method or constructor:
 
 ````java
-  @Goal
-  public String concat(String foo, String bar) {
-    return foo + bar;
-  }
-````
-
-Then add a `@Builders` annotation to the enclosing class:
-
-````java
-  @Builders
-  public class Doo {
+  final class Doo {
+    final String foo;
+    final String bar;
     @Goal         
-    public String concat(String foo, String bar) {
-      return foo + bar;
+    Doo(String foo, String bar) {
+      this.foo = foo;
+      this.bar = bar;
     }
   }
 ````

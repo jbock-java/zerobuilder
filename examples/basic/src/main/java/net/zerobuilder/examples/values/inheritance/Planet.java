@@ -1,12 +1,10 @@
 package net.zerobuilder.examples.values.inheritance;
 
-import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
 import java.math.BigInteger;
 
 // inheritance + overrides
-@Builders
 final class Planet extends CelestialBody implements IMoons {
   private final int numberOfMoons;
   private final boolean habitable;

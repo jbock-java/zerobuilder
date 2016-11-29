@@ -1,13 +1,11 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-@Builders
 final class EmptyListConvenience {
 
   final List things;

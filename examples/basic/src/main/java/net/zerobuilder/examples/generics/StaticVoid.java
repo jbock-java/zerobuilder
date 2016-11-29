@@ -1,9 +1,7 @@
 package net.zerobuilder.examples.generics;
 
-import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
-@Builders
 public class StaticVoid {
 
   @Goal(name = "twins")

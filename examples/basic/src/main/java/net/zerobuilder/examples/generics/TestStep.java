@@ -1,17 +1,13 @@
 package net.zerobuilder.examples.generics;
 
-import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
-import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;
 
-import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 
 import static net.zerobuilder.NullPolicy.REJECT;
 
-@Builders
 public class TestStep {
 
   @Goal(name = "entry")

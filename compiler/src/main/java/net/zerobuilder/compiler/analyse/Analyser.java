@@ -64,7 +64,8 @@ public final class Analyser {
 
   public static GeneratorInput analyse(TypeElement tel) throws ValidationException {
     validateContextClass(tel);
-    ContextLifecycle lifecycle = tel.getAnnotation(Builders.class).recycle()
+    Builders builders = tel.getAnnotation(Builders.class);
+    ContextLifecycle lifecycle = builders != null && builders.recycle()
         ? ContextLifecycle.REUSE_INSTANCES
         : ContextLifecycle.NEW_INSTANCE;
     TypeName type = parameterizedTypeName(ClassName.get(tel),
@@ -95,8 +96,8 @@ public final class Analyser {
    * @throws ValidationException if validation fails
    */
   private static List<? extends AbstractGoalElement> goals(TypeElement tel) throws ValidationException {
-    Builders buildersAnnotation = tel.getAnnotation(Builders.class);
-    AccessLevel defaultAccess = buildersAnnotation.access();
+    Builders builders = tel.getAnnotation(Builders.class);
+    AccessLevel defaultAccess = builders == null ? AccessLevel.PUBLIC : builders.access();
     return tel.getAnnotation(Goal.class) != null ?
         beanGoals(tel, defaultAccess) :
         regularGoals(tel, defaultAccess);

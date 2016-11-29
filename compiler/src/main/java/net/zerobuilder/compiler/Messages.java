@@ -28,12 +28,6 @@ public final class Messages {
     public static final String NESTING_KIND =
         "The @Builders annotation can only be used on top level and non-private static inner classes.";
 
-    static final String GOAL_NOT_IN_BUILD =
-        "The @Goal annotation may not appear outside a class that carries the @Builders annotation.";
-
-    static final String GOAL_WITHOUT_BUILDERS =
-        "A class that carries the @Goal annotation must also carry the @Builders annotation." + POJO_HINT;
-
     public static final String STEP_OUT_OF_BOUNDS =
         "Step position must be less than the number of arguments.";
 

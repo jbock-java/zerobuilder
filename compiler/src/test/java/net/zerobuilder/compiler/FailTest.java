@@ -15,25 +15,6 @@ import static java.util.Collections.singletonList;
 public class FailTest {
 
   @Test
-  public void goalNotInBuild() {
-    String badLine = "  @Goal static void create(int numberOfLegs) {}";
-    List<String> sourceLines = Arrays.asList(
-        "package test;",
-        "import net.zerobuilder.Goal;",
-        "class Centipede {",
-        badLine,
-        "}");
-    JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
-    int line = sourceLines.indexOf(badLine);
-    assertAbout(javaSources()).that(ImmutableList.of(javaFile))
-        .processedWith(new ZeroProcessor())
-        .failsToCompile()
-        .withErrorContaining("outside")
-        .in(javaFile)
-        .onLine(line + 1);
-  }
-
-  @Test
   public void twoUnnamedConstructors() {
     String badLine = "  @Goal Centipede(int a) {}";
     List<String> sourceLines = Arrays.asList(

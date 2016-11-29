@@ -48,10 +48,4 @@ public class MoreValuesTest {
     assertThat(foo.foo(), is("foo"));
     assertThat(bar.foo(), is("bar"));
   }
-
-  @Test
-  public void testNoGoals() {
-    Method[] declaredMethods = MoreValues_NoGoalsBuilders.class.getDeclaredMethods();
-    assertThat(declaredMethods.length, is(0));
-  }
 }

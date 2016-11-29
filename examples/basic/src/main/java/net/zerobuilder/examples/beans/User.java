@@ -1,12 +1,10 @@
 package net.zerobuilder.examples.beans;
 
-import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
 import static net.zerobuilder.AccessLevel.PACKAGE;
 
 // not public
-@Builders
 @Goal(updater = true, builderAccess = PACKAGE, updaterAccess = PACKAGE)
 class User {
 

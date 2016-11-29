@@ -2,7 +2,7 @@ package net.zerobuilder.examples.beans;
 
 import net.zerobuilder.Step;
 
-class Employee {
+abstract class Employee {
 
   private int id;
   private int salary;

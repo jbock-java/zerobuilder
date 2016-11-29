@@ -1,12 +1,8 @@
 package net.zerobuilder.examples.beans;
 
-import net.zerobuilder.Builders;
 import net.zerobuilder.Goal;
 
-import java.util.List;
-
 // inheritance + overrides
-@Builders
 @Goal(updater = true)
 final class Manager extends Employee {
 
