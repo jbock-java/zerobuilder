@@ -167,3 +167,7 @@
 ### 2016-11-29 zerobuilder 1.532 released
 
 * instance-update: rename static method fooBuilder -> fooBuilderFactory
+
+### 2016-11-29 zerobuilder 1.541 released
+
+* make @Builders annotation optional
