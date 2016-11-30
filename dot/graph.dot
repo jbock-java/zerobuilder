@@ -12,10 +12,10 @@ digraph G {
     Body [style=filled, fillcolor=lightblue]
     Recipient [style=filled, fillcolor=lightblue]
     edge[constraint = false]
-    Sender -> Body    [label = "                    .sender(\"Alice\")"] 
-    Body -> Recipient [label = "                  .body(\"Hello\")"]
+    Sender -> Body    [label = <&nbsp;&nbsp;&nbsp;                 .sender(<FONT color="red">"Alice"</FONT>)>] 
+    Body -> Recipient [label = <&nbsp;&nbsp;&nbsp;               .body(<FONT color="red">"Hello"</FONT>)>]
   }
   messageBuilder -> Sender
   edge [constraint=true]
-  Recipient -> Message [label = ".recipient(\"Bob\");"]
+  Recipient -> Message [label = <.recipient(<FONT color="red">"Bob"</FONT>)>]
 }
