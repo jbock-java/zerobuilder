@@ -1,21 +1,26 @@
 package net.zerobuilder.examples.beans;
 
+import net.zerobuilder.examples.beans.UserBuilders.UserBuilder;
+import net.zerobuilder.examples.beans.UserBuilders.UserUpdater;
 import org.junit.Test;
 
 import static net.zerobuilder.examples.beans.UserBuilders.userBuilder;
 import static net.zerobuilder.examples.beans.UserBuilders.userUpdater;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class UserTest {
 
   @Test
   public void basic() throws Exception {
-    User foo = userBuilder()
+    UserBuilder.Id builder = userBuilder();
+    User foo = builder
         .id(12)
         .name("foo")
         .power(false);
-    User bar = userUpdater(foo)
+    UserUpdater updater = userUpdater(foo);
+    User bar = updater
         .name("bar")
         .done();
     assertThat(foo.getId(), is(12));
@@ -24,5 +29,8 @@ public class UserTest {
     assertThat(bar.getId(), is(12));
     assertThat(bar.getName(), is("bar"));
     assertThat(bar.isPower(), is(false));
+    // check that caching works
+    assertTrue(userBuilder() == builder);
+    assertTrue(userUpdater(foo) == updater);
   }
 }

@@ -25,7 +25,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.updater.bean.Updater.fields;
@@ -33,7 +33,7 @@ import static net.zerobuilder.modules.updater.bean.Updater.stepMethods;
 
 public final class BeanUpdater implements BeanModule {
 
-  private static final String moduleName = "updater";
+  static final String moduleName = "updater";
 
   private MethodSpec buildMethod(BeanGoalContext goal) {
     return methodBuilder("done")
@@ -44,7 +44,7 @@ public final class BeanUpdater implements BeanModule {
   }
 
   private TypeSpec defineUpdater(BeanGoalContext projectedGoal) {
-    return classBuilder(rawClassName(implType(projectedGoal)).get())
+    return classBuilder(simpleName(implType(projectedGoal)))
         .addFields(fields.apply(projectedGoal))
         .addMethods(stepMethods.apply(projectedGoal))
         .addMethod(buildMethod(projectedGoal))
@@ -53,7 +53,7 @@ public final class BeanUpdater implements BeanModule {
         .build();
   }
 
-  static TypeName implType(BeanGoalContext goal) {
+  static ClassName implType(BeanGoalContext goal) {
     String implName = upcase(goal.details.name) + upcase(moduleName);
     return goal.context.generatedType.nestedClass(implName);
   }
@@ -87,9 +87,9 @@ public final class BeanUpdater implements BeanModule {
   private final Function<BeanGoalContext, CodeBlock> invoke =
       this::returnBean;
 
-  static FieldSpec cacheField(BeanGoalContext projectedGoal) {
-    TypeName type = implType(projectedGoal);
-    return FieldSpec.builder(type, downcase(rawClassName(type).get().simpleName()), PRIVATE)
+  static FieldSpec cacheField(BeanGoalContext beanGoal) {
+    TypeName type = implType(beanGoal);
+    return FieldSpec.builder(type, downcase(simpleName(type)), PRIVATE)
         .initializer("new $T()", type)
         .build();
   }
@@ -99,6 +99,6 @@ public final class BeanUpdater implements BeanModule {
     return new ModuleOutput(
         Generator.updaterMethod(goal),
         singletonList(defineUpdater(goal)),
-        singletonList(cacheField(goal)));
+        singletonList(goal.context.cache(implType(goal))));
   }
 }

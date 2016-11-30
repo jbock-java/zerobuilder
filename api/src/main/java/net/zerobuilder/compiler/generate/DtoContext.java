@@ -39,18 +39,10 @@ public final class DtoContext {
      */
     public final TypeName type;
 
-    /**
-     * An instance of {@code ThreadLocal} that holds an instance of {@link #generatedType}.
-     * Only used when {@link #lifecycle} is
-     * {@link ContextLifecycle#REUSE_INSTANCES REUSE_INSTANCES}.
-     */
-    public final Supplier<FieldSpec> cache;
-
     private GoalContext(ContextLifecycle lifecycle, TypeName type, ClassName generatedType) {
       this.lifecycle = lifecycle;
       this.type = type;
       this.generatedType = generatedType;
-      this.cache = memoizeCache(generatedType);
     }
 
     public FieldSpec cache(String className) {
@@ -69,6 +61,10 @@ public final class DtoContext {
           .initializer("$L", initializer)
           .addModifiers(PRIVATE, STATIC, FINAL)
           .build();
+    }
+
+    public FieldSpec cache(ClassName className) {
+      return cache(className.simpleName());
     }
   }
 

@@ -20,7 +20,6 @@ import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_
 import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionInputCases;
 import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
-import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.listCollector;
 
@@ -73,10 +72,9 @@ public final class Generator {
     if (context.lifecycle == NEW_INSTANCE) {
       return emptyList();
     }
-    List<FieldSpec> fieldSpecs = inputOutputs.stream()
+    return inputOutputs.stream()
         .map(ModuleOutput::cacheFields)
         .collect(flatList());
-    return concat(context.cache.get(), fieldSpecs);
   }
 
   private static final Function<AbstractGoalInput, ModuleOutput> process =

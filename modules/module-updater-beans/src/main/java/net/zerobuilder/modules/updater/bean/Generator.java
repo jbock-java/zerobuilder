@@ -30,7 +30,9 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
+import static net.zerobuilder.modules.updater.bean.BeanUpdater.moduleName;
 
 final class Generator {
 
@@ -124,15 +126,13 @@ final class Generator {
   private static CodeBlock initVarUpdater(BeanGoalContext goal, ParameterSpec varUpdater) {
     DtoContext.GoalContext context = goal.context;
     if (goal.isReuse()) {
-      FieldSpec cache = context.cache.get();
-      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec updaterField = BeanUpdater.cacheField(goal);
+      FieldSpec cache = context.cache(goal.details.name + upcase(moduleName));
       return CodeBlock.builder()
-          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, updaterField)
-          .addStatement("$N.$N = new $T()", varContext, updaterField, varUpdater.type)
+          .addStatement("$T $N = $N.get()", varUpdater.type, varUpdater, cache)
+          .beginControlFlow("if ($N._currently_in_use)", varUpdater)
+          .addStatement("$N.remove()", cache)
+          .addStatement("$N = $N.get()", varUpdater, cache)
           .endControlFlow()
-          .addStatement("$T $N = $N.$N", varUpdater.type, varUpdater, varContext, updaterField)
           .addStatement("$N.$N = new $T()", varUpdater, goal.bean(), goal.details.goalType)
           .addStatement("$N._currently_in_use = true", varUpdater)
           .build();
