@@ -1,6 +1,6 @@
 # zerobuilder for value types
 
-### Why?
+### Motivation
 
 Immutable types, also known as values, are quite popular nowadays.
 Their constructors tend to have a lot of arguments, which can lead to code that's hard to read.
@@ -21,9 +21,9 @@ Zerobuilder takes care of the boilerplate by generating two different variants o
 
 [1]: http://blog.crisp.se/2013/10/09/perlundholm/another-builder-pattern-for-java
 
-### How?
+### Builder
 
-By adding the `@Goal` annotation to a constructor:
+Start by adding the `@Goal` annotation to a constructor:
 
 ````java
 final class Message {
@@ -32,7 +32,68 @@ final class Message {
   final String body;
   final String recipient;
 
-  @Goal(updater = true)
+  @Goal
+  Message(String sender, String body, String recipient) {
+    this.sender = sender;
+    this.body = body;
+    this.recipient = recipient;
+  }
+}
+
+````
+
+The following class will be generated:
+
+````java
+@Generated final class MessageBuilders {
+
+  static MessageBuilder.Sender messageBuilder() { ... }
+
+  static final class MessageBuilder {
+    interface Sender { Body sender(String sender); }
+    interface Body { Recipient body(String body); }
+    interface Recipient { Message recipient(String recipient); }
+  }
+}
+````
+
+The implementations of the step interfaces `MessageBuilder.Sender`, `MessageBuilder.Body`, `MessageBuilder.Recipient` 
+are omitted here.
+If you clone this project and do a `mvn install`, you will find the complete source code of `MessageBuilders.java`
+in the `examples/basic/target/generated-sources/annotations` folder.
+
+The `messageBuilder` method returns `MessageBuilder.Sender`, the first step of a linear
+chain towards the constructor goal:
+
+![steps](https://raw.githubusercontent.com/h908714124/zerobuilder/a24575a7255178c4cac0e61b12bb1644d9f39443/dot/graph.png "steps diagram")
+
+By default, these steps are in the original order of the goal arguments.
+If for some reason you would like to call them in a different order, you can use the `@Step` annotation:
+
+````java
+  @Goal
+  Message(@Step(1) String sender, 
+          @Step(2) String body, 
+          @Step(0) String recipient) {
+    this.sender = sender;
+    this.body = body;
+    this.recipient = recipient;
+  }
+
+````
+
+### Updater
+
+This time, we override a default by specifying `builder = false`, so that we can study the generated updater in isolation.
+
+````java
+final class Message {
+
+  final String sender;
+  final String body;
+  final String recipient;
+
+  @Goal(updater = true, builder = false)
   Message(String sender, String body, String recipient) {
     this.sender = sender;
     this.body = body;
@@ -43,7 +104,8 @@ final class Message {
 ````
 
 In order for the `updater = true` option to make sense,
-there has to exist one corresponding _projection_, i.e. a getter or instance field, for each goal parameter.
+there has to exist one corresponding _projection_, i.e. a getter or instance field of the same name, 
+for each goal parameter.
 This is the case in `Message.java`.
 
 The following class will be generated:
@@ -51,7 +113,6 @@ The following class will be generated:
 ````java
 @Generated final class MessageBuilders {
 
-  static MessageBuilder.Sender messageBuilder() { ... }
   static MessageUpdater messageUpdater(Message message) { ... }
 
   static final class MessageUpdater {
@@ -60,34 +121,10 @@ The following class will be generated:
     MessageUpdater recipient(String recipient) { ... }
     Message done() { ... }
   }
-  
-  static final class MessageBuilder {
-    interface Sender { Body sender(String sender); }
-    interface Body { Recipient body(String body); }
-    interface Recipient { Message recipient(String recipient); }
-  }
 }
 ````
 
-If you clone this project and do a `mvn install`, you will find the complete source code of `MessageBuilders.java`
-in the `examples/basic/target/generated-sources/annotations` folder.
-
-The `messageBuilder` method returns the first step of a chain of interfaces, which ends in `Message`:
-
-![steps](https://raw.githubusercontent.com/h908714124/zerobuilder/a24575a7255178c4cac0e61b12bb1644d9f39443/dot/graph.png "steps diagram")
-
-### Order of steps
-
-Unlike the methods of `MessageUpdater`, the steps defined in `MessageBuilder` have a fixed order.
-By default, they are in the original order of the goal arguments.
-
-If for some reason you would like to call them in a different order, you have some options:
-
-* Change the order of the goal arguments. 
-  It is possible to have multiple versions of the same factory method or constructor, with different argument order.
-  The `@Goal(name = ...)` attribute can resolve the potential goal name conflict.
-* Give the steps an order that is different from the order of arguments, by using `@Step`.
-  See [Spaghetti.java](../master/examples/basic/src/main/java/net/zerobuilder/examples/values/Spaghetti.java).
+Note that this is the "classic" builder pattern, with no implicit ordering of the steps.
 
 ### Factory methods
 
