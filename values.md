@@ -65,7 +65,7 @@ in the `examples/basic/target/generated-sources/annotations` folder.
 The `messageBuilder` method returns `MessageBuilder.Sender`, the first step of a linear
 chain towards the constructor goal:
 
-![steps](https://raw.githubusercontent.com/h908714124/zerobuilder/a24575a7255178c4cac0e61b12bb1644d9f39443/dot/graph.png "steps diagram")
+![steps](https://raw.githubusercontent.com/h908714124/zerobuilder/09642ec5a9ebe2b84ef16930f64f919cb57f9e6e/dot/graph.png "steps diagram")
 
 By default, these steps are in the original order of the goal arguments.
 If for some reason you would like to call them in a different order, you can use the `@Step` annotation:
