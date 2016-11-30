@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static com.squareup.javapoet.TypeName.VOID;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.empty;
@@ -61,7 +61,7 @@ final class Builder {
   static final Function<SimpleRegularGoalContext, List<FieldSpec>> fields
       = goal -> {
     List<SimpleParameter> steps = goal.description().parameters();
-    return asList(
+    return Stream.of(
         presentInstances(maybeField.apply(goal)),
         goal.context().lifecycle == REUSE_INSTANCES ?
             singletonList(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
@@ -70,7 +70,6 @@ final class Builder {
             .limit(steps.size() - 1)
             .map(parameter -> fieldSpec(parameter.type, parameter.name, PRIVATE))
             .collect(toList()))
-        .stream()
         .collect(flatList());
   };
 

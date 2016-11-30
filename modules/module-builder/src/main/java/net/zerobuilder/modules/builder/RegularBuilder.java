@@ -29,7 +29,7 @@ import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContex
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.Step.stepInterface;
@@ -94,7 +94,7 @@ public final class RegularBuilder implements RegularSimpleModule {
               return constructor();
             }
             TypeName type = method.context.type;
-            ParameterSpec parameter = parameterSpec(type, downcase(rawClassName(type).get().simpleName()));
+            ParameterSpec parameter = parameterSpec(type, downcase(simpleName(type)));
             return constructorBuilder()
                 .addParameter(parameter)
                 .addStatement("this.$N = $N", method.instanceField(), parameter)
@@ -105,15 +105,7 @@ public final class RegularBuilder implements RegularSimpleModule {
   private final Function<SimpleRegularGoalContext, MethodSpec> builderConstructor =
       regularConstructor;
 
-  static FieldSpec cacheField(SimpleRegularGoalContext goal) {
-    ClassName type = implType(goal);
-    return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
-        .initializer("new $T()", type)
-        .build();
-  }
-
-
-  List<ClassName> stepInterfaceTypes(SimpleRegularGoalContext goal) {
+  private List<ClassName> stepInterfaceTypes(SimpleRegularGoalContext goal) {
     return transform(goal.description().parameters(),
         step -> contractType(goal).nestedClass(upcase(step.name)));
   }
@@ -130,6 +122,6 @@ public final class RegularBuilder implements RegularSimpleModule {
         asList(
             defineBuilderImpl(goal),
             defineContract(goal)),
-        singletonList(cacheField(goal)));
+        singletonList(goal.context().cache(implType(goal))));
   }
 }

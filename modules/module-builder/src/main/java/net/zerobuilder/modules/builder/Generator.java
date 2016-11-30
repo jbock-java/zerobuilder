@@ -1,6 +1,5 @@
 package net.zerobuilder.modules.builder;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -24,7 +23,6 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.builder.RegularBuilder.cacheField;
 import static net.zerobuilder.modules.builder.RegularBuilder.implType;
 
 final class Generator {
@@ -57,16 +55,15 @@ final class Generator {
     ParameterSpec varBuilder = builderInstance(goal);
     GoalContext context = goal.context();
     if (context.lifecycle == REUSE_INSTANCES) {
-      FieldSpec cache = context.cache.get();
-      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec goalField = cacheField(goal);
+      FieldSpec cache = goal.context().cache(implType(goal));
       return CodeBlock.builder()
-          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, goalField)
-          .addStatement("$N.$N = new $T()", varContext, goalField, varBuilder.type)
+          .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)
+          .beginControlFlow("if ($N._currently_in_use)", varBuilder)
+          .addStatement("$N.remove()", cache)
+          .addStatement("$N = $N.get()", varBuilder, cache)
           .endControlFlow()
-          .addStatement("$N.$N._currently_in_use = true", varContext, goalField)
-          .addStatement("return $N.$N", varContext, goalField)
+          .addStatement("$N._currently_in_use = true", varBuilder)
+          .addStatement("return $N", varBuilder)
           .build();
     }
     return statement("return new $T()", varBuilder.type);
@@ -74,27 +71,26 @@ final class Generator {
 
   private static CodeBlock returnInstanceMethod(
       InstanceMethodGoalContext goal, ParameterSpec varInstance) {
+    ParameterSpec varBuilder = builderInstance(goal);
     GoalContext context = goal.context;
     if (context.lifecycle == REUSE_INSTANCES) {
-      FieldSpec cache = context.cache.get();
-      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec goalField = cacheField(goal);
+      FieldSpec cache = goal.context().cache(implType(goal));
       return CodeBlock.builder()
-          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, goalField)
-          .addStatement("$N.$N = new $T()", varContext, goalField, implType(goal))
+          .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)
+          .beginControlFlow("if ($N._currently_in_use)", varBuilder)
+          .addStatement("$N.remove()", cache)
+          .addStatement("$N = $N.get()", varBuilder, cache)
           .endControlFlow()
-          .addStatement("$N.$N._currently_in_use = true", varContext, goalField)
-          .addStatement("$N.$N.$N = $N", varContext, goalField, goal.instanceField(), varInstance)
-          .addStatement("return $N.$N", varContext, goalField)
+          .addStatement("$N._currently_in_use = true", varBuilder)
+          .addStatement("$N.$N = $N", varBuilder, goal.instanceField(), varInstance)
+          .addStatement("return $N", varBuilder)
           .build();
     }
     return statement("return new $T($N)", implType(goal), varInstance);
   }
 
   private static ParameterSpec builderInstance(SimpleRegularGoalContext goal) {
-    ClassName type = implType(goal);
-    return parameterSpec(type, downcase(type.simpleName()));
+    return parameterSpec(implType(goal), "builder");
   }
 
   private Generator() {
