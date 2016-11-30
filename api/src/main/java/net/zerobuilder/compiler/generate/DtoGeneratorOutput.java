@@ -92,12 +92,10 @@ public final class DtoGeneratorOutput {
     }
 
     private MethodSpec constructor() {
-      return lifecycle == ContextLifecycle.REUSE_INSTANCES ?
-          ZeroUtil.constructor(PRIVATE) :
-          constructorBuilder()
-              .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
-              .addModifiers(PRIVATE)
-              .build();
+      return constructorBuilder()
+          .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
+          .addModifiers(PRIVATE)
+          .build();
     }
 
     /**
