@@ -15,6 +15,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.THREAD_LOCAL;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 
 public final class DtoContext {
@@ -50,6 +51,24 @@ public final class DtoContext {
       this.type = type;
       this.generatedType = generatedType;
       this.cache = memoizeCache(generatedType);
+    }
+
+    public FieldSpec cache(String className) {
+      ParameterizedTypeName type = ParameterizedTypeName.get(THREAD_LOCAL,
+          generatedType.nestedClass(className));
+      TypeSpec initializer = anonymousClassBuilder("")
+          .addSuperinterface(type)
+          .addMethod(methodBuilder("initialValue")
+              .addAnnotation(Override.class)
+              .addModifiers(PROTECTED)
+              .returns(generatedType)
+              .addStatement("return new $T()", generatedType)
+              .build())
+          .build();
+      return FieldSpec.builder(type, downcase(className))
+          .initializer("$L", initializer)
+          .addModifiers(PRIVATE, STATIC, FINAL)
+          .build();
     }
   }
 
