@@ -39,7 +39,7 @@ final class Generator {
     ClassName implType = implType(goal);
     GoalContext context = goal.context;
     if (context.lifecycle == REUSE_INSTANCES) {
-      ParameterSpec varUpdater = parameterSpec(implType, downcase("_updater"));
+      ParameterSpec varUpdater = parameterSpec(implType, downcase("_builder"));
       FieldSpec cache = context.cache(implType);
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varUpdater.type, varUpdater, cache)
