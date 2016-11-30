@@ -6,5 +6,6 @@ target
 
 /examples/basic/src/main/java/net/zerobuilder/examples/generics/InstanceBuilders2.java
 /examples/basic/src/main/java/net/zerobuilder/examples/generics/GenericInstanceBuilders2.java
+examples/basic/src/main/java/net/zerobuilder/examples/values/FieldAccessBuilders2.java
 
 dot/graph2.png
