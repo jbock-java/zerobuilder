@@ -39,7 +39,6 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -76,10 +75,13 @@ public final class RegularUpdater implements ProjectedModule {
   }
 
   static TypeName implType(ProjectedRegularGoalContext goal) {
-    String implName = upcase(goal.description().details().name()) + upcase(moduleName);
     return parameterizedTypeName(
-        goal.context().generatedType.nestedClass(implName),
+        goal.context().generatedType.nestedClass(implTypeName(goal)),
         implTypeParameters.apply(goal));
+  }
+
+  private static String implTypeName(ProjectedRegularGoalContext goal) {
+    return upcase(goal.description().details().name()) + upcase(moduleName);
   }
 
   private static final Function<ProjectedRegularGoalContext, Collection<TypeVariableName>> implTypeParameters =
@@ -181,6 +183,8 @@ public final class RegularUpdater implements ProjectedModule {
     return new ModuleOutput(
         goalMethod.apply(goal),
         types.apply(goal),
-        presentInstances(cacheField(goal)));
+        isReusable.apply(goal) ?
+            singletonList(goal.context().cache(implTypeName(goal))) :
+            emptyList());
   }
 }

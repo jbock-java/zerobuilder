@@ -17,7 +17,6 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -33,10 +32,11 @@ import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.modules.updater.RegularUpdater.cacheField;
 import static net.zerobuilder.modules.updater.RegularUpdater.implType;
+import static net.zerobuilder.modules.updater.RegularUpdater.isReusable;
 
 final class Generator {
 
@@ -143,17 +143,15 @@ final class Generator {
   }
 
   static CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {
-    Optional<FieldSpec> udpaterField = cacheField(goal);
-    if (udpaterField.isPresent()) {
+    if (isReusable.apply(goal)) {
       GoalContext context = goal.context();
-      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec cache = context.cache.get();
+      FieldSpec cache = context.cache(rawClassName(varUpdater.type));
       return CodeBlock.builder()
-          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, udpaterField.get())
-          .addStatement("$N.$N = new $T()", varContext, udpaterField.get(), varUpdater.type)
+          .addStatement("$T $N = $N.get()", varUpdater.type, varUpdater, cache)
+          .beginControlFlow("if ($N._currently_in_use)", varUpdater)
+          .addStatement("$N.remove()", cache)
+          .addStatement("$N = $N.get()", varUpdater, cache)
           .endControlFlow()
-          .addStatement("$T $N = $N.$N", varUpdater.type, varUpdater, varContext, udpaterField.get())
           .addStatement("$N._currently_in_use = true", varUpdater)
           .build();
     } else {
@@ -163,7 +161,7 @@ final class Generator {
 
   static ParameterSpec varUpdater(ProjectedRegularGoalContext goal) {
     TypeName updaterType = implType(goal);
-    return parameterSpec(updaterType, "updater");
+    return parameterSpec(updaterType, "_updater");
   }
 
   static Set<TypeName> thrownByProjections(ProjectedRegularGoalContext goal) {

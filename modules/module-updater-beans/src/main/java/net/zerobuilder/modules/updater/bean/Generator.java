@@ -29,10 +29,9 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
-import static net.zerobuilder.modules.updater.bean.BeanUpdater.moduleName;
 
 final class Generator {
 
@@ -126,7 +125,7 @@ final class Generator {
   private static CodeBlock initVarUpdater(BeanGoalContext goal, ParameterSpec varUpdater) {
     DtoContext.GoalContext context = goal.context;
     if (goal.isReuse()) {
-      FieldSpec cache = context.cache(goal.details.name + upcase(moduleName));
+      FieldSpec cache = context.cache(rawClassName(varUpdater.type));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varUpdater.type, varUpdater, cache)
           .beginControlFlow("if ($N._currently_in_use)", varUpdater)
@@ -144,6 +143,7 @@ final class Generator {
     TypeName updaterType = implType(goal);
     return parameterSpec(updaterType, "updater");
   }
+
   private Generator() {
     throw new UnsupportedOperationException("no instances");
   }
