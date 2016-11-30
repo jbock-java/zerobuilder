@@ -46,15 +46,16 @@ public final class DtoContext {
     }
 
     public FieldSpec cache(String className) {
+      ClassName cachedClass = generatedType.nestedClass(className);
       ParameterizedTypeName type = ParameterizedTypeName.get(THREAD_LOCAL,
-          generatedType.nestedClass(className));
+          cachedClass);
       TypeSpec initializer = anonymousClassBuilder("")
           .addSuperinterface(type)
           .addMethod(methodBuilder("initialValue")
               .addAnnotation(Override.class)
               .addModifiers(PROTECTED)
-              .returns(generatedType)
-              .addStatement("return new $T()", generatedType)
+              .returns(cachedClass)
+              .addStatement("return new $T()", cachedClass)
               .build())
           .build();
       return FieldSpec.builder(type, downcase(className))

@@ -70,7 +70,7 @@ public final class Analyser {
         : ContextLifecycle.NEW_INSTANCE;
     TypeName type = parameterizedTypeName(ClassName.get(tel),
         transform(tel.getTypeParameters(), TypeVariableName::get));
-    ClassName generatedType = peer(rawClassName(type).get(), "Builders");
+    ClassName generatedType = peer(rawClassName(type), "Builders");
     GoalContext context = createContext(type, generatedType, lifecycle);
     List<? extends AbstractGoalElement> goals = goals(tel);
     checkNameConflict(goals);
