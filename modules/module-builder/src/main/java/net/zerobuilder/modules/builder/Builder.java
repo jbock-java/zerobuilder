@@ -167,10 +167,10 @@ final class Builder {
       builder.addStatement("this._currently_in_use = false");
     }
     if (VOID.equals(type)) {
-      builder.addStatement("$T.$N($L)", rawClassName(goal.context.type).get(),
+      builder.addStatement("$T.$N($L)", rawClassName(goal.context.type),
           method, goal.invocationParameters());
     } else {
-      builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, rawClassName(goal.context.type).get(),
+      builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, rawClassName(goal.context.type),
           method, goal.invocationParameters());
     }
     if (goal.context.lifecycle == REUSE_INSTANCES) {

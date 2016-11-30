@@ -110,21 +110,19 @@ public final class ZeroUtil {
     return string;
   }
 
-  public static Optional<ClassName> rawClassName(TypeName typeName) {
+  public static ClassName rawClassName(TypeName typeName) {
     if (typeName instanceof ClassName) {
-      return Optional.of((ClassName) typeName);
+      return (ClassName) typeName;
     }
     if (typeName instanceof ParameterizedTypeName) {
-      ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
-      return Optional.of(parameterized.rawType);
+      return ((ParameterizedTypeName) typeName).rawType;
     }
-    return Optional.empty();
+    throw new IllegalArgumentException("not a declared type: " + typeName);
   }
 
   public static List<TypeName> typeArguments(TypeName typeName) {
     if (typeName instanceof ParameterizedTypeName) {
-      ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
-      return parameterized.typeArguments;
+      return ((ParameterizedTypeName) typeName).typeArguments;
     }
     return emptyList();
   }

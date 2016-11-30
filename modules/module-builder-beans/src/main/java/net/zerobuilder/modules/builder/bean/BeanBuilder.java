@@ -24,7 +24,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
@@ -90,15 +89,7 @@ public final class BeanBuilder implements BeanModule {
               : statement("this.$N = new $T()", bean.bean(), bean.type()))
           .build();
 
-  static FieldSpec cacheField(BeanGoalContext goal) {
-    ClassName type = implType(goal);
-    return FieldSpec.builder(type, downcase(type.simpleName()), PRIVATE)
-        .initializer("new $T()", type)
-        .build();
-  }
-
-
-  List<ClassName> stepInterfaceTypes(BeanGoalContext goal) {
+  private List<ClassName> stepInterfaceTypes(BeanGoalContext goal) {
     return transform(goal.description().parameters(),
         step -> contractType(goal).nestedClass(upcase(step.name())));
   }
@@ -115,6 +106,6 @@ public final class BeanBuilder implements BeanModule {
         asList(
             defineBuilderImpl(goal),
             defineContract(goal)),
-        singletonList(cacheField(goal)));
+        singletonList(goal.context.cache(implType(goal))));
   }
 }

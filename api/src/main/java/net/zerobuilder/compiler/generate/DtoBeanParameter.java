@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.NullPolicy;
@@ -15,7 +14,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.distinctFrom;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.onlyTypeArgument;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class DtoBeanParameter {
@@ -177,10 +176,7 @@ public final class DtoBeanParameter {
   public static AbstractBeanParameter loneGetter(TypeName type, String getter, NullPolicy nullPolicy,
                                                  List<TypeName> getterThrownTypes) {
     TypeName collectionType = onlyTypeArgument(type).orElse(OBJECT);
-    String name = rawClassName(collectionType)
-        .map(ClassName::simpleName)
-        .map(ZeroUtil::downcase)
-        .orElseThrow(IllegalStateException::new);
+    String name = downcase(simpleName(collectionType));
     ParameterSpec iterationVar = parameterSpec(collectionType, name);
     return new LoneGetter(type, getter, nullPolicy, iterationVar, getterThrownTypes);
   }

@@ -16,7 +16,7 @@ import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUS
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
-import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 
 public final class DtoMethodGoal {
 
@@ -83,7 +83,7 @@ public final class DtoMethodGoal {
   private static Supplier<FieldSpec> memoizeInstanceField(GoalContext context) {
     return memoize(() -> {
       TypeName type = context.type;
-      String name = '_' + downcase(rawClassName(type).get().simpleName());
+      String name = '_' + downcase(simpleName(type));
       return context.lifecycle == REUSE_INSTANCES
           ? fieldSpec(type, name, PRIVATE)
           : fieldSpec(type, name, PRIVATE, FINAL);

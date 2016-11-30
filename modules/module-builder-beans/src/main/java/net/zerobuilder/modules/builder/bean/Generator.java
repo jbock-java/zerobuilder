@@ -6,7 +6,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoContext;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
 import java.util.Collections;
@@ -18,6 +18,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
+import static net.zerobuilder.modules.builder.bean.BeanBuilder.implType;
 
 final class Generator {
 
@@ -35,21 +36,20 @@ final class Generator {
   }
 
   private static CodeBlock returnBuilder(BeanGoalContext goal) {
-    ClassName implType = BeanBuilder.implType(goal);
-    ParameterSpec varUpdater = parameterSpec(implType, downcase(implType.simpleName()));
-    DtoContext.GoalContext context = goal.context;
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
-      FieldSpec cache = goal.context.cache.get();
-      ParameterSpec varContext = parameterSpec(context.generatedType, "context");
-      FieldSpec builderField = BeanBuilder.cacheField(goal);
+    ClassName implType = implType(goal);
+    GoalContext context = goal.context;
+    if (context.lifecycle == REUSE_INSTANCES) {
+      ParameterSpec varUpdater = parameterSpec(implType, downcase("_updater"));
+      FieldSpec cache = context.cache(implType);
       return CodeBlock.builder()
-          .addStatement("$T $N = $N.get()", varContext.type, varContext, cache)
-          .beginControlFlow("if ($N.$N._currently_in_use)", varContext, builderField)
-          .addStatement("$N.$N = new $T()", varContext, builderField, implType)
+          .addStatement("$T $N = $N.get()", varUpdater.type, varUpdater, cache)
+          .beginControlFlow("if ($N._currently_in_use)", varUpdater)
+          .addStatement("$N.remove()", cache)
+          .addStatement("$N = $N.get()", varUpdater, cache)
           .endControlFlow()
-          .addStatement("$N.$N.$N = new $T()", varContext, varUpdater, goal.bean(), goal.details.goalType)
-          .addStatement("$N.$N._currently_in_use = true", varContext, varUpdater)
-          .addStatement("return $N.$N", varContext, varUpdater)
+          .addStatement("$N.$N = new $T()", varUpdater, goal.bean(), goal.details.goalType)
+          .addStatement("$N._currently_in_use = true", varUpdater)
+          .addStatement("return $N", varUpdater)
           .build();
     }
     return statement("return new $T()", implType);
