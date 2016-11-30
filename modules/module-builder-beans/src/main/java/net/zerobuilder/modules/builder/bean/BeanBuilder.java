@@ -47,7 +47,7 @@ public final class BeanBuilder implements BeanModule {
       Builder.fields;
 
   private final Function<BeanGoalContext, BuilderMethod> goalToBuilder =
-      Generator::builderMethodB;
+      Generator::builderMethod;
 
   static ClassName implType(BeanGoalContext goal) {
     ClassName contract = contractType(goal);

@@ -22,7 +22,7 @@ import static net.zerobuilder.modules.builder.bean.BeanBuilder.implType;
 
 final class Generator {
 
-  static BuilderMethod builderMethodB(BeanGoalContext goal) {
+  static BuilderMethod builderMethod(BeanGoalContext goal) {
     String name = goal.details.name;
     MethodSpec method = methodBuilder(BeanBuilder.methodName(goal))
         .returns(BeanBuilder.contractType(goal).nestedClass(upcase(goal.description().parameters().get(0).name())))

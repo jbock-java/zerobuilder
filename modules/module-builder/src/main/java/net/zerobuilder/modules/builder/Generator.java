@@ -90,7 +90,7 @@ final class Generator {
   }
 
   private static ParameterSpec builderInstance(SimpleRegularGoalContext goal) {
-    return parameterSpec(implType(goal), "builder");
+    return parameterSpec(implType(goal), "_builder");
   }
 
   private Generator() {
