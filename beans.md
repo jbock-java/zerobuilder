@@ -23,11 +23,9 @@ and without ever updating a bean in-place.
 
 ### How?
 
-The builder code will be generated if you add two 
-annotations `@Builders` and `@Goal` to a POJO class:
+The builder code will be generated if you add the `@Goal` to a POJO class:
 
 ````java
-@Builders(recycle = true)
 @Goal(updater = true)
 public class BusinessAnalyst {
   private String name;

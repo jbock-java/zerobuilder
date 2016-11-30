@@ -23,13 +23,9 @@ Zerobuilder takes care of the boilerplate by generating two different variants o
 
 ### How?
 
-Zerobuilder generates one standalone "Builders" class per `@Builders` annotation.
-The generated class will contain 1 or 2 static utility methods per `@Goal` annotation.
-
-A valid example with one goal:
+By adding the `@Goal` annotation to a constructor:
 
 ````java
-@Builders(recycle = true)
 final class Message {
 
   final String sender;
@@ -50,7 +46,7 @@ In order for the `updater = true` option to make sense,
 there has to exist one corresponding _projection_, i.e. a getter or instance field, for each goal parameter.
 This is the case in `Message.java`.
 
-The following structure will be generated (omitting `public` keyword and other code):
+The following class will be generated:
 
 ````java
 @Generated final class MessageBuilders {
