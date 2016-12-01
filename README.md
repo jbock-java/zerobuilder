@@ -37,7 +37,16 @@ Note that `updater = true` does not work everywhere.
 ### Maven note
 
 This annotation processor has no runtime dependencies.
-It should be used in `<scope>provided</scope>`.
+It should be used in `provided` scope:
+ 
+````xml
+<dependency>
+    <groupId>com.github.h908714124</groupId>
+    <artifactId>zerobuilder</artifactId>
+    <!--<version>check maven badge above</version>-->
+    <scope>provided</scope>
+</dependency>
+````
 
 ### Why zero?
 
