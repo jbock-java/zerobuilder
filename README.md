@@ -34,6 +34,11 @@ Add a `@Goal` annotation to any non-private method or constructor:
 This will generate a class called `DooBuilders` in the same package.
 Note that `updater = true` does not work everywhere.
 
+### Maven note
+
+This annotation processor has no runtime dependencies.
+It should be used in `<scope>provided</scope>`.
+
 ### Why zero?
 
 If the optional `@Builders(recycle = true)` annotation is present on the enclosing type,
