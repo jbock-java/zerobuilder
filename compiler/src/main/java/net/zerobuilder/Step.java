@@ -3,7 +3,6 @@ package net.zerobuilder;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 import static net.zerobuilder.NullPolicy.DEFAULT;
@@ -19,7 +18,7 @@ import static net.zerobuilder.NullPolicy.DEFAULT;
  * @see Builders
  */
 @Retention(SOURCE)
-@Target({PARAMETER, METHOD})
+@Target(PARAMETER)
 public @interface Step {
 
   /**
