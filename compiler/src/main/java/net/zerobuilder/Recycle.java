@@ -9,5 +9,5 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 @Retention(SOURCE)
 @Target({METHOD, CONSTRUCTOR})
-public @interface Builder {
+public @interface Recycle {
 }

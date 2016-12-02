@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.Goal;
 import net.zerobuilder.Ignore;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;

@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.Goal;
 import net.zerobuilder.NullPolicy;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;

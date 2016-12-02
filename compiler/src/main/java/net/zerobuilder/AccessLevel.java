@@ -2,32 +2,15 @@ package net.zerobuilder;
 
 import net.zerobuilder.compiler.generate.Access;
 
-public enum AccessLevel {
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-  PUBLIC {
-    @Override
-    public Access access() {
-      return Access.PUBLIC;
-    }
-  },
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-  PACKAGE {
-    @Override
-    public Access access() {
-      return Access.PACKAGE;
-    }
-  },
-
-  /**
-   * Use inherited, or {@link #PUBLIC}
-   * if nothing is inherited or inherited is also {@link #UNSPECIFIED}
-   */
-  UNSPECIFIED {
-    @Override
-    public Access access() {
-      throw new UnsupportedOperationException("not implemented");
-    }
-  };
-
-  public abstract Access access();
+@Retention(SOURCE)
+@Target({METHOD, CONSTRUCTOR})
+public @interface AccessLevel {
+  Access value() default Access.PUBLIC;
 }
