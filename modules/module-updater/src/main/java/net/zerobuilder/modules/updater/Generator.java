@@ -25,7 +25,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.NullPolicy.ALLOW;
+import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;

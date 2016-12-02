@@ -1,4 +1,4 @@
-package net.zerobuilder;
+package net.zerobuilder.compiler.generate;
 
 public enum NullPolicy {
 

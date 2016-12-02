@@ -21,8 +21,8 @@ import java.util.Collections;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static net.zerobuilder.NullPolicy.ALLOW;
-import static net.zerobuilder.compiler.generate.Access.PUBLIC;
+import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
+import static net.zerobuilder.Access.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static org.hamcrest.core.Is.is;

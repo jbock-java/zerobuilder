@@ -1,7 +1,5 @@
 package net.zerobuilder;
 
-import net.zerobuilder.compiler.generate.Access;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 

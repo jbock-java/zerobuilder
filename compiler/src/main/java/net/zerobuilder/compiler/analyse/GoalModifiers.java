@@ -1,10 +1,10 @@
 package net.zerobuilder.compiler.analyse;
 
 import net.zerobuilder.AccessLevel;
-import net.zerobuilder.NullPolicy;
+import net.zerobuilder.compiler.generate.NullPolicy;
 import net.zerobuilder.Recycle;
 import net.zerobuilder.RejectNull;
-import net.zerobuilder.compiler.generate.Access;
+import net.zerobuilder.Access;
 import net.zerobuilder.compiler.generate.DtoContext;
 
 import javax.lang.model.element.ExecutableElement;

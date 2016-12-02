@@ -3,6 +3,8 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
+import net.zerobuilder.Access;
+import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
@@ -83,6 +85,7 @@ public final class DtoGoalDetails {
 
     public final String name;
     final Access access;
+    public final ContextLifecycle lifecycle;
 
     /**
      * parameter names in original order
@@ -103,12 +106,14 @@ public final class DtoGoalDetails {
      * @param name           goal name
      * @param parameterNames parameter names in original order
      * @param access         goal options
+     * @param lifecycle
      */
     AbstractRegularDetails(String name, List<String> parameterNames,
-                           Access access) {
+                           Access access, ContextLifecycle lifecycle) {
       this.name = name;
       this.access = access;
       this.parameterNames = parameterNames;
+      this.lifecycle = lifecycle;
     }
 
     @Override
@@ -126,15 +131,17 @@ public final class DtoGoalDetails {
     public final List<TypeVariableName> instanceTypeParameters;
 
     private ConstructorGoalDetails(ClassName goalType, String name, List<String> parameterNames,
-                                   Access access, List<TypeVariableName> instanceTypeParameters) {
-      super(name, parameterNames, access);
+                                   Access access, List<TypeVariableName> instanceTypeParameters,
+                                   ContextLifecycle lifecycle) {
+      super(name, parameterNames, access, lifecycle);
       this.goalType = parameterizedTypeName(goalType, instanceTypeParameters);
       this.instanceTypeParameters = instanceTypeParameters;
     }
 
     public static ConstructorGoalDetails create(ClassName goalType, String name, List<String> parameterNames,
-                                                Access access, List<TypeVariableName> instanceTypeParameters) {
-      return new ConstructorGoalDetails(goalType, name, parameterNames, access, instanceTypeParameters);
+                                                Access access, List<TypeVariableName> instanceTypeParameters,
+                                                ContextLifecycle lifecycle) {
+      return new ConstructorGoalDetails(goalType, name, parameterNames, access, instanceTypeParameters, lifecycle);
     }
 
     @Override
@@ -166,8 +173,9 @@ public final class DtoGoalDetails {
                                       Access access,
                                       List<TypeVariableName> typeParameters,
                                       List<TypeVariableName> instanceTypeParameters,
-                                      List<TypeVariableName> returnTypeParameters) {
-      super(name, parameterNames, access);
+                                      List<TypeVariableName> returnTypeParameters,
+                                      ContextLifecycle lifecycle) {
+      super(name, parameterNames, access, lifecycle);
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
@@ -182,9 +190,10 @@ public final class DtoGoalDetails {
                                                    Access access,
                                                    List<TypeVariableName> typeParameters,
                                                    List<TypeVariableName> instanceTypeParameters,
-                                                   List<TypeVariableName> returnTypeParameters) {
+                                                   List<TypeVariableName> returnTypeParameters,
+                                                   ContextLifecycle lifecycle) {
       return new InstanceMethodGoalDetails(goalType, name, parameterNames, methodName,
-          access, typeParameters, instanceTypeParameters, returnTypeParameters);
+          access, typeParameters, instanceTypeParameters, returnTypeParameters, lifecycle);
     }
 
     @Override
@@ -213,8 +222,9 @@ public final class DtoGoalDetails {
                                     List<String> parameterNames,
                                     String methodName,
                                     Access access,
-                                    List<TypeVariableName> typeParameters) {
-      super(name, parameterNames, access);
+                                    List<TypeVariableName> typeParameters,
+                                    ContextLifecycle lifecycle) {
+      super(name, parameterNames, access, lifecycle);
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
@@ -225,8 +235,9 @@ public final class DtoGoalDetails {
                                                  List<String> parameterNames,
                                                  String methodName,
                                                  Access access,
-                                                 List<TypeVariableName> typeParameters) {
-      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters);
+                                                 List<TypeVariableName> typeParameters,
+                                                 ContextLifecycle lifecycle) {
+      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters, lifecycle);
     }
 
     @Override
@@ -244,10 +255,12 @@ public final class DtoGoalDetails {
     public final ClassName goalType;
     public final String name;
     private final Access access;
-    public BeanGoalDetails(ClassName goalType, String name, Access access) {
+    public final ContextLifecycle lifecycle;
+    public BeanGoalDetails(ClassName goalType, String name, Access access, ContextLifecycle lifecycle) {
       this.name = name;
       this.access = access;
       this.goalType = goalType;
+      this.lifecycle = lifecycle;
     }
 
     @Override

@@ -14,9 +14,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collector;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionInputCases;
 import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
 import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
@@ -52,27 +50,24 @@ public final class Generator {
         GeneratorOutput.create(
             methods(tmpOutputs),
             types(tmpOutputs),
-            fields(context, tmpOutputs),
+            fields(tmpOutputs),
             context));
   }
 
-  private static List<BuilderMethod> methods(List<ModuleOutput> inputOutputs) {
-    return inputOutputs.stream()
+  private static List<BuilderMethod> methods(List<ModuleOutput> outputs) {
+    return outputs.stream()
         .map(ModuleOutput::method)
         .collect(toList());
   }
 
-  private static List<TypeSpec> types(List<ModuleOutput> inputOutputs) {
-    return inputOutputs.stream()
+  private static List<TypeSpec> types(List<ModuleOutput> outputs) {
+    return outputs.stream()
         .map(ModuleOutput::typeSpecs)
         .collect(flatList());
   }
 
-  private static List<FieldSpec> fields(GoalContext context, List<ModuleOutput> inputOutputs) {
-    if (context.lifecycle == NEW_INSTANCE) {
-      return emptyList();
-    }
-    return inputOutputs.stream()
+  private static List<FieldSpec> fields(List<ModuleOutput> outputs) {
+    return outputs.stream()
         .map(ModuleOutput::cacheFields)
         .collect(flatList());
   }

@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
@@ -29,7 +30,7 @@ public final class DtoMethodGoal {
       super(description, createUnshuffle(description.parameters(), details.parameterNames));
       this.details = details;
       this.context = context;
-      this.instanceField = memoizeInstanceField(context);
+      this.instanceField = memoizeInstanceField(context, details.lifecycle);
     }
 
     public final GoalContext context;
@@ -80,11 +81,11 @@ public final class DtoMethodGoal {
     }
   }
 
-  private static Supplier<FieldSpec> memoizeInstanceField(GoalContext context) {
+  private static Supplier<FieldSpec> memoizeInstanceField(GoalContext context, ContextLifecycle lifecycle) {
     return memoize(() -> {
       TypeName type = context.type;
       String name = '_' + downcase(simpleName(type));
-      return context.lifecycle == REUSE_INSTANCES
+      return lifecycle == REUSE_INSTANCES
           ? fieldSpec(type, name, PRIVATE)
           : fieldSpec(type, name, PRIVATE, FINAL);
     });

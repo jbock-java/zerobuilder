@@ -6,7 +6,7 @@ import net.zerobuilder.Step;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 
-import static net.zerobuilder.NullPolicy.REJECT;
+import static net.zerobuilder.compiler.generate.NullPolicy.REJECT;
 
 public class TestStep {
 

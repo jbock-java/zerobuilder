@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.NullPolicy;
 
 public final class DtoParameter {
 

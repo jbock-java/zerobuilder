@@ -3,7 +3,7 @@ package net.zerobuilder.compiler.analyse;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.compiler.generate.Access;
+import net.zerobuilder.Access;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
@@ -171,18 +171,18 @@ final class DtoGoalElement {
   static final class BeanGoalElement implements AbstractGoalElement {
     final BeanGoalDetails details;
     final TypeElement beanType;
-    final Goal goalAnnotation;
+    final GoalModifiers goalAnnotation;
     final ModuleChoice moduleChoice;
 
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
-                            Goal goalAnnotation, Access access, ModuleChoice moduleChoice) {
+                            GoalModifiers goalAnnotation, Access access, ModuleChoice moduleChoice) {
       this.goalAnnotation = goalAnnotation;
       this.moduleChoice = moduleChoice;
       this.details = new BeanGoalDetails(goalType, name, access);
       this.beanType = beanType;
     }
 
-    static List<BeanGoalElement> create(TypeElement beanType, AccessLevel defaultAccess) {
+    static List<BeanGoalElement> create(TypeElement beanType) {
       ClassName goalType = ClassName.get(beanType);
       Goal goalAnnotation = beanType.getAnnotation(Goal.class);
       String name = goalName(goalAnnotation, goalType);

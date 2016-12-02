@@ -31,16 +31,13 @@ public final class DtoContext {
      */
     public final ClassName generatedType;
 
-    public final ContextLifecycle lifecycle;
-
     /**
      * The class that contains the goal method(s) or constructor(s).
      * This is either a {@link ClassName} or a {@link ParameterizedTypeName}.
      */
     public final TypeName type;
 
-    private GoalContext(ContextLifecycle lifecycle, TypeName type, ClassName generatedType) {
-      this.lifecycle = lifecycle;
+    private GoalContext(TypeName type, ClassName generatedType) {
       this.type = type;
       this.generatedType = generatedType;
     }
@@ -72,16 +69,14 @@ public final class DtoContext {
   /**
    * Create metadata for goal processing.
    *
-   * @param type             type that contains the goal methods / constructors;
-   *                         for bean goals, this is just the bean type
-   * @param generatedType    type name that should be generated
-   * @param contextLifecycle lifecycle setting
+   * @param type          type that contains the goal methods / constructors;
+   *                      for bean goals, this is just the bean type
+   * @param generatedType type name that should be generated
    * @return a GoalContext
    */
   public static GoalContext createContext(TypeName type,
-                                          ClassName generatedType,
-                                          ContextLifecycle contextLifecycle) {
-    return new GoalContext(contextLifecycle, type, generatedType);
+                                          ClassName generatedType) {
+    return new GoalContext(type, generatedType);
   }
 
   private static Supplier<FieldSpec> memoizeCache(ClassName generatedType) {

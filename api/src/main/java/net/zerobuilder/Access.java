@@ -1,4 +1,4 @@
-package net.zerobuilder.compiler.generate;
+package net.zerobuilder;
 
 import javax.lang.model.element.Modifier;
 import java.util.Arrays;

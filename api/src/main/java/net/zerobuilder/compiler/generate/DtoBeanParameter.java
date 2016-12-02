@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.NullPolicy;
 import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 
 import java.util.Collections;

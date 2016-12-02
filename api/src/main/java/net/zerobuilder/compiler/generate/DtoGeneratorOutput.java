@@ -5,7 +5,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 
 import java.util.List;
 import java.util.function.Function;
@@ -57,20 +56,18 @@ public final class DtoGeneratorOutput {
     final List<TypeSpec> nestedTypes;
     final List<FieldSpec> fields;
     public final ClassName generatedType;
-    final ContextLifecycle lifecycle;
 
     private GeneratorOutput(List<BuilderMethod> methods, List<TypeSpec> nestedTypes, List<FieldSpec> fields,
-                            ClassName generatedType, ContextLifecycle lifecycle) {
+                            ClassName generatedType) {
       this.methods = methods;
       this.nestedTypes = nestedTypes;
       this.fields = fields;
       this.generatedType = generatedType;
-      this.lifecycle = lifecycle;
     }
 
     static GeneratorOutput create(List<BuilderMethod> methods, List<TypeSpec> nestedTypes, List<FieldSpec> fields,
                                   DtoContext.GoalContext context) {
-      return new GeneratorOutput(methods, nestedTypes, fields, context.generatedType, context.lifecycle);
+      return new GeneratorOutput(methods, nestedTypes, fields, context.generatedType);
     }
 
 

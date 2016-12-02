@@ -3,7 +3,7 @@ package net.zerobuilder.examples.values;
 import net.zerobuilder.Goal;
 import net.zerobuilder.Step;
 
-import static net.zerobuilder.NullPolicy.REJECT;
+import static net.zerobuilder.compiler.generate.NullPolicy.REJECT;
 
 // null checking
 public class SimpleNull {
