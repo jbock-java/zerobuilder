@@ -9,5 +9,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 @Retention(SOURCE)
 @Target({METHOD, CONSTRUCTOR})
-public @interface Updater {
+public @interface GoalName {
+  String value();
 }

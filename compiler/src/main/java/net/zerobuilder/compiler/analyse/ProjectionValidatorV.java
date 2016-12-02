@@ -44,6 +44,7 @@ import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.common.LessTypes.isDeclaredType;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 final class ProjectionValidatorV {
 
@@ -116,7 +117,7 @@ final class ProjectionValidatorV {
       = goal -> {
     List<TmpSimpleParameter> parameters = executableElement.apply(goal).getParameters()
         .stream()
-        .map(parameter -> TmpSimpleParameter.create(parameter, goalAnnotation.apply(goal)))
+        .map(parameter -> TmpSimpleParameter.create(parameter, goal.goalAnnotation))
         .collect(toList());
     List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
     List<TypeName> thrownTypes = thrownTypes(executableElement.apply(goal));

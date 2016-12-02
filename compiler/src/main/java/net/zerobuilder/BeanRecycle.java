@@ -7,6 +7,6 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 @Retention(SOURCE)
-@Target({TYPE})
-public @interface BeanBuilder {
+@Target(TYPE)
+public @interface BeanRecycle {
 }

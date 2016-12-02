@@ -1,7 +1,8 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.NullPolicy;
+import net.zerobuilder.BeanRejectNull;
+import net.zerobuilder.RejectNull;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
@@ -9,6 +10,7 @@ import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+import net.zerobuilder.compiler.generate.NullPolicy;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -69,19 +71,18 @@ final class ProjectionValidator {
     final Element element;
     final Optional<Step> annotation;
 
-    static NullPolicy nullPolicy(TypeMirror type, Step step, Goal goal) {
+    static NullPolicy nullPolicy(TypeMirror type, RejectNull rejectNullAnnotation, NullPolicy defaultPolicy) {
       if (TypeName.get(type).isPrimitive()) {
         return NullPolicy.ALLOW;
       }
-      NullPolicy defaultPolicy = goal.nullPolicy() == NullPolicy.DEFAULT
-          ? NullPolicy.ALLOW
-          : goal.nullPolicy();
-      if (step != null) {
-        return step.nullPolicy() == NullPolicy.DEFAULT
-            ? defaultPolicy
-            : step.nullPolicy();
+      return rejectNullAnnotation != null ? NullPolicy.REJECT : defaultPolicy;
+    }
+
+    static NullPolicy nullPolicy(TypeMirror type, BeanRejectNull rejectNullAnnotation, NullPolicy defaultPolicy) {
+      if (TypeName.get(type).isPrimitive()) {
+        return NullPolicy.ALLOW;
       }
-      return defaultPolicy;
+      return rejectNullAnnotation != null ? NullPolicy.REJECT : defaultPolicy;
     }
 
     private TmpValidParameter(Element element, Optional<Step> annotation) {
@@ -106,9 +107,10 @@ final class ProjectionValidator {
       this.parameter = parameter;
     }
     static TmpSimpleParameter create(VariableElement parameter,
-                                     Goal goalAnnotation) {
+                                     GoalModifiers goalAnnotation) {
       Step stepAnnotation = parameter.getAnnotation(Step.class);
-      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepAnnotation, goalAnnotation);
+      RejectNull stepPolicy = parameter.getAnnotation(RejectNull.class);
+      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepPolicy, goalAnnotation.nullPolicy);
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
       DtoRegularParameter.SimpleParameter regularParameter =
@@ -128,9 +130,10 @@ final class ProjectionValidator {
         parameter -> parameter.parameter;
 
     static TmpProjectedParameter create(VariableElement parameter, ProjectionInfo projectionInfo,
-                                        Goal goalAnnotation) {
+                                        GoalModifiers goalAnnotation) {
       Step stepAnnotation = parameter.getAnnotation(Step.class);
-      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepAnnotation, goalAnnotation);
+      RejectNull stepPolicy = parameter.getAnnotation(RejectNull.class);
+      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepPolicy, goalAnnotation.nullPolicy);
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
       ProjectedParameter regularParameter =
@@ -148,10 +151,11 @@ final class ProjectionValidator {
 
     static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = parameter -> parameter.parameter;
 
-    static TmpAccessorPair accessorPair(ExecutableElement getter, ExecutableElement setter, Goal goalAnnotation) {
+    static TmpAccessorPair accessorPair(ExecutableElement getter, ExecutableElement setter) {
       Step stepAnnotation = getter.getAnnotation(Step.class);
+      BeanRejectNull beanRejectNull = getter.getAnnotation(BeanRejectNull.class);
       TypeName type = TypeName.get(getter.getReturnType());
-      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(getter.getReturnType(), stepAnnotation, goalAnnotation);
+      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(getter.getReturnType(), beanRejectNull, NullPolicy.ALLOW);
       AbstractBeanParameter accessorPair = DtoBeanParameter.accessorPair(type, getter.getSimpleName().toString(), nullPolicy,
           thrownTypes(getter), thrownTypes(setter));
       return new TmpAccessorPair(getter, ofNullable(stepAnnotation), accessorPair);

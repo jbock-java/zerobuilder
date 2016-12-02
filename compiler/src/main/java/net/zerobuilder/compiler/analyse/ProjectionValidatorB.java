@@ -94,8 +94,8 @@ final class ProjectionValidatorB {
   private static TmpAccessorPair tmpAccessorPair(Map<String, ExecutableElement> settersByName, BeanGoalElement goal, ExecutableElement getter) {
     ExecutableElement setter = settersByName.get(setterName(getter));
     return setter == null
-        ? loneGetter(getter, goal.goalAnnotation)
-        : accessorPair(getter, setter, goal.goalAnnotation);
+        ? loneGetter(getter)
+        : accessorPair(getter, setter);
   }
 
   private static final Predicate<ExecutableElement> IS_NOT_IGNORED = getter -> {

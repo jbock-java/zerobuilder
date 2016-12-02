@@ -4,6 +4,12 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.Access;
+import net.zerobuilder.BeanBuilder;
+import net.zerobuilder.BeanRecycle;
+import net.zerobuilder.BeanUpdater;
+import net.zerobuilder.Builder;
+import net.zerobuilder.Updater;
+import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
@@ -22,14 +28,13 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.AccessLevel.UNSPECIFIED;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDATER;
-import static net.zerobuilder.compiler.analyse.Utilities.downcase;
-import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.common.LessTypes.isDeclaredType;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 final class DtoGoalElement {
 
@@ -55,7 +60,7 @@ final class DtoGoalElement {
     <R> R accept(RegularGoalElementCases<R> cases);
   }
 
-  static <R> Function<AbstractRegularGoalElement, R> asFunction(RegularGoalElementCases<R> cases) {
+  private static <R> Function<AbstractRegularGoalElement, R> asFunction(RegularGoalElementCases<R> cases) {
     return element -> element.accept(cases);
   }
 
@@ -95,13 +100,6 @@ final class DtoGoalElement {
     });
   }
 
-  static final Function<AbstractGoalElement, Goal> goalAnnotation =
-      goalElementCases(
-          regularGoalElementCases(
-              general -> general.goalAnnotation,
-              projectable -> projectable.goalAnnotation),
-          bean -> bean.goalAnnotation);
-
   private static final Function<AbstractRegularGoalElement, AbstractGoalDetails> abstractDetails =
       regularGoalElementCases(
           general -> general.details,
@@ -122,10 +120,10 @@ final class DtoGoalElement {
   static final class RegularGoalElement implements AbstractRegularGoalElement {
     final AbstractRegularDetails details;
     final ExecutableElement executableElement;
-    final Goal goalAnnotation;
+    final GoalModifiers goalAnnotation;
 
     private RegularGoalElement(ExecutableElement element, AbstractRegularDetails details) {
-      this.goalAnnotation = element.getAnnotation(Goal.class);
+      this.goalAnnotation = GoalModifiers.create(element);
       this.details = details;
       this.executableElement = element;
     }
@@ -144,10 +142,10 @@ final class DtoGoalElement {
   static final class RegularProjectableGoalElement implements AbstractRegularGoalElement {
     final AbstractRegularDetails details;
     final ExecutableElement executableElement;
-    final Goal goalAnnotation;
+    final GoalModifiers goalAnnotation;
 
     private RegularProjectableGoalElement(ExecutableElement element, AbstractRegularDetails details) {
-      this.goalAnnotation = element.getAnnotation(Goal.class);
+      this.goalAnnotation = GoalModifiers.create(element);
       this.details = details;
       this.executableElement = element;
     }
@@ -171,25 +169,25 @@ final class DtoGoalElement {
   static final class BeanGoalElement implements AbstractGoalElement {
     final BeanGoalDetails details;
     final TypeElement beanType;
-    final GoalModifiers goalAnnotation;
     final ModuleChoice moduleChoice;
 
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
-                            GoalModifiers goalAnnotation, Access access, ModuleChoice moduleChoice) {
-      this.goalAnnotation = goalAnnotation;
+                            ModuleChoice moduleChoice, ContextLifecycle lifecycle) {
       this.moduleChoice = moduleChoice;
-      this.details = new BeanGoalDetails(goalType, name, access);
+      this.details = new BeanGoalDetails(goalType, name, Access.PUBLIC, lifecycle);
       this.beanType = beanType;
     }
 
     static List<BeanGoalElement> create(TypeElement beanType) {
       ClassName goalType = ClassName.get(beanType);
-      Goal goalAnnotation = beanType.getAnnotation(Goal.class);
-      String name = goalName(goalAnnotation, goalType);
-      List<ModuledOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
+      String name = downcase(simpleName(goalType));
+      List<ModuleChoice> goalOptions = goalOptions(beanType);
+      ContextLifecycle lifecycle = beanType.getAnnotation(BeanRecycle.class) == null ?
+          ContextLifecycle.NEW_INSTANCE :
+          ContextLifecycle.REUSE_INSTANCES;
       return transform(goalOptions,
-          goalOption -> new BeanGoalElement(goalType, name, beanType, goalAnnotation,
-              goalOption.access, goalOption.module));
+          goalOption -> new BeanGoalElement(goalType, name, beanType, goalOption,
+              lifecycle));
     }
 
     @Override
@@ -198,46 +196,28 @@ final class DtoGoalElement {
     }
   }
 
-  static String goalName(Goal goalAnnotation, TypeName goalType) {
-    return goalAnnotation.name().isEmpty()
-        ? downcase(simpleName(goalType))
-        : goalAnnotation.name();
-  }
-
-  private static Access accessLevelOverride(AccessLevel override, AccessLevel defaultAccess) {
-    defaultAccess = defaultAccess == UNSPECIFIED
-        ? AccessLevel.PUBLIC
-        : defaultAccess;
-    return override == UNSPECIFIED
-        ? defaultAccess.access()
-        : override.access();
-  }
-
   enum ModuleChoice {
     UPDATER, BUILDER
   }
 
-  static final class ModuledOption {
-    final Access access;
-    final ModuleChoice module;
-    ModuledOption(Access access, ModuleChoice module) {
-      this.access = access;
-      this.module = module;
+  private static List<ModuleChoice> goalOptions(ExecutableElement element) {
+    ArrayList<ModuleChoice> options = new ArrayList<>(2);
+    if (element.getAnnotation(Builder.class) != null) {
+      options.add(BUILDER);
     }
-    static ModuledOption create(Access access, ModuleChoice module) {
-      return new ModuledOption(access, module);
+    if (element.getAnnotation(Updater.class) != null) {
+      options.add(UPDATER);
     }
+    return options;
   }
 
-  private static List<ModuledOption> goalOptions(Goal goalAnnotation, AccessLevel defaultAccess) {
-    List<ModuledOption> options = new ArrayList<>(2);
-    if (goalAnnotation.updater()) {
-      options.add(ModuledOption.create(
-          accessLevelOverride(goalAnnotation.updaterAccess(), defaultAccess), UPDATER));
+  private static List<ModuleChoice> goalOptions(TypeElement element) {
+    ArrayList<ModuleChoice> options = new ArrayList<>(2);
+    if (element.getAnnotation(BeanBuilder.class) != null) {
+      options.add(BUILDER);
     }
-    if (goalAnnotation.builder()) {
-      options.add(ModuledOption.create(
-          accessLevelOverride(goalAnnotation.builderAccess(), defaultAccess), BUILDER));
+    if (element.getAnnotation(BeanUpdater.class) != null) {
+      options.add(UPDATER);
     }
     return options;
   }
@@ -251,36 +231,40 @@ final class DtoGoalElement {
     }
   }
 
-  static List<AbstractRegularGoalElement> createRegular(ExecutableElement element, AccessLevel defaultAccess) {
+  static List<AbstractRegularGoalElement> createRegular(ExecutableElement element) {
     TypeName goalType = goalType(element);
-    Goal goalAnnotation = element.getAnnotation(Goal.class);
-    String name = goalName(goalAnnotation, goalType);
-    List<ModuledOption> goalOptions = goalOptions(goalAnnotation, defaultAccess);
+    GoalModifiers modifiers = GoalModifiers.create(element);
+    List<ModuleChoice> goalOptions = goalOptions(element);
     String methodName = element.getSimpleName().toString();
     return transform(goalOptions,
         goalOption ->
-            goalOption.module == BUILDER ?
-                createBuilderGoal(element, goalType, name, methodName,
-                    parameterNames(element), goalOption) :
-                createUpdaterGoal(element, goalType, name, methodName,
-                    parameterNames(element), goalOption));
+            goalOption == BUILDER ?
+                createBuilderGoal(element, goalType, modifiers, methodName,
+                    parameterNames(element)) :
+                createUpdaterGoal(element, goalType, modifiers, methodName,
+                    parameterNames(element)));
   }
 
-  private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType, String name,
+  private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType,
+                                                              GoalModifiers goalModifiers,
                                                               String methodName,
-                                                              List<String> parameterNames, ModuledOption goalOption) {
+                                                              List<String> parameterNames) {
     if (element.getKind() == CONSTRUCTOR) {
-      return new RegularProjectableGoalElement(element, ConstructorGoalDetails.create(ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
-          name, parameterNames, goalOption.access, instanceTypevars(element)));
+      return new RegularProjectableGoalElement(element, ConstructorGoalDetails.create(
+          ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
+          goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element),
+          goalModifiers.lifecycle));
     }
     AbstractRegularDetails details =
         element.getModifiers().contains(STATIC) ?
-            StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                methodTypevars(element)) :
-            InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
+            StaticMethodGoalDetails.create(goalType, goalModifiers.goalName, parameterNames, methodName,
+                goalModifiers.access, methodTypevars(element), goalModifiers.lifecycle) :
+            InstanceMethodGoalDetails.create(goalType, goalModifiers.goalName, parameterNames, methodName,
+                goalModifiers.access,
                 methodTypevars(element),
                 instanceTypevars(element),
-                returnTypeInstanceTypevars(element));
+                returnTypeInstanceTypevars(element),
+                goalModifiers.lifecycle);
     return new RegularProjectableGoalElement(element, details);
   }
 
@@ -303,23 +287,28 @@ final class DtoGoalElement {
         .collect(toList());
   }
 
-  private static AbstractRegularGoalElement createBuilderGoal(ExecutableElement element, TypeName goalType, String name,
+  private static AbstractRegularGoalElement createBuilderGoal(ExecutableElement element, TypeName goalType,
+                                                              GoalModifiers goalModifiers,
                                                               String methodName,
-                                                              List<String> parameterNames, ModuledOption goalOption) {
+                                                              List<String> parameterNames) {
     if (element.getKind() == CONSTRUCTOR) {
       ConstructorGoalDetails details = ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
-          name, parameterNames, goalOption.access, instanceTypevars(element));
+          goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element),
+          goalModifiers.lifecycle);
       return new RegularGoalElement(element, details);
     }
     AbstractRegularDetails details =
         element.getModifiers().contains(STATIC) ?
-            StaticMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
-                methodTypevars(element)) :
-            InstanceMethodGoalDetails.create(goalType, name, parameterNames, methodName, goalOption.access,
+            StaticMethodGoalDetails.create(goalType, goalModifiers.goalName, parameterNames, methodName,
+                goalModifiers.access,
+                methodTypevars(element), goalModifiers.lifecycle) :
+            InstanceMethodGoalDetails.create(goalType, goalModifiers.goalName, parameterNames, methodName,
+                goalModifiers.access,
                 methodTypevars(element),
                 instanceTypevars(element),
-                returnTypeInstanceTypevars(element));
+                returnTypeInstanceTypevars(element),
+                goalModifiers.lifecycle);
     return new RegularGoalElement(element, details);
   }
 
