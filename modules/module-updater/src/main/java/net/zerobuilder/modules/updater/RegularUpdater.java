@@ -163,13 +163,13 @@ public final class RegularUpdater implements ProjectedModule {
 
   static final Function<ProjectedRegularGoalContext, Boolean> isReusable =
       projectedRegularGoalContextCases(
-          staticMethod -> staticMethod.context.lifecycle == REUSE_INSTANCES &&
+          staticMethod -> staticMethod.details.lifecycle == REUSE_INSTANCES &&
               staticMethod.details.typeParameters.isEmpty(),
-          instanceMethod -> instanceMethod.context.lifecycle == REUSE_INSTANCES &&
+          instanceMethod -> instanceMethod.details.lifecycle == REUSE_INSTANCES &&
               instanceMethod.details.typeParameters.isEmpty() &&
               instanceMethod.details.instanceTypeParameters.isEmpty() &&
               instanceMethod.details.returnTypeParameters.isEmpty(),
-          constructor -> constructor.context.lifecycle == REUSE_INSTANCES &&
+          constructor -> constructor.details.lifecycle == REUSE_INSTANCES &&
               constructor.details.instanceTypeParameters.isEmpty());
 
   private final Function<ProjectedRegularGoalContext, List<TypeSpec>> types =

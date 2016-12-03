@@ -53,8 +53,7 @@ final class Generator {
 
   private static CodeBlock returnRegular(SimpleRegularGoalContext goal) {
     ParameterSpec varBuilder = builderInstance(goal);
-    GoalContext context = goal.context();
-    if (context.lifecycle == REUSE_INSTANCES) {
+    if (goal.description().details().lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = goal.context().cache(implType(goal));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)
@@ -72,8 +71,7 @@ final class Generator {
   private static CodeBlock returnInstanceMethod(
       InstanceMethodGoalContext goal, ParameterSpec varInstance) {
     ParameterSpec varBuilder = builderInstance(goal);
-    GoalContext context = goal.context;
-    if (context.lifecycle == REUSE_INSTANCES) {
+    if (goal.details.lifecycle == REUSE_INSTANCES) {
       FieldSpec cache = goal.context().cache(implType(goal));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)

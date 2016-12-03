@@ -23,10 +23,10 @@ import java.util.Map;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
+import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -54,14 +54,13 @@ public class VoidTest {
     // create goal context
     DtoContext.GoalContext goalContext = createContext(
         ClassName.get(VoidTest.class).peerClass("Throw"),
-        ClassName.get(VoidTest.class).nestedClass("ThrowBuilders"),
-        NEW_INSTANCE);
+        ClassName.get(VoidTest.class).nestedClass("ThrowBuilders"));
 
     // create goal details
     String goalName = "Void";
     StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
         TypeName.VOID, goalName, singletonList("message"),
-        "doUpdate", PRIVATE, emptyList());
+        "doUpdate", PRIVATE, emptyList(), NEW_INSTANCE);
 
     SimpleParameter parameter = DtoRegularParameter.create("message", STRING, ALLOW);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(

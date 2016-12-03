@@ -63,7 +63,7 @@ final class Builder {
     List<SimpleParameter> steps = goal.description().parameters();
     return Stream.of(
         presentInstances(maybeField.apply(goal)),
-        goal.context().lifecycle == REUSE_INSTANCES ?
+        goal.description().details().lifecycle == REUSE_INSTANCES ?
             singletonList(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
             Collections.<FieldSpec>emptyList(),
         steps.stream()
@@ -121,11 +121,11 @@ final class Builder {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
     builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, goal.type(), goal.invocationParameters());
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.add(free(goal.description().parameters()));
     }
     return builder.addStatement("return $N", varGoal).build();
@@ -137,7 +137,7 @@ final class Builder {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
     if (VOID.equals(type)) {
@@ -147,7 +147,7 @@ final class Builder {
       builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type, varGoal, goal.instanceField(),
           method, goal.invocationParameters());
     }
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this.$N = null", goal.instanceField());
       builder.add(free(goal.description().parameters()));
     }
@@ -163,7 +163,7 @@ final class Builder {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
     if (VOID.equals(type)) {
@@ -173,7 +173,7 @@ final class Builder {
       builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, rawClassName(goal.context.type),
           method, goal.invocationParameters());
     }
-    if (goal.context.lifecycle == REUSE_INSTANCES) {
+    if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.add(free(goal.description().parameters()));
     }
     if (!VOID.equals(type)) {

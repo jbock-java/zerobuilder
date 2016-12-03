@@ -27,7 +27,7 @@ final class Generator {
     MethodSpec method = methodBuilder(BeanBuilder.methodName(goal))
         .returns(BeanBuilder.contractType(goal).nestedClass(upcase(goal.description().parameters().get(0).name())))
         .addModifiers(goal.details.access(STATIC))
-        .addExceptions(goal.context.lifecycle == REUSE_INSTANCES
+        .addExceptions(goal.details.lifecycle == REUSE_INSTANCES
             ? Collections.emptyList()
             : goal.description().thrownTypes)
         .addCode(returnBuilder(goal))
@@ -38,7 +38,7 @@ final class Generator {
   private static CodeBlock returnBuilder(BeanGoalContext goal) {
     ClassName implType = implType(goal);
     GoalContext context = goal.context;
-    if (context.lifecycle == REUSE_INSTANCES) {
+    if (goal.details.lifecycle == REUSE_INSTANCES) {
       ParameterSpec varUpdater = parameterSpec(implType, downcase("_builder"));
       FieldSpec cache = context.cache(implType);
       return CodeBlock.builder()

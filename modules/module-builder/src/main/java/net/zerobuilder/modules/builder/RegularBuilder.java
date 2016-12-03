@@ -90,7 +90,7 @@ public final class RegularBuilder implements RegularSimpleModule {
       regularGoalContextCases(
           constructor -> constructor(),
           method -> {
-            if (method.context.lifecycle == REUSE_INSTANCES) {
+            if (method.details.lifecycle == REUSE_INSTANCES) {
               return constructor();
             }
             TypeName type = method.context.type;

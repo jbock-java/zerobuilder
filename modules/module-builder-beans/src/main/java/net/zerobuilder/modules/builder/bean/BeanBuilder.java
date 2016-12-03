@@ -81,10 +81,10 @@ public final class BeanBuilder implements BeanModule {
 
   private final Function<BeanGoalContext, MethodSpec> builderConstructor =
       bean -> constructorBuilder()
-          .addExceptions(bean.context.lifecycle == REUSE_INSTANCES
+          .addExceptions(bean.details.lifecycle == REUSE_INSTANCES
               ? Collections.emptyList()
               : bean.description().thrownTypes)
-          .addCode(bean.context.lifecycle == REUSE_INSTANCES
+          .addCode(bean.details.lifecycle == REUSE_INSTANCES
               ? emptyCodeBlock
               : statement("this.$N = new $T()", bean.bean(), bean.type()))
           .build();

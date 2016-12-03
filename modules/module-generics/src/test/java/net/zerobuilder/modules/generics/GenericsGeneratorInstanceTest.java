@@ -15,10 +15,10 @@ import org.junit.Test;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
+import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.modules.generics.VarLifeTest.map;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -53,8 +53,7 @@ public class GenericsGeneratorInstanceTest {
   public void create() throws Exception {
     GoalContext goalContext = createContext(
         TYPE, // type that contains the goal method
-        GENERATED_TYPE, // the type we want to generate; it will contain all the generated code
-        NEW_INSTANCE
+        GENERATED_TYPE // the type we wish to generate; it will contain all the generated code
     );
 
     String goalName = "foo"; // free choice
@@ -66,7 +65,8 @@ public class GenericsGeneratorInstanceTest {
         PRIVATE,
         asList(K, V),
         singletonList(S),
-        asList(K, V));
+        asList(K, V),
+        NEW_INSTANCE);
 
     SimpleParameter keyParameter = DtoRegularParameter.create("key", K, ALLOW);
     SimpleParameter valueParameter = DtoRegularParameter.create("value", V, ALLOW);

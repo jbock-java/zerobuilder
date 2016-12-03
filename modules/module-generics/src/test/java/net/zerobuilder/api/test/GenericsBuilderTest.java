@@ -28,10 +28,10 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
+import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -70,8 +70,7 @@ public class GenericsBuilderTest {
     // create goal context
     DtoContext.GoalContext goalContext = createContext(
         TYPE, // type that contains the goal method; in this case, this is the same as the goal type
-        GENERATED_TYPE, // the type we want to generate; it will contain all the generated code
-        NEW_INSTANCE // forbid caching of generics instances
+        GENERATED_TYPE // the type we wish to generate; it will contain all the generated code
     );
 
     // create goal details
@@ -82,7 +81,8 @@ public class GenericsBuilderTest {
         asList("keys", "value"),
         "multiKey",
         PRIVATE,
-        asList(K, V));
+        asList(K, V),
+        NEW_INSTANCE);
 
     // use SimpleParameter because the generics module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("keys", LIST_OF_K, ALLOW);

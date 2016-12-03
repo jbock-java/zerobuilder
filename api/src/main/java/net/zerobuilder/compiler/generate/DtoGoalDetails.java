@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static java.util.Collections.emptyList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
 public final class DtoGoalDetails {
@@ -283,23 +282,6 @@ public final class DtoGoalDetails {
       return cases.bean(this);
     }
   }
-
-  public static final Function<AbstractRegularDetails, List<TypeVariableName>> instanceTypeParameters =
-      regularDetailsCases(
-          constructor -> constructor.instanceTypeParameters,
-          staticMethod -> emptyList(),
-          instanceMethod -> instanceMethod.instanceTypeParameters);
-  public static final Function<AbstractGoalDetails, TypeName> goalType
-      = asFunction(new AbstractGoalDetailsCases<TypeName>() {
-    @Override
-    public TypeName regular(AbstractRegularDetails goal) {
-      return goal.type();
-    }
-    @Override
-    public TypeName bean(BeanGoalDetails goal) {
-      return goal.goalType;
-    }
-  });
 
   private DtoGoalDetails() {
     throw new UnsupportedOperationException("no instances");
