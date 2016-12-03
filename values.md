@@ -23,7 +23,7 @@ Zerobuilder takes care of the boilerplate by generating two different variants o
 
 ### Builder
 
-Start by adding the `@Goal` annotation to a constructor:
+Start by adding the `@Builder` annotation to a constructor:
 
 ````java
 final class Message {
@@ -32,7 +32,7 @@ final class Message {
   final String body;
   final String recipient;
 
-  @Goal
+  @Builder
   Message(String sender, String body, String recipient) {
     this.sender = sender;
     this.body = body;
@@ -57,21 +57,18 @@ The following class will be generated:
 }
 ````
 
-The implementations of the step interfaces `MessageBuilder.Sender`, `MessageBuilder.Body`, `MessageBuilder.Recipient` 
-are omitted here.
-If you clone this project and do a `mvn install`, you will find the complete source code of `MessageBuilders.java`
-in the `examples/basic/target/generated-sources/annotations` folder.
-
 The `messageBuilder` method returns `MessageBuilder.Sender`, the first step of a linear
 chain towards the constructor goal:
 
 ![steps](https://raw.githubusercontent.com/h908714124/zerobuilder/68729a2ecdd44a60be40498eef1abc3b378fb524/dot/graph.png "steps diagram")
 
+### Changing step order
+
 By default, these steps are in the original order of the goal arguments.
 If for some reason you would like to call them in a different order, you can use the `@Step` annotation:
 
 ````java
-  @Goal
+  @Builder
   Message(@Step(1) String sender, 
           @Step(2) String body, 
           @Step(0) String recipient) {
@@ -84,7 +81,7 @@ If for some reason you would like to call them in a different order, you can use
 
 ### Updater
 
-This time, we override a default by specifying `builder = false`, so that we can study the generated updater in isolation.
+This time, we use a different annotation on the constructor:
 
 ````java
 final class Message {
@@ -93,7 +90,7 @@ final class Message {
   final String body;
   final String recipient;
 
-  @Goal(updater = true, builder = false)
+  @Updater
   Message(String sender, String body, String recipient) {
     this.sender = sender;
     this.body = body;
@@ -103,7 +100,7 @@ final class Message {
 
 ````
 
-In order for the `updater = true` option to make sense,
+In order for the `@Updater` annotation to work,
 there has to exist one corresponding _projection_, i.e. a getter or instance field of the same name, 
 for each goal parameter.
 This is the case in `Message.java`.
@@ -124,56 +121,50 @@ The following class will be generated:
 }
 ````
 
-Note that this is the "classic" builder pattern, with no implicit ordering of the steps.
+### What's a projection?
 
-### Factory methods
+This can either be a non-private field or a non-private, non-abstract, non-static method,
+of the same name and type as one of the parameters. Inherited methods are considered.
 
-In addition to constructors, the `@Goal` annotation can appear on methods, even non-static ones. 
-Have a look at the [MessageFactory](../master/examples/basic/src/main/java/net/zerobuilder/examples/values/MessageFactory.java) example,
-to see what this can be used for.
+The following are valid projections for the `sender` parameter above:
 
-### Other frameworks
-
-Zerobuilder does not help with the <em>definition</em> of your data types.
-Other source generators, like 
-[auto-value](https://github.com/google/auto/tree/master/value) 
-can be used for the data definition, with zerobuilder handling the builders.
-
-See the [auto-value](../master/examples/autovalue/src/main/java/net/zerobuilder/examples/autovalue/Bob.java) and 
-and [derive4j](../master/examples/derive4j/src/main/java/net/zerobuilder/examples/derive4j/Request.java) examples.
-
-Note: auto-value's `abstract property()` methods are valid projections (see above),
-so `updater = true` is possible.
+1. A field `sender` of type String
+2. A method `String sender()`
+3. A method `String getSender()`
 
 ### Null checking
 
-Run-time null checks can be added for all non-primitive properties,
-by using the goal level `nullPolicy` option:
+Runtime null checks can be added if you put a `@RejectNull` annotation on a parameter.
 
 ````java
-@Goal(nullPolicy = NullPolicy.REJECT)
-public MyConstructor(String required) {
-  this.name = required;
+@Builder
+public Doo(@RejectNull String foo) {
+  this.foo = foo;
 }
 ````
 
-Additionaly, `nullPolicy` can be specified for each individual step:
+### Recycling
+
+If `ThreadLocals` are permissible in your context,
+the builder pattern can be made more efficient by adding a `@Recycle` annotation:
 
 ````java
-@Goal(nullPolicy = REJECT)
-public MyConstructor(String required,
-                     @Step(nullPolicy = ALLOW) String optional) {
-  this.required = required;
-  this.optional = optional;
+@Recycle
+@Builder
+public Doo(String foo) {
+  this.foo = foo;
 }
 ````
-
-A `nullPolicy` setting on the step level overrides the goal level setting, if any.
-The default behaviour is `NullPolicy.ALLOW`.
 
 ### Access level
 
 By default, the generated static methods `fooBuilder` and `fooUpdater` are public.
-You can change this to default (package) visibility using `@Builders(access = AccessLevel.PACKAGE)`.
+This can be changed to package visibility by adding an `@AccessLevel` annotation.
 
-Each goal can override this setting with `@Goal(builderAccess)` and `@Goal(updaterAccess)`.
+````java
+@AccessLevel(Access.PACKAGE)
+@Builder
+public Doo(String foo) {
+  this.foo = foo;
+}
+````

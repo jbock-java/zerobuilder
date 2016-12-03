@@ -5,19 +5,20 @@
 This project generates some variants of the builder pattern.
 It has two different use cases:
 
-* Create and update <em>instances of</em> immutable value objects with minimal effort. 
-  See [values](values.md).
+* Create and update <em>instances of</em> immutable value objects, as shown below.
+  More documentation can be found here: [values](values.md).
 * Create <em>instances of</em> mutable JavaBeans and update them with "immutable semantics", i.e. by making shallow copies.
-  See [beans](beans.md).
+  See here: [beans](beans.md).
 
 ### Non goals
 
-* Generating data types. This is up to the user, or other tools (see [examples](examples)).
+* Generating data types, such as beans. This can be achieved with other tools (see [examples](examples)).
   Thanks for [mentioning us](https://github.com/jodastephen/compare-beangen) though!
 
 ### Quick start
 
-Add a `@Builder` annotation to any method or constructor. You can also add an `@Updater` annotation, if your type has "projections" 
+Add a `@Builder` annotation to any non-private, non-abstract method or constructor.
+You can also add an `@Updater` annotation, if the returned (or constructed) type has "projections" 
 (in this case, the fields `foo` and `bar`):
 
 ````java
@@ -38,7 +39,7 @@ Add a `@Builder` annotation to any method or constructor. You can also add an `@
   }
 ````
 
-This will generate a class called `DooBuilders` in the same package. 
+This will generate a class called `DooBuilders` in the same package.
 
 * The static method `DooBuilders.dooBuilder()` returns the builder.
 * The static method `DooBuilders.dooUpdater(Doo doo)` returns the updater.
@@ -56,10 +57,3 @@ It should be used in `provided` scope, as shown here:
     <scope>provided</scope>
 </dependency>
 ````
-
-### Why zero?
-
-If the optional `@Builders(recycle = true)` annotation is present on the enclosing type,
-<em>and the goal method does not use any type variables</em>, 
-the generated code will reuse the generated builder/updater instance(s).
-Thus, the project name implies "zero garbage collection".
