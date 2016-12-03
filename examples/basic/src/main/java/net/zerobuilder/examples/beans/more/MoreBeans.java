@@ -106,18 +106,6 @@ public class MoreBeans {
     }
   }
 
-  // access rules: default is PACKAGE, but updater is PUBLIC
-  @BeanBuilder
-  public static class Access {
-    private String foo;
-    public String getFoo() {
-      return foo;
-    }
-    public void setFoo(String foo) {
-      this.foo = foo;
-    }
-  }
-
   // accessors declare exceptions
   @BeanBuilder
   public static class Kaboom {

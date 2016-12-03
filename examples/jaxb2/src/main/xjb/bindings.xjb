@@ -15,7 +15,6 @@
   <jaxb:bindings schemaLocation="../xsd/paperclips.xsd">
     <jaxb:bindings node="xs:complexType[@name='PaperclipFactory']">
       <annox:annotateClass>@net.zerobuilder.BeanBuilder</annox:annotateClass>
-      <annox:annotateClass>@net.zerobuilder.BeanUpdater</annox:annotateClass>
     </jaxb:bindings>
     <jaxb:bindings node="//xs:element[@name = 'employees']/xs:complexType">
       <annox:annotateClass>@net.zerobuilder.BeanBuilder</annox:annotateClass>

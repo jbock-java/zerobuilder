@@ -1,6 +1,5 @@
 package net.zerobuilder.examples.beans.more;
 
-import net.zerobuilder.examples.beans.more.MoreBeans.Access;
 import net.zerobuilder.examples.beans.more.MoreBeans.AeroExperiment;
 import net.zerobuilder.examples.beans.more.MoreBeans.BioExperiment;
 import net.zerobuilder.examples.beans.more.MoreBeans.Ignorify;
@@ -9,16 +8,12 @@ import net.zerobuilder.examples.beans.more.MoreBeans.OverloadedExperiment;
 import net.zerobuilder.examples.beans.more.MoreBeans.RawExperiment;
 import org.junit.Test;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static net.zerobuilder.examples.beans.more.MoreBeans_AccessBuilders.accessBuilder;
-import static net.zerobuilder.examples.beans.more.MoreBeans_AccessBuilders.accessUpdater;
 import static net.zerobuilder.examples.beans.more.MoreBeans_AeroExperimentBuilders.aeroExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.MoreBeans_AeroExperimentBuilders.aeroExperimentUpdater;
 import static net.zerobuilder.examples.beans.more.MoreBeans_BioExperimentBuilders.bioExperimentBuilder;
@@ -32,9 +27,7 @@ import static net.zerobuilder.examples.beans.more.MoreBeans_OverloadedExperiment
 import static net.zerobuilder.examples.beans.more.MoreBeans_RawExperimentBuilders.rawExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.MoreBeans_RawExperimentBuilders.rawExperimentUpdater;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 public class MoreBeansTest {
 
@@ -120,20 +113,5 @@ public class MoreBeansTest {
     assertThat(something.getThings().get(0),
         is(singletonList("a")));
     assertThat(nothing2.getThings().size(), is(0));
-  }
-
-  @Test
-  public void accessTest() throws NoSuchMethodException {
-    Access foo = accessBuilder()
-        .foo("foo");
-    Access bar = accessUpdater(foo)
-        .foo("bar")
-        .done();
-    Method builderMethod = MoreBeans_AccessBuilders.class.getDeclaredMethod("accessBuilder");
-    Method updaterMethod = MoreBeans_AccessBuilders.class.getDeclaredMethod("accessUpdater", Access.class);
-    assertFalse(Modifier.isPublic(builderMethod.getModifiers()));
-    assertTrue(Modifier.isPublic(updaterMethod.getModifiers()));
-    assertThat(foo.getFoo(), is("foo"));
-    assertThat(bar.getFoo(), is("bar"));
   }
 }

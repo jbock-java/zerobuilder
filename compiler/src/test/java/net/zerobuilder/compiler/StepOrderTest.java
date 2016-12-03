@@ -55,7 +55,7 @@ public class StepOrderTest {
             "",
             "    @Override",
             "    public Spaghetti cheese(String cheese) {",
-            "      Spaghetti _spaghetti = new Spaghetti(sauce, cheese);",
+            "      Spaghetti _spaghetti = new Spaghetti(cheese, sauce);",
             "      return _spaghetti;",
             "    }",
             "  }",

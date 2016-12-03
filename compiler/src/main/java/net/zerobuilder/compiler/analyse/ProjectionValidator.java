@@ -107,8 +107,8 @@ final class ProjectionValidator {
     }
     static TmpSimpleParameter create(VariableElement parameter,
                                      GoalModifiers goalAnnotation) {
-      int value = parameter.getAnnotation(BeanStep.class) == null ?
-          -1 : parameter.getAnnotation(BeanStep.class).value();
+      int value = parameter.getAnnotation(Step.class) == null ?
+          -1 : parameter.getAnnotation(Step.class).value();
       RejectNull stepPolicy = parameter.getAnnotation(RejectNull.class);
       NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepPolicy, goalAnnotation.nullPolicy);
       String name = parameter.getSimpleName().toString();

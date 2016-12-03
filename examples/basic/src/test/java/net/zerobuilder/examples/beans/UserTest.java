@@ -8,7 +8,6 @@ import static net.zerobuilder.examples.beans.UserBuilders.userBuilder;
 import static net.zerobuilder.examples.beans.UserBuilders.userUpdater;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 public class UserTest {
 
@@ -29,8 +28,5 @@ public class UserTest {
     assertThat(bar.getId(), is(12));
     assertThat(bar.getName(), is("bar"));
     assertThat(bar.isPower(), is(false));
-    // check that caching works
-    assertTrue(userBuilder() == builder);
-    assertTrue(userUpdater(foo) == updater);
   }
 }
