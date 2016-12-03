@@ -17,13 +17,20 @@ It has two different use cases:
 
 ### Quick start
 
-Add a `@Goal` annotation to any non-private method or constructor:
+Add a `@Builder` annotation to any method or constructor. You can also add an `@Updater` annotation, if your type has "projections" 
+(in this case, the fields `foo` and `bar`):
 
 ````java
+  import net.zerobuilder.Builder;
+  import net.zerobuilder.Updater;
+
   final class Doo {
+
     final String foo;
     final String bar;
-    @Goal(updater = true)
+
+    @Builder
+    @Updater
     Doo(String foo, String bar) {
       this.foo = foo;
       this.bar = bar;
