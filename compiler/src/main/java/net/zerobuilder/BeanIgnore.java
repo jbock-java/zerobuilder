@@ -9,8 +9,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 /**
  * <p>
  * Marks a &quot;getter&quot; method as ignored.
- * This may be necessary a method that looks like a &quot;getter&quot;
- * has no corresponding &quot;setter&quot;.
  * </p>
  */
 @Retention(SOURCE)
