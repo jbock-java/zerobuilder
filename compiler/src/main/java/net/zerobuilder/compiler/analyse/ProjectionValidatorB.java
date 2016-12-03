@@ -3,7 +3,7 @@ package net.zerobuilder.compiler.analyse;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.BeanRejectNull;
-import net.zerobuilder.Ignore;
+import net.zerobuilder.BeanIgnore;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
@@ -100,7 +100,7 @@ final class ProjectionValidatorB {
   }
 
   private static final Predicate<ExecutableElement> IS_NOT_IGNORED = getter -> {
-    Ignore ignoreAnnotation = getter.getAnnotation(Ignore.class);
+    BeanIgnore ignoreAnnotation = getter.getAnnotation(BeanIgnore.class);
     if (ignoreAnnotation != null && getter.getAnnotation(Step.class) != null) {
       throw new ValidationException(BEAN_IGNORE_AND_STEP, getter);
     }
@@ -111,7 +111,7 @@ final class ProjectionValidatorB {
     if (setter.getAnnotation(Step.class) != null) {
       throw new ValidationException(STEP_ON_SETTER, setter);
     }
-    if (setter.getAnnotation(Ignore.class) != null) {
+    if (setter.getAnnotation(BeanIgnore.class) != null) {
       throw new ValidationException(IGNORE_ON_SETTER, setter);
     }
     return true;

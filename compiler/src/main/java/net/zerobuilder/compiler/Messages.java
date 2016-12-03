@@ -54,13 +54,13 @@ public final class Messages {
         "Problem while generating an updater: Missing projection.";
 
     public static final String BEAN_IGNORE_AND_STEP =
-        "@Ignore and @Step don't make sense together." + POJO_HINT;
+        "@BeanIgnore and @Step don't make sense together." + POJO_HINT;
 
     public static final String STEP_ON_SETTER =
         "The @Step annotation goes on getters, not setters.";
 
     public static final String IGNORE_ON_SETTER =
-        "The @Ignore annotation goes on getters, not setters.";
+        "The @BeanIgnore annotation goes on getters, not setters.";
 
     public static final String BEAN_SUBGOALS =
         "Bean goals may not have subgoals." + POJO_HINT;
