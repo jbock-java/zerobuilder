@@ -9,7 +9,6 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractRegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
-import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.BeanDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
@@ -86,8 +85,7 @@ public final class Analyser {
               new BeanDescriptionInput(BEAN_UPDATER, validateBean.apply(bean)));
 
   private static List<? extends AbstractGoalElement> goals(TypeElement tel) throws ValidationException {
-    return tel.getAnnotation(net.zerobuilder.BeanBuilder.class) != null ||
-        tel.getAnnotation(net.zerobuilder.BeanUpdater.class) != null ?
+    return tel.getAnnotation(net.zerobuilder.BeanBuilder.class) != null ?
         beanGoals(tel) :
         regularGoals(tel);
   }

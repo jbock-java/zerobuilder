@@ -1,9 +1,9 @@
 package net.zerobuilder.examples.beans;
 
-import net.zerobuilder.Goal;
+import net.zerobuilder.BeanBuilder;
 
 // inheritance + overrides
-@Goal(updater = true)
+@BeanBuilder
 final class Manager extends Employee {
 
   private Manager boss;

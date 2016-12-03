@@ -1,6 +1,6 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Goal;
+import net.zerobuilder.Builder;
 
 import java.io.IOException;
 
@@ -13,7 +13,7 @@ final class Throw<S> {
     this.string = string;
   }
 
-  @Goal
+  @Builder
   static void doUpdate(String message) throws IOException {
     throw new IOException(message);
   }

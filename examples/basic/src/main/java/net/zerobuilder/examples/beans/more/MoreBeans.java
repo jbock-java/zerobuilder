@@ -1,7 +1,6 @@
 package net.zerobuilder.examples.beans.more;
 
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+import net.zerobuilder.BeanBuilder;
 import net.zerobuilder.Ignore;
 
 import java.io.IOException;
@@ -9,15 +8,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.zerobuilder.AccessLevel.PACKAGE;
-import static net.zerobuilder.AccessLevel.PUBLIC;
-
 // various beans
 public class MoreBeans {
 
   // standard bean
-  @Builders(recycle = true)
-  @Goal(updater = true)
+  @BeanBuilder
   public static class Experiment {
     private int yield;
     public int getYield() {
@@ -29,8 +24,7 @@ public class MoreBeans {
   }
 
   // overloaded setter
-  @Builders(recycle = true)
-  @Goal(updater = true)
+  @BeanBuilder
   public static class OverloadedExperiment {
     private int yield;
     public int getYield() {
@@ -45,8 +39,7 @@ public class MoreBeans {
   }
 
   // inheritance
-  @Builders(recycle = true)
-  @Goal(updater = true)
+  @BeanBuilder
   public static class AeroExperiment extends Experiment {
     private int altitude;
     public int getAltitude() {
@@ -58,8 +51,7 @@ public class MoreBeans {
   }
 
   // setterless collection with complicated type
-  @Builders(recycle = true)
-  @Goal(updater = true)
+  @BeanBuilder
   public static class BioExperiment {
     private List<List<String>> candidates;
 
@@ -72,8 +64,7 @@ public class MoreBeans {
   }
 
   // setterless raw collection
-  @Builders(recycle = true)
-  @Goal(updater = true)
+  @BeanBuilder
   @SuppressWarnings("rawtypes")
   public static class RawExperiment {
     private List things;
@@ -87,8 +78,7 @@ public class MoreBeans {
   }
 
   // corner case: list<iterable>; must avoid "same erasure" error
-  @Builders(recycle = true)
-  @Goal(updater = true)
+  @BeanBuilder
   public static class IterableExperiment {
     private List<Iterable<String>> things;
 
@@ -101,7 +91,7 @@ public class MoreBeans {
   }
 
   // ignore an invalid getter
-  @Goal(updater = true)
+  @BeanBuilder
   public static class Ignorify {
     private List<Iterable<String>> things;
     @Ignore
@@ -117,8 +107,7 @@ public class MoreBeans {
   }
 
   // access rules: default is PACKAGE, but updater is PUBLIC
-  @Builders(access = PACKAGE)
-  @Goal(updater = true, updaterAccess = PUBLIC)
+  @BeanBuilder
   public static class Access {
     private String foo;
     public String getFoo() {
@@ -130,7 +119,7 @@ public class MoreBeans {
   }
 
   // accessors declare exceptions
-  @Goal(updater = true)
+  @BeanBuilder
   public static class Kaboom {
     private String foo;
     private List<String> bar;
@@ -162,5 +151,4 @@ public class MoreBeans {
       this.doo = doo;
     }
   }
-
 }

@@ -2,10 +2,8 @@ package net.zerobuilder.modules.updater.bean;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
@@ -23,7 +21,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -61,12 +58,8 @@ public final class BeanUpdater implements BeanModule {
   private static final Function<BeanGoalContext, MethodSpec> updaterConstructor =
       bean -> constructorBuilder()
           .addModifiers(PRIVATE)
-          .addExceptions(bean.isReuse()
-              ? emptyList()
-              : bean.description().thrownTypes)
-          .addCode(bean.isReuse()
-              ? emptyCodeBlock
-              : statement("this.$N = new $T()", bean.bean(), bean.type()))
+          .addExceptions(bean.description().thrownTypes)
+          .addCode(statement("this.$N = new $T()", bean.bean(), bean.type()))
           .build();
 
   private CodeBlock returnBean(BeanGoalContext goal) {
@@ -74,31 +67,18 @@ public final class BeanUpdater implements BeanModule {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(type.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.isReuse()) {
-      builder.addStatement("this._currently_in_use = false");
-    }
     builder.addStatement("$T $N = this.$N", varGoal.type, varGoal, goal.bean());
-    if (goal.isReuse()) {
-      builder.addStatement("this.$N = null", goal.bean());
-    }
     return builder.addStatement("return $N", varGoal).build();
   }
 
   private final Function<BeanGoalContext, CodeBlock> invoke =
       this::returnBean;
 
-  static FieldSpec cacheField(BeanGoalContext beanGoal) {
-    TypeName type = implType(beanGoal);
-    return FieldSpec.builder(type, downcase(simpleName(type)), PRIVATE)
-        .initializer("new $T()", type)
-        .build();
-  }
-
   @Override
   public ModuleOutput process(BeanGoalContext goal) {
     return new ModuleOutput(
         Generator.updaterMethod(goal),
         singletonList(defineUpdater(goal)),
-        singletonList(goal.context.cache(implType(goal))));
+        emptyList());
   }
 }

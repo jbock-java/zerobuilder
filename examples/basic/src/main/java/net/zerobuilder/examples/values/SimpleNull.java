@@ -1,9 +1,8 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Goal;
-import net.zerobuilder.Step;
-
-import static net.zerobuilder.compiler.generate.NullPolicy.REJECT;
+import net.zerobuilder.Builder;
+import net.zerobuilder.RejectNull;
+import net.zerobuilder.Updater;
 
 // null checking
 public class SimpleNull {
@@ -11,8 +10,9 @@ public class SimpleNull {
   static final class BasicNull {
     final String string;
 
-    @Goal(updater = true)
-    BasicNull(@Step(nullPolicy = REJECT) String string) {
+    @Builder
+    @Updater
+    BasicNull(@RejectNull String string) {
       this.string = string;
     }
   }

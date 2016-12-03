@@ -14,16 +14,14 @@
 
   <jaxb:bindings schemaLocation="../xsd/paperclips.xsd">
     <jaxb:bindings node="xs:complexType[@name='PaperclipFactory']">
-      <annox:annotateClass>@net.zerobuilder.Goal(updater = true)</annox:annotateClass>
-      <annox:annotateClass>@net.zerobuilder.Builders</annox:annotateClass>
+      <annox:annotateClass>@net.zerobuilder.BeanBuilder</annox:annotateClass>
+      <annox:annotateClass>@net.zerobuilder.BeanUpdater</annox:annotateClass>
     </jaxb:bindings>
     <jaxb:bindings node="//xs:element[@name = 'employees']/xs:complexType">
-      <annox:annotateClass>@net.zerobuilder.Goal</annox:annotateClass>
-      <annox:annotateClass>@net.zerobuilder.Builders</annox:annotateClass>
+      <annox:annotateClass>@net.zerobuilder.BeanBuilder</annox:annotateClass>
     </jaxb:bindings>
     <jaxb:bindings node="xs:complexType[@name='Employee']">
-      <annox:annotateClass>@net.zerobuilder.Goal</annox:annotateClass>
-      <annox:annotateClass>@net.zerobuilder.Builders</annox:annotateClass>
+      <annox:annotateClass>@net.zerobuilder.BeanBuilder</annox:annotateClass>
     </jaxb:bindings>
     <jaxb:schemaBindings>
       <jaxb:package name="net.zerobuilder.paperclips"/>

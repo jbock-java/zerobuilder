@@ -1,14 +1,16 @@
 package net.zerobuilder.examples.generics;
 
-import net.zerobuilder.Goal;
+import net.zerobuilder.Builder;
+import net.zerobuilder.GoalName;
 
-import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 
 final class GenericInstance<S> {
 
-  @Goal(name = "entry")
+  @Builder
+  @GoalName("entry")
   <K, V> Map.Entry<K, V> entry(S suffix, K key, V value) {
-    return new AbstractMap.SimpleEntry(key, value + String.valueOf(suffix));
+    return new SimpleEntry(key, value + String.valueOf(suffix));
   }
 }

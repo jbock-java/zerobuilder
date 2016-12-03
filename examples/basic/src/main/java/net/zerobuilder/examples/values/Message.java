@@ -1,11 +1,11 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+import net.zerobuilder.Builder;
+import net.zerobuilder.Recycle;
+import net.zerobuilder.Updater;
 
 // direct field access
 // see MessageTest
-@Builders(recycle = true)
 final class Message {
 
   final String sender;
@@ -13,7 +13,9 @@ final class Message {
   final String recipient;
   final String subject;
 
-  @Goal(updater = true)
+  @Builder
+  @Updater
+  @Recycle
   Message(String sender, String body, String recipient, String subject) {
     this.sender = sender;
     this.body = body;

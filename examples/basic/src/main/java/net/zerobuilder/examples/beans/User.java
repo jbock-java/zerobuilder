@@ -1,13 +1,8 @@
 package net.zerobuilder.examples.beans;
 
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+import net.zerobuilder.BeanBuilder;
 
-import static net.zerobuilder.AccessLevel.PACKAGE;
-
-// not public
-@Builders(recycle = true)
-@Goal(updater = true, builderAccess = PACKAGE, updaterAccess = PACKAGE)
+@BeanBuilder
 class User {
 
   private int id;

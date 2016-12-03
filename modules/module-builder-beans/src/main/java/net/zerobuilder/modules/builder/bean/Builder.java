@@ -15,17 +15,13 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -34,11 +30,7 @@ import static net.zerobuilder.modules.builder.bean.BeanStep.nextType;
 final class Builder {
 
   static final Function<BeanGoalContext, List<FieldSpec>> fields =
-      goal -> goal.isReuse() ?
-          asList(
-              fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
-              goal.bean()) :
-          singletonList(goal.bean());
+      goal -> singletonList(goal.bean());
 
   static final Function<BeanGoalContext, List<MethodSpec>> steps =
       goal -> IntStream.range(0, goal.description().parameters().size())
@@ -57,13 +49,7 @@ final class Builder {
     ParameterSpec varBean = parameterSpec(goal.type(),
         '_' + downcase(goal.details.goalType.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.isReuse()) {
-      builder.addStatement("this._currently_in_use = false");
-    }
     builder.addStatement("$T $N = this.$N", varBean.type, varBean, goal.bean());
-    if (goal.isReuse()) {
-      builder.addStatement("this.$N = null", goal.bean());
-    }
     return builder.addStatement("return $N", varBean).build();
   }
 

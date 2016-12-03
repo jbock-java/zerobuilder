@@ -1,15 +1,13 @@
 package net.zerobuilder.examples.beans.more;
 
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+import net.zerobuilder.BeanBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 // bean with setterless collection (notes)
 // see BusinessAnalystTest
-@Builders(recycle = true)
-@Goal(updater = true)
+@BeanBuilder
 public class BusinessAnalyst {
 
   private String name;

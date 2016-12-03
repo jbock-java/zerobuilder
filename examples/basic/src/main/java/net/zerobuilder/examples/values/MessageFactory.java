@@ -1,21 +1,23 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+import net.zerobuilder.Builder;
+import net.zerobuilder.Recycle;
+import net.zerobuilder.Updater;
 
 // non-static goal
 // see MessageFactoryTest
-@Builders(recycle = true)
 final class MessageFactory {
 
   final String sender;
 
-  @Goal
+  @Builder
+  @Recycle
   MessageFactory(String sender) {
     this.sender = sender;
   }
 
-  @Goal
+  @Builder
+  @Recycle
   Message create(String body, String recipient, String subject) {
     return MessageFactory_MessageBuilders.messageBuilder()
         .sender(sender)
@@ -24,14 +26,15 @@ final class MessageFactory {
         .subject(subject);
   }
 
-  @Builders(recycle = true)
   static final class Message {
     final String sender;
     final String body;
     final String recipient;
     final String subject;
 
-    @Goal(updater = true)
+    @Builder
+    @Updater
+    @Recycle
     Message(String sender, String body, String recipient, String subject) {
       this.sender = sender;
       this.body = body;

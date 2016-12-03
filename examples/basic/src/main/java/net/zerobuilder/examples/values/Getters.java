@@ -1,6 +1,7 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Goal;
+import net.zerobuilder.Builder;
+import net.zerobuilder.Updater;
 
 // projections: getters
 // see GettersTest
@@ -10,7 +11,8 @@ final class Getters {
   private final double width;
   private final double height;
 
-  @Goal(updater = true)
+  @Builder
+  @Updater
   Getters(double lenght, double width, double height) {
     this.lenght = lenght;
     this.width = width;

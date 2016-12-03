@@ -8,7 +8,6 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 
@@ -26,10 +25,6 @@ public final class DtoBeanGoal {
 
     private final FieldSpec bean;
 
-    public final boolean isReuse() {
-      return details.lifecycle == REUSE_INSTANCES;
-    }
-
     /**
      * A instanceField that holds an instance of the bean type.
      *
@@ -44,15 +39,13 @@ public final class DtoBeanGoal {
                     BeanGoalDescription description) {
       this.context = context;
       this.description = description;
-      this.bean = beanSupplier(details.goalType, details.lifecycle);
+      this.bean = beanSupplier(details.goalType);
       this.details = details;
     }
 
-    private static FieldSpec beanSupplier(ClassName type, DtoContext.ContextLifecycle lifecycle) {
+    private static FieldSpec beanSupplier(ClassName type) {
       String name = downcase(type.simpleName());
-      return lifecycle == REUSE_INSTANCES
-          ? fieldSpec(type, name, PRIVATE)
-          : fieldSpec(type, name, PRIVATE, FINAL);
+      return fieldSpec(type, name, PRIVATE, FINAL);
     }
 
     public ClassName type() {

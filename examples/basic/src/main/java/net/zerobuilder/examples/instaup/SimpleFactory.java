@@ -1,11 +1,10 @@
 package net.zerobuilder.examples.instaup;
 
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+import net.zerobuilder.Recycle;
+import net.zerobuilder.Updater;
 
 import java.io.IOException;
 
-@Builders(recycle = true)
 final class SimpleFactory {
   private final String string;
 
@@ -13,7 +12,8 @@ final class SimpleFactory {
     this.string = string;
   }
 
-  @Goal(builder = false, updater = true)
+  @Updater
+  @Recycle
   Simple simple(String appendix) throws IOException {
     return new Simple(string, appendix);
   }

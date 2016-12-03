@@ -1,14 +1,12 @@
 package net.zerobuilder.examples.beans;
 
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+import net.zerobuilder.BeanBuilder;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-@Builders
-@Goal(updater = true)
+@BeanBuilder
 public class EmptyBeanConvenience {
 
   private List things;

@@ -1,13 +1,12 @@
 package net.zerobuilder.examples.derive4j;
 
-import net.zerobuilder.Builders;
+import net.zerobuilder.Builder;
+import net.zerobuilder.GoalName;
+import net.zerobuilder.Recycle;
 import org.derive4j.Data;
-
-import net.zerobuilder.Goal;
 
 // see RequestTest
 @Data
-@Builders(recycle = true)
 abstract class Request {
 
   interface Cases<R> {
@@ -19,22 +18,31 @@ abstract class Request {
 
   abstract <R> R match(Cases<R> cases);
 
-  @Goal(name = "get")
+  @Builder
+  @Recycle
+  @GoalName("get")
   static Request get(String path) {
     return Requests.GET(path);
   }
 
-  @Goal(name = "delete")
+  @Builder
+  @Recycle
+  @GoalName("delete")
   static Request delete(String path) {
     return Requests.DELETE(path);
   }
 
-  @Goal(name = "put")
+  @Builder
+  @Recycle
+  @GoalName("put")
   static Request put(String path, String body) {
     return Requests.PUT(path, body);
   }
 
-  @Goal(name = "post")
+
+  @Builder
+  @Recycle
+  @GoalName("post")
   static Request post(String path, String body) {
     return Requests.POST(path, body);
   }

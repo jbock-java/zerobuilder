@@ -15,27 +15,19 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
-import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
-import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
 
 final class Updater {
 
   final static Function<BeanGoalContext, List<FieldSpec>> fields =
-      goal -> goal.isReuse() ?
-          asList(
-              fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE),
-              goal.bean()) :
-          singletonList(goal.bean());
+      goal -> singletonList(goal.bean());
 
   final static Function<BeanGoalContext, List<MethodSpec>> stepMethods = goal ->
       goal.description().parameters().stream()

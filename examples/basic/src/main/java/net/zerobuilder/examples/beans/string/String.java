@@ -1,14 +1,13 @@
 package net.zerobuilder.examples.beans.string;
 
-import net.zerobuilder.Goal;
+
+import net.zerobuilder.BeanBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.zerobuilder.compiler.generate.NullPolicy.REJECT;
-
 // danger of variable name conflict
-@Goal(updater = true, nullPolicy = REJECT)
+@BeanBuilder
 public class String {
 
   private List<String> string;

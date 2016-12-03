@@ -2,7 +2,6 @@ package net.zerobuilder.modules.updater.bean;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -10,7 +9,6 @@ import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
 import javax.lang.model.element.Modifier;
@@ -22,14 +20,13 @@ import java.util.function.Function;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.Arrays.asList;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
+import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
 
@@ -48,7 +45,7 @@ final class Generator {
                 AbstractBeanParameter::getterThrownTypes,
                 AbstractBeanParameter::setterThrownTypes)))
         .addCode(goal.description().parameters().stream().map(nullChecks(goal)).collect(joinCodeBlocks))
-        .addCode(initVarUpdater(goal, varUpdater))
+        .addCode(initVarUpdater(varUpdater))
         .addCode(goal.description().parameters().stream().map(copy(goal)).collect(joinCodeBlocks))
         .addStatement("return $N", varUpdater)
         .addModifiers(modifiers)
@@ -122,20 +119,7 @@ final class Generator {
         .endControlFlow().build();
   }
 
-  private static CodeBlock initVarUpdater(BeanGoalContext goal, ParameterSpec varUpdater) {
-    DtoContext.GoalContext context = goal.context;
-    if (goal.isReuse()) {
-      FieldSpec cache = context.cache(rawClassName(varUpdater.type));
-      return CodeBlock.builder()
-          .addStatement("$T $N = $N.get()", varUpdater.type, varUpdater, cache)
-          .beginControlFlow("if ($N._currently_in_use)", varUpdater)
-          .addStatement("$N.remove()", cache)
-          .addStatement("$N = $N.get()", varUpdater, cache)
-          .endControlFlow()
-          .addStatement("$N.$N = new $T()", varUpdater, goal.bean(), goal.details.goalType)
-          .addStatement("$N._currently_in_use = true", varUpdater)
-          .build();
-    }
+  private static CodeBlock initVarUpdater(ParameterSpec varUpdater) {
     return statement("$T $N = new $T()", varUpdater.type, varUpdater, varUpdater.type);
   }
 

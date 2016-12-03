@@ -15,6 +15,8 @@ public final class DtoBeanGoalDescription {
 
     public final BeanGoalDetails details;
     private final List<AbstractBeanParameter> parameters;
+
+    // thrown by constructor
     public final List<TypeName> thrownTypes;
 
     public List<AbstractBeanParameter> parameters() {

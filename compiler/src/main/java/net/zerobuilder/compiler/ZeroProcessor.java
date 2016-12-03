@@ -5,7 +5,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.BeanBuilder;
-import net.zerobuilder.BeanUpdater;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.Analyser;
@@ -25,11 +24,13 @@ import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
@@ -44,7 +45,7 @@ public final class ZeroProcessor extends AbstractProcessor {
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
-    return Stream.of(Builder.class, Updater.class, BeanBuilder.class, BeanUpdater.class)
+    return Stream.of(Builder.class, Updater.class, BeanBuilder.class)
         .map(Class::getName)
         .collect(toSet());
   }
@@ -59,20 +60,15 @@ public final class ZeroProcessor extends AbstractProcessor {
     Elements elements = processingEnv.getElementUtils();
     List<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
     Set<TypeElement> types = new HashSet<>();
-    types.addAll(Stream.concat(methodsIn(env.getElementsAnnotatedWith(Builder.class)).stream(),
-        constructorsIn(types).stream())
-        .map(ExecutableElement::getEnclosingElement)
-        .map(Element::asType)
-        .map(LessTypes::asTypeElement)
-        .collect(toList()));
-    types.addAll(Stream.concat(methodsIn(env.getElementsAnnotatedWith(Updater.class)).stream(),
-        constructorsIn(types).stream())
-        .map(ExecutableElement::getEnclosingElement)
-        .map(Element::asType)
-        .map(LessTypes::asTypeElement)
-        .collect(toList()));
+    for (Class<? extends Annotation> c : asList(Builder.class, Updater.class)) {
+      types.addAll(Stream.concat(methodsIn(env.getElementsAnnotatedWith(c)).stream(),
+          constructorsIn(types).stream())
+          .map(ExecutableElement::getEnclosingElement)
+          .map(Element::asType)
+          .map(LessTypes::asTypeElement)
+          .collect(toList()));
+    }
     types.addAll(typesIn(env.getElementsAnnotatedWith(BeanBuilder.class)));
-    types.addAll(typesIn(env.getElementsAnnotatedWith(BeanUpdater.class)));
     for (TypeElement enclosingElement : types) {
       try {
         if (!done.add(enclosingElement)) {

@@ -5,11 +5,8 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.Access;
 import net.zerobuilder.BeanBuilder;
-import net.zerobuilder.BeanRecycle;
-import net.zerobuilder.BeanUpdater;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
-import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
@@ -21,6 +18,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -172,9 +170,9 @@ final class DtoGoalElement {
     final ModuleChoice moduleChoice;
 
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
-                            ModuleChoice moduleChoice, ContextLifecycle lifecycle) {
+                            ModuleChoice moduleChoice) {
       this.moduleChoice = moduleChoice;
-      this.details = new BeanGoalDetails(goalType, name, Access.PUBLIC, lifecycle);
+      this.details = new BeanGoalDetails(goalType, name, Access.PUBLIC);
       this.beanType = beanType;
     }
 
@@ -182,12 +180,8 @@ final class DtoGoalElement {
       ClassName goalType = ClassName.get(beanType);
       String name = downcase(simpleName(goalType));
       List<ModuleChoice> goalOptions = goalOptions(beanType);
-      ContextLifecycle lifecycle = beanType.getAnnotation(BeanRecycle.class) == null ?
-          ContextLifecycle.NEW_INSTANCE :
-          ContextLifecycle.REUSE_INSTANCES;
       return transform(goalOptions,
-          goalOption -> new BeanGoalElement(goalType, name, beanType, goalOption,
-              lifecycle));
+          goalOption -> new BeanGoalElement(goalType, name, beanType, goalOption));
     }
 
     @Override
@@ -212,14 +206,10 @@ final class DtoGoalElement {
   }
 
   private static List<ModuleChoice> goalOptions(TypeElement element) {
-    ArrayList<ModuleChoice> options = new ArrayList<>(2);
     if (element.getAnnotation(BeanBuilder.class) != null) {
-      options.add(BUILDER);
+      return Arrays.asList(BUILDER, UPDATER);
     }
-    if (element.getAnnotation(BeanUpdater.class) != null) {
-      options.add(UPDATER);
-    }
-    return options;
+    return emptyList();
   }
 
   static TypeName goalType(ExecutableElement goal) {

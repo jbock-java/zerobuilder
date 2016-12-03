@@ -1,22 +1,24 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+
+import net.zerobuilder.Builder;
+import net.zerobuilder.Recycle;
+import net.zerobuilder.Updater;
 
 // projections: field access
 // see FieldAccessTest
-@Builders(recycle = true)
 final class FieldAccess {
 
   final double length;
   final double width;
   final double height;
 
-  @Goal(updater = true)
+  @Builder
+  @Updater
+  @Recycle
   FieldAccess(double length, double width, double height) {
     this.length = length;
     this.width = width;
     this.height = height;
   }
-
 }

@@ -1,7 +1,8 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+import net.zerobuilder.Builder;
+import net.zerobuilder.GoalName;
+import net.zerobuilder.Recycle;
 
 import java.io.IOException;
 
@@ -9,37 +10,45 @@ class MoreValues {
 
   // goal name is a reserved word
   static class Interface {
+
     final String foo;
-    @Goal(name = "interface")
+
+    @Builder
+    @GoalName("interface")
     Interface(String foo) {
       this.foo = foo;
     }
   }
 
   // goal returns void
-  @Builders(recycle = true)
   static class Nothing {
-    @Goal(name = "append")
+
+    @Builder
+    @Recycle
+    @GoalName("append")
     static void append(StringBuilder sb, String word) {
       sb.append(word);
     }
   }
 
   // goal returns primitive
-  @Builders(recycle = true)
   static class Sum {
-    @Goal(name = "sum")
+
+    @Builder
+    @Recycle
+    @GoalName("sum")
     static int sum(int a, int b) {
       return a + b;
     }
   }
 
   // projection method declares exception
-  @Builders(recycle = true)
   static final class NothingSpecial {
     private final String foo;
 
-    @Goal(updater = true)
+    @Builder
+    @Recycle
+    @GoalName("append")
     NothingSpecial(String foo) {
       this.foo = foo;
     }

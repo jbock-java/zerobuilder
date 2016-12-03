@@ -254,12 +254,10 @@ public final class DtoGoalDetails {
     public final ClassName goalType;
     public final String name;
     private final Access access;
-    public final ContextLifecycle lifecycle;
-    public BeanGoalDetails(ClassName goalType, String name, Access access, ContextLifecycle lifecycle) {
+    public BeanGoalDetails(ClassName goalType, String name, Access access) {
       this.name = name;
       this.access = access;
       this.goalType = goalType;
-      this.lifecycle = lifecycle;
     }
 
     @Override

@@ -1,7 +1,6 @@
 package net.zerobuilder.modules.updater;
 
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -18,7 +17,6 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -26,7 +24,6 @@ import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static java.util.Optional.empty;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -149,16 +146,6 @@ public final class RegularUpdater implements ProjectedModule {
 
   static String methodName(ProjectedRegularGoalContext goal) {
     return goal.description().details().name() + upcase(moduleName);
-  }
-
-  static Optional<FieldSpec> cacheField(ProjectedRegularGoalContext projectedGoal) {
-    if (!isReusable.apply(projectedGoal)) {
-      return empty();
-    }
-    TypeName type = implType(projectedGoal);
-    return Optional.of(FieldSpec.builder(type, downcase(simpleName(type)), PRIVATE)
-        .initializer("new $T()", type)
-        .build());
   }
 
   static final Function<ProjectedRegularGoalContext, Boolean> isReusable =

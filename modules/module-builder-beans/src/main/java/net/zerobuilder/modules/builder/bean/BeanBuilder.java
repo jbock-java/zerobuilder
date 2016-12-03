@@ -9,7 +9,6 @@ import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -17,14 +16,12 @@ import java.util.stream.IntStream;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -81,12 +78,8 @@ public final class BeanBuilder implements BeanModule {
 
   private final Function<BeanGoalContext, MethodSpec> builderConstructor =
       bean -> constructorBuilder()
-          .addExceptions(bean.details.lifecycle == REUSE_INSTANCES
-              ? Collections.emptyList()
-              : bean.description().thrownTypes)
-          .addCode(bean.details.lifecycle == REUSE_INSTANCES
-              ? emptyCodeBlock
-              : statement("this.$N = new $T()", bean.bean(), bean.type()))
+          .addExceptions(bean.description().thrownTypes)
+          .addCode(statement("this.$N = new $T()", bean.bean(), bean.type()))
           .build();
 
   private List<ClassName> stepInterfaceTypes(BeanGoalContext goal) {
@@ -106,6 +99,6 @@ public final class BeanBuilder implements BeanModule {
         asList(
             defineBuilderImpl(goal),
             defineContract(goal)),
-        singletonList(goal.context.cache(implType(goal))));
+        emptyList());
   }
 }

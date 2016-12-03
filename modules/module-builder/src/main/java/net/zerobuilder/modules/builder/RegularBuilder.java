@@ -18,6 +18,7 @@ import java.util.stream.IntStream;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -122,6 +123,8 @@ public final class RegularBuilder implements RegularSimpleModule {
         asList(
             defineBuilderImpl(goal),
             defineContract(goal)),
-        singletonList(goal.context().cache(implType(goal))));
+        goal.description().details().lifecycle == REUSE_INSTANCES ?
+            singletonList(goal.context().cache(implType(goal))) :
+            emptyList());
   }
 }
