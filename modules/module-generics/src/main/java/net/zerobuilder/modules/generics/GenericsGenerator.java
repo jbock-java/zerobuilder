@@ -11,6 +11,7 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Function;
 
@@ -123,7 +124,13 @@ final class GenericsGenerator {
             staticMethod -> Collections.<ParameterSpec>emptyList(),
             instanceMethod -> singletonList(instance)
         ).apply(goal.description().details()));
-    builder.addTypeVariables(stepSpecs.get(0).typeVariables);
+    builder.addTypeVariables(new HashSet<>(
+        concat(regularDetailsCases(
+            constructor -> Collections.<TypeVariableName>emptyList(),
+            staticMethod -> Collections.<TypeVariableName>emptyList(),
+            instanceMethod -> instanceMethod.instanceTypeParameters
+            ).apply(goal.description().details()),
+            stepSpecs.get(0).typeVariables)));
     builder.addCode(regularDetailsCases(
         constructor -> statement("return $T.$L", implType, downcase(stepImpls.get(0).name)),
         staticMethod -> statement("return $T.$L", implType, downcase(stepImpls.get(0).name)),
