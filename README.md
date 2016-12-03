@@ -57,3 +57,7 @@ It should be used in `provided` scope, as shown here:
     <scope>provided</scope>
 </dependency>
 ````
+
+### Migrating from 1.5
+
+The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater` and `@Recycle` instead. Gomenasai!
