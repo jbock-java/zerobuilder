@@ -1,13 +1,12 @@
 package net.zerobuilder.examples.autovalue;
 
 import com.google.auto.value.AutoValue;
-import net.zerobuilder.Builders;
-import net.zerobuilder.Goal;
+import net.zerobuilder.Builder;
+import net.zerobuilder.Updater;
 
 import static net.zerobuilder.examples.autovalue.BobBuilders.bobUpdater;
 
 // see BobTest
-@Builders
 @AutoValue
 abstract class Bob {
 
@@ -15,7 +14,8 @@ abstract class Bob {
   abstract String chantal();
   abstract String justin();
 
-  @Goal(updater = true)
+  @Builder
+  @Updater
   static Bob create(String kevin, String chantal, String justin) {
     return new AutoValue_Bob(kevin, chantal, justin);
   }

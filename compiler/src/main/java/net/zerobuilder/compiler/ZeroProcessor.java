@@ -61,8 +61,9 @@ public final class ZeroProcessor extends AbstractProcessor {
     List<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
     Set<TypeElement> types = new HashSet<>();
     for (Class<? extends Annotation> c : asList(Builder.class, Updater.class)) {
-      types.addAll(Stream.concat(methodsIn(env.getElementsAnnotatedWith(c)).stream(),
-          constructorsIn(types).stream())
+      types.addAll(Stream.concat(
+          methodsIn(env.getElementsAnnotatedWith(c)).stream(),
+          constructorsIn(env.getElementsAnnotatedWith(c)).stream())
           .map(ExecutableElement::getEnclosingElement)
           .map(Element::asType)
           .map(LessTypes::asTypeElement)

@@ -18,10 +18,11 @@ public class InstanceTest {
         "package cube;",
         "import net.zerobuilder.*;",
         "",
-        "@Builders",
         "final class Sum {",
         "  private final int a;",
-        "  @Goal(name = \"sum\") int sum(int b) { return a  + b; };",
+        "  @Builder",
+        "  @GoalName(\"sum\")",
+        "  int sum(int b) { return a  + b; };",
         "  Sum (int a) { this.a = a; }",
         "}");
     JavaFileObject expected =

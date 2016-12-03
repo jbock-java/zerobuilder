@@ -16,12 +16,12 @@ public class FailTest {
 
   @Test
   public void twoUnnamedConstructors() {
-    String badLine = "  @Goal Centipede(int a) {}";
+    String badLine = "  @Builder Centipede(int a) {}";
     List<String> sourceLines = Arrays.asList(
         "package test;",
         "import net.zerobuilder.*;",
-        "@Builders class Centipede {",
-        "  @Goal Centipede(int a, int b) {}",
+        "class Centipede {",
+        "  @Builder Centipede(int a, int b) {}",
         badLine,
         "}");
     JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
@@ -36,12 +36,12 @@ public class FailTest {
 
   @Test
   public void constructorVersusFactory() {
-    String badLine = "  @Goal static Centipede create (int a) {}";
+    String badLine = "  @Builder static Centipede create (int a) {}";
     List<String> sourceLines = Arrays.asList(
         "package test;",
         "import net.zerobuilder.*;",
-        "@Builders class Centipede {",
-        "  @Goal Centipede(int a) {}",
+        "class Centipede {",
+        "  @Builder Centipede(int a) {}",
         badLine,
         "}");
     JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
@@ -53,5 +53,4 @@ public class FailTest {
         .in(javaFile)
         .onLine(line + 1);
   }
-
 }

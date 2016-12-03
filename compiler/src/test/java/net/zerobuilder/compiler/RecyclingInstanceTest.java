@@ -18,10 +18,12 @@ public class RecyclingInstanceTest {
         "package cube;",
         "import net.zerobuilder.*;",
         "",
-        "@Builders(recycle = true)",
         "final class Sum {",
         "  private final int a;",
-        "  @Goal(name = \"sum\") int sum(int b) { return a  + b; };",
+        "  @Builder",
+        "  @GoalName(\"sum\")",
+        "  @Recycle",
+        "  int sum(int b) { return a  + b; };",
         "  Sum (int a) { this.a = a; }",
         "}");
     JavaFileObject expected =

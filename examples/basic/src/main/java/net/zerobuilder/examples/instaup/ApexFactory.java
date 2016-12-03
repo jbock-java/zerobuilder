@@ -1,9 +1,6 @@
 package net.zerobuilder.examples.instaup;
 
 import net.zerobuilder.Builder;
-import net.zerobuilder.Updater;
-
-import java.io.IOException;
 
 final class ApexFactory<T extends String> {
   private final T string;
@@ -13,8 +10,7 @@ final class ApexFactory<T extends String> {
   }
 
   @Builder
-  @Updater
-  <S extends String> Apex<S> apex(S appendix) throws IOException {
+  <S extends String> Apex<S> apex(S appendix) {
     return new Apex(string, appendix);
   }
 }
