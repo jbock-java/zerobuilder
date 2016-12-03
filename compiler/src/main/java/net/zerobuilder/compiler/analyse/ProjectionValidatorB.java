@@ -2,14 +2,16 @@ package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.BeanRejectNull;
 import net.zerobuilder.Ignore;
-import net.zerobuilder.compiler.generate.NullPolicy;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter;
 import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.generate.NullPolicy;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -41,15 +43,14 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TYPE_PARAMS_BEAN;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.accessorPair;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.toValidParameter;
-import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter.nullPolicy;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.ClassNames.COLLECTION;
 import static net.zerobuilder.compiler.analyse.Utilities.sortedCopy;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
-import static net.zerobuilder.compiler.analyse.Utilities.transform;
-import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class ProjectionValidatorB {
 
@@ -86,12 +87,12 @@ final class ProjectionValidatorB {
     Collection<ExecutableElement> getters = getters(goal);
     Map<String, ExecutableElement> settersByName = setters(goal.beanType, getters);
     List<TmpAccessorPair> builder = getters.stream()
-        .map(getter -> tmpAccessorPair(settersByName, goal, getter))
+        .map(getter -> tmpAccessorPair(settersByName, getter))
         .collect(Collectors.toList());
     return createResult(goal, builder);
   };
 
-  private static TmpAccessorPair tmpAccessorPair(Map<String, ExecutableElement> settersByName, BeanGoalElement goal, ExecutableElement getter) {
+  private static TmpAccessorPair tmpAccessorPair(Map<String, ExecutableElement> settersByName, ExecutableElement getter) {
     ExecutableElement setter = settersByName.get(setterName(getter));
     return setter == null
         ? loneGetter(getter)
@@ -116,14 +117,15 @@ final class ProjectionValidatorB {
     return true;
   };
 
-  private static TmpAccessorPair loneGetter(ExecutableElement getter, Goal goalAnnotation) {
+  private static TmpAccessorPair loneGetter(ExecutableElement getter) {
     TypeMirror type = getter.getReturnType();
     String name = getter.getSimpleName().toString();
     if (!isImplementationOf(type, COLLECTION)) {
       throw new ValidationException(BEAN_COULD_NOT_FIND_SETTER, getter);
     }
+    BeanRejectNull beanRejectNull = getter.getAnnotation(BeanRejectNull.class);
     TypeName typeName = TypeName.get(type);
-    NullPolicy nullPolicy = nullPolicy(type, getter.getAnnotation(Step.class), goalAnnotation);
+    NullPolicy nullPolicy = TmpValidParameter.nullPolicy(type, beanRejectNull, NullPolicy.ALLOW);
     AbstractBeanParameter loneGetter = DtoBeanParameter.loneGetter(typeName, name, nullPolicy, thrownTypes(getter));
     return TmpAccessorPair.createLoneGetter(getter, loneGetter);
   }

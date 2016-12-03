@@ -34,17 +34,15 @@ import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.ABSTRACT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.MISSING_PROJECTION;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.executableElement;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalAnnotation;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.findKey;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
-import static net.zerobuilder.compiler.analyse.Utilities.transform;
-import static net.zerobuilder.compiler.analyse.Utilities.upcase;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.common.LessTypes.isDeclaredType;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class ProjectionValidatorV {
 

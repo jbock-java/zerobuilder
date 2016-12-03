@@ -3,7 +3,8 @@ package net.zerobuilder.compiler.analyse;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.AccessLevel;
+import net.zerobuilder.Builder;
+import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractRegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
@@ -43,14 +44,14 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateBuilder;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpdater;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
-import static net.zerobuilder.compiler.analyse.Utilities.flatList;
 import static net.zerobuilder.compiler.analyse.Utilities.peer;
-import static net.zerobuilder.compiler.analyse.Utilities.transform;
 import static net.zerobuilder.compiler.common.LessElements.asExecutable;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
+import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class Analyser {
 
@@ -62,14 +63,10 @@ public final class Analyser {
 
   public static GeneratorInput analyse(TypeElement tel) throws ValidationException {
     validateContextClass(tel);
-    Builders builders = tel.getAnnotation(Builders.class);
-    ContextLifecycle lifecycle = builders != null && builders.recycle()
-        ? ContextLifecycle.REUSE_INSTANCES
-        : ContextLifecycle.NEW_INSTANCE;
     TypeName type = parameterizedTypeName(ClassName.get(tel),
         transform(tel.getTypeParameters(), TypeVariableName::get));
     ClassName generatedType = peer(rawClassName(type), "Builders");
-    GoalContext context = createContext(type, generatedType, lifecycle);
+    GoalContext context = createContext(type, generatedType);
     List<? extends AbstractGoalElement> goals = goals(tel);
     checkNameConflict(goals);
     checkAccessLevel(goals);
@@ -88,17 +85,11 @@ public final class Analyser {
               new BeanDescriptionInput(BEAN_BUILDER, validateBean.apply(bean)) :
               new BeanDescriptionInput(BEAN_UPDATER, validateBean.apply(bean)));
 
-  /**
-   * @param tel a class that carries the {@link net.zerobuilder.Builders} annotation
-   * @return the goals that this class defines: one per {@link Goal} annotation
-   * @throws ValidationException if validation fails
-   */
   private static List<? extends AbstractGoalElement> goals(TypeElement tel) throws ValidationException {
-    Builders builders = tel.getAnnotation(Builders.class);
-    AccessLevel defaultAccess = builders == null ? AccessLevel.PUBLIC : builders.access();
-    return tel.getAnnotation(Goal.class) != null ?
-        beanGoals(tel, defaultAccess) :
-        regularGoals(tel, defaultAccess);
+    return tel.getAnnotation(net.zerobuilder.BeanBuilder.class) != null ||
+        tel.getAnnotation(net.zerobuilder.BeanUpdater.class) != null ?
+        beanGoals(tel) :
+        regularGoals(tel);
   }
 
   private static boolean hasTypevars(ExecutableElement element) {
@@ -112,24 +103,24 @@ public final class Analyser {
         .getTypeParameters().isEmpty();
   }
 
-  private static List<AbstractRegularGoalElement> regularGoals(TypeElement tel, AccessLevel defaultAccess) {
+  private static List<AbstractRegularGoalElement> regularGoals(TypeElement tel) {
     return tel.getEnclosedElements().stream()
-        .filter(el -> el.getAnnotation(Goal.class) != null)
+        .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
         .filter(el -> el.getKind() == CONSTRUCTOR || el.getKind() == METHOD)
         .map(el -> asExecutable(el))
-        .map(el -> DtoGoalElement.createRegular(el, defaultAccess))
+        .map(DtoGoalElement::createRegular)
         .collect(flatList());
   }
 
-  private static List<BeanGoalElement> beanGoals(TypeElement buildElement, AccessLevel defaultAccess) {
+  private static List<BeanGoalElement> beanGoals(TypeElement buildElement) {
     Optional<? extends Element> annotated = buildElement.getEnclosedElements().stream()
-        .filter(el -> el.getAnnotation(Goal.class) != null)
+        .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
         .filter(el -> el.getKind() == METHOD || el.getKind() == CONSTRUCTOR)
         .findAny();
     if (annotated.isPresent()) {
       throw new ValidationException(BEAN_SUBGOALS, annotated.get());
     }
-    return BeanGoalElement.create(buildElement, defaultAccess);
+    return BeanGoalElement.create(buildElement);
   }
 
   private Analyser() {
