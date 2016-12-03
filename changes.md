@@ -176,3 +176,7 @@
 
 * major change of the public interface (breaking)
 * bugfix generic instance
+
+### 2016-12-03 zerobuilder 1.602 released
+
+* rename @Ignore -> @BeanIgnore (breaking)
