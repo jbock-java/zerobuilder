@@ -39,18 +39,17 @@ Add a `@Builder` annotation to any method or constructor. You can also add an `@
 ````
 
 This will generate a class called `DooBuilders` in the same package.
-Note that `updater = true` does not work everywhere.
 
 ### Maven note
 
 This annotation processor has no runtime dependencies.
-It should be used in `provided` scope:
+It should be used in `provided` scope, as shown here:
  
 ````xml
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
-    <!--<version>check maven badge above</version>-->
+    <!--<version>...</version>-->
     <scope>provided</scope>
 </dependency>
 ````

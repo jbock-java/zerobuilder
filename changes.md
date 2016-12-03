@@ -171,3 +171,8 @@
 ### 2016-11-29 zerobuilder 1.541 released
 
 * make @Builders annotation optional
+
+### 2016-12-03 zerobuilder 1.601 released
+
+* major change of the public interface (breaking)
+* bugfix generic instance
