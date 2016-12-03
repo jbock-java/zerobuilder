@@ -15,9 +15,7 @@ Zerobuilder takes care of the boilerplate by generating two different variants o
 
 * A `Builder` to create new instance. 
   In this [variant of the builder pattern][1], it is impossible to omit a constructor argument.
-  This is generated once per `@Goal`, unless `@Goal(builder = false)`.
 * A classical-builder style `Updater` to make modified shallow copies. 
-  This is generated for each goal where `@Goal(updater = true)`.
 
 [1]: http://blog.crisp.se/2013/10/09/perlundholm/another-builder-pattern-for-java
 
