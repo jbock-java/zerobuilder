@@ -11,8 +11,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * Marks a &quot;getter&quot; method as ignored.
  * This may be necessary a method that looks like a &quot;getter&quot;
  * has no corresponding &quot;setter&quot;.
- * </p><p>
- * <em>Note:</em> Only applies to &quot;bean goals&quot;.
  * </p>
  */
 @Retention(SOURCE)
