@@ -3,6 +3,7 @@ package net.zerobuilder.examples.values;
 import net.zerobuilder.Builder;
 import net.zerobuilder.GoalName;
 import net.zerobuilder.Recycle;
+import net.zerobuilder.Updater;
 
 import java.io.IOException;
 
@@ -47,8 +48,8 @@ class MoreValues {
     private final String foo;
 
     @Builder
+    @Updater
     @Recycle
-    @GoalName("append")
     NothingSpecial(String foo) {
       this.foo = foo;
     }
