@@ -195,3 +195,15 @@ abstract class Animal {
   abstract int numberOfLegs();
 }
 ````
+
+The following methods could then also be added to the `Animal` class, for convenience:
+
+````java
+  static AnimalBuilders.AnimalBuilder.Name builder() {
+    return AnimalBuilders.animalBuilder();
+  }
+
+  AnimalBuilders.AnimalUpdater updater() {
+    return AnimalBuilders.animalUpdater(this);
+  }
+````
