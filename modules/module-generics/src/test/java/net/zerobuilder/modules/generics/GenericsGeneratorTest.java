@@ -60,7 +60,6 @@ public class GenericsGeneratorTest {
     SimpleParameter valueParameter = DtoRegularParameter.create("value", V, ALLOW);
 
     SimpleStaticMethodGoalContext goal = new SimpleStaticMethodGoalContext(
-        details,
         DtoRegularGoalDescription.SimpleRegularGoalDescription.create(details, emptyList(),
             asList(keysParameter, valueParameter), goalContext));
 

@@ -25,10 +25,10 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
+import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -65,7 +65,7 @@ final class Generator {
           normalGoalMethod);
 
   static CodeBlock copyBlock(ProjectedRegularGoalContext goal) {
-    return goal.description().parameters().stream()
+    return goal.description.parameters.stream()
         .map(copyField(goal))
         .collect(ZeroUtil.joinCodeBlocks);
   }
@@ -73,7 +73,7 @@ final class Generator {
   static CodeBlock nullCheckingBlock(ProjectedRegularGoalContext goal) {
     ProjectionInfoCases<CodeBlock, ProjectedParameter> nullChecks = nullChecks(goal);
     CodeBlock.Builder builder = CodeBlock.builder();
-    for (ProjectedParameter step : goal.description().parameters()) {
+    for (ProjectedParameter step : goal.description.parameters) {
       builder.add(step.projectionInfo.accept(nullChecks, step));
     }
     return builder.build();
@@ -144,7 +144,7 @@ final class Generator {
 
   static CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {
     if (isReusable.apply(goal)) {
-      GoalContext context = goal.context();
+      GoalContext context = goal.description.context;
       FieldSpec cache = context.cache(rawClassName(varUpdater.type));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varUpdater.type, varUpdater, cache)
@@ -165,7 +165,7 @@ final class Generator {
   }
 
   static Set<TypeName> thrownByProjections(ProjectedRegularGoalContext goal) {
-    return goal.description().parameters().stream()
+    return goal.description.parameters.stream()
         .map(parameter -> parameter.projectionInfo)
         .map(thrownTypes)
         .map(List::stream)

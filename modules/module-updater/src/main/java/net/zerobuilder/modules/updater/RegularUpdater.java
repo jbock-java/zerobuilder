@@ -55,8 +55,8 @@ public final class RegularUpdater implements ProjectedModule {
   private final Function<ProjectedRegularGoalContext, MethodSpec> doneMethod =
       goal -> methodBuilder("done")
           .addModifiers(PUBLIC)
-          .addExceptions(goal.description().thrownTypes())
-          .returns(goal.description().details().type())
+          .addExceptions(goal.description.thrownTypes)
+          .returns(goal.description.details.type())
           .addCode(regularInvoke.apply(goal))
           .build();
 
@@ -73,12 +73,12 @@ public final class RegularUpdater implements ProjectedModule {
 
   static TypeName implType(ProjectedRegularGoalContext goal) {
     return parameterizedTypeName(
-        goal.context().generatedType.nestedClass(implTypeName(goal)),
+        goal.description.context.generatedType.nestedClass(implTypeName(goal)),
         implTypeParameters.apply(goal));
   }
 
   private static String implTypeName(ProjectedRegularGoalContext goal) {
-    return upcase(goal.description().details().name()) + upcase(moduleName);
+    return upcase(goal.description.details.name()) + upcase(moduleName);
   }
 
   private static final Function<ProjectedRegularGoalContext, Collection<TypeVariableName>> implTypeParameters =
@@ -97,10 +97,10 @@ public final class RegularUpdater implements ProjectedModule {
     if (isReusable.apply(goal)) {
       builder.addStatement("this._currently_in_use = false");
     }
-    builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.context.type,
+    builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.description.context.type,
         method, goal.invocationParameters());
     if (isReusable.apply(goal)) {
-      builder.add(free(goal.description().parameters()));
+      builder.add(free(goal.description.parameters));
     }
     return builder.addStatement("return $N", varGoal)
         .build();
@@ -131,7 +131,7 @@ public final class RegularUpdater implements ProjectedModule {
     }
     builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, goal.invocationParameters());
     if (isReusable.apply(goal)) {
-      builder.add(free(goal.description().parameters()));
+      builder.add(free(goal.description.parameters));
     }
     return builder.addStatement("return $N", varGoal)
         .build();
@@ -145,7 +145,7 @@ public final class RegularUpdater implements ProjectedModule {
   }
 
   static String methodName(ProjectedRegularGoalContext goal) {
-    return goal.description().details().name() + upcase(moduleName);
+    return goal.description.details.name() + upcase(moduleName);
   }
 
   static final Function<ProjectedRegularGoalContext, Boolean> isReusable =
@@ -171,7 +171,7 @@ public final class RegularUpdater implements ProjectedModule {
         goalMethod.apply(goal),
         types.apply(goal),
         isReusable.apply(goal) ?
-            singletonList(goal.context().cache(implTypeName(goal))) :
+            singletonList(goal.description.context.cache(implTypeName(goal))) :
             emptyList());
   }
 }

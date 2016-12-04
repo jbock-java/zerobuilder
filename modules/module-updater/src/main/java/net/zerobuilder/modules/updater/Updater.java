@@ -32,9 +32,9 @@ final class Updater {
       builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
     }
     if (goal.isInstance()) {
-      builder.add(fieldSpec(goal.context().type, "_factory", PRIVATE));
+      builder.add(fieldSpec(goal.description.context.type, "_factory", PRIVATE));
     }
-    for (ProjectedParameter step : goal.description().parameters()) {
+    for (ProjectedParameter step : goal.description.parameters) {
       String name = step.name;
       TypeName type = step.type;
       builder.add(fieldSpec(type, name, PRIVATE));
@@ -43,7 +43,7 @@ final class Updater {
   }
 
   static List<MethodSpec> stepMethods(ProjectedRegularGoalContext goal) {
-    return goal.description().parameters().stream()
+    return goal.description.parameters.stream()
         .map(updateMethods(goal))
         .collect(toList());
   }

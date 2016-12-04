@@ -6,9 +6,6 @@ import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalCon
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
 import java.util.function.Function;
-import java.util.function.Predicate;
-
-import static net.zerobuilder.compiler.generate.ZeroUtil.asPredicate;
 
 public final class DtoRegularGoal {
 
@@ -25,18 +22,7 @@ public final class DtoRegularGoal {
     }
 
     public abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
-
-    public final boolean isInstance() {
-      return isInstance.test(this);
-    }
-
   }
-
-  private static final Predicate<SimpleRegularGoalContext> isInstance =
-      asPredicate(regularGoalContextCases(
-          constructor -> false,
-          instanceMethod -> true,
-          staticMethod -> false));
 
   interface RegularGoalContextCases<R> {
     R constructor(SimpleConstructorGoalContext goal);

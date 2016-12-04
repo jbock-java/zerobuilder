@@ -2,8 +2,6 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
-import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
@@ -25,18 +23,10 @@ public final class DtoProjectedRegularGoalContext {
 
   public static abstract class ProjectedRegularGoalContext {
 
-    private final ProjectedRegularGoalDescription description;
-
-    public ProjectedRegularGoalDescription description() {
-      return description;
-    }
+    public final ProjectedRegularGoalDescription description;
 
     ProjectedRegularGoalContext(ProjectedRegularGoalDescription description) {
       this.description = description;
-    }
-
-    public final GoalContext context() {
-      return context.apply(this);
     }
 
     public final AbstractRegularDetails details() {
@@ -57,12 +47,6 @@ public final class DtoProjectedRegularGoalContext {
       return CodeBlock.of(String.join(", ", goalDetails.apply(this).parameterNames));
     }
   }
-
-  private static final Function<ProjectedRegularGoalContext, GoalContext> context =
-      projectedRegularGoalContextCases(
-          staticMethod -> staticMethod.context,
-          instanceMethod -> instanceMethod.context,
-          constructor -> constructor.context);
 
   private static final Function<ProjectedRegularGoalContext, Boolean> isInstance =
       projectedRegularGoalContextCases(
@@ -95,15 +79,12 @@ public final class DtoProjectedRegularGoalContext {
   }
 
   public static final class ProjectedMethodGoalContext extends ProjectedRegularGoalContext {
-    public final GoalContext context;
     public final StaticMethodGoalDetails details;
 
     ProjectedMethodGoalContext(
-        GoalContext context,
         StaticMethodGoalDetails details,
         ProjectedRegularGoalDescription description) {
       super(description);
-      this.context = context;
       this.details = details;
     }
 
@@ -114,15 +95,12 @@ public final class DtoProjectedRegularGoalContext {
   }
 
   public static final class ProjectedInstanceMethodGoalContext extends ProjectedRegularGoalContext {
-    public final GoalContext context;
     public final InstanceMethodGoalDetails details;
 
     ProjectedInstanceMethodGoalContext(
-        GoalContext context,
         InstanceMethodGoalDetails details,
         ProjectedRegularGoalDescription description) {
       super(description);
-      this.context = context;
       this.details = details;
     }
 
@@ -135,14 +113,11 @@ public final class DtoProjectedRegularGoalContext {
   public static final class ProjectedConstructorGoalContext
       extends ProjectedRegularGoalContext {
 
-    public final GoalContext context;
     public final ConstructorGoalDetails details;
 
-    ProjectedConstructorGoalContext(GoalContext context,
-                                    ConstructorGoalDetails details,
+    ProjectedConstructorGoalContext(ConstructorGoalDetails details,
                                     ProjectedRegularGoalDescription description) {
       super(description);
-      this.context = context;
       this.details = details;
     }
 

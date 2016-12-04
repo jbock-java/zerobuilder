@@ -5,10 +5,10 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import java.util.Collections;
@@ -28,6 +28,7 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
@@ -45,26 +46,26 @@ import static net.zerobuilder.modules.builder.Step.nullCheck;
 final class Builder {
 
   static TypeName nextType(int i, SimpleRegularGoalContext goal) {
-    if (i < goal.description().parameters().size() - 1) {
+    if (i < goal.description.parameters.size() - 1) {
       return goal.description.context.generatedType
-          .nestedClass(upcase(goal.description().details().name() + "Builder"))
-          .nestedClass(upcase(goal.description().parameters().get(i + 1).name));
+          .nestedClass(upcase(goal.description.details.name() + "Builder"))
+          .nestedClass(upcase(goal.description.parameters.get(i + 1).name));
     }
-    return goal.description().details().type();
+    return goal.description.details.type();
   }
 
   private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
       regularGoalContextCases(
           constructor -> empty(),
-          method -> Optional.of(instanceField(method)),
+          method -> Optional.of(instanceField(method.description)),
           staticMethod -> empty());
 
   static final Function<SimpleRegularGoalContext, List<FieldSpec>> fields
       = goal -> {
-    List<SimpleParameter> steps = goal.description().parameters();
+    List<SimpleParameter> steps = goal.description.parameters;
     return Stream.of(
         presentInstances(maybeField.apply(goal)),
-        goal.description().details().lifecycle == REUSE_INSTANCES ?
+        goal.description.details.lifecycle == REUSE_INSTANCES ?
             singletonList(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
             Collections.<FieldSpec>emptyList(),
         steps.stream()
@@ -76,13 +77,13 @@ final class Builder {
 
   static IntFunction<MethodSpec> steps(SimpleRegularGoalContext goal) {
     return i -> {
-      SimpleParameter step = goal.description().parameters().get(i);
+      SimpleParameter step = goal.description.parameters.get(i);
       TypeName type = step.type;
       String name = step.name;
       ParameterSpec parameter = parameterSpec(type, name);
-      List<TypeName> thrownTypes = i < goal.description().parameters().size() - 1 ?
+      List<TypeName> thrownTypes = i < goal.description.parameters.size() - 1 ?
           emptyList() :
-          goal.description().thrownTypes();
+          goal.description.thrownTypes;
       TypeName nextType = nextType(i, goal);
       return methodBuilder(step.name)
           .addAnnotation(Override.class)
@@ -97,12 +98,12 @@ final class Builder {
   }
 
   private static CodeBlock normalAssignment(int i, SimpleRegularGoalContext goal) {
-    SimpleParameter step = goal.description().parameters().get(i);
+    SimpleParameter step = goal.description.parameters.get(i);
     TypeName type = step.type;
     String name = step.name;
     ParameterSpec parameter = parameterSpec(type, name);
-    if (i == goal.description().parameters().size() - 1) {
-      return regularInvoke.apply(goal);
+    if (i == goal.description.parameters.size() - 1) {
+      return regularInvoke(goal).apply(goal.description.details);
     } else {
       return CodeBlock.builder()
           .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
@@ -111,47 +112,50 @@ final class Builder {
     }
   }
 
-  private static final Function<SimpleRegularGoalContext, CodeBlock> regularInvoke =
-      regularGoalContextCases(
-          Builder::constructorCall,
-          Builder::instanceCall,
-          Builder::staticCall);
+  private static final Function<AbstractRegularDetails, CodeBlock> regularInvoke(SimpleRegularGoalContext goal) {
+    return regularDetailsCases(
+        constructor -> constructorCall(goal.description, constructor),
+        staticMethod -> staticCall(goal.description, staticMethod),
+        instanceMethod -> instanceCall(goal.description, instanceMethod));
+  }
 
-  private static CodeBlock constructorCall(SimpleConstructorGoalContext goal) {
-    TypeName type = goal.details.goalType;
+  private static CodeBlock constructorCall(SimpleRegularGoalDescription description,
+                                           DtoGoalDetails.ConstructorGoalDetails details) {
+    TypeName type = details.type();
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.details.lifecycle == REUSE_INSTANCES) {
+    if (details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
-    CodeBlock args = goal.description().invocationParameters();
+    CodeBlock args = description.invocationParameters();
     builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, args);
-    if (goal.details.lifecycle == REUSE_INSTANCES) {
-      builder.add(free(goal.description().parameters()));
+    if (details.lifecycle == REUSE_INSTANCES) {
+      builder.add(free(description.parameters));
     }
     return builder.addStatement("return $N", varGoal).build();
   }
 
-  private static CodeBlock instanceCall(InstanceMethodGoalContext goal) {
-    TypeName type = goal.details.goalType;
-    String method = goal.details.methodName;
+  private static CodeBlock instanceCall(SimpleRegularGoalDescription description,
+                                        DtoGoalDetails.InstanceMethodGoalDetails details) {
+    TypeName type = details.goalType;
+    String method = details.methodName;
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.details.lifecycle == REUSE_INSTANCES) {
+    if (details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
     if (VOID.equals(type)) {
-      builder.addStatement("this.$N.$N($L)", instanceField(goal),
-          method, goal.description().invocationParameters());
+      builder.addStatement("this.$N.$N($L)", instanceField(description),
+          method, description.invocationParameters());
     } else {
-      builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type, varGoal, instanceField(goal),
-          method, goal.description().invocationParameters());
+      builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type, varGoal, instanceField(description),
+          method, description.invocationParameters());
     }
-    if (goal.details.lifecycle == REUSE_INSTANCES) {
-      builder.addStatement("this.$N = null", instanceField(goal));
-      builder.add(free(goal.description().parameters()));
+    if (details.lifecycle == REUSE_INSTANCES) {
+      builder.addStatement("this.$N = null", instanceField(description));
+      builder.add(free(description.parameters));
     }
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);
@@ -159,25 +163,26 @@ final class Builder {
     return builder.build();
   }
 
-  private static CodeBlock staticCall(SimpleStaticMethodGoalContext goal) {
-    TypeName type = goal.details.goalType;
-    String method = goal.details.methodName;
+  private static CodeBlock staticCall(SimpleRegularGoalDescription description,
+                                      DtoGoalDetails.StaticMethodGoalDetails details) {
+    TypeName type = details.goalType;
+    String method = details.methodName;
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.details.lifecycle == REUSE_INSTANCES) {
+    if (details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
     if (VOID.equals(type)) {
-      builder.addStatement("$T.$N($L)", rawClassName(goal.description.context.type),
-          method, goal.description().invocationParameters());
+      builder.addStatement("$T.$N($L)", rawClassName(description.context.type),
+          method, description.invocationParameters());
     } else {
       builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal,
-          rawClassName(goal.description.context.type),
-          method, goal.description().invocationParameters());
+          rawClassName(description.context.type),
+          method, description.invocationParameters());
     }
-    if (goal.details.lifecycle == REUSE_INSTANCES) {
-      builder.add(free(goal.description().parameters()));
+    if (details.lifecycle == REUSE_INSTANCES) {
+      builder.add(free(description.parameters));
     }
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);

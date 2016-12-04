@@ -33,7 +33,7 @@ final class InstanceWorld {
 
   static DtoGeneratorOutput.BuilderMethod instanceGoalMethod(ProjectedInstanceMethodGoalContext goal) {
     TypeName factoryType = factoryType(goal);
-    ParameterSpec parameter = parameterSpec(goal.context.type, "factory");
+    ParameterSpec parameter = parameterSpec(goal.description.context.type, "factory");
     MethodSpec method = methodBuilder(RegularUpdater.methodName(goal) + "Factory")
         .addParameter(parameter)
         .addTypeVariables(new HashSet<>(concat(
@@ -50,13 +50,13 @@ final class InstanceWorld {
   private static TypeName factoryType(ProjectedInstanceMethodGoalContext goal) {
     String implName = upcase(goal.details.name()) + upcase(moduleName) + "Factory";
     return parameterizedTypeName(
-        goal.context.generatedType.nestedClass(implName),
+        goal.description.context.generatedType.nestedClass(implName),
         goal.details.instanceTypeParameters);
   }
 
   static TypeSpec factorySpec(ProjectedInstanceMethodGoalContext goal) {
     ParameterSpec updater = varUpdater(goal);
-    ParameterSpec factory = parameterSpec(goal.context.type, "factory");
+    ParameterSpec factory = parameterSpec(goal.description.context.type, "factory");
     return TypeSpec.classBuilder(simpleName(factoryType(goal)))
         .addTypeVariables(goal.details.instanceTypeParameters)
         .addField(fieldSpec(factory.type, "_factory", PRIVATE, FINAL))

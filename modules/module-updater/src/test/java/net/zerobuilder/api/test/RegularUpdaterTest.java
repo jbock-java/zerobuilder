@@ -72,7 +72,8 @@ public class RegularUpdaterTest {
     ProjectedRegularGoalDescription description = ProjectedRegularGoalDescription.create(
         details,
         Collections.emptyList(),
-        singletonList(fooParameter));
+        singletonList(fooParameter),
+        goalContext);
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(

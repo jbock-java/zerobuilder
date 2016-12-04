@@ -2,6 +2,7 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
+import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
@@ -29,17 +30,9 @@ public final class DtoRegularGoalDescription {
     private final int[] ranking;
 
     public final List<SimpleParameter> parameters;
-    public final DtoContext.GoalContext context;
+    public final GoalContext context;
     public final AbstractRegularDetails details;
     public final List<TypeName> thrownTypes;
-
-    public final List<TypeName> thrownTypes() {
-      return thrownTypes;
-    }
-
-    public final AbstractRegularDetails details() {
-      return details;
-    }
 
     public final <E> List<E> unshuffle(List<E> shuffled) {
       return applyRanking(ranking, shuffled);
@@ -53,14 +46,10 @@ public final class DtoRegularGoalDescription {
           .collect(joinCodeBlocks(", "));
     }
 
-    public List<SimpleParameter> parameters() {
-      return parameters;
-    }
-
     private SimpleRegularGoalDescription(AbstractRegularDetails details,
                                          List<TypeName> thrownTypes,
                                          List<SimpleParameter> parameters,
-                                         DtoContext.GoalContext context,
+                                         GoalContext context,
                                          int[] ranking) {
       this.details = details;
       this.thrownTypes = thrownTypes;
@@ -72,7 +61,7 @@ public final class DtoRegularGoalDescription {
     public static SimpleRegularGoalDescription create(AbstractRegularDetails details,
                                                       List<TypeName> thrownTypes,
                                                       List<SimpleParameter> parameters,
-                                                      DtoContext.GoalContext context) {
+                                                      GoalContext context) {
       checkParameterNames(details.parameterNames, parameters);
       int[] ranking = createUnshuffle(parameters, details.parameterNames);
       return new SimpleRegularGoalDescription(details, thrownTypes, parameters, context, ranking);
@@ -83,35 +72,26 @@ public final class DtoRegularGoalDescription {
    * Describes of a goal that represents either a static method or an instance method, or a constructor.
    */
   public static final class ProjectedRegularGoalDescription {
-    private final List<ProjectedParameter> parameters;
-    private final AbstractRegularDetails details;
-    private final List<TypeName> thrownTypes;
-
-    public List<ProjectedParameter> parameters() {
-      return parameters;
-    }
-
-    public AbstractRegularDetails details() {
-      return details;
-    }
-
-    public List<TypeName> thrownTypes() {
-      return thrownTypes;
-    }
+    public final List<ProjectedParameter> parameters;
+    public final AbstractRegularDetails details;
+    public final List<TypeName> thrownTypes;
+    public final GoalContext context;
 
     private ProjectedRegularGoalDescription(AbstractRegularDetails details,
                                             List<TypeName> thrownTypes,
-                                            List<ProjectedParameter> parameters) {
+                                            List<ProjectedParameter> parameters, GoalContext context) {
       this.details = details;
       this.thrownTypes = thrownTypes;
       this.parameters = parameters;
+      this.context = context;
     }
 
     public static ProjectedRegularGoalDescription create(AbstractRegularDetails details,
                                                          List<TypeName> thrownTypes,
-                                                         List<ProjectedParameter> parameters) {
+                                                         List<ProjectedParameter> parameters,
+                                                         GoalContext context) {
       checkParameterNames(details.parameterNames, parameters);
-      return new ProjectedRegularGoalDescription(details, thrownTypes, parameters);
+      return new ProjectedRegularGoalDescription(details, thrownTypes, parameters, context);
     }
   }
 

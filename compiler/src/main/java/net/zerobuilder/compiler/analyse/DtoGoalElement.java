@@ -4,7 +4,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.Access;
-import net.zerobuilder.BeanBuilder;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.generate.DtoContext;
@@ -145,11 +144,13 @@ final class DtoGoalElement {
     final AbstractRegularDetails details;
     final ExecutableElement executableElement;
     final GoalModifiers goalAnnotation;
+    final DtoContext.GoalContext context;
 
-    private RegularProjectableGoalElement(ExecutableElement element, AbstractRegularDetails details) {
+    private RegularProjectableGoalElement(ExecutableElement element, AbstractRegularDetails details, DtoContext.GoalContext context) {
       this.goalAnnotation = GoalModifiers.create(element);
       this.details = details;
       this.executableElement = element;
+      this.context = context;
     }
 
     @Override
@@ -230,19 +231,20 @@ final class DtoGoalElement {
                   createBuilderGoal(element, goalType, modifiers, methodName,
                       parameterNames(element), context) :
                   createUpdaterGoal(element, goalType, modifiers, methodName,
-                      parameterNames(element)));
+                      parameterNames(element), context));
     };
   }
 
   private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType,
                                                               GoalModifiers goalModifiers,
                                                               String methodName,
-                                                              List<String> parameterNames) {
+                                                              List<String> parameterNames,
+                                                              DtoContext.GoalContext context) {
     if (element.getKind() == CONSTRUCTOR) {
       return new RegularProjectableGoalElement(element, ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
           goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element),
-          goalModifiers.lifecycle));
+          goalModifiers.lifecycle), context);
     }
     AbstractRegularDetails details =
         element.getModifiers().contains(STATIC) ?
@@ -254,7 +256,7 @@ final class DtoGoalElement {
                 instanceTypevars(element),
                 returnTypeInstanceTypevars(element),
                 goalModifiers.lifecycle);
-    return new RegularProjectableGoalElement(element, details);
+    return new RegularProjectableGoalElement(element, details, context);
   }
 
   private static List<TypeVariableName> instanceTypevars(ExecutableElement element) {

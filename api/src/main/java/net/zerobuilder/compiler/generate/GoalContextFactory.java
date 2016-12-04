@@ -3,7 +3,6 @@ package net.zerobuilder.compiler.generate;
 import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
 import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.BeanGoalInput;
@@ -30,56 +29,53 @@ import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionI
 final class GoalContextFactory {
 
   private static BeanGoalContext prepareBean(
-      GoalContext context,
       BeanGoalDescription description) {
     return new BeanGoalContext(description.details, description);
   }
 
   private static SimpleRegularGoalContext prepareRegular(
-      GoalContext context,
       SimpleRegularGoalDescription simple) {
-    return simple.details().accept(new RegularGoalDetailsCases<SimpleRegularGoalContext, Void>() {
+    return simple.details.accept(new RegularGoalDetailsCases<SimpleRegularGoalContext, Void>() {
       @Override
       public SimpleRegularGoalContext method(InstanceMethodGoalDetails details, Void _null) {
-        return new InstanceMethodGoalContext(details, simple);
+        return new InstanceMethodGoalContext(simple);
       }
       @Override
       public SimpleRegularGoalContext staticMethod(StaticMethodGoalDetails details, Void _null) {
-        return new SimpleStaticMethodGoalContext(details, simple);
+        return new SimpleStaticMethodGoalContext(simple);
       }
       @Override
       public SimpleRegularGoalContext constructor(ConstructorGoalDetails details, Void _null) {
-        return new SimpleConstructorGoalContext(details, simple);
+        return new SimpleConstructorGoalContext(simple);
       }
     }, null);
   }
 
   private static ProjectedRegularGoalContext prepareProjectedRegular(
-      DtoContext.GoalContext context,
       ProjectedRegularGoalDescription description) {
-    return description.details().accept(new RegularGoalDetailsCases<ProjectedRegularGoalContext, Void>() {
+    return description.details.accept(new RegularGoalDetailsCases<ProjectedRegularGoalContext, Void>() {
       @Override
       public ProjectedRegularGoalContext method(InstanceMethodGoalDetails details, Void _null) {
-        return new ProjectedInstanceMethodGoalContext(context, details, description);
+        return new ProjectedInstanceMethodGoalContext(details, description);
       }
       @Override
       public ProjectedRegularGoalContext staticMethod(StaticMethodGoalDetails method, Void _null) {
-        return new ProjectedMethodGoalContext(context, method, description);
+        return new ProjectedMethodGoalContext(method, description);
       }
       @Override
       public ProjectedRegularGoalContext constructor(ConstructorGoalDetails constructor, Void _null) {
-        return new ProjectedConstructorGoalContext(context, constructor, description);
+        return new ProjectedConstructorGoalContext(constructor, description);
       }
     }, null);
   }
 
-  static Function<DescriptionInput, AbstractGoalInput> prepare(DtoContext.GoalContext context) {
-    return descriptionInputCases(
-        (module, description) -> new RegularSimpleGoalInput(
-            module, prepareRegular(context, description)),
-        (module, description) -> new ProjectedGoalInput(
-            module, prepareProjectedRegular(context, description)),
-        (module, bean) -> new BeanGoalInput(
-            module, prepareBean(context, bean)));
-  }
+  static final Function<DescriptionInput, AbstractGoalInput> prepare =
+      descriptionInputCases(
+          (module, description) -> new RegularSimpleGoalInput(
+              module, prepareRegular(description)),
+          (module, description) -> new ProjectedGoalInput(
+              module, prepareProjectedRegular(description)),
+          (module, bean) -> new BeanGoalInput(
+              module, prepareBean(bean)));
+
 }

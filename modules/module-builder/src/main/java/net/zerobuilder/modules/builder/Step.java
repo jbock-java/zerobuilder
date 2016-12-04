@@ -25,18 +25,18 @@ import static net.zerobuilder.modules.builder.Builder.nextType;
 final class Step {
 
   static IntFunction<TypeSpec> stepInterface(SimpleRegularGoalContext goal) {
-    return i -> interfaceBuilder(upcase(goal.description().parameters().get(i).name))
+    return i -> interfaceBuilder(upcase(goal.description.parameters.get(i).name))
         .addMethod(stepMethod(i, goal))
         .addModifiers(PUBLIC)
         .build();
   }
 
   private static MethodSpec stepMethod(int i, SimpleRegularGoalContext goal) {
-    SimpleParameter parameter = goal.description().parameters().get(i);
+    SimpleParameter parameter = goal.description.parameters.get(i);
     String name = parameter.name;
     TypeName type = parameter.type;
-    List<TypeName> thrownTypes = i == goal.description().parameters().size() - 1 ?
-        goal.description().thrownTypes() :
+    List<TypeName> thrownTypes = i == goal.description.parameters.size() - 1 ?
+        goal.description.thrownTypes :
         Collections.emptyList();
     return methodBuilder(name)
         .returns(nextType(i, goal))

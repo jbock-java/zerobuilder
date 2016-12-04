@@ -41,13 +41,13 @@ public final class RegularBuilder implements RegularSimpleModule {
   private static final String moduleName = "builder";
 
   private List<TypeSpec> stepInterfaces(SimpleRegularGoalContext goal) {
-    return IntStream.range(0, goal.description().parameters().size())
+    return IntStream.range(0, goal.description.parameters.size())
         .mapToObj(stepInterface(goal))
         .collect(toList());
   }
 
   private List<MethodSpec> steps(SimpleRegularGoalContext goal) {
-    return IntStream.range(0, goal.description().parameters().size())
+    return IntStream.range(0, goal.description.parameters.size())
         .mapToObj(Builder.steps(goal))
         .collect(toList());
   }
@@ -64,7 +64,7 @@ public final class RegularBuilder implements RegularSimpleModule {
   }
 
   static String methodName(SimpleRegularGoalContext goal) {
-    return goal.description().details().name + upcase(moduleName);
+    return goal.description.details.name + upcase(moduleName);
   }
 
   private TypeSpec defineBuilderImpl(SimpleRegularGoalContext goal) {
@@ -92,25 +92,25 @@ public final class RegularBuilder implements RegularSimpleModule {
       regularGoalContextCases(
           constructor -> constructor(),
           method -> {
-            if (method.details.lifecycle == REUSE_INSTANCES) {
+            if (method.description.details.lifecycle == REUSE_INSTANCES) {
               return constructor();
             }
             TypeName type = method.description.context.type;
             ParameterSpec parameter = parameterSpec(type, downcase(simpleName(type)));
             return constructorBuilder()
                 .addParameter(parameter)
-                .addStatement("this.$N = $N", instanceField(method), parameter)
+                .addStatement("this.$N = $N", instanceField(method.description), parameter)
                 .build();
           },
           staticMethod -> constructor());
 
   private List<ClassName> stepInterfaceTypes(SimpleRegularGoalContext goal) {
-    return transform(goal.description().parameters(),
+    return transform(goal.description.parameters,
         step -> contractType(goal).nestedClass(upcase(step.name)));
   }
 
   static ClassName contractType(SimpleRegularGoalContext goal) {
-    String contractName = upcase(goal.description().details().name) + upcase(moduleName);
+    String contractName = upcase(goal.description.details.name) + upcase(moduleName);
     return goal.description.context.generatedType.nestedClass(contractName);
   }
 
@@ -121,7 +121,7 @@ public final class RegularBuilder implements RegularSimpleModule {
         asList(
             defineBuilderImpl(goal),
             defineContract(goal)),
-        goal.description().details().lifecycle == REUSE_INSTANCES ?
+        goal.description.details.lifecycle == REUSE_INSTANCES ?
             singletonList(goal.description.context.cache(implType(goal))) :
             emptyList());
   }

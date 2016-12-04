@@ -34,15 +34,15 @@ public final class Generator {
     DtoContext.GoalContext context = generatorInput.context;
     return goals.stream()
         .filter(goal -> hasParameters.apply(goal))
-        .map(prepare(context))
+        .map(prepare)
         .map(process)
         .collect(collectOutput(context));
   }
 
   private static final Function<DescriptionInput, Boolean> hasParameters =
       descriptionInputCases(
-          (m, regular) -> !regular.parameters().isEmpty(),
-          (m, projected) -> !projected.parameters().isEmpty(),
+          (m, regular) -> !regular.parameters.isEmpty(),
+          (m, projected) -> !projected.parameters.isEmpty(),
           (m, bean) -> !bean.parameters().isEmpty());
 
   private static Collector<ModuleOutput, List<ModuleOutput>, GeneratorOutput> collectOutput(GoalContext context) {

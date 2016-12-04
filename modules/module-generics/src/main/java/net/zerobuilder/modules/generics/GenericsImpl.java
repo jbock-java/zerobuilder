@@ -53,7 +53,7 @@ final class GenericsImpl {
       TypeSpec stepSpec = stepSpecs.get(i);
       MethodSpec method = stepSpec.methodSpecs.get(0);
       ParameterSpec parameter = method.parameters.get(0);
-      List<FieldSpec> fields = implFields.fields.apply(goal.description().details(), i);
+      List<FieldSpec> fields = implFields.fields.apply(goal.description.details, i);
       TypeName superinterface = parameterizedTypeName(contract.nestedClass(stepSpec.name),
           stepSpec.typeVariables);
       builder.set(i, classBuilder(stepSpec.name + "Impl")
@@ -68,8 +68,8 @@ final class GenericsImpl {
               .addModifiers(PUBLIC)
               .returns(method.returnType)
               .addCode(getCodeBlock(stepSpecs, i, parameter))
-              .addExceptions(i == goal.description().parameters().size() - 1 ?
-                  goal.description().thrownTypes() :
+              .addExceptions(i == goal.description.parameters.size() - 1 ?
+                  goal.description.thrownTypes :
                   emptyList())
               .build())
           .addModifiers(PRIVATE, STATIC, FINAL)
@@ -81,8 +81,8 @@ final class GenericsImpl {
 
   private CodeBlock getCodeBlock(List<TypeSpec> stepSpecs, int i, ParameterSpec parameter) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (goal.description().parameters().get(i).nullPolicy == REJECT
-        && !goal.description().parameters().get(i).type.isPrimitive()) {
+    if (goal.description.parameters.get(i).nullPolicy == REJECT
+        && !goal.description.parameters.get(i).type.isPrimitive()) {
       builder.add(nullCheck(parameter.name, parameter.name));
     }
     if (i == stepSpecs.size() - 1) {
@@ -110,7 +110,7 @@ final class GenericsImpl {
             .addStatement("$L.$L($L)",
                 instance(stepSpecs),
                 instanceMethod.methodName, invoke).build())
-        .apply(goal.description().details());
+        .apply(goal.description.details);
   }
 
   static CodeBlock instance(List<TypeSpec> stepSpecs) {
