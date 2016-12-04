@@ -118,14 +118,15 @@ final class Builder {
           Builder::staticCall);
 
   private static CodeBlock constructorCall(SimpleConstructorGoalContext goal) {
-    TypeName type = goal.type();
+    TypeName type = goal.details.goalType;
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
-    builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, goal.type(), goal.description().invocationParameters());
+    CodeBlock args = goal.description().invocationParameters();
+    builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, args);
     if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.add(free(goal.description().parameters()));
     }
@@ -133,7 +134,7 @@ final class Builder {
   }
 
   private static CodeBlock instanceCall(InstanceMethodGoalContext goal) {
-    TypeName type = goal.type();
+    TypeName type = goal.details.goalType;
     String method = goal.details.methodName;
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
@@ -159,7 +160,7 @@ final class Builder {
   }
 
   private static CodeBlock staticCall(SimpleStaticMethodGoalContext goal) {
-    TypeName type = goal.type();
+    TypeName type = goal.details.goalType;
     String method = goal.details.methodName;
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));

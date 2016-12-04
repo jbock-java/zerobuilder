@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
@@ -27,7 +26,6 @@ public final class DtoRegularGoal {
     }
 
     public abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
-    public abstract TypeName type();
 
     public final GoalContext context() {
       return context.apply(this);
