@@ -13,6 +13,7 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
@@ -52,18 +53,17 @@ final class Builder {
     return description.details.type();
   }
 
-  private static Function<AbstractRegularDetails, Optional<FieldSpec>> maybeField(SimpleRegularGoalDescription description) {
-    return regularDetailsCases(
-        constructor -> empty(),
-        staticMethod -> empty(),
-        method -> Optional.of(instanceField(description)));
-  }
+  private static final BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, Optional<FieldSpec>> maybeField =
+      regularDetailsCases(
+          (constructor, description) -> empty(),
+          (staticMethod, description) -> empty(),
+          (method, description) -> Optional.of(instanceField(description)));
 
   static final Function<SimpleRegularGoalDescription, List<FieldSpec>> fields
       = description -> {
     List<SimpleParameter> steps = description.parameters;
     return Stream.of(
-        presentInstances(maybeField(description).apply(description.details)),
+        presentInstances(maybeField.apply(description.details, description)),
         description.details.lifecycle == REUSE_INSTANCES ?
             singletonList(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
             Collections.<FieldSpec>emptyList(),
@@ -102,7 +102,7 @@ final class Builder {
     String name = step.name;
     ParameterSpec parameter = parameterSpec(type, name);
     if (i == description.parameters.size() - 1) {
-      return regularInvoke(description).apply(description.details);
+      return regularInvoke.apply(description.details, description);
     } else {
       return CodeBlock.builder()
           .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
@@ -111,12 +111,11 @@ final class Builder {
     }
   }
 
-  private static Function<AbstractRegularDetails, CodeBlock> regularInvoke(SimpleRegularGoalDescription description) {
-    return regularDetailsCases(
-        constructor -> constructorCall(description, constructor),
-        staticMethod -> staticCall(description, staticMethod),
-        instanceMethod -> instanceCall(description, instanceMethod));
-  }
+  private static final BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, CodeBlock> regularInvoke =
+      regularDetailsCases(
+          (constructor, description) -> constructorCall(description, constructor),
+          (staticMethod, description) -> staticCall(description, staticMethod),
+          (instanceMethod, description) -> instanceCall(description, instanceMethod));
 
   private static CodeBlock constructorCall(SimpleRegularGoalDescription description,
                                            DtoGoalDetails.ConstructorGoalDetails details) {
