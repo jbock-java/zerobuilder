@@ -33,6 +33,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
+import static net.zerobuilder.modules.builder.Generator.instanceField;
 import static net.zerobuilder.modules.builder.Step.stepInterface;
 
 public final class RegularBuilder implements RegularSimpleModule {
@@ -98,7 +99,7 @@ public final class RegularBuilder implements RegularSimpleModule {
             ParameterSpec parameter = parameterSpec(type, downcase(simpleName(type)));
             return constructorBuilder()
                 .addParameter(parameter)
-                .addStatement("this.$N = $N", method.instanceField(), parameter)
+                .addStatement("this.$N = $N", instanceField(method), parameter)
                 .build();
           },
           staticMethod -> constructor());

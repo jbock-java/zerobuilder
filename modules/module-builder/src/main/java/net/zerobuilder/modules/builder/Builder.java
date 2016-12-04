@@ -39,6 +39,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
+import static net.zerobuilder.modules.builder.Generator.instanceField;
 import static net.zerobuilder.modules.builder.Step.nullCheck;
 
 final class Builder {
@@ -55,7 +56,7 @@ final class Builder {
   private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
       regularGoalContextCases(
           constructor -> empty(),
-          method -> Optional.of(method.instanceField()),
+          method -> Optional.of(instanceField(method)),
           staticMethod -> empty());
 
   static final Function<SimpleRegularGoalContext, List<FieldSpec>> fields
@@ -141,14 +142,14 @@ final class Builder {
       builder.addStatement("this._currently_in_use = false");
     }
     if (VOID.equals(type)) {
-      builder.addStatement("this.$N.$N($L)", goal.instanceField(),
+      builder.addStatement("this.$N.$N($L)", instanceField(goal),
           method, goal.description().invocationParameters());
     } else {
-      builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type, varGoal, goal.instanceField(),
+      builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type, varGoal, instanceField(goal),
           method, goal.description().invocationParameters());
     }
     if (goal.details.lifecycle == REUSE_INSTANCES) {
-      builder.addStatement("this.$N = null", goal.instanceField());
+      builder.addStatement("this.$N = null", instanceField(goal));
       builder.add(free(goal.description().parameters()));
     }
     if (!VOID.equals(type)) {

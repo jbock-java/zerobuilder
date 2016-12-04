@@ -4,6 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
@@ -15,10 +16,13 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -80,7 +84,7 @@ final class Generator {
           .addStatement("$N = $N.get()", varBuilder, cache)
           .endControlFlow()
           .addStatement("$N._currently_in_use = true", varBuilder)
-          .addStatement("$N.$N = $N", varBuilder, goal.instanceField(), varInstance)
+          .addStatement("$N.$N = $N", varBuilder, instanceField(goal), varInstance)
           .addStatement("return $N", varBuilder)
           .build();
     }
@@ -89,6 +93,14 @@ final class Generator {
 
   private static ParameterSpec builderInstance(SimpleRegularGoalContext goal) {
     return parameterSpec(implType(goal), "_builder");
+  }
+
+  static FieldSpec instanceField(InstanceMethodGoalContext goal) {
+    TypeName type = goal.context.type;
+    String name = '_' + downcase(simpleName(type));
+    return goal.details.lifecycle == REUSE_INSTANCES
+        ? fieldSpec(type, name, PRIVATE)
+        : fieldSpec(type, name, PRIVATE, FINAL);
   }
 
   private Generator() {
