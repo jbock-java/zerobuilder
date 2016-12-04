@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
@@ -8,9 +9,25 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import java.util.List;
 
+import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;
+import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
+import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
+
 public final class DtoRegularGoalDescription {
 
-  public static abstract class AbstractRegularGoalDescription {
+  static int[] createUnshuffle(List<? extends AbstractRegularParameter> parameters, List<String> parameterNames) {
+    String[] a = new String[parameters.size()];
+    for (int i = 0; i < parameters.size(); i++) {
+      a[i] = parameters.get(i).name;
+    }
+    String[] b = parameterNames.toArray(new String[parameterNames.size()]);
+    return createRanking(a, b);
+  }
+
+  public static final class SimpleRegularGoalDescription {
+
+    private final List<SimpleParameter> parameters;
+    private final int[] ranking;
     private final AbstractRegularDetails details;
     private final List<TypeName> thrownTypes;
 
@@ -22,18 +39,17 @@ public final class DtoRegularGoalDescription {
       return details;
     }
 
-    protected AbstractRegularGoalDescription(AbstractRegularDetails details, List<TypeName> thrownTypes) {
-      this.details = details;
-      this.thrownTypes = thrownTypes;
+    public final <E> List<E> unshuffle(List<E> shuffled) {
+      return applyRanking(ranking, shuffled);
     }
-  }
 
-  /**
-   * Describes of a goal that represents either a static method or an instance method, or a constructor.
-   */
-  public static final class SimpleRegularGoalDescription extends AbstractRegularGoalDescription {
-
-    private final List<SimpleParameter> parameters;
+    public final CodeBlock invocationParameters() {
+      List<SimpleParameter> unshuffled = unshuffle(parameters);
+      return unshuffled.stream()
+          .map(parameter -> parameter.name)
+          .map(CodeBlock::of)
+          .collect(joinCodeBlocks(", "));
+    }
 
     public List<SimpleParameter> parameters() {
       return parameters;
@@ -41,8 +57,11 @@ public final class DtoRegularGoalDescription {
 
     private SimpleRegularGoalDescription(AbstractRegularDetails details,
                                          List<TypeName> thrownTypes,
-                                         List<SimpleParameter> parameters) {
-      super(details, thrownTypes);
+                                         List<SimpleParameter> parameters,
+                                         int[] ranking) {
+      this.details = details;
+      this.thrownTypes = thrownTypes;
+      this.ranking = ranking;
       this.parameters = parameters;
     }
 
@@ -50,7 +69,8 @@ public final class DtoRegularGoalDescription {
                                                       List<TypeName> thrownTypes,
                                                       List<SimpleParameter> parameters) {
       checkParameterNames(details.parameterNames, parameters);
-      return new SimpleRegularGoalDescription(details, thrownTypes, parameters);
+      int[] ranking = createUnshuffle(parameters, details.parameterNames);
+      return new SimpleRegularGoalDescription(details, thrownTypes, parameters, ranking);
     }
   }
 

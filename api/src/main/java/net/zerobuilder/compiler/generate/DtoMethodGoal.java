@@ -27,7 +27,7 @@ public final class DtoMethodGoal {
         GoalContext context,
         InstanceMethodGoalDetails details,
         SimpleRegularGoalDescription description) {
-      super(description, createUnshuffle(description.parameters(), details.parameterNames));
+      super(description);
       this.details = details;
       this.context = context;
       this.instanceField = memoizeInstanceField(context, details.lifecycle);
@@ -62,7 +62,7 @@ public final class DtoMethodGoal {
         GoalContext context,
         StaticMethodGoalDetails details,
         SimpleRegularGoalDescription description) {
-      super(description, createUnshuffle(description.parameters(), details.parameterNames));
+      super(description);
       this.details = details;
       this.context = context;
     }

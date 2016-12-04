@@ -124,7 +124,7 @@ final class Builder {
     if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this._currently_in_use = false");
     }
-    builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, goal.type(), goal.invocationParameters());
+    builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, goal.type(), goal.description().invocationParameters());
     if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.add(free(goal.description().parameters()));
     }
@@ -142,10 +142,10 @@ final class Builder {
     }
     if (VOID.equals(type)) {
       builder.addStatement("this.$N.$N($L)", goal.instanceField(),
-          method, goal.invocationParameters());
+          method, goal.description().invocationParameters());
     } else {
       builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type, varGoal, goal.instanceField(),
-          method, goal.invocationParameters());
+          method, goal.description().invocationParameters());
     }
     if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.addStatement("this.$N = null", goal.instanceField());
@@ -168,10 +168,10 @@ final class Builder {
     }
     if (VOID.equals(type)) {
       builder.addStatement("$T.$N($L)", rawClassName(goal.context.type),
-          method, goal.invocationParameters());
+          method, goal.description().invocationParameters());
     } else {
       builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, rawClassName(goal.context.type),
-          method, goal.invocationParameters());
+          method, goal.description().invocationParameters());
     }
     if (goal.details.lifecycle == REUSE_INSTANCES) {
       builder.add(free(goal.description().parameters()));

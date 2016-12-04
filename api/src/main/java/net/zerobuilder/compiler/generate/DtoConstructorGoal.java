@@ -6,8 +6,6 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
-import java.util.List;
-
 public final class DtoConstructorGoal {
 
   public static final class SimpleConstructorGoalContext
@@ -19,7 +17,7 @@ public final class DtoConstructorGoal {
     SimpleConstructorGoalContext(DtoContext.GoalContext context,
                                  ConstructorGoalDetails details,
                                  SimpleRegularGoalDescription description) {
-      super(description, createUnshuffle(description.parameters(), details.parameterNames));
+      super(description);
       this.context = context;
       this.details = details;
     }
