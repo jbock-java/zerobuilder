@@ -1,18 +1,21 @@
 package net.zerobuilder.modules.generics;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
@@ -111,19 +114,12 @@ final class GenericsGenerator {
         .returns(parameterizedTypeName(
             contractType.nestedClass(stepSpecs.get(0).name),
             stepSpecs.get(0).typeVariables));
-    builder.addCode(regularDetailsCases(
-        constructor -> emptyCodeBlock,
-        staticMethod -> emptyCodeBlock,
-        instanceMethod -> nullCheck(instance)
-    ).apply(description.details));
+    builder.addCode(goalMethodNullcheck
+        .apply(description.details, instance));
     builder.addParameters(
-        regularDetailsCases(
-            constructor -> Collections.<ParameterSpec>emptyList(),
-            staticMethod -> Collections.<ParameterSpec>emptyList(),
-            instanceMethod -> singletonList(instance)
-        ).apply(description.details));
+        goalMethodParameters.apply(description.details, instance));
     builder.addTypeVariables(new HashSet<>(
-        concat(instanceMethodTypeParameters.apply(description.details),
+        instanceMethodTypeParameters.apply(description.details,
             stepSpecs.get(0).typeVariables)));
     builder.addCode(regularDetailsCases(
         constructor -> statement("return $T.$L", implType, downcase(stepImpls.get(0).name)),
@@ -135,11 +131,24 @@ final class GenericsGenerator {
         builder.build());
   }
 
-  private final Function<AbstractRegularDetails, List<TypeVariableName>> instanceMethodTypeParameters =
+  private final BiFunction<AbstractRegularDetails, ParameterSpec, CodeBlock> goalMethodNullcheck =
       regularDetailsCases(
-          constructor -> Collections.<TypeVariableName>emptyList(),
-          staticMethod -> Collections.<TypeVariableName>emptyList(),
-          instanceMethod -> instanceMethod.instanceTypeParameters);
+          (constructor, instance) -> emptyCodeBlock,
+          (staticMethod, instance) -> emptyCodeBlock,
+          (instanceMethod, instance) -> nullCheck(instance));
+
+  private final BiFunction<AbstractRegularDetails, ParameterSpec, List<ParameterSpec>> goalMethodParameters =
+      regularDetailsCases(
+          (constructor, instance) -> emptyList(),
+          (staticMethod, instance) -> emptyList(),
+          (instanceMethod, instance) -> singletonList(instance));
+
+  private final BiFunction<AbstractRegularDetails, List<TypeVariableName>, List<TypeVariableName>> instanceMethodTypeParameters =
+      regularDetailsCases(
+          (constructor, step0params) -> step0params,
+          (staticMethod, step0params) -> step0params,
+          (instanceMethod, step0params) -> concat(step0params,
+              instanceMethod.instanceTypeParameters));
 
   static GenericsGenerator create(SimpleRegularGoalDescription description) {
     AbstractRegularDetails details = description.details;
