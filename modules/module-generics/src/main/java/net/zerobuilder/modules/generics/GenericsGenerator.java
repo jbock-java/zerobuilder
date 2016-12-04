@@ -8,7 +8,6 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
@@ -46,27 +45,28 @@ import static net.zerobuilder.modules.generics.VarLife.varLifes;
 
 final class GenericsGenerator {
 
-  final List<TypeSpec> stepSpecs;
+  private final List<TypeSpec> stepSpecs;
   final List<List<TypeVariableName>> methodParams;
   final List<List<TypeVariableName>> implTypeParams;
-  final ClassName implType;
-  final ClassName contractType;
-  final GenericsImpl impl;
-  final List<TypeSpec> stepImpls;
-  final SimpleRegularGoalDescription description;
+  private final ClassName implType;
+  private final ClassName contractType;
+  private final List<TypeSpec> stepImpls;
+  private final SimpleRegularGoalDescription description;
 
   private GenericsGenerator(List<TypeSpec> stepSpecs,
                             List<List<TypeVariableName>> methodParams,
                             List<List<TypeVariableName>> implTypeParams,
-                            SimpleRegularGoalDescription description) {
+                            SimpleRegularGoalDescription description,
+                            ClassName implType,
+                            ClassName contractType,
+                            List<TypeSpec> stepImpls) {
     this.stepSpecs = stepSpecs;
     this.methodParams = methodParams;
     this.implTypeParams = implTypeParams;
-    this.implType = implType(description);
-    this.contractType = contractType(description);
-    this.impl = new GenericsImpl(implType, contractType, description);
+    this.implType = implType;
+    this.contractType = contractType;
     this.description = description;
-    this.stepImpls = impl.stepImpls(stepSpecs, methodParams, implTypeParams);
+    this.stepImpls = stepImpls;
   }
 
   TypeSpec defineImpl() {
@@ -114,7 +114,7 @@ final class GenericsGenerator {
         .returns(parameterizedTypeName(
             contractType.nestedClass(stepSpecs.get(0).name),
             stepSpecs.get(0).typeVariables));
-    builder.addCode(goalMethodNullcheck
+    builder.addCode(goalMethodNullCheck
         .apply(description.details, instance));
     builder.addParameters(
         goalMethodParameters.apply(description.details, instance));
@@ -131,7 +131,7 @@ final class GenericsGenerator {
         builder.build());
   }
 
-  private final BiFunction<AbstractRegularDetails, ParameterSpec, CodeBlock> goalMethodNullcheck =
+  private final BiFunction<AbstractRegularDetails, ParameterSpec, CodeBlock> goalMethodNullCheck =
       regularDetailsCases(
           (constructor, instance) -> emptyCodeBlock,
           (staticMethod, instance) -> emptyCodeBlock,
@@ -162,7 +162,12 @@ final class GenericsGenerator {
     List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes, dependents);
     List<List<TypeVariableName>> methodParams = methodParams(lifes, dependents);
     List<TypeSpec> stepSpecs = stepInterfaces(description, typeParams, methodParams);
-    return new GenericsGenerator(stepSpecs, methodParams, implTypeParams, description);
+    ClassName implType = implType(description);
+    ClassName contractType = contractType(description);
+    GenericsImpl genericsImpl = new GenericsImpl(implType, contractType, description);
+    List<TypeSpec> stepImpls = genericsImpl.stepImpls(stepSpecs, methodParams, implTypeParams);
+    return new GenericsGenerator(stepSpecs, methodParams, implTypeParams, description,
+        implType, contractType, stepImpls);
   }
 
   private static final Function<AbstractRegularDetails, List<TypeVariableName>> allTypeParameters =
