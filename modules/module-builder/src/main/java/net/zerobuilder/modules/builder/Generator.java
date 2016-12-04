@@ -8,9 +8,8 @@ import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import java.util.List;
@@ -22,7 +21,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -33,21 +31,21 @@ import static net.zerobuilder.modules.builder.RegularBuilder.implType;
 
 final class Generator {
 
-  static BuilderMethod builderMethod(SimpleRegularGoalContext goal) {
-    AbstractRegularDetails abstractRegularDetails = goal.description.details;
-    List<SimpleParameter> steps = goal.description.parameters;
-    MethodSpec.Builder method = methodBuilder(RegularBuilder.methodName(goal))
-        .returns(RegularBuilder.contractType(goal).nestedClass(upcase(steps.get(0).name)))
+  static BuilderMethod builderMethod(SimpleRegularGoalDescription description) {
+    AbstractRegularDetails abstractRegularDetails = description.details;
+    List<SimpleParameter> steps = description.parameters;
+    MethodSpec.Builder method = methodBuilder(RegularBuilder.methodName(description))
+        .returns(RegularBuilder.contractType(description).nestedClass(upcase(steps.get(0).name)))
         .addModifiers(abstractRegularDetails.access(STATIC));
-    GoalContext context = goal.description.context;
+    GoalContext context = description.context;
     ParameterSpec varInstance = parameterSpec(context.type,
         downcase(simpleName(context.type)));
-    CodeBlock returnBlock = returnBlock(varInstance).apply(goal);
+    CodeBlock returnBlock = returnBlock(description, varInstance).apply(description.details);
     method.addCode(returnBlock);
-    if (isInstance.apply(goal.description.details)) {
+    if (isInstance.apply(description.details)) {
       method.addParameter(varInstance);
     }
-    return new BuilderMethod(goal.description.details.name, method.build());
+    return new BuilderMethod(description.details.name, method.build());
   }
 
   private static final Function<AbstractRegularDetails, Boolean> isInstance =
@@ -56,17 +54,18 @@ final class Generator {
           staticMethod -> false,
           instanceMethod -> true);
 
-  private static Function<SimpleRegularGoalContext, CodeBlock> returnBlock(ParameterSpec varInstance) {
-    return regularGoalContextCases(
-        Generator::returnRegular,
-        method -> returnInstanceMethod(method, varInstance),
-        Generator::returnRegular);
+  private static Function<AbstractRegularDetails, CodeBlock> returnBlock(SimpleRegularGoalDescription description,
+                                                                         ParameterSpec varInstance) {
+    return regularDetailsCases(
+        constructor -> returnRegular(description),
+        staticMethod -> returnRegular(description),
+        instanceMethod -> returnInstanceMethod(description, instanceMethod, varInstance));
   }
 
-  private static CodeBlock returnRegular(SimpleRegularGoalContext goal) {
-    ParameterSpec varBuilder = builderInstance(goal);
-    if (goal.description.details.lifecycle == REUSE_INSTANCES) {
-      FieldSpec cache = goal.description.context.cache(implType(goal));
+  private static CodeBlock returnRegular(SimpleRegularGoalDescription description) {
+    ParameterSpec varBuilder = builderInstance(description);
+    if (description.details.lifecycle == REUSE_INSTANCES) {
+      FieldSpec cache = description.context.cache(implType(description));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)
           .beginControlFlow("if ($N._currently_in_use)", varBuilder)
@@ -81,10 +80,11 @@ final class Generator {
   }
 
   private static CodeBlock returnInstanceMethod(
-      InstanceMethodGoalContext goal, ParameterSpec varInstance) {
-    ParameterSpec varBuilder = builderInstance(goal);
-    if (goal.description.details.lifecycle == REUSE_INSTANCES) {
-      FieldSpec cache = goal.description.context.cache(implType(goal));
+      SimpleRegularGoalDescription description,
+      InstanceMethodGoalDetails details, ParameterSpec varInstance) {
+    ParameterSpec varBuilder = builderInstance(description);
+    if (details.lifecycle == REUSE_INSTANCES) {
+      FieldSpec cache = description.context.cache(implType(description));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)
           .beginControlFlow("if ($N._currently_in_use)", varBuilder)
@@ -92,18 +92,18 @@ final class Generator {
           .addStatement("$N = $N.get()", varBuilder, cache)
           .endControlFlow()
           .addStatement("$N._currently_in_use = true", varBuilder)
-          .addStatement("$N.$N = $N", varBuilder, instanceField(goal.description), varInstance)
+          .addStatement("$N.$N = $N", varBuilder, instanceField(description), varInstance)
           .addStatement("return $N", varBuilder)
           .build();
     }
-    return statement("return new $T($N)", implType(goal), varInstance);
+    return statement("return new $T($N)", implType(description), varInstance);
   }
 
-  private static ParameterSpec builderInstance(SimpleRegularGoalContext goal) {
-    return parameterSpec(implType(goal), "_builder");
+  private static ParameterSpec builderInstance(SimpleRegularGoalDescription description) {
+    return parameterSpec(implType(description), "_builder");
   }
 
-  static FieldSpec instanceField(DtoRegularGoalDescription.SimpleRegularGoalDescription description) {
+  static FieldSpec instanceField(SimpleRegularGoalDescription description) {
     TypeName type = description.context.type;
     String name = '_' + downcase(simpleName(type));
     return description.details.lifecycle == REUSE_INSTANCES

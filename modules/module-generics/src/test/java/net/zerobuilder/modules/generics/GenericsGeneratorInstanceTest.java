@@ -6,7 +6,6 @@ import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.api.test.GenericsBuilderTest;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
@@ -71,11 +70,10 @@ public class GenericsGeneratorInstanceTest {
     SimpleParameter keyParameter = DtoRegularParameter.create("key", K, ALLOW);
     SimpleParameter valueParameter = DtoRegularParameter.create("value", V, ALLOW);
 
-    InstanceMethodGoalContext goal = new InstanceMethodGoalContext(
-        SimpleRegularGoalDescription.create(details, emptyList(),
-            asList(keyParameter, valueParameter), goalContext));
+    SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(details, emptyList(),
+        asList(keyParameter, valueParameter), goalContext);
 
-    GenericsGenerator generator = GenericsGenerator.create(goal);
+    GenericsGenerator generator = GenericsGenerator.create(description);
     assertThat(generator.methodParams, is(asList(singletonList(K), emptyList())));
     assertThat(generator.implTypeParams, is(asList(asList(S, V), asList(S, V, K))));
   }

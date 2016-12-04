@@ -4,7 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import java.util.Collections;
@@ -24,22 +24,22 @@ import static net.zerobuilder.modules.builder.Builder.nextType;
 
 final class Step {
 
-  static IntFunction<TypeSpec> stepInterface(SimpleRegularGoalContext goal) {
-    return i -> interfaceBuilder(upcase(goal.description.parameters.get(i).name))
-        .addMethod(stepMethod(i, goal))
+  static IntFunction<TypeSpec> stepInterface(SimpleRegularGoalDescription description) {
+    return i -> interfaceBuilder(upcase(description.parameters.get(i).name))
+        .addMethod(stepMethod(i, description))
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static MethodSpec stepMethod(int i, SimpleRegularGoalContext goal) {
-    SimpleParameter parameter = goal.description.parameters.get(i);
+  private static MethodSpec stepMethod(int i, SimpleRegularGoalDescription description) {
+    SimpleParameter parameter = description.parameters.get(i);
     String name = parameter.name;
     TypeName type = parameter.type;
-    List<TypeName> thrownTypes = i == goal.description.parameters.size() - 1 ?
-        goal.description.thrownTypes :
+    List<TypeName> thrownTypes = i == description.parameters.size() - 1 ?
+        description.thrownTypes :
         Collections.emptyList();
     return methodBuilder(name)
-        .returns(nextType(i, goal))
+        .returns(nextType(i, description))
         .addParameter(parameterSpec(type, name))
         .addExceptions(thrownTypes)
         .addModifiers(PUBLIC, ABSTRACT)

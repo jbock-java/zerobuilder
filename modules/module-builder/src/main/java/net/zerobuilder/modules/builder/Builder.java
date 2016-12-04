@@ -7,7 +7,6 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
-import net.zerobuilder.compiler.generate.DtoRegularGoal.SimpleRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
@@ -29,7 +28,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
-import static net.zerobuilder.compiler.generate.DtoRegularGoal.regularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
@@ -45,27 +43,28 @@ import static net.zerobuilder.modules.builder.Step.nullCheck;
 
 final class Builder {
 
-  static TypeName nextType(int i, SimpleRegularGoalContext goal) {
-    if (i < goal.description.parameters.size() - 1) {
-      return goal.description.context.generatedType
-          .nestedClass(upcase(goal.description.details.name() + "Builder"))
-          .nestedClass(upcase(goal.description.parameters.get(i + 1).name));
+  static TypeName nextType(int i, SimpleRegularGoalDescription description) {
+    if (i < description.parameters.size() - 1) {
+      return description.context.generatedType
+          .nestedClass(upcase(description.details.name() + "Builder"))
+          .nestedClass(upcase(description.parameters.get(i + 1).name));
     }
-    return goal.description.details.type();
+    return description.details.type();
   }
 
-  private static final Function<SimpleRegularGoalContext, Optional<FieldSpec>> maybeField =
-      regularGoalContextCases(
-          constructor -> empty(),
-          method -> Optional.of(instanceField(method.description)),
-          staticMethod -> empty());
+  private static Function<AbstractRegularDetails, Optional<FieldSpec>> maybeField(SimpleRegularGoalDescription description) {
+    return regularDetailsCases(
+        constructor -> empty(),
+        staticMethod -> empty(),
+        method -> Optional.of(instanceField(description)));
+  }
 
-  static final Function<SimpleRegularGoalContext, List<FieldSpec>> fields
-      = goal -> {
-    List<SimpleParameter> steps = goal.description.parameters;
+  static final Function<SimpleRegularGoalDescription, List<FieldSpec>> fields
+      = description -> {
+    List<SimpleParameter> steps = description.parameters;
     return Stream.of(
-        presentInstances(maybeField.apply(goal)),
-        goal.description.details.lifecycle == REUSE_INSTANCES ?
+        presentInstances(maybeField(description).apply(description.details)),
+        description.details.lifecycle == REUSE_INSTANCES ?
             singletonList(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
             Collections.<FieldSpec>emptyList(),
         steps.stream()
@@ -75,35 +74,35 @@ final class Builder {
         .collect(flatList());
   };
 
-  static IntFunction<MethodSpec> steps(SimpleRegularGoalContext goal) {
+  static IntFunction<MethodSpec> steps(SimpleRegularGoalDescription description) {
     return i -> {
-      SimpleParameter step = goal.description.parameters.get(i);
+      SimpleParameter step = description.parameters.get(i);
       TypeName type = step.type;
       String name = step.name;
       ParameterSpec parameter = parameterSpec(type, name);
-      List<TypeName> thrownTypes = i < goal.description.parameters.size() - 1 ?
+      List<TypeName> thrownTypes = i < description.parameters.size() - 1 ?
           emptyList() :
-          goal.description.thrownTypes;
-      TypeName nextType = nextType(i, goal);
+          description.thrownTypes;
+      TypeName nextType = nextType(i, description);
       return methodBuilder(step.name)
           .addAnnotation(Override.class)
           .addParameter(parameter)
           .returns(nextType)
           .addCode(nullCheck.apply(step))
-          .addCode(normalAssignment(i, goal))
+          .addCode(normalAssignment(i, description))
           .addModifiers(PUBLIC)
           .addExceptions(thrownTypes)
           .build();
     };
   }
 
-  private static CodeBlock normalAssignment(int i, SimpleRegularGoalContext goal) {
-    SimpleParameter step = goal.description.parameters.get(i);
+  private static CodeBlock normalAssignment(int i, SimpleRegularGoalDescription description) {
+    SimpleParameter step = description.parameters.get(i);
     TypeName type = step.type;
     String name = step.name;
     ParameterSpec parameter = parameterSpec(type, name);
-    if (i == goal.description.parameters.size() - 1) {
-      return regularInvoke(goal).apply(goal.description.details);
+    if (i == description.parameters.size() - 1) {
+      return regularInvoke(description).apply(description.details);
     } else {
       return CodeBlock.builder()
           .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
@@ -112,11 +111,11 @@ final class Builder {
     }
   }
 
-  private static final Function<AbstractRegularDetails, CodeBlock> regularInvoke(SimpleRegularGoalContext goal) {
+  private static Function<AbstractRegularDetails, CodeBlock> regularInvoke(SimpleRegularGoalDescription description) {
     return regularDetailsCases(
-        constructor -> constructorCall(goal.description, constructor),
-        staticMethod -> staticCall(goal.description, staticMethod),
-        instanceMethod -> instanceCall(goal.description, instanceMethod));
+        constructor -> constructorCall(description, constructor),
+        staticMethod -> staticCall(description, staticMethod),
+        instanceMethod -> instanceCall(description, instanceMethod));
   }
 
   private static CodeBlock constructorCall(SimpleRegularGoalDescription description,

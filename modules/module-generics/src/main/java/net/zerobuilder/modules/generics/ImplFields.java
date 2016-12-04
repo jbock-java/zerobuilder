@@ -7,8 +7,8 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.compiler.generate.DtoGoalDetails;
-import net.zerobuilder.compiler.generate.DtoRegularGoal;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -25,23 +25,23 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 final class ImplFields {
 
   private final ClassName impl;
-  private final DtoRegularGoal.SimpleRegularGoalContext goal;
+  private final SimpleRegularGoalDescription description;
   private final List<TypeSpec> stepSpecs;
   private final List<List<TypeVariableName>> typeParams;
 
   ImplFields(ClassName impl,
-             DtoRegularGoal.SimpleRegularGoalContext goal,
+             SimpleRegularGoalDescription description,
              List<TypeSpec> stepSpecs,
              List<List<TypeVariableName>> typeParams) {
     this.impl = impl;
-    this.goal = goal;
+    this.description = description;
     this.stepSpecs = stepSpecs;
     this.typeParams = typeParams;
   }
 
-  final BiFunction<DtoGoalDetails.AbstractRegularDetails, Integer, List<FieldSpec>> fields = fields();
+  final BiFunction<AbstractRegularDetails, Integer, List<FieldSpec>> fields = fields();
 
-  private BiFunction<DtoGoalDetails.AbstractRegularDetails, Integer, List<FieldSpec>> fields() {
+  private BiFunction<AbstractRegularDetails, Integer, List<FieldSpec>> fields() {
     return regularDetailsCases(
         (constructor, i) -> i == 0 ?
             emptyList() :
@@ -50,7 +50,7 @@ final class ImplFields {
             emptyList() :
             normalFields(i),
         (instanceMethod, i) -> i == 0 ?
-            singletonList(FieldSpec.builder(goal.description.context.type, "instance",
+            singletonList(FieldSpec.builder(description.context.type, "instance",
                 PRIVATE, FINAL).build()) :
             normalFields(i)
     );

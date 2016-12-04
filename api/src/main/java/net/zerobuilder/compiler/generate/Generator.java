@@ -75,7 +75,7 @@ public final class Generator {
   private static final Function<AbstractGoalInput, ModuleOutput> process =
       goalInputCases(
           projected -> projected.module.process(projected.goal),
-          regularSimple -> regularSimple.module.process(regularSimple.goal),
+          regularSimple -> regularSimple.module.process(regularSimple.description),
           bean -> bean.module.process(bean.goal));
 
 
