@@ -52,7 +52,7 @@ public final class BeanUpdater implements BeanModule {
 
   static ClassName implType(BeanGoalContext goal) {
     String implName = upcase(goal.details.name) + upcase(moduleName);
-    return goal.context.generatedType.nestedClass(implName);
+    return goal.details.context.generatedType.nestedClass(implName);
   }
 
   private static final Function<BeanGoalContext, MethodSpec> updaterConstructor =

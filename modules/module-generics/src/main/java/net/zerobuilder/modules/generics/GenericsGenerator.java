@@ -107,7 +107,7 @@ final class GenericsGenerator {
   }
 
   DtoGeneratorOutput.BuilderMethod builderMethod(SimpleRegularGoalContext goal) {
-    ParameterSpec instance = parameterSpec(goal.context().type, "instance");
+    ParameterSpec instance = parameterSpec(goal.description.context.type, "instance");
     MethodSpec.Builder builder = methodBuilder(goal.description().details().name + "Builder")
         .addModifiers(goal.description().details().access(STATIC))
         .returns(parameterizedTypeName(

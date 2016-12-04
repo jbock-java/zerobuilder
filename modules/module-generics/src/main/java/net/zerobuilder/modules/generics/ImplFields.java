@@ -50,7 +50,7 @@ final class ImplFields {
             emptyList() :
             normalFields(i),
         (instanceMethod, i) -> i == 0 ?
-            singletonList(FieldSpec.builder(goal.context().type, "instance",
+            singletonList(FieldSpec.builder(goal.description.context.type, "instance",
                 PRIVATE, FINAL).build()) :
             normalFields(i)
     );

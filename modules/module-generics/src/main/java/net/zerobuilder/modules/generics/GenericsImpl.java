@@ -99,11 +99,11 @@ final class GenericsImpl {
         .collect(joinCodeBlocks(", "));
     return regularDetailsCases(
         constructor -> statement("return new $T($L)",
-            rawClassName(goal.context().type), invoke),
+            rawClassName(goal.description.context.type), invoke),
         staticMethod -> CodeBlock.builder()
             .add(staticMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))
             .addStatement("$T.$L($L)",
-                rawClassName(goal.context().type),
+                rawClassName(goal.description.context.type),
                 staticMethod.methodName, invoke).build(),
         instanceMethod -> CodeBlock.builder()
             .add(instanceMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))

@@ -71,7 +71,7 @@ public final class RegularBuilder implements RegularSimpleModule {
     return classBuilder(implType(goal))
         .addSuperinterfaces(stepInterfaceTypes(goal))
         .addFields(fields.apply(goal))
-        .addMethod(builderConstructor.apply(goal))
+        .addMethod(regularConstructor.apply(goal))
         .addMethods(steps(goal))
         .addModifiers(PRIVATE, STATIC, FINAL)
         .build();
@@ -95,7 +95,7 @@ public final class RegularBuilder implements RegularSimpleModule {
             if (method.details.lifecycle == REUSE_INSTANCES) {
               return constructor();
             }
-            TypeName type = method.context.type;
+            TypeName type = method.description.context.type;
             ParameterSpec parameter = parameterSpec(type, downcase(simpleName(type)));
             return constructorBuilder()
                 .addParameter(parameter)
@@ -104,9 +104,6 @@ public final class RegularBuilder implements RegularSimpleModule {
           },
           staticMethod -> constructor());
 
-  private final Function<SimpleRegularGoalContext, MethodSpec> builderConstructor =
-      regularConstructor;
-
   private List<ClassName> stepInterfaceTypes(SimpleRegularGoalContext goal) {
     return transform(goal.description().parameters(),
         step -> contractType(goal).nestedClass(upcase(step.name)));
@@ -114,7 +111,7 @@ public final class RegularBuilder implements RegularSimpleModule {
 
   static ClassName contractType(SimpleRegularGoalContext goal) {
     String contractName = upcase(goal.description().details().name) + upcase(moduleName);
-    return goal.context().generatedType.nestedClass(contractName);
+    return goal.description.context.generatedType.nestedClass(contractName);
   }
 
   @Override
@@ -125,7 +122,7 @@ public final class RegularBuilder implements RegularSimpleModule {
             defineBuilderImpl(goal),
             defineContract(goal)),
         goal.description().details().lifecycle == REUSE_INSTANCES ?
-            singletonList(goal.context().cache(implType(goal))) :
+            singletonList(goal.description.context.cache(implType(goal))) :
             emptyList());
   }
 }

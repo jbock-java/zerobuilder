@@ -58,6 +58,6 @@ It should be used in `provided` scope, as shown here:
 </dependency>
 ````
 
-### Migrating from 1.5
+### Migrating to 1.6xx
 
-The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater` and `@Recycle` instead. Gomenasai!
+The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater` and `@Recycle` instead.

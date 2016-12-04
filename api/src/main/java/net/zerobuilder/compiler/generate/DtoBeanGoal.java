@@ -3,7 +3,6 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
-import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 
 import static javax.lang.model.element.Modifier.FINAL;
@@ -15,9 +14,8 @@ public final class DtoBeanGoal {
 
   public static final class BeanGoalContext {
 
-    public final GoalContext context;
     public final BeanGoalDetails details;
-    private final BeanGoalDescription description;
+    public final BeanGoalDescription description;
 
     public BeanGoalDescription description() {
       return description;
@@ -34,10 +32,8 @@ public final class DtoBeanGoal {
       return bean;
     }
 
-    BeanGoalContext(GoalContext context,
-                    BeanGoalDetails details,
+    BeanGoalContext(BeanGoalDetails details,
                     BeanGoalDescription description) {
-      this.context = context;
       this.description = description;
       this.bean = beanSupplier(details.goalType);
       this.details = details;

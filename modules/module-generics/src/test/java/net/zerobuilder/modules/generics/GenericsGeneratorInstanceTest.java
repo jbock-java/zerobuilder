@@ -72,7 +72,6 @@ public class GenericsGeneratorInstanceTest {
     SimpleParameter valueParameter = DtoRegularParameter.create("value", V, ALLOW);
 
     InstanceMethodGoalContext goal = new InstanceMethodGoalContext(
-        goalContext,
         details,
         SimpleRegularGoalDescription.create(details, emptyList(),
             asList(keyParameter, valueParameter), goalContext));

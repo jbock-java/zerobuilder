@@ -37,7 +37,7 @@ final class Generator {
     MethodSpec.Builder method = methodBuilder(RegularBuilder.methodName(goal))
         .returns(RegularBuilder.contractType(goal).nestedClass(upcase(steps.get(0).name)))
         .addModifiers(abstractRegularDetails.access(STATIC));
-    GoalContext context = goal.context();
+    GoalContext context = goal.description.context;
     ParameterSpec varInstance = parameterSpec(context.type,
         downcase(simpleName(context.type)));
     CodeBlock returnBlock = returnBlock(varInstance).apply(goal);
@@ -58,7 +58,7 @@ final class Generator {
   private static CodeBlock returnRegular(SimpleRegularGoalContext goal) {
     ParameterSpec varBuilder = builderInstance(goal);
     if (goal.description().details().lifecycle == REUSE_INSTANCES) {
-      FieldSpec cache = goal.context().cache(implType(goal));
+      FieldSpec cache = goal.description.context.cache(implType(goal));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)
           .beginControlFlow("if ($N._currently_in_use)", varBuilder)
@@ -76,7 +76,7 @@ final class Generator {
       InstanceMethodGoalContext goal, ParameterSpec varInstance) {
     ParameterSpec varBuilder = builderInstance(goal);
     if (goal.details.lifecycle == REUSE_INSTANCES) {
-      FieldSpec cache = goal.context().cache(implType(goal));
+      FieldSpec cache = goal.description.context.cache(implType(goal));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)
           .beginControlFlow("if ($N._currently_in_use)", varBuilder)
@@ -96,7 +96,7 @@ final class Generator {
   }
 
   static FieldSpec instanceField(InstanceMethodGoalContext goal) {
-    TypeName type = goal.context.type;
+    TypeName type = goal.description.context.type;
     String name = '_' + downcase(simpleName(type));
     return goal.details.lifecycle == REUSE_INSTANCES
         ? fieldSpec(type, name, PRIVATE)

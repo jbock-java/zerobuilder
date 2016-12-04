@@ -32,7 +32,7 @@ final class GoalContextFactory {
   private static BeanGoalContext prepareBean(
       GoalContext context,
       BeanGoalDescription description) {
-    return new BeanGoalContext(context, description.details, description);
+    return new BeanGoalContext(description.details, description);
   }
 
   private static SimpleRegularGoalContext prepareRegular(
@@ -41,15 +41,15 @@ final class GoalContextFactory {
     return simple.details().accept(new RegularGoalDetailsCases<SimpleRegularGoalContext, Void>() {
       @Override
       public SimpleRegularGoalContext method(InstanceMethodGoalDetails details, Void _null) {
-        return new InstanceMethodGoalContext(context, details, simple);
+        return new InstanceMethodGoalContext(details, simple);
       }
       @Override
       public SimpleRegularGoalContext staticMethod(StaticMethodGoalDetails details, Void _null) {
-        return new SimpleStaticMethodGoalContext(context, details, simple);
+        return new SimpleStaticMethodGoalContext(details, simple);
       }
       @Override
       public SimpleRegularGoalContext constructor(ConstructorGoalDetails details, Void _null) {
-        return new SimpleConstructorGoalContext(context, details, simple);
+        return new SimpleConstructorGoalContext(details, simple);
       }
     }, null);
   }

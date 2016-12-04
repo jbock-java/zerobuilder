@@ -61,7 +61,7 @@ final class GenericsContract {
     }
     List<SimpleParameter> steps = goal.description().parameters();
     SimpleParameter step = steps.get(i + 1);
-    ClassName rawNext = goal.context().generatedType
+    ClassName rawNext = goal.description.context.generatedType
         .nestedClass(upcase(goal.description().details().name() + "Builder"))
         .nestedClass(upcase(step.name));
     return parameterizedTypeName(rawNext, typeParams.get(i + 1));
@@ -69,13 +69,13 @@ final class GenericsContract {
 
   static ClassName contractType(SimpleRegularGoalContext goal) {
     String contractName = upcase(goal.description().details().name) + "Builder";
-    return goal.context()
+    return goal.description.context
         .generatedType.nestedClass(contractName);
   }
 
   static ClassName implType(SimpleRegularGoalContext goal) {
     String contractName = upcase(goal.description().details().name) + "BuilderImpl";
-    return goal.context().generatedType.nestedClass(contractName);
+    return goal.description.context.generatedType.nestedClass(contractName);
   }
 
   static List<TypeName> stepTypes(SimpleRegularGoalContext goal) {

@@ -1,6 +1,5 @@
 package net.zerobuilder.compiler.generate;
 
-import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoal.RegularGoalContextCases;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
@@ -10,14 +9,11 @@ public final class DtoConstructorGoal {
   public static final class SimpleConstructorGoalContext
       extends DtoRegularGoal.SimpleRegularGoalContext {
 
-    public final GoalContext context;
     public final ConstructorGoalDetails details;
 
-    SimpleConstructorGoalContext(DtoContext.GoalContext context,
-                                 ConstructorGoalDetails details,
+    SimpleConstructorGoalContext(ConstructorGoalDetails details,
                                  SimpleRegularGoalDescription description) {
       super(description);
-      this.context = context;
       this.details = details;
     }
 

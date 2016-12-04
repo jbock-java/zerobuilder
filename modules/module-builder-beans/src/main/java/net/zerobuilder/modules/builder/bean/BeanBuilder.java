@@ -89,7 +89,7 @@ public final class BeanBuilder implements BeanModule {
 
   static ClassName contractType(BeanGoalContext goal) {
     String contractName = upcase(goal.details.name) + upcase(moduleName);
-    return goal.context.generatedType.nestedClass(contractName);
+    return goal.description.details.context.generatedType.nestedClass(contractName);
   }
 
   @Override

@@ -46,7 +46,7 @@ final class Builder {
 
   static TypeName nextType(int i, SimpleRegularGoalContext goal) {
     if (i < goal.description().parameters().size() - 1) {
-      return goal.context().generatedType
+      return goal.description.context.generatedType
           .nestedClass(upcase(goal.description().details().name() + "Builder"))
           .nestedClass(upcase(goal.description().parameters().get(i + 1).name));
     }
@@ -169,10 +169,11 @@ final class Builder {
       builder.addStatement("this._currently_in_use = false");
     }
     if (VOID.equals(type)) {
-      builder.addStatement("$T.$N($L)", rawClassName(goal.context.type),
+      builder.addStatement("$T.$N($L)", rawClassName(goal.description.context.type),
           method, goal.description().invocationParameters());
     } else {
-      builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, rawClassName(goal.context.type),
+      builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal,
+          rawClassName(goal.description.context.type),
           method, goal.description().invocationParameters());
     }
     if (goal.details.lifecycle == REUSE_INSTANCES) {

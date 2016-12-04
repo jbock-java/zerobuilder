@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoConstructorGoal.SimpleConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.InstanceMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoMethodGoal.SimpleStaticMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
@@ -19,17 +18,13 @@ public final class DtoRegularGoal {
       this.description = description;
     }
 
-    private final SimpleRegularGoalDescription description;
+    public final SimpleRegularGoalDescription description;
 
     public final SimpleRegularGoalDescription description() {
       return description;
     }
 
     public abstract <R> R acceptRegular(RegularGoalContextCases<R> cases);
-
-    public final GoalContext context() {
-      return context.apply(this);
-    }
 
     public final boolean isInstance() {
       return isInstance.test(this);
@@ -43,19 +38,13 @@ public final class DtoRegularGoal {
           instanceMethod -> true,
           staticMethod -> false));
 
-  private static final Function<SimpleRegularGoalContext, GoalContext> context =
-      regularGoalContextCases(
-          constructor -> constructor.context,
-          instanceMethod -> instanceMethod.context,
-          staticMethod -> staticMethod.context);
-
   interface RegularGoalContextCases<R> {
     R constructor(SimpleConstructorGoalContext goal);
     R instanceMethod(InstanceMethodGoalContext goal);
     R staticMethod(SimpleStaticMethodGoalContext goal);
   }
 
-  public static <R> Function<SimpleRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
+  private static <R> Function<SimpleRegularGoalContext, R> asFunction(RegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegular(cases);
   }
 

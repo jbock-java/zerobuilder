@@ -59,7 +59,7 @@ final class BeanStep {
 
   static TypeName nextType(int i, BeanGoalContext goal) {
     if (i < goal.description().parameters().size() - 1) {
-      return goal.context.generatedType
+      return goal.description.details.context.generatedType
           .nestedClass(upcase(goal.details.name() + "Builder"))
           .nestedClass(upcase(goal.description().parameters().get(i + 1).name()));
     }
