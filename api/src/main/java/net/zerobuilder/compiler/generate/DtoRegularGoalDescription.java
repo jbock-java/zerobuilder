@@ -15,7 +15,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 
 public final class DtoRegularGoalDescription {
 
-  static int[] createUnshuffle(List<? extends AbstractRegularParameter> parameters, List<String> parameterNames) {
+  private static int[] createUnshuffle(List<? extends AbstractRegularParameter> parameters, List<String> parameterNames) {
     String[] a = new String[parameters.size()];
     for (int i = 0; i < parameters.size(); i++) {
       a[i] = parameters.get(i).name;
@@ -26,10 +26,12 @@ public final class DtoRegularGoalDescription {
 
   public static final class SimpleRegularGoalDescription {
 
-    private final List<SimpleParameter> parameters;
     private final int[] ranking;
-    private final AbstractRegularDetails details;
-    private final List<TypeName> thrownTypes;
+
+    public final List<SimpleParameter> parameters;
+    public final DtoContext.GoalContext context;
+    public final AbstractRegularDetails details;
+    public final List<TypeName> thrownTypes;
 
     public final List<TypeName> thrownTypes() {
       return thrownTypes;
@@ -58,19 +60,22 @@ public final class DtoRegularGoalDescription {
     private SimpleRegularGoalDescription(AbstractRegularDetails details,
                                          List<TypeName> thrownTypes,
                                          List<SimpleParameter> parameters,
+                                         DtoContext.GoalContext context,
                                          int[] ranking) {
       this.details = details;
       this.thrownTypes = thrownTypes;
       this.ranking = ranking;
       this.parameters = parameters;
+      this.context = context;
     }
 
     public static SimpleRegularGoalDescription create(AbstractRegularDetails details,
                                                       List<TypeName> thrownTypes,
-                                                      List<SimpleParameter> parameters) {
+                                                      List<SimpleParameter> parameters,
+                                                      DtoContext.GoalContext context) {
       checkParameterNames(details.parameterNames, parameters);
       int[] ranking = createUnshuffle(parameters, details.parameterNames);
-      return new SimpleRegularGoalDescription(details, thrownTypes, parameters, ranking);
+      return new SimpleRegularGoalDescription(details, thrownTypes, parameters, context, ranking);
     }
   }
 

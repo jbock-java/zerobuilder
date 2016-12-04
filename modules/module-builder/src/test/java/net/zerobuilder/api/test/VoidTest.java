@@ -65,7 +65,8 @@ public class VoidTest {
     SimpleParameter parameter = DtoRegularParameter.create("message", STRING, ALLOW);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
         details, singletonList(IO_EXCEPTION),
-        singletonList(parameter));
+        singletonList(parameter),
+        goalContext);
 
     GeneratorInput input = GeneratorInput.create(
         goalContext, singletonList(new RegularSimpleDescriptionInput(MODULE_BUILDER, description)));

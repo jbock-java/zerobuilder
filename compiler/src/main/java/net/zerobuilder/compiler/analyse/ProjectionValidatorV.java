@@ -122,7 +122,8 @@ final class ProjectionValidatorV {
     return SimpleRegularGoalDescription.create(
         goal.details,
         thrownTypes,
-        transform(shuffled, parameter -> parameter.parameter));
+        transform(shuffled, parameter -> parameter.parameter),
+        goal.context);
   };
 
   private static ProjectedRegularGoalDescription createGoalDescription(RegularProjectableGoalElement goal,

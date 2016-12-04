@@ -94,7 +94,8 @@ public class TrickyGenericsBuilderTest {
         details,
         Collections.emptyList(), // the goal method declares no exceptions
         // step order; not necessarily the order of the goal parameters
-        asList(fooParameter, barParameter, tarParameter));
+        asList(fooParameter, barParameter, tarParameter),
+        goalContext);
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(

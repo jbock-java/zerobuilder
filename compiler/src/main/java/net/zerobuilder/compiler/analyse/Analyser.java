@@ -66,7 +66,7 @@ public final class Analyser {
         transform(tel.getTypeParameters(), TypeVariableName::get));
     ClassName generatedType = peer(rawClassName(type), "Builders");
     GoalContext context = createContext(type, generatedType);
-    List<? extends AbstractGoalElement> goals = goals(tel);
+    List<? extends AbstractGoalElement> goals = goals(tel, context);
     checkNameConflict(goals);
     checkAccessLevel(goals);
     List<DescriptionInput> descriptions = transform(goals, description);
@@ -84,10 +84,10 @@ public final class Analyser {
               new BeanDescriptionInput(BEAN_BUILDER, validateBean.apply(bean)) :
               new BeanDescriptionInput(BEAN_UPDATER, validateBean.apply(bean)));
 
-  private static List<? extends AbstractGoalElement> goals(TypeElement tel) throws ValidationException {
+  private static List<? extends AbstractGoalElement> goals(TypeElement tel, GoalContext context) throws ValidationException {
     return tel.getAnnotation(net.zerobuilder.BeanBuilder.class) != null ?
         beanGoals(tel) :
-        regularGoals(tel);
+        regularGoals(tel, context);
   }
 
   private static boolean hasTypevars(ExecutableElement element) {
@@ -101,12 +101,12 @@ public final class Analyser {
         .getTypeParameters().isEmpty();
   }
 
-  private static List<AbstractRegularGoalElement> regularGoals(TypeElement tel) {
+  private static List<AbstractRegularGoalElement> regularGoals(TypeElement tel, GoalContext context) {
     return tel.getEnclosedElements().stream()
         .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
         .filter(el -> el.getKind() == CONSTRUCTOR || el.getKind() == METHOD)
         .map(el -> asExecutable(el))
-        .map(DtoGoalElement::createRegular)
+        .map(DtoGoalElement.createRegular(context))
         .collect(flatList());
   }
 

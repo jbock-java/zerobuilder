@@ -82,7 +82,8 @@ public class BuilderTest {
         details,
         Collections.emptyList(), // the goal method declares no exceptions
         // step order; not necessarily the order of the goal parameters
-        asList(fooParameter, barParameter));
+        asList(fooParameter, barParameter),
+        goalContext);
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(

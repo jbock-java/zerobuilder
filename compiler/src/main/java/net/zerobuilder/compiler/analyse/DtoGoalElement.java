@@ -7,6 +7,7 @@ import net.zerobuilder.Access;
 import net.zerobuilder.BeanBuilder;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
+import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
@@ -119,11 +120,14 @@ final class DtoGoalElement {
     final AbstractRegularDetails details;
     final ExecutableElement executableElement;
     final GoalModifiers goalAnnotation;
+    final DtoContext.GoalContext context;
 
-    private RegularGoalElement(ExecutableElement element, AbstractRegularDetails details) {
+    private RegularGoalElement(ExecutableElement element, AbstractRegularDetails details,
+                               DtoContext.GoalContext context) {
       this.goalAnnotation = GoalModifiers.create(element);
       this.details = details;
       this.executableElement = element;
+      this.context = context;
     }
 
     @Override
@@ -221,18 +225,20 @@ final class DtoGoalElement {
     }
   }
 
-  static List<AbstractRegularGoalElement> createRegular(ExecutableElement element) {
-    TypeName goalType = goalType(element);
-    GoalModifiers modifiers = GoalModifiers.create(element);
-    List<ModuleChoice> goalOptions = goalOptions(element);
-    String methodName = element.getSimpleName().toString();
-    return transform(goalOptions,
-        goalOption ->
-            goalOption == BUILDER ?
-                createBuilderGoal(element, goalType, modifiers, methodName,
-                    parameterNames(element)) :
-                createUpdaterGoal(element, goalType, modifiers, methodName,
-                    parameterNames(element)));
+  static Function<ExecutableElement, List<AbstractRegularGoalElement>> createRegular(DtoContext.GoalContext context) {
+    return element -> {
+      TypeName goalType = goalType(element);
+      GoalModifiers modifiers = GoalModifiers.create(element);
+      List<ModuleChoice> goalOptions = goalOptions(element);
+      String methodName = element.getSimpleName().toString();
+      return transform(goalOptions,
+          goalOption ->
+              goalOption == BUILDER ?
+                  createBuilderGoal(element, goalType, modifiers, methodName,
+                      parameterNames(element), context) :
+                  createUpdaterGoal(element, goalType, modifiers, methodName,
+                      parameterNames(element)));
+    };
   }
 
   private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType,
@@ -280,13 +286,14 @@ final class DtoGoalElement {
   private static AbstractRegularGoalElement createBuilderGoal(ExecutableElement element, TypeName goalType,
                                                               GoalModifiers goalModifiers,
                                                               String methodName,
-                                                              List<String> parameterNames) {
+                                                              List<String> parameterNames,
+                                                              DtoContext.GoalContext context) {
     if (element.getKind() == CONSTRUCTOR) {
       ConstructorGoalDetails details = ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
           goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element),
           goalModifiers.lifecycle);
-      return new RegularGoalElement(element, details);
+      return new RegularGoalElement(element, details, context);
     }
     AbstractRegularDetails details =
         element.getModifiers().contains(STATIC) ?
@@ -299,7 +306,7 @@ final class DtoGoalElement {
                 instanceTypevars(element),
                 returnTypeInstanceTypevars(element),
                 goalModifiers.lifecycle);
-    return new RegularGoalElement(element, details);
+    return new RegularGoalElement(element, details, context);
   }
 
   private DtoGoalElement() {

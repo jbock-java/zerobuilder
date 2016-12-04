@@ -62,7 +62,8 @@ public class GenericsGeneratorTest {
     SimpleStaticMethodGoalContext goal = new SimpleStaticMethodGoalContext(
         goalContext,
         details,
-        DtoRegularGoalDescription.SimpleRegularGoalDescription.create(details, emptyList(), asList(keysParameter, valueParameter)));
+        DtoRegularGoalDescription.SimpleRegularGoalDescription.create(details, emptyList(),
+            asList(keysParameter, valueParameter), goalContext));
 
     GenericsGenerator generator = GenericsGenerator.create(goal);
     assertThat(generator.methodParams, is(asList(singletonList(K), singletonList(V))));

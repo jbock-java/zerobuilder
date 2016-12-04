@@ -74,7 +74,8 @@ public class GenericsGeneratorInstanceTest {
     InstanceMethodGoalContext goal = new InstanceMethodGoalContext(
         goalContext,
         details,
-        SimpleRegularGoalDescription.create(details, emptyList(), asList(keyParameter, valueParameter)));
+        SimpleRegularGoalDescription.create(details, emptyList(),
+            asList(keyParameter, valueParameter), goalContext));
 
     GenericsGenerator generator = GenericsGenerator.create(goal);
     assertThat(generator.methodParams, is(asList(singletonList(K), emptyList())));
