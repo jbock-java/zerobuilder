@@ -174,18 +174,18 @@ final class DtoGoalElement {
     final ModuleChoice moduleChoice;
 
     private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
-                            ModuleChoice moduleChoice) {
+                            ModuleChoice moduleChoice, DtoContext.GoalContext context) {
       this.moduleChoice = moduleChoice;
-      this.details = new BeanGoalDetails(goalType, name, Access.PUBLIC);
+      this.details = new BeanGoalDetails(goalType, name, Access.PUBLIC, context);
       this.beanType = beanType;
     }
 
-    static List<BeanGoalElement> create(TypeElement beanType) {
+    static List<BeanGoalElement> create(TypeElement beanType, DtoContext.GoalContext context) {
       ClassName goalType = ClassName.get(beanType);
       String name = downcase(simpleName(goalType));
-      List<ModuleChoice> goalOptions = goalOptions(beanType);
+      List<ModuleChoice> goalOptions = Arrays.asList(BUILDER, UPDATER);
       return transform(goalOptions,
-          goalOption -> new BeanGoalElement(goalType, name, beanType, goalOption));
+          goalOption -> new BeanGoalElement(goalType, name, beanType, goalOption, context));
     }
 
     @Override
@@ -207,13 +207,6 @@ final class DtoGoalElement {
       options.add(UPDATER);
     }
     return options;
-  }
-
-  private static List<ModuleChoice> goalOptions(TypeElement element) {
-    if (element.getAnnotation(BeanBuilder.class) != null) {
-      return Arrays.asList(BUILDER, UPDATER);
-    }
-    return emptyList();
   }
 
   static TypeName goalType(ExecutableElement goal) {

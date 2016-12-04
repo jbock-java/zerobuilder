@@ -24,11 +24,9 @@ import net.zerobuilder.modules.generics.GenericsBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
 import net.zerobuilder.modules.updater.bean.BeanUpdater;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
@@ -86,7 +84,7 @@ public final class Analyser {
 
   private static List<? extends AbstractGoalElement> goals(TypeElement tel, GoalContext context) throws ValidationException {
     return tel.getAnnotation(net.zerobuilder.BeanBuilder.class) != null ?
-        beanGoals(tel) :
+        beanGoals(tel, context) :
         regularGoals(tel, context);
   }
 
@@ -110,15 +108,14 @@ public final class Analyser {
         .collect(flatList());
   }
 
-  private static List<BeanGoalElement> beanGoals(TypeElement buildElement) {
-    Optional<? extends Element> annotated = buildElement.getEnclosedElements().stream()
+  private static List<BeanGoalElement> beanGoals(TypeElement buildElement, GoalContext context) {
+    buildElement.getEnclosedElements().stream()
         .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
-        .filter(el -> el.getKind() == METHOD || el.getKind() == CONSTRUCTOR)
-        .findAny();
-    if (annotated.isPresent()) {
-      throw new ValidationException(BEAN_SUBGOALS, annotated.get());
-    }
-    return BeanGoalElement.create(buildElement);
+        .findAny()
+        .ifPresent(el -> {
+          throw new ValidationException(BEAN_SUBGOALS, el);
+        });
+    return BeanGoalElement.create(buildElement, context);
   }
 
   private Analyser() {

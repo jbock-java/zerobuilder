@@ -254,10 +254,12 @@ public final class DtoGoalDetails {
     public final ClassName goalType;
     public final String name;
     private final Access access;
-    public BeanGoalDetails(ClassName goalType, String name, Access access) {
+    public final DtoContext.GoalContext context;
+    public BeanGoalDetails(ClassName goalType, String name, Access access, DtoContext.GoalContext context) {
       this.name = name;
       this.access = access;
       this.goalType = goalType;
+      this.context = context;
     }
 
     @Override
