@@ -3,7 +3,6 @@ package net.zerobuilder.compiler.generate;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
-import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
@@ -15,9 +14,7 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 
 import static java.util.stream.Collectors.toList;
-import static net.zerobuilder.compiler.generate.DtoDescriptionInput.descriptionInputCases;
 import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
-import static net.zerobuilder.compiler.generate.GoalContextFactory.prepare;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.listCollector;
 
@@ -30,20 +27,19 @@ public final class Generator {
    * @return a GeneratorOutput
    */
   public static GeneratorOutput generate(GeneratorInput generatorInput) {
-    List<DescriptionInput> goals = generatorInput.goals;
+    List<AbstractGoalInput> goals = generatorInput.goals;
     DtoContext.GoalContext context = generatorInput.context;
     return goals.stream()
         .filter(hasParameters::apply)
-        .map(prepare)
         .map(process)
         .collect(collectOutput(context));
   }
 
-  private static final Function<DescriptionInput, Boolean> hasParameters =
-      descriptionInputCases(
-          (m, regular) -> !regular.parameters.isEmpty(),
-          (m, projected) -> !projected.parameters.isEmpty(),
-          (m, bean) -> !bean.parameters.isEmpty());
+  private static final Function<AbstractGoalInput, Boolean> hasParameters =
+      goalInputCases(
+          projected -> !projected.description.parameters.isEmpty(),
+          regular -> !regular.description.parameters.isEmpty(),
+          bean -> !bean.description.parameters.isEmpty());
 
   private static Collector<ModuleOutput, List<ModuleOutput>, GeneratorOutput> collectOutput(GoalContext context) {
     return listCollector(tmpOutputs ->

@@ -3,8 +3,8 @@ package net.zerobuilder.api.test;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext;
-import net.zerobuilder.compiler.generate.DtoDescriptionInput.RegularSimpleDescriptionInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
@@ -39,7 +39,7 @@ public class BuilderTest {
   // the type we wish to generate; in this case, a nested type
   private static final ClassName GENERATED_TYPE = ClassName.get(BuilderTest.class)
       .nestedClass("MyTypeBuilders");
-  public static final RegularBuilder MODULE_BUILDER = new RegularBuilder();
+  private static final RegularBuilder MODULE_BUILDER = new RegularBuilder();
 
   /**
    * <p>We want to generate a builder for {@code MyType#create(String, Integer)}
@@ -87,7 +87,7 @@ public class BuilderTest {
 
     // wrap it all together
     GeneratorInput generatorInput = GeneratorInput.create(
-        goalContext, singletonList(new RegularSimpleDescriptionInput(MODULE_BUILDER, description)));
+        goalContext, singletonList(new RegularSimpleGoalInput(MODULE_BUILDER, description)));
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(generatorInput);

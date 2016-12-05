@@ -10,11 +10,11 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractRegularGoalElemen
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
-import net.zerobuilder.compiler.generate.DtoDescriptionInput.BeanDescriptionInput;
-import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
-import net.zerobuilder.compiler.generate.DtoDescriptionInput.ProjectedDescriptionInput;
-import net.zerobuilder.compiler.generate.DtoDescriptionInput.RegularSimpleDescriptionInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.BeanGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
@@ -67,20 +67,20 @@ public final class Analyser {
     List<? extends AbstractGoalElement> goals = goals(tel, context);
     checkNameConflict(goals);
     checkAccessLevel(goals);
-    List<DescriptionInput> descriptions = transform(goals, description);
+    List<AbstractGoalInput> descriptions = transform(goals, description);
     return GeneratorInput.create(context, descriptions);
   }
 
-  private static final Function<AbstractGoalElement, DescriptionInput> description =
+  private static final Function<AbstractGoalElement, AbstractGoalInput> description =
       goalElementCases(
           regularGoalElementCases(
               general -> hasTypevars(general.executableElement) ?
-                  new RegularSimpleDescriptionInput(GENERICS, validateBuilder.apply(general)) :
-                  new RegularSimpleDescriptionInput(BUILDER, validateBuilder.apply(general)),
-              projected -> new ProjectedDescriptionInput(UPDATER, validateUpdater.apply(projected))),
+                  new RegularSimpleGoalInput(GENERICS, validateBuilder.apply(general)) :
+                  new RegularSimpleGoalInput(BUILDER, validateBuilder.apply(general)),
+              projected -> new ProjectedGoalInput(UPDATER, validateUpdater.apply(projected))),
           bean -> bean.moduleChoice == ModuleChoice.BUILDER ?
-              new BeanDescriptionInput(BEAN_BUILDER, validateBean.apply(bean)) :
-              new BeanDescriptionInput(BEAN_UPDATER, validateBean.apply(bean)));
+              new BeanGoalInput(BEAN_BUILDER, validateBean.apply(bean)) :
+              new BeanGoalInput(BEAN_UPDATER, validateBean.apply(bean)));
 
   private static List<? extends AbstractGoalElement> goals(TypeElement tel, GoalContext context) throws ValidationException {
     return tel.getAnnotation(net.zerobuilder.BeanBuilder.class) != null ?
