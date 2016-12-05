@@ -5,7 +5,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 
@@ -30,55 +30,54 @@ import static net.zerobuilder.modules.updater.bean.Updater.stepMethods;
 
 public final class BeanUpdater implements BeanModule {
 
-  static final String moduleName = "updater";
+  private static final String moduleName = "updater";
 
-  private MethodSpec buildMethod(BeanGoalContext goal) {
+  private MethodSpec buildMethod(BeanGoalDescription description) {
     return methodBuilder("done")
         .addModifiers(PUBLIC)
-        .returns(goal.details.type())
-        .addCode(invoke.apply(goal))
+        .returns(description.details.type())
+        .addCode(returnBean(description))
         .build();
   }
 
-  private TypeSpec defineUpdater(BeanGoalContext projectedGoal) {
-    return classBuilder(simpleName(implType(projectedGoal)))
-        .addFields(fields.apply(projectedGoal))
-        .addMethods(stepMethods.apply(projectedGoal))
-        .addMethod(buildMethod(projectedGoal))
+  private TypeSpec defineUpdater(BeanGoalDescription description) {
+    return classBuilder(simpleName(implType(description)))
+        .addFields(fields.apply(description))
+        .addMethods(stepMethods.apply(description))
+        .addMethod(buildMethod(description))
         .addModifiers(PUBLIC, STATIC, FINAL)
-        .addMethod(updaterConstructor.apply(projectedGoal))
+        .addMethod(updaterConstructor.apply(description))
         .build();
   }
 
-  static ClassName implType(BeanGoalContext goal) {
-    String implName = upcase(goal.details.name) + upcase(moduleName);
-    return goal.details.context.generatedType.nestedClass(implName);
+  static ClassName implType(BeanGoalDescription description) {
+    String implName = upcase(description.details.name) + upcase(moduleName);
+    return description.details.context.generatedType.nestedClass(implName);
   }
 
-  private static final Function<BeanGoalContext, MethodSpec> updaterConstructor =
-      bean -> constructorBuilder()
+  private static final Function<BeanGoalDescription, MethodSpec> updaterConstructor =
+      description -> constructorBuilder()
           .addModifiers(PRIVATE)
-          .addExceptions(bean.description().thrownTypes)
-          .addCode(statement("this.$N = new $T()", bean.bean(), bean.type()))
+          .addExceptions(description.thrownTypes)
+          .addCode(statement("this.$N = new $T()",
+              description.beanField, description.details.goalType))
           .build();
 
-  private CodeBlock returnBean(BeanGoalContext goal) {
-    ClassName type = goal.details.goalType;
+  private CodeBlock returnBean(BeanGoalDescription description) {
+    ClassName type = description.details.goalType;
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(type.simpleName()));
     CodeBlock.Builder builder = CodeBlock.builder();
-    builder.addStatement("$T $N = this.$N", varGoal.type, varGoal, goal.bean());
+    builder.addStatement("$T $N = this.$N",
+        varGoal.type, varGoal, description.beanField);
     return builder.addStatement("return $N", varGoal).build();
   }
 
-  private final Function<BeanGoalContext, CodeBlock> invoke =
-      this::returnBean;
-
   @Override
-  public ModuleOutput process(BeanGoalContext goal) {
+  public ModuleOutput process(BeanGoalDescription description) {
     return new ModuleOutput(
-        Generator.updaterMethod(goal),
-        singletonList(defineUpdater(goal)),
+        Generator.updaterMethod(description),
+        singletonList(defineUpdater(description)),
         emptyList());
   }
 }

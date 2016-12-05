@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
-import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
@@ -16,7 +16,7 @@ public final class DtoModule {
   }
 
   public interface BeanModule {
-    ModuleOutput process(BeanGoalContext goal);
+    ModuleOutput process(BeanGoalDescription description);
   }
 
   private DtoModule() {

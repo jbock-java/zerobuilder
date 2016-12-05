@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
-import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
+import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
@@ -63,10 +63,10 @@ public final class DtoGeneratorInput {
 
   static final class BeanGoalInput extends AbstractGoalInput {
     final BeanModule module;
-    final BeanGoalContext goal;
-    BeanGoalInput(BeanModule module, BeanGoalContext goal) {
+    final BeanGoalDescription description;
+    BeanGoalInput(BeanModule module, BeanGoalDescription description) {
       this.module = module;
-      this.goal = goal;
+      this.description = description;
     }
     @Override
     <R> R accept(GoalInputCases<R> cases) {

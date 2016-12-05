@@ -1,11 +1,9 @@
 package net.zerobuilder.modules.builder.bean;
 
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoBeanGoal.BeanGoalContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
+import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 
@@ -26,48 +24,41 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.bean.BeanStep.beanStepInterface;
+import static net.zerobuilder.modules.builder.bean.Builder.fields;
+import static net.zerobuilder.modules.builder.bean.Builder.steps;
 
 public final class BeanBuilder implements BeanModule {
 
   private static final String moduleName = "builder";
 
-  private List<TypeSpec> stepInterfaces(BeanGoalContext goal) {
-    return IntStream.range(0, goal.description().parameters().size())
-        .mapToObj(beanStepInterface(goal))
+  private List<TypeSpec> stepInterfaces(BeanGoalDescription description) {
+    return IntStream.range(0, description.parameters.size())
+        .mapToObj(beanStepInterface(description))
         .collect(toList());
   }
 
-  private final Function<BeanGoalContext, List<MethodSpec>> steps =
-      Builder.steps;
-
-  private final Function<BeanGoalContext, List<FieldSpec>> fields =
-      Builder.fields;
-
-  private final Function<BeanGoalContext, BuilderMethod> goalToBuilder =
-      Generator::builderMethod;
-
-  static ClassName implType(BeanGoalContext goal) {
-    ClassName contract = contractType(goal);
+  static ClassName implType(BeanGoalDescription description) {
+    ClassName contract = contractType(description);
     return contract.peerClass(contract.simpleName() + "Impl");
   }
 
-  static String methodName(BeanGoalContext goal) {
-    return goal.details.name + upcase(moduleName);
+  static String methodName(BeanGoalDescription description) {
+    return description.details.name + upcase(moduleName);
   }
 
-  private TypeSpec defineBuilderImpl(BeanGoalContext goal) {
-    return classBuilder(implType(goal))
-        .addSuperinterfaces(stepInterfaceTypes(goal))
-        .addFields(fields.apply(goal))
-        .addMethod(builderConstructor.apply(goal))
-        .addMethods(steps.apply(goal))
+  private TypeSpec defineBuilderImpl(BeanGoalDescription description) {
+    return classBuilder(implType(description))
+        .addSuperinterfaces(stepInterfaceTypes(description))
+        .addFields(fields.apply(description))
+        .addMethod(builderConstructor.apply(description))
+        .addMethods(steps.apply(description))
         .addModifiers(PRIVATE, STATIC, FINAL)
         .build();
   }
 
-  private TypeSpec defineContract(BeanGoalContext goal) {
-    return classBuilder(contractType(goal))
-        .addTypes(stepInterfaces(goal))
+  private TypeSpec defineContract(BeanGoalDescription description) {
+    return classBuilder(contractType(description))
+        .addTypes(stepInterfaces(description))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder()
             .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
@@ -76,29 +67,30 @@ public final class BeanBuilder implements BeanModule {
         .build();
   }
 
-  private final Function<BeanGoalContext, MethodSpec> builderConstructor =
-      bean -> constructorBuilder()
-          .addExceptions(bean.description().thrownTypes)
-          .addCode(statement("this.$N = new $T()", bean.bean(), bean.type()))
+  private final Function<BeanGoalDescription, MethodSpec> builderConstructor =
+      description -> constructorBuilder()
+          .addExceptions(description.thrownTypes)
+          .addCode(statement("this.$N = new $T()",
+              description.beanField, description.details.goalType))
           .build();
 
-  private List<ClassName> stepInterfaceTypes(BeanGoalContext goal) {
-    return transform(goal.description().parameters(),
-        step -> contractType(goal).nestedClass(upcase(step.name())));
+  private List<ClassName> stepInterfaceTypes(BeanGoalDescription description) {
+    return transform(description.parameters,
+        step -> contractType(description).nestedClass(upcase(step.name())));
   }
 
-  static ClassName contractType(BeanGoalContext goal) {
-    String contractName = upcase(goal.details.name) + upcase(moduleName);
-    return goal.description.details.context.generatedType.nestedClass(contractName);
+  static ClassName contractType(BeanGoalDescription description) {
+    String contractName = upcase(description.details.name) + upcase(moduleName);
+    return description.details.context.generatedType.nestedClass(contractName);
   }
 
   @Override
-  public ModuleOutput process(BeanGoalContext goal) {
+  public ModuleOutput process(BeanGoalDescription description) {
     return new ModuleOutput(
-        goalToBuilder.apply(goal),
+        Generator.builderMethod(description),
         asList(
-            defineBuilderImpl(goal),
-            defineContract(goal)),
+            defineBuilderImpl(description),
+            defineContract(description)),
         emptyList());
   }
 }
