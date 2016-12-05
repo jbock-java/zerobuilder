@@ -29,7 +29,7 @@ final class Updater {
 
   static List<FieldSpec> fields(ProjectedRegularGoalContext goal) {
     List<FieldSpec> builder = new ArrayList<>();
-    if (isReusable.apply(goal)) {
+    if (isReusable.apply(goal.description.details)) {
       builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
     }
     if (isInstance.apply(goal.description.details)) {

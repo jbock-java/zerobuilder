@@ -37,7 +37,7 @@ final class GoalContextFactory {
       }
       @Override
       public ProjectedRegularGoalContext staticMethod(StaticMethodGoalDetails method, Void _null) {
-        return new ProjectedMethodGoalContext(method, description);
+        return new ProjectedMethodGoalContext(description);
       }
       @Override
       public ProjectedRegularGoalContext constructor(ConstructorGoalDetails constructor, Void _null) {

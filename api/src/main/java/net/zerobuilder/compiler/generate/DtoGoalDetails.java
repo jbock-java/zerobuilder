@@ -100,6 +100,10 @@ public final class DtoGoalDetails {
       return access.modifiers(modifiers);
     }
 
+    public final CodeBlock invocationParameters() {
+      return CodeBlock.of(String.join(", ", parameterNames));
+    }
+
     public abstract TypeName type();
 
     /**

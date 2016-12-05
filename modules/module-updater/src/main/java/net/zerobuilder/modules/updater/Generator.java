@@ -152,7 +152,7 @@ final class Generator {
   }
 
   static CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {
-    if (isReusable.apply(goal)) {
+    if (isReusable.apply(goal.description.details)) {
       GoalContext context = goal.description.context;
       FieldSpec cache = context.cache(rawClassName(varUpdater.type));
       return CodeBlock.builder()

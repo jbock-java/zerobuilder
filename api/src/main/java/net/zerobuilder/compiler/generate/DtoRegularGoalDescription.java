@@ -86,10 +86,6 @@ public final class DtoRegularGoalDescription {
       this.context = context;
     }
 
-    public CodeBlock invocationParameters() {
-      return CodeBlock.of(String.join(", ", details.parameterNames));
-    }
-
     public static ProjectedRegularGoalDescription create(AbstractRegularDetails details,
                                                          List<TypeName> thrownTypes,
                                                          List<ProjectedParameter> parameters,

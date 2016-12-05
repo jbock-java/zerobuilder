@@ -6,17 +6,19 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedConstructorGoalContext;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedInstanceMethodGoalContext;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedMethodGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -29,10 +31,12 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
@@ -46,18 +50,18 @@ public final class RegularUpdater implements ProjectedModule {
 
   static final String moduleName = "updater";
 
-  private final Function<ProjectedRegularGoalContext, CodeBlock> regularInvoke =
-      projectedRegularGoalContextCases(
-          this::staticCall,
-          this::instanceCall,
-          this::constructorCall);
+  private final BiFunction<AbstractRegularDetails, ProjectedRegularGoalDescription, CodeBlock> regularInvoke =
+      regularDetailsCases(
+          (constructor, description) -> constructorCall(description, constructor),
+          (staticMethod, description) -> staticCall(description, staticMethod),
+          (instanceMethod, description) -> instanceCall(description, instanceMethod));
 
-  private final Function<ProjectedRegularGoalContext, MethodSpec> doneMethod =
-      goal -> methodBuilder("done")
+  private final Function<ProjectedRegularGoalDescription, MethodSpec> doneMethod =
+      description -> methodBuilder("done")
           .addModifiers(PUBLIC)
-          .addExceptions(goal.description.thrownTypes)
-          .returns(goal.description.details.type())
-          .addCode(regularInvoke.apply(goal))
+          .addExceptions(description.thrownTypes)
+          .returns(description.details.type())
+          .addCode(regularInvoke.apply(description.details, description))
           .build();
 
   private TypeSpec defineUpdater(ProjectedRegularGoalContext projectedGoal) {
@@ -65,7 +69,7 @@ public final class RegularUpdater implements ProjectedModule {
         .addFields(Updater.fields(projectedGoal))
         .addMethods(Updater.stepMethods(projectedGoal))
         .addTypeVariables(implTypeParameters.apply(projectedGoal))
-        .addMethod(doneMethod.apply(projectedGoal))
+        .addMethod(doneMethod.apply(projectedGoal.description))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructor(PRIVATE))
         .build();
@@ -89,56 +93,60 @@ public final class RegularUpdater implements ProjectedModule {
               instanceMethod.details.typeParameters)),
           constructor -> constructor.details.instanceTypeParameters);
 
-  private CodeBlock staticCall(ProjectedMethodGoalContext goal) {
-    String method = goal.details.methodName;
-    TypeName type = goal.details.goalType;
+  private CodeBlock staticCall(ProjectedRegularGoalDescription description,
+                               StaticMethodGoalDetails details) {
+    String method = details.methodName;
+    TypeName type = details.goalType;
     ParameterSpec varGoal = parameterSpec(type, '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (isReusable.apply(goal)) {
+    if (isReusable.apply(details)) {
       builder.addStatement("this._currently_in_use = false");
     }
-    builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.description.context.type,
-        method, goal.description.invocationParameters());
-    if (isReusable.apply(goal)) {
-      builder.add(free(goal.description.parameters));
-    }
-    return builder.addStatement("return $N", varGoal)
-        .build();
-  }
-
-  private CodeBlock instanceCall(ProjectedInstanceMethodGoalContext goal) {
-    String method = goal.details.methodName;
-    TypeName type = goal.details.goalType;
-    ParameterSpec varGoal = parameterSpec(type, '_' + downcase(simpleName(type)));
-    CodeBlock.Builder builder = CodeBlock.builder();
-    if (isReusable.apply(goal)) {
-      builder.addStatement("this._currently_in_use = false");
-    }
-    return builder
-        .addStatement("$T $N = _factory.$N($L)", varGoal.type, varGoal,
-            method, goal.description.invocationParameters())
+    return builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, description.context.type,
+        method, details.invocationParameters())
+        .add(free(description))
         .addStatement("return $N", varGoal)
         .build();
   }
 
-  private CodeBlock constructorCall(ProjectedConstructorGoalContext goal) {
-    TypeName type = goal.details.goalType;
-    ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(simpleName(type)));
+  private CodeBlock instanceCall(ProjectedRegularGoalDescription description,
+                                 InstanceMethodGoalDetails details) {
+    String method = details.methodName;
+    TypeName type = details.goalType;
+    ParameterSpec varGoal = parameterSpec(type, '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (isReusable.apply(goal)) {
+    if (isReusable.apply(details)) {
       builder.addStatement("this._currently_in_use = false");
     }
-    builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, goal.description.invocationParameters());
-    if (isReusable.apply(goal)) {
-      builder.add(free(goal.description.parameters));
-    }
-    return builder.addStatement("return $N", varGoal)
+    return builder
+        .addStatement("$T $N = _factory.$N($L)", varGoal.type, varGoal,
+            method, details.invocationParameters())
+        .add(free(description))
+        .addStatement("return $N", varGoal)
         .build();
   }
 
-  private CodeBlock free(List<ProjectedParameter> steps) {
-    return steps.stream()
+  private CodeBlock constructorCall(ProjectedRegularGoalDescription description,
+                                    ConstructorGoalDetails details) {
+    TypeName type = details.goalType;
+    ParameterSpec varGoal = parameterSpec(type,
+        '_' + downcase(simpleName(type)));
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (isReusable.apply(details)) {
+      builder.addStatement("this._currently_in_use = false");
+    }
+    return builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type,
+        details.invocationParameters())
+        .add(free(description))
+        .addStatement("return $N", varGoal)
+        .build();
+  }
+
+  private CodeBlock free(ProjectedRegularGoalDescription description) {
+    if (!isReusable.apply(description.details)) {
+      return emptyCodeBlock;
+    }
+    return description.parameters.stream()
         .filter(parameter -> !parameter.type.isPrimitive())
         .map(parameter -> statement("this.$N = null", parameter.name))
         .collect(joinCodeBlocks);
@@ -148,16 +156,28 @@ public final class RegularUpdater implements ProjectedModule {
     return goal.description.details.name() + upcase(moduleName);
   }
 
-  static final Function<ProjectedRegularGoalContext, Boolean> isReusable =
-      projectedRegularGoalContextCases(
-          staticMethod -> staticMethod.details.lifecycle == REUSE_INSTANCES &&
-              staticMethod.details.typeParameters.isEmpty(),
-          instanceMethod -> instanceMethod.details.lifecycle == REUSE_INSTANCES &&
-              instanceMethod.details.typeParameters.isEmpty() &&
-              instanceMethod.details.instanceTypeParameters.isEmpty() &&
-              instanceMethod.details.returnTypeParameters.isEmpty(),
-          constructor -> constructor.details.lifecycle == REUSE_INSTANCES &&
-              constructor.details.instanceTypeParameters.isEmpty());
+  static final Function<AbstractRegularDetails, Boolean> isReusable =
+      regularDetailsCases(
+          RegularUpdater::isConstructorReusable,
+          RegularUpdater::isStaticMethodReusable,
+          RegularUpdater::isInstanceMethodReusable);
+
+  static boolean isInstanceMethodReusable(InstanceMethodGoalDetails details) {
+    return details.lifecycle == REUSE_INSTANCES &&
+        details.typeParameters.isEmpty() &&
+        details.instanceTypeParameters.isEmpty() &&
+        details.returnTypeParameters.isEmpty();
+  }
+
+  static boolean isStaticMethodReusable(StaticMethodGoalDetails details) {
+    return details.lifecycle == REUSE_INSTANCES &&
+        details.typeParameters.isEmpty();
+  }
+
+  static boolean isConstructorReusable(ConstructorGoalDetails details) {
+    return details.lifecycle == REUSE_INSTANCES &&
+        details.instanceTypeParameters.isEmpty();
+  }
 
   private final Function<ProjectedRegularGoalContext, List<TypeSpec>> types =
       projectedRegularGoalContextCases(
@@ -170,7 +190,7 @@ public final class RegularUpdater implements ProjectedModule {
     return new ModuleOutput(
         goalMethod.apply(goal),
         types.apply(goal),
-        isReusable.apply(goal) ?
+        isReusable.apply(goal.description.details) ?
             singletonList(goal.description.context.cache(implTypeName(goal))) :
             emptyList());
   }

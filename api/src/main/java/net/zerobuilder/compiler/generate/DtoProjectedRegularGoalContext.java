@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.generate;
 
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
 import java.util.function.Function;
@@ -26,7 +25,7 @@ public final class DtoProjectedRegularGoalContext {
     abstract <R> R acceptRegularProjected(ProjectedRegularGoalContextCases<R> cases);
   }
 
-  static <R> Function<ProjectedRegularGoalContext, R> asFunction(ProjectedRegularGoalContextCases<R> cases) {
+  private static <R> Function<ProjectedRegularGoalContext, R> asFunction(ProjectedRegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegularProjected(cases);
   }
 
@@ -51,13 +50,10 @@ public final class DtoProjectedRegularGoalContext {
   }
 
   public static final class ProjectedMethodGoalContext extends ProjectedRegularGoalContext {
-    public final StaticMethodGoalDetails details;
 
     ProjectedMethodGoalContext(
-        StaticMethodGoalDetails details,
         ProjectedRegularGoalDescription description) {
       super(description);
-      this.details = details;
     }
 
     @Override
