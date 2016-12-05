@@ -20,6 +20,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
@@ -47,12 +48,6 @@ final class Generator {
     }
     return new BuilderMethod(description.details.name, method.build());
   }
-
-  private static final Function<AbstractRegularDetails, Boolean> isInstance =
-      regularDetailsCases(
-          constructor -> false,
-          staticMethod -> false,
-          instanceMethod -> true);
 
   private static Function<AbstractRegularDetails, CodeBlock> returnBlock(SimpleRegularGoalDescription description,
                                                                          ParameterSpec varInstance) {

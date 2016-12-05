@@ -5,6 +5,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
@@ -22,9 +23,11 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
@@ -40,14 +43,20 @@ import static net.zerobuilder.modules.updater.RegularUpdater.isReusable;
 
 final class Generator {
 
+  private static final Function<AbstractRegularDetails, List<TypeVariableName>> instanceTypeParameters =
+      regularDetailsCases(
+          constructor -> constructor.instanceTypeParameters,
+          staticMethod -> emptyList(),
+          instanceMethod -> instanceMethod.instanceTypeParameters);
+
   private static final Function<ProjectedRegularGoalContext, BuilderMethod> normalGoalMethod =
       goal -> {
-        AbstractRegularDetails details = goal.details();
+        AbstractRegularDetails details = goal.description.details;
         ParameterSpec updater = varUpdater(goal);
         MethodSpec method = methodBuilder(RegularUpdater.methodName(goal))
             .addExceptions(thrownByProjections(goal))
             .addParameter(toBuilderParameter(goal))
-            .addTypeVariables(goal.instanceTypeParameters())
+            .addTypeVariables(instanceTypeParameters.apply(goal.description.details))
             .returns(updater.type)
             .addCode(nullCheckingBlock(goal))
             .addCode(initVarUpdater(goal, updater))
@@ -137,7 +146,7 @@ final class Generator {
   }
 
   static ParameterSpec toBuilderParameter(ProjectedRegularGoalContext goal) {
-    AbstractRegularDetails details = goal.details();
+    AbstractRegularDetails details = goal.description.details;
     TypeName goalType = details.type();
     return parameterSpec(goalType, downcase(simpleName(goalType)));
   }

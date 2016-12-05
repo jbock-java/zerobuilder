@@ -18,6 +18,7 @@ import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -31,7 +32,7 @@ final class Updater {
     if (isReusable.apply(goal)) {
       builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
     }
-    if (goal.isInstance()) {
+    if (isInstance.apply(goal.description.details)) {
       builder.add(fieldSpec(goal.description.context.type, "_factory", PRIVATE));
     }
     for (ProjectedParameter step : goal.description.parameters) {

@@ -98,7 +98,7 @@ public final class RegularUpdater implements ProjectedModule {
       builder.addStatement("this._currently_in_use = false");
     }
     builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, goal.description.context.type,
-        method, goal.invocationParameters());
+        method, goal.description.invocationParameters());
     if (isReusable.apply(goal)) {
       builder.add(free(goal.description.parameters));
     }
@@ -116,7 +116,7 @@ public final class RegularUpdater implements ProjectedModule {
     }
     return builder
         .addStatement("$T $N = _factory.$N($L)", varGoal.type, varGoal,
-            method, goal.invocationParameters())
+            method, goal.description.invocationParameters())
         .addStatement("return $N", varGoal)
         .build();
   }
@@ -129,7 +129,7 @@ public final class RegularUpdater implements ProjectedModule {
     if (isReusable.apply(goal)) {
       builder.addStatement("this._currently_in_use = false");
     }
-    builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, goal.invocationParameters());
+    builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, goal.description.invocationParameters());
     if (isReusable.apply(goal)) {
       builder.add(free(goal.description.parameters));
     }

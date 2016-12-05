@@ -1,17 +1,11 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
-import java.util.List;
 import java.util.function.Function;
-
-import static java.util.Collections.emptyList;
 
 public final class DtoProjectedRegularGoalContext {
 
@@ -29,30 +23,8 @@ public final class DtoProjectedRegularGoalContext {
       this.description = description;
     }
 
-    public final AbstractRegularDetails details() {
-      return goalDetails.apply(this);
-    }
-
-    public final boolean isInstance() {
-      return isInstance.apply(this);
-    }
-
-    public final List<TypeVariableName> instanceTypeParameters() {
-      return instanceTypeParameters.apply(this);
-    }
-
     abstract <R> R acceptRegularProjected(ProjectedRegularGoalContextCases<R> cases);
-
-    public final CodeBlock invocationParameters() {
-      return CodeBlock.of(String.join(", ", goalDetails.apply(this).parameterNames));
-    }
   }
-
-  private static final Function<ProjectedRegularGoalContext, Boolean> isInstance =
-      projectedRegularGoalContextCases(
-          staticMethod -> false,
-          instanceMethod -> true,
-          constructor -> false);
 
   static <R> Function<ProjectedRegularGoalContext, R> asFunction(ProjectedRegularGoalContextCases<R> cases) {
     return goal -> goal.acceptRegularProjected(cases);
@@ -126,18 +98,6 @@ public final class DtoProjectedRegularGoalContext {
       return cases.constructor(this);
     }
   }
-
-  private static final Function<ProjectedRegularGoalContext, AbstractRegularDetails> goalDetails =
-      projectedRegularGoalContextCases(
-          staticMethod -> staticMethod.details,
-          instanceMethod -> instanceMethod.details,
-          constructor -> constructor.details);
-
-  private static final Function<ProjectedRegularGoalContext, List<TypeVariableName>> instanceTypeParameters =
-      projectedRegularGoalContextCases(
-          staticMethod -> emptyList(),
-          instanceMethod -> instanceMethod.details.instanceTypeParameters,
-          constructor -> constructor.details.instanceTypeParameters);
 
   private DtoProjectedRegularGoalContext() {
     throw new UnsupportedOperationException("no instances");

@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.Access;
@@ -282,6 +283,12 @@ public final class DtoGoalDetails {
       return cases.bean(this);
     }
   }
+
+  public static final Function<AbstractRegularDetails, Boolean> isInstance =
+      regularDetailsCases(
+          constructor -> false,
+          staticMethod -> false,
+          instanceMethod -> true);
 
   private DtoGoalDetails() {
     throw new UnsupportedOperationException("no instances");
