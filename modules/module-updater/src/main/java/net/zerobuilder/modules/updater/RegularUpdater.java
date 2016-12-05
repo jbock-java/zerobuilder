@@ -68,7 +68,7 @@ public final class RegularUpdater implements ProjectedModule {
     return classBuilder(simpleName(implType(projectedGoal)))
         .addFields(Updater.fields(projectedGoal))
         .addMethods(Updater.stepMethods(projectedGoal))
-        .addTypeVariables(implTypeParameters.apply(projectedGoal))
+        .addTypeVariables(implTypeParameters.apply(projectedGoal.description.details))
         .addMethod(doneMethod.apply(projectedGoal.description))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructor(PRIVATE))
@@ -78,20 +78,20 @@ public final class RegularUpdater implements ProjectedModule {
   static TypeName implType(ProjectedRegularGoalContext goal) {
     return parameterizedTypeName(
         goal.description.context.generatedType.nestedClass(implTypeName(goal)),
-        implTypeParameters.apply(goal));
+        implTypeParameters.apply(goal.description.details));
   }
 
   private static String implTypeName(ProjectedRegularGoalContext goal) {
     return upcase(goal.description.details.name()) + upcase(moduleName);
   }
 
-  private static final Function<ProjectedRegularGoalContext, Collection<TypeVariableName>> implTypeParameters =
-      projectedRegularGoalContextCases(
+  private static final Function<AbstractRegularDetails, Collection<TypeVariableName>> implTypeParameters =
+      regularDetailsCases(
+          constructor -> constructor.instanceTypeParameters,
           staticMethod -> emptyList(),
           instanceMethod -> new HashSet<>(concat(
-              instanceMethod.details.instanceTypeParameters,
-              instanceMethod.details.typeParameters)),
-          constructor -> constructor.details.instanceTypeParameters);
+              instanceMethod.instanceTypeParameters,
+              instanceMethod.typeParameters)));
 
   private CodeBlock staticCall(ProjectedRegularGoalDescription description,
                                StaticMethodGoalDetails details) {
