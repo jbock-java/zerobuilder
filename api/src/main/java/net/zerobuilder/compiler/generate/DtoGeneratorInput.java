@@ -6,7 +6,7 @@ import net.zerobuilder.compiler.generate.DtoDescriptionInput.DescriptionInput;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
 import java.util.List;
@@ -76,10 +76,10 @@ public final class DtoGeneratorInput {
 
   static final class ProjectedGoalInput extends AbstractGoalInput {
     final ProjectedModule module;
-    final ProjectedRegularGoalContext goal;
-    ProjectedGoalInput(ProjectedModule module, ProjectedRegularGoalContext goal) {
+    final ProjectedRegularGoalDescription description;
+    ProjectedGoalInput(ProjectedModule module, ProjectedRegularGoalDescription description) {
       this.module = module;
-      this.goal = goal;
+      this.description = description;
     }
     @Override
     <R> R accept(GoalInputCases<R> cases) {

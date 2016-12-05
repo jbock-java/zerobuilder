@@ -5,7 +5,8 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedInstanceMethodGoalContext;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
 import java.util.HashSet;
 
@@ -31,34 +32,37 @@ import static net.zerobuilder.modules.updater.RegularUpdater.moduleName;
 
 final class InstanceWorld {
 
-  static DtoGeneratorOutput.BuilderMethod instanceGoalMethod(ProjectedInstanceMethodGoalContext goal) {
-    TypeName factoryType = factoryType(goal);
-    ParameterSpec parameter = parameterSpec(goal.description.context.type, "factory");
-    MethodSpec method = methodBuilder(RegularUpdater.methodName(goal) + "Factory")
+  static DtoGeneratorOutput.BuilderMethod instanceGoalMethod(InstanceMethodGoalDetails details,
+                                                             ProjectedRegularGoalDescription description) {
+    TypeName factoryType = factoryType(details, description);
+    ParameterSpec parameter = parameterSpec(description.context.type, "factory");
+    MethodSpec method = methodBuilder(RegularUpdater.methodName(description) + "Factory")
         .addParameter(parameter)
         .addTypeVariables(new HashSet<>(concat(
-            goal.details.instanceTypeParameters,
-            goal.details.returnTypeParameters)))
+            details.instanceTypeParameters,
+            details.returnTypeParameters)))
         .returns(factoryType)
-        .addCode(nullCheckingBlock(goal))
+        .addCode(nullCheckingBlock(description))
         .addStatement("return new $T($N)", factoryType, parameter)
-        .addModifiers(goal.details.access(STATIC))
+        .addModifiers(details.access(STATIC))
         .build();
-    return new DtoGeneratorOutput.BuilderMethod(goal.details.name, method);
+    return new DtoGeneratorOutput.BuilderMethod(details.name, method);
   }
 
-  private static TypeName factoryType(ProjectedInstanceMethodGoalContext goal) {
-    String implName = upcase(goal.details.name()) + upcase(moduleName) + "Factory";
+  private static TypeName factoryType(InstanceMethodGoalDetails details,
+                                      ProjectedRegularGoalDescription description) {
+    String implName = upcase(details.name) + upcase(moduleName) + "Factory";
     return parameterizedTypeName(
-        goal.description.context.generatedType.nestedClass(implName),
-        goal.details.instanceTypeParameters);
+        description.context.generatedType.nestedClass(implName),
+        details.instanceTypeParameters);
   }
 
-  static TypeSpec factorySpec(ProjectedInstanceMethodGoalContext goal) {
-    ParameterSpec updater = varUpdater(goal);
-    ParameterSpec factory = parameterSpec(goal.description.context.type, "factory");
-    return TypeSpec.classBuilder(simpleName(factoryType(goal)))
-        .addTypeVariables(goal.details.instanceTypeParameters)
+  static TypeSpec factorySpec(InstanceMethodGoalDetails details,
+                              ProjectedRegularGoalDescription description) {
+    ParameterSpec updater = varUpdater(description);
+    ParameterSpec factory = parameterSpec(description.context.type, "factory");
+    return TypeSpec.classBuilder(simpleName(factoryType(details, description)))
+        .addTypeVariables(details.instanceTypeParameters)
         .addField(fieldSpec(factory.type, "_factory", PRIVATE, FINAL))
         .addMethod(constructorBuilder()
             .addModifiers(PRIVATE)
@@ -66,15 +70,15 @@ final class InstanceWorld {
             .addStatement("this._factory = $N", factory)
             .build())
         .addMethod(methodBuilder("updater")
-            .addExceptions(thrownByProjections(goal))
-            .addParameter(toBuilderParameter(goal))
-            .addTypeVariables(goal.details.returnTypeParameters)
+            .addExceptions(thrownByProjections(description))
+            .addParameter(toBuilderParameter(description))
+            .addTypeVariables(details.returnTypeParameters)
             .returns(updater.type)
-            .addCode(initVarUpdater(goal, updater))
+            .addCode(initVarUpdater(description, updater))
             .addStatement("$N._factory = this._factory", updater)
-            .addCode(copyBlock(goal))
+            .addCode(copyBlock(description))
             .addStatement("return $N", updater)
-            .addModifiers(goal.details.access())
+            .addModifiers(details.access())
             .build())
         .addModifiers(PUBLIC, STATIC, FINAL)
         .build();

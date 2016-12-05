@@ -8,12 +8,13 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
+import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoCases;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
@@ -28,7 +29,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
-import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
@@ -49,81 +49,80 @@ final class Generator {
           staticMethod -> emptyList(),
           instanceMethod -> instanceMethod.instanceTypeParameters);
 
-  private static final Function<ProjectedRegularGoalContext, BuilderMethod> normalGoalMethod =
-      goal -> {
-        AbstractRegularDetails details = goal.description.details;
-        ParameterSpec updater = varUpdater(goal);
-        MethodSpec method = methodBuilder(RegularUpdater.methodName(goal))
-            .addExceptions(thrownByProjections(goal))
-            .addParameter(toBuilderParameter(goal))
-            .addTypeVariables(instanceTypeParameters.apply(goal.description.details))
+  private static final BiFunction<AbstractRegularDetails, ProjectedRegularGoalDescription, BuilderMethod> normalGoalMethod =
+      (details, description) -> {
+        ParameterSpec updater = varUpdater(description);
+        MethodSpec method = methodBuilder(RegularUpdater.methodName(description))
+            .addExceptions(thrownByProjections(description))
+            .addParameter(toBuilderParameter(description))
+            .addTypeVariables(instanceTypeParameters.apply(description.details))
             .returns(updater.type)
-            .addCode(nullCheckingBlock(goal))
-            .addCode(initVarUpdater(goal, updater))
-            .addCode(copyBlock(goal))
+            .addCode(nullCheckingBlock(description))
+            .addCode(initVarUpdater(description, updater))
+            .addCode(copyBlock(description))
             .addStatement("return $N", updater)
             .addModifiers(details.access(STATIC))
             .build();
         return new BuilderMethod(details.name, method);
       };
 
-  static final Function<ProjectedRegularGoalContext, BuilderMethod> goalMethod =
-      projectedRegularGoalContextCases(
+  static final BiFunction<AbstractRegularDetails, ProjectedRegularGoalDescription, BuilderMethod> goalMethod =
+      regularDetailsCases(
           normalGoalMethod,
-          InstanceWorld::instanceGoalMethod,
-          normalGoalMethod);
+          normalGoalMethod,
+          InstanceWorld::instanceGoalMethod);
 
-  static CodeBlock copyBlock(ProjectedRegularGoalContext goal) {
-    return goal.description.parameters.stream()
-        .map(copyField(goal))
+  static CodeBlock copyBlock(ProjectedRegularGoalDescription description) {
+    return description.parameters.stream()
+        .map(copyField(description))
         .collect(ZeroUtil.joinCodeBlocks);
   }
 
-  static CodeBlock nullCheckingBlock(ProjectedRegularGoalContext goal) {
-    ProjectionInfoCases<CodeBlock, ProjectedParameter> nullChecks = nullChecks(goal);
+  static CodeBlock nullCheckingBlock(ProjectedRegularGoalDescription description) {
+    ProjectionInfoCases<CodeBlock, ProjectedParameter> nullChecks = nullChecks(description);
     CodeBlock.Builder builder = CodeBlock.builder();
-    for (ProjectedParameter step : goal.description.parameters) {
+    for (ProjectedParameter step : description.parameters) {
       builder.add(step.projectionInfo.accept(nullChecks, step));
     }
     return builder.build();
   }
 
-  private static Function<ProjectedParameter, CodeBlock> copyField(ProjectedRegularGoalContext goal) {
+  private static Function<ProjectedParameter, CodeBlock> copyField(ProjectedRegularGoalDescription description) {
     BiFunction<ProjectionInfo, ProjectedParameter, CodeBlock> copy =
         projectionInfoCases(
-            copyFromMethod(goal),
-            copyFromField(goal));
+            copyFromMethod(description),
+            copyFromField(description));
     return step -> copy.apply(step.projectionInfo, step);
   }
 
-  private static BiFunction<FieldAccess, ProjectedParameter, CodeBlock> copyFromField(ProjectedRegularGoalContext goal) {
+  private static BiFunction<FieldAccess, ProjectedParameter, CodeBlock> copyFromField(ProjectedRegularGoalDescription description) {
     return (FieldAccess projection, ProjectedParameter step) -> {
       String field = projection.fieldName;
-      ParameterSpec parameter = toBuilderParameter(goal);
-      ParameterSpec updater = varUpdater(goal);
+      ParameterSpec parameter = toBuilderParameter(description);
+      ParameterSpec updater = varUpdater(description);
       return statement("$N.$N = $N.$N",
           updater, field, parameter, field);
     };
   }
 
-  private static BiFunction<ProjectionMethod, ProjectedParameter, CodeBlock> copyFromMethod(ProjectedRegularGoalContext goal) {
+  private static BiFunction<ProjectionMethod, ProjectedParameter, CodeBlock> copyFromMethod(ProjectedRegularGoalDescription description) {
     return (ProjectionMethod projection, ProjectedParameter step) -> {
-      ParameterSpec parameter = toBuilderParameter(goal);
-      ParameterSpec updater = varUpdater(goal);
+      ParameterSpec parameter = toBuilderParameter(description);
+      ParameterSpec updater = varUpdater(description);
       String field = step.name;
       return statement("$N.$N = $N.$N()",
           updater, field, parameter, projection.methodName);
     };
   }
 
-  private static ProjectionInfoCases<CodeBlock, ProjectedParameter> nullChecks(ProjectedRegularGoalContext goal) {
+  private static ProjectionInfoCases<CodeBlock, ProjectedParameter> nullChecks(ProjectedRegularGoalDescription description) {
     return new ProjectionInfoCases<CodeBlock, ProjectedParameter>() {
       @Override
       public CodeBlock projectionMethod(ProjectionMethod projection, ProjectedParameter step) {
         if (step.nullPolicy == ALLOW) {
           return emptyCodeBlock;
         }
-        ParameterSpec parameter = toBuilderParameter(goal);
+        ParameterSpec parameter = toBuilderParameter(description);
         String name = step.name;
         return CodeBlock.builder()
             .beginControlFlow("if ($N.$N() == null)", parameter, projection.methodName)
@@ -135,7 +134,7 @@ final class Generator {
         if (step.nullPolicy == ALLOW) {
           return emptyCodeBlock;
         }
-        ParameterSpec parameter = toBuilderParameter(goal);
+        ParameterSpec parameter = toBuilderParameter(description);
         String name = step.name;
         return CodeBlock.builder()
             .beginControlFlow("if ($N.$N == null)", parameter, name)
@@ -145,15 +144,15 @@ final class Generator {
     };
   }
 
-  static ParameterSpec toBuilderParameter(ProjectedRegularGoalContext goal) {
-    AbstractRegularDetails details = goal.description.details;
+  static ParameterSpec toBuilderParameter(ProjectedRegularGoalDescription description) {
+    AbstractRegularDetails details = description.details;
     TypeName goalType = details.type();
     return parameterSpec(goalType, downcase(simpleName(goalType)));
   }
 
-  static CodeBlock initVarUpdater(ProjectedRegularGoalContext goal, ParameterSpec varUpdater) {
-    if (isReusable.apply(goal.description.details)) {
-      GoalContext context = goal.description.context;
+  static CodeBlock initVarUpdater(ProjectedRegularGoalDescription description, ParameterSpec varUpdater) {
+    if (isReusable.apply(description.details)) {
+      GoalContext context = description.context;
       FieldSpec cache = context.cache(rawClassName(varUpdater.type));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varUpdater.type, varUpdater, cache)
@@ -168,13 +167,13 @@ final class Generator {
     }
   }
 
-  static ParameterSpec varUpdater(ProjectedRegularGoalContext goal) {
-    TypeName updaterType = implType(goal);
+  static ParameterSpec varUpdater(ProjectedRegularGoalDescription description) {
+    TypeName updaterType = implType(description);
     return parameterSpec(updaterType, "_updater");
   }
 
-  static Set<TypeName> thrownByProjections(ProjectedRegularGoalContext goal) {
-    return goal.description.parameters.stream()
+  static Set<TypeName> thrownByProjections(ProjectedRegularGoalDescription description) {
+    return description.parameters.stream()
         .map(parameter -> parameter.projectionInfo)
         .map(thrownTypes)
         .map(List::stream)

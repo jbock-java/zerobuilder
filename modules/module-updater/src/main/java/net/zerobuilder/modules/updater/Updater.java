@@ -5,7 +5,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
@@ -27,15 +27,15 @@ import static net.zerobuilder.modules.updater.RegularUpdater.isReusable;
 
 final class Updater {
 
-  static List<FieldSpec> fields(ProjectedRegularGoalContext goal) {
+  static List<FieldSpec> fields(ProjectedRegularGoalDescription description) {
     List<FieldSpec> builder = new ArrayList<>();
-    if (isReusable.apply(goal.description.details)) {
+    if (isReusable.apply(description.details)) {
       builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
     }
-    if (isInstance.apply(goal.description.details)) {
-      builder.add(fieldSpec(goal.description.context.type, "_factory", PRIVATE));
+    if (isInstance.apply(description.details)) {
+      builder.add(fieldSpec(description.context.type, "_factory", PRIVATE));
     }
-    for (ProjectedParameter step : goal.description.parameters) {
+    for (ProjectedParameter step : description.parameters) {
       String name = step.name;
       TypeName type = step.type;
       builder.add(fieldSpec(type, name, PRIVATE));
@@ -43,22 +43,22 @@ final class Updater {
     return builder;
   }
 
-  static List<MethodSpec> stepMethods(ProjectedRegularGoalContext goal) {
-    return goal.description.parameters.stream()
-        .map(updateMethods(goal))
+  static List<MethodSpec> stepMethods(ProjectedRegularGoalDescription description) {
+    return description.parameters.stream()
+        .map(updateMethods(description))
         .collect(toList());
   }
 
-  private static Function<ProjectedParameter, MethodSpec> updateMethods(ProjectedRegularGoalContext goal) {
-    return step -> normalUpdate(goal, step);
+  private static Function<ProjectedParameter, MethodSpec> updateMethods(ProjectedRegularGoalDescription description) {
+    return step -> normalUpdate(description, step);
   }
 
-  private static MethodSpec normalUpdate(ProjectedRegularGoalContext goal, ProjectedParameter step) {
+  private static MethodSpec normalUpdate(ProjectedRegularGoalDescription description, ProjectedParameter step) {
     String name = step.name;
     TypeName type = step.type;
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
-        .returns(implType(goal))
+        .returns(implType(description))
         .addParameter(parameter)
         .addCode(nullCheck(step))
         .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)

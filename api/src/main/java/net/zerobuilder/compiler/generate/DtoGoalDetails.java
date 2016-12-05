@@ -50,9 +50,9 @@ public final class DtoGoalDetails {
   }
 
   public static <R, P> BiFunction<AbstractRegularDetails, P, R> regularDetailsCases(
-      BiFunction<ConstructorGoalDetails, P, R> constructorFunction,
-      BiFunction<StaticMethodGoalDetails, P, R> staticFunction,
-      BiFunction<InstanceMethodGoalDetails, P, R> instanceFunction) {
+      BiFunction<? super ConstructorGoalDetails, ? super P, ? extends R> constructorFunction,
+      BiFunction<? super StaticMethodGoalDetails, ? super P, ? extends R> staticFunction,
+      BiFunction<? super InstanceMethodGoalDetails, ? super P, ? extends R> instanceFunction) {
     return asFunction(new RegularGoalDetailsCases<R, P>() {
       @Override
       public R method(InstanceMethodGoalDetails details, P p) {

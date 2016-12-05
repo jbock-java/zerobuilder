@@ -12,7 +12,6 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetail
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
-import net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.ProjectedRegularGoalContext;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
 import java.util.Collection;
@@ -32,7 +31,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
-import static net.zerobuilder.compiler.generate.DtoProjectedRegularGoalContext.projectedRegularGoalContextCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
@@ -64,25 +62,25 @@ public final class RegularUpdater implements ProjectedModule {
           .addCode(regularInvoke.apply(description.details, description))
           .build();
 
-  private TypeSpec defineUpdater(ProjectedRegularGoalContext projectedGoal) {
-    return classBuilder(simpleName(implType(projectedGoal)))
-        .addFields(Updater.fields(projectedGoal))
-        .addMethods(Updater.stepMethods(projectedGoal))
-        .addTypeVariables(implTypeParameters.apply(projectedGoal.description.details))
-        .addMethod(doneMethod.apply(projectedGoal.description))
+  private TypeSpec defineUpdater(ProjectedRegularGoalDescription description) {
+    return classBuilder(simpleName(implType(description)))
+        .addFields(Updater.fields(description))
+        .addMethods(Updater.stepMethods(description))
+        .addTypeVariables(implTypeParameters.apply(description.details))
+        .addMethod(doneMethod.apply(description))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructor(PRIVATE))
         .build();
   }
 
-  static TypeName implType(ProjectedRegularGoalContext goal) {
+  static TypeName implType(ProjectedRegularGoalDescription description) {
     return parameterizedTypeName(
-        goal.description.context.generatedType.nestedClass(implTypeName(goal)),
-        implTypeParameters.apply(goal.description.details));
+        description.context.generatedType.nestedClass(implTypeName(description)),
+        implTypeParameters.apply(description.details));
   }
 
-  private static String implTypeName(ProjectedRegularGoalContext goal) {
-    return upcase(goal.description.details.name()) + upcase(moduleName);
+  private static String implTypeName(ProjectedRegularGoalDescription description) {
+    return upcase(description.details.name()) + upcase(moduleName);
   }
 
   private static final Function<AbstractRegularDetails, Collection<TypeVariableName>> implTypeParameters =
@@ -152,8 +150,8 @@ public final class RegularUpdater implements ProjectedModule {
         .collect(joinCodeBlocks);
   }
 
-  static String methodName(ProjectedRegularGoalContext goal) {
-    return goal.description.details.name() + upcase(moduleName);
+  static String methodName(ProjectedRegularGoalDescription description) {
+    return description.details.name() + upcase(moduleName);
   }
 
   static final Function<AbstractRegularDetails, Boolean> isReusable =
@@ -162,36 +160,38 @@ public final class RegularUpdater implements ProjectedModule {
           RegularUpdater::isStaticMethodReusable,
           RegularUpdater::isInstanceMethodReusable);
 
-  static boolean isInstanceMethodReusable(InstanceMethodGoalDetails details) {
+  private static boolean isInstanceMethodReusable(InstanceMethodGoalDetails details) {
     return details.lifecycle == REUSE_INSTANCES &&
         details.typeParameters.isEmpty() &&
         details.instanceTypeParameters.isEmpty() &&
         details.returnTypeParameters.isEmpty();
   }
 
-  static boolean isStaticMethodReusable(StaticMethodGoalDetails details) {
+  private static boolean isStaticMethodReusable(StaticMethodGoalDetails details) {
     return details.lifecycle == REUSE_INSTANCES &&
         details.typeParameters.isEmpty();
   }
 
-  static boolean isConstructorReusable(ConstructorGoalDetails details) {
+  private static boolean isConstructorReusable(ConstructorGoalDetails details) {
     return details.lifecycle == REUSE_INSTANCES &&
         details.instanceTypeParameters.isEmpty();
   }
 
-  private final Function<ProjectedRegularGoalContext, List<TypeSpec>> types =
-      projectedRegularGoalContextCases(
-          staticMethod -> singletonList(defineUpdater(staticMethod)),
-          instanceMethod -> asList(defineUpdater(instanceMethod), factorySpec(instanceMethod)),
-          constructor -> singletonList(defineUpdater(constructor)));
+  private final BiFunction<AbstractRegularDetails, ProjectedRegularGoalDescription, List<TypeSpec>> types =
+      regularDetailsCases(
+          (constructor, description) -> singletonList(defineUpdater(description)),
+          (staticMethod, description) -> singletonList(defineUpdater(description)),
+          (instanceMethod, description) -> asList(
+              defineUpdater(description),
+              factorySpec(instanceMethod, description)));
 
   @Override
-  public ModuleOutput process(ProjectedRegularGoalContext goal) {
+  public ModuleOutput process(ProjectedRegularGoalDescription description) {
     return new ModuleOutput(
-        goalMethod.apply(goal),
-        types.apply(goal),
-        isReusable.apply(goal.description.details) ?
-            singletonList(goal.description.context.cache(implTypeName(goal))) :
+        goalMethod.apply(description.details, description),
+        types.apply(description.details, description),
+        isReusable.apply(description.details) ?
+            singletonList(description.context.cache(implTypeName(description))) :
             emptyList());
   }
 }
