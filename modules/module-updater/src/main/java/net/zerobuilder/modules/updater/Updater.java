@@ -7,6 +7,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
+import net.zerobuilder.compiler.generate.NullPolicy;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ final class Updater {
   }
 
   private static CodeBlock nullCheck(ProjectedParameter parameter) {
-    if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
+    if (parameter.nullPolicy == NullPolicy.ALLOW || parameter.type.isPrimitive()) {
       return emptyCodeBlock;
     }
     String name = parameter.name;

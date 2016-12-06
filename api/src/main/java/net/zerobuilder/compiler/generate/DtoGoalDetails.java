@@ -16,36 +16,13 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
 public final class DtoGoalDetails {
 
-  public interface AbstractGoalDetails {
-
-    /**
-     * Returns the goal name.
-     *
-     * @return goal name
-     */
-    String name();
-    Modifier[] access(Modifier... modifiers);
-    TypeName type();
-
-    <R> R acceptAbstract(AbstractGoalDetailsCases<R> cases);
-  }
-
-  interface AbstractGoalDetailsCases<R> {
-    R regular(AbstractRegularDetails details);
-    R bean(BeanGoalDetails details);
-  }
-
   interface RegularGoalDetailsCases<R, P> {
     R method(InstanceMethodGoalDetails details, P p);
     R staticMethod(StaticMethodGoalDetails details, P p);
     R constructor(ConstructorGoalDetails details, P p);
   }
 
-  public static <R> Function<AbstractGoalDetails, R> asFunction(AbstractGoalDetailsCases<R> cases) {
-    return details -> details.acceptAbstract(cases);
-  }
-
-  public static <R, P> BiFunction<AbstractRegularDetails, P, R> asFunction(RegularGoalDetailsCases<R, P> cases) {
+  private static <R, P> BiFunction<AbstractRegularDetails, P, R> asFunction(RegularGoalDetailsCases<R, P> cases) {
     return (details, p) -> details.accept(cases, p);
   }
 
@@ -81,10 +58,10 @@ public final class DtoGoalDetails {
     return details -> biFunction.apply(details, null);
   }
 
-  public static abstract class AbstractRegularDetails implements AbstractGoalDetails {
+  public static abstract class AbstractRegularDetails {
 
     public final String name;
-    final Access access;
+    public final Access access;
     public final ContextLifecycle lifecycle;
 
     /**
@@ -96,8 +73,8 @@ public final class DtoGoalDetails {
       return name;
     }
 
-    public final Modifier[] access(Modifier... modifiers) {
-      return access.modifiers(modifiers);
+    public final Modifier[] access(Modifier modifiers) {
+      return ZeroUtil.modifiers(access, modifiers);
     }
 
     public final CodeBlock invocationParameters() {
@@ -110,7 +87,7 @@ public final class DtoGoalDetails {
      * @param name           goal name
      * @param parameterNames parameter names in original order
      * @param access         goal options
-     * @param lifecycle
+     * @param lifecycle      lifecycle
      */
     AbstractRegularDetails(String name, List<String> parameterNames,
                            Access access, ContextLifecycle lifecycle) {
@@ -120,16 +97,10 @@ public final class DtoGoalDetails {
       this.lifecycle = lifecycle;
     }
 
-    @Override
-    public final <R> R acceptAbstract(AbstractGoalDetailsCases<R> cases) {
-      return cases.regular(this);
-    }
-
     abstract <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p);
   }
 
-  public static final class ConstructorGoalDetails extends AbstractRegularDetails
-      implements AbstractGoalDetails {
+  public static final class ConstructorGoalDetails extends AbstractRegularDetails {
 
     public final TypeName goalType;
     public final List<TypeVariableName> instanceTypeParameters;
@@ -215,8 +186,7 @@ public final class DtoGoalDetails {
   /**
    * Describes static method goal.
    */
-  public static final class StaticMethodGoalDetails extends AbstractRegularDetails
-      implements AbstractGoalDetails {
+  public static final class StaticMethodGoalDetails extends AbstractRegularDetails {
 
     public final List<TypeVariableName> typeParameters;
     public final String methodName;
@@ -255,10 +225,10 @@ public final class DtoGoalDetails {
     }
   }
 
-  public static final class BeanGoalDetails implements AbstractGoalDetails {
+  public static final class BeanGoalDetails {
     public final ClassName goalType;
     public final String name;
-    private final Access access;
+    public final Access access;
     public final DtoContext.GoalContext context;
     public BeanGoalDetails(ClassName goalType, String name, Access access, DtoContext.GoalContext context) {
       this.name = name;
@@ -267,24 +237,8 @@ public final class DtoGoalDetails {
       this.context = context;
     }
 
-    @Override
-    public String name() {
-      return name;
-    }
-
-    @Override
-    public Modifier[] access(Modifier... modifiers) {
-      return access.modifiers(modifiers);
-    }
-
-    @Override
-    public TypeName type() {
-      return goalType;
-    }
-
-    @Override
-    public <R> R acceptAbstract(AbstractGoalDetailsCases<R> cases) {
-      return cases.bean(this);
+    public Modifier[] access(Modifier modifiers) {
+      return ZeroUtil.modifiers(access, modifiers);
     }
   }
 

@@ -19,33 +19,30 @@ public final class DtoProjectionInfo {
     R fieldAccess(FieldAccess projection, P p);
   }
 
-  static <R> Function<ProjectionInfo, R> asFunction(ProjectionInfoCases<R, Void> cases) {
-    return projectionInfo -> projectionInfo.accept(cases, null);
-  }
-
-  static <R, P> BiFunction<ProjectionInfo, P, R> asBiFunction(ProjectionInfoCases<R, P> cases) {
+  private static <R, P> BiFunction<ProjectionInfo, P, R> asFunction(ProjectionInfoCases<R, P> cases) {
     return (projectionInfo, p) -> projectionInfo.accept(cases, p);
   }
 
-  static <R> Function<ProjectionInfo, R> projectionInfoCases(
+  private static <R> Function<ProjectionInfo, R> projectionInfoCases(
       Function<ProjectionMethod, R> projectionMethod,
       Function<FieldAccess, R> fieldAccess) {
-    return asFunction(new ProjectionInfoCases<R, Void>() {
+    BiFunction<ProjectionInfo, Void, R> function = asFunction(new ProjectionInfoCases<R, Void>() {
       @Override
-      public R projectionMethod(ProjectionMethod projection, Void aVoid) {
+      public R projectionMethod(ProjectionMethod projection, Void _null) {
         return projectionMethod.apply(projection);
       }
       @Override
-      public R fieldAccess(FieldAccess projection, Void aVoid) {
+      public R fieldAccess(FieldAccess projection, Void _null) {
         return fieldAccess.apply(projection);
       }
     });
+    return projectionInfo -> function.apply(projectionInfo, null);
   }
 
   public static <R, P> BiFunction<ProjectionInfo, P, R> projectionInfoCases(
       BiFunction<ProjectionMethod, P, R> projectionMethod,
       BiFunction<FieldAccess, P, R> fieldAccess) {
-    return asBiFunction(new ProjectionInfoCases<R, P>() {
+    return asFunction(new ProjectionInfoCases<R, P>() {
       @Override
       public R projectionMethod(ProjectionMethod projection, P p) {
         return projectionMethod.apply(projection, p);

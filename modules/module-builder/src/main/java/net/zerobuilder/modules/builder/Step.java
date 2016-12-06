@@ -6,6 +6,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+import net.zerobuilder.compiler.generate.NullPolicy;
 
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +49,7 @@ final class Step {
 
   static final Function<SimpleParameter, CodeBlock> nullCheck
       = parameter -> {
-    if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
+    if (parameter.nullPolicy == NullPolicy.ALLOW || parameter.type.isPrimitive()) {
       return emptyCodeBlock;
     }
     String name = parameter.name;

@@ -18,6 +18,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.modifiers;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
@@ -78,7 +79,7 @@ final class InstanceWorld {
             .addStatement("$N._factory = this._factory", updater)
             .addCode(copyBlock(description))
             .addStatement("return $N", updater)
-            .addModifiers(details.access())
+            .addModifiers(modifiers(details.access))
             .build())
         .addModifiers(PUBLIC, STATIC, FINAL)
         .build();

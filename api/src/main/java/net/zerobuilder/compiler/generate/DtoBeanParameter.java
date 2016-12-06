@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,12 +17,12 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class DtoBeanParameter {
 
-  public interface BeanParameterCases<R> {
+  interface BeanParameterCases<R> {
     R accessorPair(AccessorPair pair);
     R loneGetter(LoneGetter getter);
   }
 
-  public static <R> Function<AbstractBeanParameter, R> asFunction(BeanParameterCases<R> cases) {
+  private static <R> Function<AbstractBeanParameter, R> asFunction(BeanParameterCases<R> cases) {
     return parameter -> parameter.accept(cases);
   }
 
@@ -53,7 +52,19 @@ public final class DtoBeanParameter {
           loneGetter -> Collections.emptyList());
 
 
-  public static abstract class AbstractBeanParameter extends AbstractParameter {
+  public static abstract class AbstractBeanParameter {
+
+    /**
+     * the type that's returned by the getter,
+     * or equivalently the type of the setter parameter
+     */
+    public final TypeName type;
+
+    /**
+     * true if null checks should be added
+     */
+    public final NullPolicy nullPolicy;
+
 
     /**
      * Name of the getter method (could start with {@code "is"})
@@ -65,7 +76,8 @@ public final class DtoBeanParameter {
     private final String name;
 
     private AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy, List<TypeName> getterThrownTypes) {
-      super(type, nullPolicy);
+      this.type = type;
+      this.nullPolicy = nullPolicy;
       this.getter = getter;
       this.getterThrownTypes = getterThrownTypes;
       this.name = downcase(getter.substring(getter.startsWith("is") ? 2 : 3));

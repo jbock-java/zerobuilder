@@ -14,7 +14,7 @@ import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -83,13 +83,13 @@ public final class RegularUpdater implements ProjectedModule {
     return upcase(description.details.name()) + upcase(moduleName);
   }
 
-  private static final Function<AbstractRegularDetails, Collection<TypeVariableName>> implTypeParameters =
+  private static final Function<AbstractRegularDetails, List<TypeVariableName>> implTypeParameters =
       regularDetailsCases(
           constructor -> constructor.instanceTypeParameters,
           staticMethod -> emptyList(),
-          instanceMethod -> new HashSet<>(concat(
+          instanceMethod -> new ArrayList<>(new HashSet<>(concat(
               instanceMethod.instanceTypeParameters,
-              instanceMethod.typeParameters)));
+              instanceMethod.typeParameters))));
 
   private CodeBlock staticCall(ProjectedRegularGoalDescription description,
                                StaticMethodGoalDetails details) {

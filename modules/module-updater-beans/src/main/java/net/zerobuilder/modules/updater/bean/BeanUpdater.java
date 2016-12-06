@@ -35,7 +35,7 @@ public final class BeanUpdater implements BeanModule {
   private MethodSpec buildMethod(BeanGoalDescription description) {
     return methodBuilder("done")
         .addModifiers(PUBLIC)
-        .returns(description.details.type())
+        .returns(description.details.goalType)
         .addCode(returnBean(description))
         .build();
   }

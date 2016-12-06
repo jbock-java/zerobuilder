@@ -1,5 +1,6 @@
 package net.zerobuilder.modules.builder.bean;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -20,7 +21,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
-import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -28,6 +28,8 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.builder.bean.BeanStep.nextType;
 
 final class Builder {
+
+  private static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
   static final Function<BeanGoalDescription, List<FieldSpec>> fields =
       description -> singletonList(description.beanField);

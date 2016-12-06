@@ -2,6 +2,7 @@ package net.zerobuilder.modules.builder.bean;
 
 import com.squareup.javapoet.CodeBlock;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+import net.zerobuilder.compiler.generate.NullPolicy;
 
 import java.util.function.Function;
 
@@ -12,7 +13,7 @@ final class Step {
 
   static final Function<AbstractBeanParameter, CodeBlock> nullCheck =
       parameter -> {
-        if (!parameter.nullPolicy.check() || parameter.type.isPrimitive()) {
+        if (parameter.nullPolicy == NullPolicy.ALLOW || parameter.type.isPrimitive()) {
           return emptyCodeBlock;
         }
         String name = parameter.name();

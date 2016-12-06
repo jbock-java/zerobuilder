@@ -1,5 +1,6 @@
 package net.zerobuilder.modules.builder.bean;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
@@ -16,11 +17,12 @@ import static com.squareup.javapoet.WildcardTypeName.subtypeOf;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
-import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class BeanStep {
+
+  private static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
   static IntFunction<TypeSpec> beanStepInterface(BeanGoalDescription description) {
     return i -> beanParameterCases(
@@ -60,13 +62,12 @@ final class BeanStep {
   static TypeName nextType(int i, BeanGoalDescription description) {
     if (i < description.parameters.size() - 1) {
       return description.details.context.generatedType
-          .nestedClass(upcase(description.details.name() + "Builder"))
+          .nestedClass(upcase(description.details.name + "Builder"))
           .nestedClass(upcase(description.parameters.get(i + 1).name()));
     }
-    return description.details.type();
+    return description.details.goalType;
   }
-
-
+  
   private BeanStep() {
     throw new UnsupportedOperationException("no instances");
   }

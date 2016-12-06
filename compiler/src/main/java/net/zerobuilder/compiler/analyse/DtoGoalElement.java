@@ -7,7 +7,6 @@ import net.zerobuilder.Access;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.generate.DtoContext;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
@@ -98,15 +97,15 @@ final class DtoGoalElement {
     });
   }
 
-  private static final Function<AbstractRegularGoalElement, AbstractGoalDetails> abstractDetails =
+  private static final Function<AbstractRegularGoalElement, String> regularGoalName =
       regularGoalElementCases(
-          general -> general.details,
-          projectable -> projectable.details);
+          general -> general.details.name,
+          projected -> projected.details.name);
 
   static final Function<AbstractGoalElement, String> goalName =
       goalElementCases(
-          regular -> abstractDetails.apply(regular).name(),
-          bean -> bean.details.name());
+          regular -> regularGoalName.apply(regular),
+          bean -> bean.details.name);
 
   static final Function<AbstractGoalElement, Element> element =
       goalElementCases(

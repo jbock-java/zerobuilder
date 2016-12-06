@@ -6,8 +6,11 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
+/**
+ * Determines step position of the getter
+ */
 @Retention(SOURCE)
-@Target({METHOD})
+@Target(METHOD)
 public @interface BeanStep {
   int value();
 }

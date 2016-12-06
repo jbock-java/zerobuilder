@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
 public final class DtoRegularParameter {
@@ -9,7 +8,17 @@ public final class DtoRegularParameter {
   /**
    * Represents one method (or constructor) parameter.
    */
-  public static abstract class AbstractRegularParameter extends AbstractParameter {
+  static abstract class AbstractRegularParameter {
+
+    /**
+     * original parameter type
+     */
+    public final TypeName type;
+
+    /**
+     * true if null checks should be added
+     */
+    public final NullPolicy nullPolicy;
 
     /**
      * original parameter name
@@ -17,7 +26,8 @@ public final class DtoRegularParameter {
     public final String name;
 
     private AbstractRegularParameter(String name, TypeName type, NullPolicy nullPolicy) {
-      super(type, nullPolicy);
+      this.type = type;
+      this.nullPolicy = nullPolicy;
       this.name = name;
     }
 

@@ -7,6 +7,12 @@ import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
+/**
+ * Access level of generated static method
+ *
+ * @see Builder
+ * @see Updater
+ */
 @Retention(SOURCE)
 @Target({METHOD, CONSTRUCTOR})
 public @interface AccessLevel {

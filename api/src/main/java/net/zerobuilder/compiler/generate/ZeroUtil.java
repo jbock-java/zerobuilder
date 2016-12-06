@@ -8,12 +8,12 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
+import net.zerobuilder.Access;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -21,12 +21,12 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isUpperCase;
+import static java.util.Arrays.copyOf;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
@@ -35,13 +35,9 @@ import static java.util.stream.Collectors.toList;
 
 public final class ZeroUtil {
 
-  public static final class ClassNames {
+  static final class ClassNames {
 
-    public static final ClassName COLLECTION = ClassName.get(Collection.class);
-    public static final ClassName LIST = ClassName.get(List.class);
-    public static final ClassName SET = ClassName.get(Set.class);
-    public static final ClassName ITERABLE = ClassName.get(Iterable.class);
-    public static final ClassName THREAD_LOCAL = ClassName.get(ThreadLocal.class);
+    static final ClassName THREAD_LOCAL = ClassName.get(ThreadLocal.class);
 
     private ClassNames() {
       throw new UnsupportedOperationException("no instances");
@@ -103,7 +99,7 @@ public final class ZeroUtil {
     return nullCheck(parameterSpec.name, message);
   }
 
-  public static String distinctFrom(String string, String other) {
+  static String distinctFrom(String string, String other) {
     if (string.equals(other)) {
       return 'a' + upcase(string);
     }
@@ -120,7 +116,7 @@ public final class ZeroUtil {
     throw new IllegalArgumentException("not a declared type: " + typeName);
   }
 
-  public static List<TypeName> typeArguments(TypeName typeName) {
+  private static List<TypeName> typeArguments(TypeName typeName) {
     if (typeName instanceof ParameterizedTypeName) {
       return ((ParameterizedTypeName) typeName).typeArguments;
     }
@@ -132,7 +128,7 @@ public final class ZeroUtil {
    * @return first type argument, if any
    * @throws IllegalArgumentException if type has multiple type arguments
    */
-  public static Optional<TypeName> onlyTypeArgument(TypeName typeName) {
+  static Optional<TypeName> onlyTypeArgument(TypeName typeName) {
     List<TypeName> types = typeArguments(typeName);
     switch (types.size()) {
       case 0:
@@ -153,13 +149,6 @@ public final class ZeroUtil {
       return singletonList(optional.get());
     }
     return emptyList();
-  }
-
-  public static <P> List<P> reverse(List<P> list) {
-    List<P> reversed = new ArrayList<>(list.size());
-    reversed.addAll(list);
-    Collections.reverse(reversed);
-    return reversed;
   }
 
   public static <P> List<P> concat(P first, List<? extends P> list) {
@@ -193,7 +182,7 @@ public final class ZeroUtil {
       }
       @Override
       public BiConsumer<List<CodeBlock>, CodeBlock> accumulator() {
-        return (builder, block) -> builder.add(block);
+        return List::add;
       }
       @Override
       public BinaryOperator<List<CodeBlock>> combiner() {
@@ -234,7 +223,7 @@ public final class ZeroUtil {
       }
       @Override
       public BiConsumer<List<E>, List<E>> accumulator() {
-        return (left, right) -> left.addAll(right);
+        return List::addAll;
       }
       @Override
       public BinaryOperator<List<E>> combiner() {
@@ -254,7 +243,7 @@ public final class ZeroUtil {
     };
   }
 
-  public static <E, R> Collector<E, List<E>, R> listCollector(Function<List<E>, R> finisher) {
+  static <E, R> Collector<E, List<E>, R> listCollector(Function<List<E>, R> finisher) {
     return new Collector<E, List<E>, R>() {
 
       @Override
@@ -264,7 +253,7 @@ public final class ZeroUtil {
 
       @Override
       public BiConsumer<List<E>, E> accumulator() {
-        return (left, right) -> left.add(right);
+        return List::add;
       }
 
       @Override
@@ -287,7 +276,7 @@ public final class ZeroUtil {
     };
   }
 
-  public static <R> Supplier<R> memoize(Supplier<R> supplier) {
+  static <R> Supplier<R> memoize(Supplier<R> supplier) {
     List<R> ref = new ArrayList<>(singletonList(null));
     return () -> {
       R element = ref.get(0);
@@ -297,10 +286,6 @@ public final class ZeroUtil {
       }
       return element;
     };
-  }
-
-  public static <R> Predicate<R> asPredicate(Function<R, Boolean> function) {
-    return r -> function.apply(r);
   }
 
   public static MethodSpec constructor(Modifier... modifiers) {
@@ -348,7 +333,7 @@ public final class ZeroUtil {
     if (input.size() != ranking.length) {
       throw new IllegalArgumentException("input.size() != ranking.length");
     }
-    List<E> result = new ArrayList(input.size());
+    List<E> result = new ArrayList<>(input.size());
     for (int i = 0; i < input.size(); i++)
       result.add(null);
     for (int i = 0; i < input.size(); i++)
@@ -356,11 +341,38 @@ public final class ZeroUtil {
     return result;
   }
 
-  public static TypeName parameterizedTypeName(ClassName raw, Collection<TypeVariableName> typeVars) {
+  public static TypeName parameterizedTypeName(ClassName raw, List<TypeVariableName> typeVars) {
     if (typeVars.isEmpty()) {
       return raw;
     }
     return ParameterizedTypeName.get(raw, typeVars.toArray(new TypeVariableName[typeVars.size()]));
+  }
+
+  private static Modifier[] addModifier(Modifier modifier, Modifier[] modifiers) {
+    for (Modifier m : modifiers) {
+      if (m == modifier) {
+        return modifiers;
+      }
+    }
+    Modifier[] copy = copyOf(modifiers, modifiers.length + 1);
+    copy[modifiers.length] = modifier;
+    return copy;
+  }
+
+  public static Modifier[] modifiers(Access access, Modifier modifiers) {
+    return access == Access.PUBLIC ?
+        addModifier(Modifier.PUBLIC, new Modifier[]{modifiers}) :
+        access == Access.PRIVATE ?
+            addModifier(Modifier.PRIVATE, new Modifier[]{modifiers}) :
+            new Modifier[]{modifiers};
+  }
+
+  public static Modifier[] modifiers(Access access) {
+    return access == Access.PUBLIC ?
+        new Modifier[]{Modifier.PUBLIC} :
+        access == Access.PRIVATE ?
+            new Modifier[]{Modifier.PRIVATE} :
+            new Modifier[0];
   }
 
   private ZeroUtil() {

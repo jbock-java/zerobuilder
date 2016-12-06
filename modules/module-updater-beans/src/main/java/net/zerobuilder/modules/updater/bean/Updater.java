@@ -1,5 +1,6 @@
 package net.zerobuilder.modules.updater.bean;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -20,11 +21,12 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
-import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.ITERABLE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
 
 final class Updater {
+
+  private static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
   final static Function<BeanGoalDescription, List<FieldSpec>> fields =
       description -> singletonList(description.beanField);
