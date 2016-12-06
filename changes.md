@@ -180,3 +180,9 @@
 ### 2016-12-03 zerobuilder 1.602 released
 
 * rename @Ignore -> @BeanIgnore (breaking)
+
+### 2016-12-06 zerobuilder 1.603 released
+
+* maintenance release
+* update javadoc
+* potentially fix a problem where references were not cleared in instance goal (recycle)
