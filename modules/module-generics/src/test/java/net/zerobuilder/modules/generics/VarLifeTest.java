@@ -27,7 +27,7 @@ public class VarLifeTest {
   private static final TypeVariableName K = TypeVariableName.get("K");
   private static final TypeVariableName V = TypeVariableName.get("V");
 
-  public static TypeName listOf(TypeName v) {
+  static TypeName listOf(TypeName v) {
     return ParameterizedTypeName.get(ClassName.get(List.class), v);
   }
 
@@ -37,28 +37,31 @@ public class VarLifeTest {
 
   @Test
   public void test_LK_V_MKV() {
-    List<List<TypeVariableName>> life = varLifes(asList(K, V), asList(listOf(K), V, map(K, V)), emptyList());
+    List<TypeVariableName> typeParameters = asList(K, V);
+    List<List<TypeVariableName>> life = varLifes(typeParameters, asList(listOf(K), V, map(K, V)), emptyList());
     assertThat(life, is(asList(singletonList(K), asList(K, V), asList(K, V))));
     assertThat(methodParams(life, emptyList()), is(asList(singletonList(K), singletonList(V))));
-    assertThat(typeParams(life, emptyList()), is(asList(emptyList(), singletonList(K))));
+    assertThat(typeParams(typeParameters, life, emptyList()), is(asList(emptyList(), singletonList(K))));
     assertThat(implTypeParams(life, emptyList()), is(asList(emptyList(), singletonList(K))));
   }
 
   @Test
   public void test_MKV_K_V_LV() {
-    List<List<TypeVariableName>> life = varLifes(asList(K, V), asList(map(K, V), K, V, listOf(V)), emptyList());
+    List<TypeVariableName> typeParameters = asList(K, V);
+    List<List<TypeVariableName>> life = varLifes(typeParameters, asList(map(K, V), K, V, listOf(V)), emptyList());
     assertThat(life, is(asList(asList(K, V), asList(K, V), singletonList(V), singletonList(V))));
     assertThat(methodParams(life, emptyList()), is(asList(asList(K, V), emptyList(), emptyList())));
-    assertThat(typeParams(life, emptyList()), is(asList(emptyList(), asList(K, V), singletonList(V))));
+    assertThat(typeParams(typeParameters, life, emptyList()), is(asList(emptyList(), asList(K, V), singletonList(V))));
     assertThat(implTypeParams(life, emptyList()), is(asList(emptyList(), asList(K, V), asList(K, V))));
   }
 
   @Test
   public void test_K_V_LK_V() {
-    List<List<TypeVariableName>> life = varLifes(asList(K, V), asList(K, V, listOf(K), V), emptyList());
+    List<TypeVariableName> typeParameters = asList(K, V);
+    List<List<TypeVariableName>> life = varLifes(typeParameters, asList(K, V, listOf(K), V), emptyList());
     assertThat(life, is(asList(singletonList(K), asList(K, V), asList(K, V), singletonList(V))));
     assertThat(methodParams(life, emptyList()), is(asList(singletonList(K), singletonList(V), emptyList())));
-    assertThat(typeParams(life, emptyList()), is(asList(emptyList(), singletonList(K), asList(V, K))));
+    assertThat(typeParams(typeParameters, life, emptyList()), is(asList(emptyList(), singletonList(K), asList(K, V))));
   }
 
   @Test
@@ -76,8 +79,9 @@ public class VarLifeTest {
   public void testGenericInstance() {
     List<TypeName> parameters = asList(S, K, V, map(K, V));
     List<TypeVariableName> dependents = dependents(singletonList(S), parameters);
-    List<List<TypeVariableName>> life = varLifes(asList(S, K, V), parameters, dependents);
-    assertThat(typeParams(life, dependents), is(asList(singletonList(S), asList(K, V), asList(K, V))));
+    List<TypeVariableName> typeParameters = asList(S, K, V);
+    List<List<TypeVariableName>> life = varLifes(typeParameters, parameters, dependents);
+    assertThat(typeParams(typeParameters, life, dependents), is(asList(singletonList(S), asList(K, V), asList(K, V))));
     assertThat(methodParams(life, dependents), is(asList(asList(K, V), emptyList(), emptyList())));
     assertThat(implTypeParams(life, dependents), is(asList(singletonList(S), asList(S, K, V), asList(S, K, V))));
   }
@@ -108,7 +112,7 @@ public class VarLifeTest {
     List<TypeVariableName> dependents = dependents(singletonList(S), parameters);
     List<List<TypeVariableName>> life = varLifes(typeParameters, parameters, dependents);
     assertThat(life, is(asList(asList(S, K, V), asList(S, K, V), asList(S, K, V))));
-    assertThat(typeParams(life, dependents), is(asList(asList(S, V), asList(K, S, V))));
+    assertThat(typeParams(typeParameters, life, dependents), is(asList(asList(S, V), asList(S, K, V))));
     assertThat(implTypeParams(life, dependents), is(asList(asList(S, V), asList(S, V, K))));
     assertThat(methodParams(life, dependents), is(asList(singletonList(K), emptyList())));
   }

@@ -32,12 +32,15 @@ final class VarLife {
     return builder;
   }
 
-  static List<List<TypeVariableName>> typeParams(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start) {
+  static List<List<TypeVariableName>> typeParams(List<TypeVariableName> typeParameters,
+                                                 List<List<TypeVariableName>> varLifes,
+                                                 List<TypeVariableName> start) {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeVariableName> previous = start;
     List<TypeVariableName> later = new ArrayList<>();
     for (int i = 0; i < varLifes.size() - 1; i++) {
+      boolean needsSort = !later.isEmpty();
       builder.get(i).addAll(later);
       later.clear();
       for (TypeVariableName t : varLifes.get(i)) {
@@ -49,9 +52,22 @@ final class VarLife {
           later.add(t);
         }
       }
+      if (needsSort) {
+        builder.set(i, sort(builder.get(i), typeParameters));
+      }
       previous = varLifes.get(i);
     }
     return builder;
+  }
+
+  static List<TypeVariableName> sort(List<TypeVariableName> toSort, List<TypeVariableName> orig) {
+    List<TypeVariableName> result = new ArrayList<>();
+    for (TypeVariableName type : orig) {
+      if (toSort.contains(type)) {
+        result.add(type);
+      }
+    }
+    return result;
   }
 
   static List<List<TypeVariableName>> implTypeParams(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start) {

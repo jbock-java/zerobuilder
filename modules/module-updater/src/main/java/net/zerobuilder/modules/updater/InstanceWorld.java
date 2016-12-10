@@ -73,7 +73,7 @@ final class InstanceWorld {
         .addMethod(methodBuilder("updater")
             .addExceptions(thrownByProjections(description))
             .addParameter(toBuilderParameter(description))
-            .addTypeVariables(details.returnTypeParameters)
+            .addTypeVariables(details.typeParameters)
             .returns(updater.type)
             .addCode(initVarUpdater(description, updater))
             .addStatement("$N._factory = this._factory", updater)

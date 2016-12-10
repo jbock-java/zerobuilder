@@ -154,11 +154,12 @@ final class GenericsGenerator {
     AbstractRegularDetails details = description.details;
     List<TypeVariableName> dependents = GenericsGenerator.dependents(description)
         .apply(description.details);
+    List<TypeVariableName> typeParameters = GenericsGenerator.allTypeParameters.apply(details);
     List<List<TypeVariableName>> lifes = varLifes(
-        GenericsGenerator.allTypeParameters.apply(details),
+        typeParameters,
         stepTypes(description),
         dependents);
-    List<List<TypeVariableName>> typeParams = typeParams(lifes, dependents);
+    List<List<TypeVariableName>> typeParams = typeParams(typeParameters, lifes, dependents);
     List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes, dependents);
     List<List<TypeVariableName>> methodParams = methodParams(lifes, dependents);
     List<TypeSpec> stepSpecs = stepInterfaces(description, typeParams, methodParams);
