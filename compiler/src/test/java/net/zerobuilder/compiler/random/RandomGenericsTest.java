@@ -36,10 +36,16 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 public class RandomGenericsTest {
 
   private static final String abc =
-      "ABCDEFGHI";
+      "ABCDEFGHIJKLMNOP";
 
   @Test
-  public void rand() {
+  public void test() {
+    for (int i = 0; i < 10; i++) {
+      rand();
+    }
+  }
+
+  private void rand() {
 
     String s = "package foo;\n" +
         topLevelClass().toString();
@@ -47,7 +53,6 @@ public class RandomGenericsTest {
     List<String> split = Arrays.stream(s.split("\n", -1))
         .map(line -> line + '\n')
         .collect(toList());
-    System.out.println(split.stream().collect(joining()));
     JavaFileObject jfo = forSourceLines("foo.Foo", split);
 
     assertAbout(javaSources()).that(singletonList(jfo))
