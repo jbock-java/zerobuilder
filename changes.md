@@ -186,3 +186,8 @@
 * maintenance release
 * update javadoc
 * potentially fix a problem where references were not cleared in instance goal (recycle)
+
+### 2016-12-10 zerobuilder 1.604 released
+
+* preserve ordering of typevars (if any)
+
