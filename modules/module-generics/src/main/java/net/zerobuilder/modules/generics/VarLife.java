@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static net.zerobuilder.modules.generics.GenericsUtil.extractTypeVars;
-import static net.zerobuilder.modules.generics.GenericsUtil.references;
+import static net.zerobuilder.compiler.generate.ZeroUtil.extractTypeVars;
+import static net.zerobuilder.compiler.generate.ZeroUtil.references;
 
 final class VarLife {
 
@@ -143,7 +143,7 @@ final class VarLife {
     return false;
   }
 
-  static int varLifeStart(TypeName typeParameter, List<TypeName> steps, List<TypeVariableName> dependents) {
+  static int varLifeStart(TypeVariableName typeParameter, List<TypeName> steps, List<TypeVariableName> dependents) {
     for (TypeVariableName type : dependents) {
       for (TypeName step : steps) {
         if (references(step, type)) {
@@ -160,7 +160,7 @@ final class VarLife {
     return -1;
   }
 
-  private static int varLifeEnd(TypeName typeParameter, List<TypeName> steps) {
+  private static int varLifeEnd(TypeVariableName typeParameter, List<TypeName> steps) {
     for (int i = steps.size() - 1; i >= 0; i--) {
       TypeName step = steps.get(i);
       if (references(step, typeParameter)) {

@@ -1,19 +1,24 @@
-package net.zerobuilder.modules.generics;
+package net.zerobuilder.compiler.generate;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeVariableName;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import static net.zerobuilder.modules.generics.GenericsUtil.references;
+import static java.util.Arrays.asList;
+import static net.zerobuilder.compiler.generate.ZeroUtil.extractTypeVars;
+import static net.zerobuilder.compiler.generate.ZeroUtil.references;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class GenericsUtilTest {
+public class ZeroUtilTest {
 
   private static final TypeVariableName K = TypeVariableName.get("K");
   private static final TypeVariableName V = TypeVariableName.get("V");
@@ -26,8 +31,6 @@ public class GenericsUtilTest {
       ParameterizedTypeName.get(ClassName.get(Map.class), K, V);
   private static final ParameterizedTypeName MAP_V_LIST_OF_K =
       ParameterizedTypeName.get(ClassName.get(Map.class), V, LIST_OF_K);
-  private static final ParameterizedTypeName MAP_K_LIST_V =
-      ParameterizedTypeName.get(ClassName.get(Map.class), K, LIST_OF_V);
 
 
   @Test
@@ -51,5 +54,21 @@ public class GenericsUtilTest {
     TypeVariableName v = TypeVariableName.get("V", s);
     TypeVariableName k = TypeVariableName.get("K", v);
     assertTrue(references(k, s));
+  }
+
+  @Test
+  public void testExtractTypeVars() {
+    TypeVariableName a = TypeVariableName.get("A");
+    TypeVariableName b = TypeVariableName.get("B");
+    TypeVariableName c = TypeVariableName.get("C");
+    TypeVariableName d = TypeVariableName.get("D");
+    ParameterizedTypeName ab = ParameterizedTypeName.get(ClassName.get(HashMap.class), a, b);
+    ParameterizedTypeName abc = ParameterizedTypeName.get(ClassName.get(HashMap.class), ab, c);
+    ParameterizedTypeName dabc = ParameterizedTypeName.get(ClassName.get(HashMap.class), d, abc);
+    ParameterizedTypeName dabca = ParameterizedTypeName.get(ClassName.get(HashMap.class), dabc, a);
+    ParameterizedTypeName dabcab = ParameterizedTypeName.get(ClassName.get(HashMap.class), dabca, b);
+    ParameterizedTypeName ddabcab = ParameterizedTypeName.get(ClassName.get(HashMap.class), d, dabcab);
+    List<TypeVariableName> vars = extractTypeVars(ddabcab);
+    assertThat(new HashSet<>(vars), is(new HashSet<>(asList(a, b, c, d))));
   }
 }

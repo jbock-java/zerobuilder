@@ -15,9 +15,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Stack;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -373,6 +375,68 @@ public final class ZeroUtil {
         access == Access.PRIVATE ?
             new Modifier[]{Modifier.PRIVATE} :
             new Modifier[0];
+  }
+
+  private static final class TypeWalk implements Iterator<TypeName> {
+
+    private final Stack<TypeName> stack;
+
+    TypeWalk(TypeName type) {
+      stack = new Stack<>();
+      stack.push(type);
+    }
+
+    @Override
+    public boolean hasNext() {
+      return !stack.isEmpty();
+    }
+
+    @Override
+    public TypeName next() {
+      TypeName type = stack.pop();
+      if (type instanceof ParameterizedTypeName) {
+        ((ParameterizedTypeName) type).typeArguments.forEach(stack::push);
+      }
+      if (type instanceof TypeVariableName) {
+        ((TypeVariableName) type).bounds.forEach(stack::push);
+      }
+      return type;
+    }
+  }
+
+  private static boolean maybeTypevars(TypeName type) {
+    return type instanceof ParameterizedTypeName
+        || type instanceof TypeVariableName;
+  }
+
+  public static boolean references(TypeName type, TypeVariableName test) {
+    if (!maybeTypevars(type)) {
+      return false;
+    }
+    TypeWalk walk = new TypeWalk(type);
+    while (walk.hasNext()) {
+      if (walk.next().equals(test)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static List<TypeVariableName> extractTypeVars(TypeName type) {
+    if (!maybeTypevars(type)) {
+      return emptyList();
+    }
+    List<TypeVariableName> builder = new ArrayList<>();
+    TypeWalk walk = new TypeWalk(type);
+    while (walk.hasNext()) {
+      TypeName next = walk.next();
+      if (next instanceof TypeVariableName) {
+        if (!builder.contains(next)) {
+          builder.add((TypeVariableName) next);
+        }
+      }
+    }
+    return builder;
   }
 
   private ZeroUtil() {
