@@ -13,10 +13,16 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.references;
 
 final class VarLife {
 
+  final List<List<TypeVariableName>> varLifes;
+
+  private VarLife(List<List<TypeVariableName>> varLifes) {
+    this.varLifes = varLifes;
+  }
+
   private static final Supplier<Stream<List<TypeVariableName>>> emptyLists =
       () -> Stream.generate(ArrayList::new);
 
-  static List<List<TypeVariableName>> methodParams(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start) {
+  List<List<TypeVariableName>> methodParams(List<TypeVariableName> start) {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeVariableName> previous = start;
@@ -32,9 +38,8 @@ final class VarLife {
     return builder;
   }
 
-  static List<List<TypeVariableName>> typeParams(List<TypeVariableName> typeParameters,
-                                                 List<List<TypeVariableName>> varLifes,
-                                                 List<TypeVariableName> start) {
+  List<List<TypeVariableName>> typeParams(List<TypeVariableName> typeParameters,
+                                          List<TypeVariableName> start) {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeVariableName> previous = start;
@@ -60,7 +65,7 @@ final class VarLife {
     return builder;
   }
 
-  static List<TypeVariableName> sort(List<TypeVariableName> toSort, List<TypeVariableName> orig) {
+  private static List<TypeVariableName> sort(List<TypeVariableName> toSort, List<TypeVariableName> orig) {
     List<TypeVariableName> result = new ArrayList<>();
     for (TypeVariableName type : orig) {
       if (toSort.contains(type)) {
@@ -70,7 +75,7 @@ final class VarLife {
     return result;
   }
 
-  static List<List<TypeVariableName>> implTypeParams(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start) {
+  List<List<TypeVariableName>> implTypeParams(List<TypeVariableName> start) {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeVariableName> seen = new ArrayList<>();
@@ -86,14 +91,12 @@ final class VarLife {
     return builder;
   }
 
-
-  static List<List<TypeVariableName>> varLifes(List<TypeVariableName> typeParameters,
-                                               List<TypeName> steps,
-                                               List<TypeVariableName> dependents) {
+  static VarLife create(List<TypeVariableName> typeParameters,
+                        List<TypeName> steps,
+                        List<TypeVariableName> dependents) {
     List<List<TypeVariableName>> builder = new ArrayList<>(steps.size());
     emptyLists.get().limit(steps.size()).forEach(builder::add);
-    List<TypeVariableName> expanded = expand(typeParameters);
-    for (TypeVariableName typeParameter : expanded) {
+    for (TypeVariableName typeParameter : typeParameters) {
       int start = varLifeStart(typeParameter, steps, dependents);
       if (start >= 0) {
         int end = varLifeEnd(typeParameter, steps);
@@ -102,20 +105,7 @@ final class VarLife {
         }
       }
     }
-    return builder;
-  }
-
-  static List<TypeVariableName> expand(List<TypeVariableName> typeParameters) {
-    List<TypeVariableName> builder = new ArrayList<>(typeParameters.size());
-    for (TypeVariableName type : typeParameters) {
-      List<TypeVariableName> types = extractTypeVars(type);
-      for (TypeVariableName t : types) {
-        if (!builder.contains(t)) {
-          builder.add(t);
-        }
-      }
-    }
-    return builder;
+    return new VarLife(builder);
   }
 
   static List<TypeVariableName> referencingParameters(List<TypeVariableName> init,
@@ -141,7 +131,7 @@ final class VarLife {
     return false;
   }
 
-  static int varLifeStart(TypeVariableName typeParameter, List<TypeName> steps, List<TypeVariableName> dependents) {
+  private static int varLifeStart(TypeVariableName typeParameter, List<TypeName> steps, List<TypeVariableName> dependents) {
     for (TypeVariableName type : dependents) {
       for (TypeName step : steps) {
         if (references(step, type)) {
@@ -166,9 +156,5 @@ final class VarLife {
       }
     }
     throw new IllegalStateException(typeParameter + " not found");
-  }
-
-  private VarLife() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

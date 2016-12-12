@@ -37,11 +37,7 @@ import static net.zerobuilder.modules.generics.GenericsContract.contractType;
 import static net.zerobuilder.modules.generics.GenericsContract.implType;
 import static net.zerobuilder.modules.generics.GenericsContract.stepInterfaces;
 import static net.zerobuilder.modules.generics.GenericsContract.stepTypes;
-import static net.zerobuilder.modules.generics.VarLife.implTypeParams;
-import static net.zerobuilder.modules.generics.VarLife.methodParams;
 import static net.zerobuilder.modules.generics.VarLife.referencingParameters;
-import static net.zerobuilder.modules.generics.VarLife.typeParams;
-import static net.zerobuilder.modules.generics.VarLife.varLifes;
 
 final class GenericsGenerator {
 
@@ -155,13 +151,13 @@ final class GenericsGenerator {
     AbstractRegularDetails details = description.details;
     List<TypeVariableName> dependents = GenericsGenerator.dependents.apply(description.details, description);
     List<TypeVariableName> typeParameters = GenericsGenerator.allTypeParameters.apply(details);
-    List<List<TypeVariableName>> lifes = varLifes(
+    VarLife lifes = VarLife.create(
         typeParameters,
         stepTypes(description),
         dependents);
-    List<List<TypeVariableName>> typeParams = typeParams(typeParameters, lifes, dependents);
-    List<List<TypeVariableName>> implTypeParams = implTypeParams(lifes, dependents);
-    List<List<TypeVariableName>> methodParams = methodParams(lifes, dependents);
+    List<List<TypeVariableName>> typeParams = lifes.typeParams(typeParameters, dependents);
+    List<List<TypeVariableName>> implTypeParams = lifes.implTypeParams(dependents);
+    List<List<TypeVariableName>> methodParams = lifes.methodParams(dependents);
     List<TypeSpec> stepSpecs = stepInterfaces(description, typeParams, methodParams);
     ClassName implType = implType(description);
     ClassName contractType = contractType(description);
