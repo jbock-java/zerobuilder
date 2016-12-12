@@ -118,20 +118,18 @@ final class VarLife {
     return builder;
   }
 
-  static List<TypeVariableName> dependents(List<TypeVariableName> init,
-                                           List<TypeName> parameters) {
+  static List<TypeVariableName> referencingParameters(List<TypeVariableName> init,
+                                                      List<TypeName> parameters,
+                                                      List<TypeVariableName> ordering) {
     List<TypeVariableName> builder = new ArrayList<>();
-    builder.addAll(init);
     for (TypeName type : parameters) {
       for (TypeVariableName t : extractTypeVars(type)) {
-        if (referencesAny(t, init)) {
-          if (!builder.contains(t)) {
-            builder.add(t);
-          }
+        if (referencesAny(t, init) && !builder.contains(t)) {
+          builder.add(t);
         }
       }
     }
-    return builder;
+    return sort(builder, ordering);
   }
 
   private static boolean referencesAny(TypeName typeVariableName, List<TypeVariableName> type) {

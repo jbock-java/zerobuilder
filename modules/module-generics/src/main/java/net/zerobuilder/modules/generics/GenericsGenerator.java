@@ -11,7 +11,6 @@ import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -40,6 +39,7 @@ import static net.zerobuilder.modules.generics.GenericsContract.stepInterfaces;
 import static net.zerobuilder.modules.generics.GenericsContract.stepTypes;
 import static net.zerobuilder.modules.generics.VarLife.implTypeParams;
 import static net.zerobuilder.modules.generics.VarLife.methodParams;
+import static net.zerobuilder.modules.generics.VarLife.referencingParameters;
 import static net.zerobuilder.modules.generics.VarLife.typeParams;
 import static net.zerobuilder.modules.generics.VarLife.varLifes;
 
@@ -145,15 +145,15 @@ final class GenericsGenerator {
 
   private final BiFunction<AbstractRegularDetails, List<TypeVariableName>, List<TypeVariableName>> instanceMethodTypeParameters =
       regularDetailsCases(
-          (constructor, step0params) -> step0params,
-          (staticMethod, step0params) -> step0params,
-          (instanceMethod, step0params) -> concat(step0params,
+          (constructor, firstStepTypeParameters) -> firstStepTypeParameters,
+          (staticMethod, firstStepTypeParameters) -> firstStepTypeParameters,
+          (instanceMethod, firstStepTypeParameters) -> concat(
+              firstStepTypeParameters,
               instanceMethod.instanceTypeParameters));
 
   static GenericsGenerator create(SimpleRegularGoalDescription description) {
     AbstractRegularDetails details = description.details;
-    List<TypeVariableName> dependents = GenericsGenerator.dependents(description)
-        .apply(description.details);
+    List<TypeVariableName> dependents = GenericsGenerator.dependents.apply(description.details, description);
     List<TypeVariableName> typeParameters = GenericsGenerator.allTypeParameters.apply(details);
     List<List<TypeVariableName>> lifes = varLifes(
         typeParameters,
@@ -175,13 +175,18 @@ final class GenericsGenerator {
       regularDetailsCases(
           constructor -> constructor.instanceTypeParameters,
           staticMethod -> staticMethod.typeParameters,
-          instanceMethod -> concat(instanceMethod.instanceTypeParameters, instanceMethod.typeParameters));
+          instanceMethod -> concat(
+              instanceMethod.instanceTypeParameters, instanceMethod.typeParameters));
 
-  private static Function<AbstractRegularDetails, List<TypeVariableName>> dependents(SimpleRegularGoalDescription description) {
-    return regularDetailsCases(
-        constructor -> Collections.<TypeVariableName>emptyList(),
-        staticMethod -> Collections.<TypeVariableName>emptyList(),
-        instanceMethod -> VarLife.dependents(instanceMethod.instanceTypeParameters,
-            stepTypes(description)));
-  }
+  private static BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, List<TypeVariableName>> dependents =
+      regularDetailsCases(
+          (constructor, description) -> emptyList(),
+          (staticMethod, description) -> emptyList(),
+          (instanceMethod, description) -> concat(
+              instanceMethod.instanceTypeParameters,
+              referencingParameters(
+                  instanceMethod.instanceTypeParameters,
+                  stepTypes(description),
+                  instanceMethod.typeParameters)));
+
 }
