@@ -14,10 +14,12 @@ final class VarLife {
 
   final List<List<TypeVariableName>> varLifes;
   final List<TypeVariableName> start;
+  final List<TypeVariableName> typeParameters;
 
-  private VarLife(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start) {
+  private VarLife(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start, List<TypeVariableName> typeParameters) {
     this.varLifes = varLifes;
     this.start = start;
+    this.typeParameters = typeParameters;
   }
 
   private static final Supplier<Stream<List<TypeVariableName>>> emptyLists =
@@ -39,14 +41,18 @@ final class VarLife {
     return builder;
   }
 
-  List<List<TypeVariableName>> typeParams(List<TypeVariableName> typeParameters) {
+  List<List<TypeVariableName>> typeParams() {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeVariableName> previous = start;
     List<TypeVariableName> later = new ArrayList<>();
     for (int i = 0; i < varLifes.size() - 1; i++) {
-      boolean needsSort = !later.isEmpty();
-      builder.get(i).addAll(later);
+      for (TypeVariableName t : later) {
+        if (varLifes.get(i).contains(t)) {
+          builder.get(i).add(t);
+        }
+      }
+      boolean needsSort = !builder.get(i).isEmpty();
       later.clear();
       for (TypeVariableName t : varLifes.get(i)) {
         if (previous.contains(t)) {
@@ -105,13 +111,13 @@ final class VarLife {
         }
       }
     }
-    return new VarLife(builder, dependents);
+    return new VarLife(builder, dependents, typeParameters);
   }
 
   static List<TypeVariableName> referencingParameters(List<TypeVariableName> init,
-                                                      List<TypeVariableName> ordering) {
+                                                      List<TypeVariableName> typeParameters) {
     List<TypeVariableName> builder = new ArrayList<>();
-    for (TypeVariableName type : ordering) {
+    for (TypeVariableName type : typeParameters) {
       for (TypeVariableName initType : init) {
         if (references(type, initType) && !builder.contains(type)) {
           builder.add(type);

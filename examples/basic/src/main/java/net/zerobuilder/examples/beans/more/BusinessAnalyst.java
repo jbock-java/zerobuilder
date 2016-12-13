@@ -1,6 +1,7 @@
 package net.zerobuilder.examples.beans.more;
 
 import net.zerobuilder.BeanBuilder;
+import net.zerobuilder.BeanRejectNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ public class BusinessAnalyst {
   private List<String> notes;
   private boolean isExecutive;
 
+  @BeanRejectNull
   public String getName() {
     return name;
   }

@@ -7,13 +7,13 @@ import net.zerobuilder.RejectNull;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 
-final class GenericInstance<S> {
+final class StaticGenericInstance<S> {
 
   @Builder
   @GoalName("entry")
-  <K, V> Map.Entry<K, V> entry(@RejectNull S suffix,
-                               @RejectNull K key,
-                               @RejectNull V value) {
+  static <S, K, V> Map.Entry<K, V> entry(@RejectNull S suffix,
+                                         @RejectNull K key,
+                                         @RejectNull V value) {
     return new SimpleEntry(key, value + String.valueOf(suffix));
   }
 }

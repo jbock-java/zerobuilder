@@ -155,7 +155,7 @@ final class GenericsGenerator {
         typeParameters,
         stepTypes(description),
         dependents);
-    List<List<TypeVariableName>> typeParams = lifes.typeParams(typeParameters);
+    List<List<TypeVariableName>> typeParams = lifes.typeParams();
     List<List<TypeVariableName>> implTypeParams = lifes.implTypeParams();
     List<List<TypeVariableName>> methodParams = lifes.methodParams();
     List<TypeSpec> stepSpecs = stepInterfaces(description, typeParams, methodParams);
