@@ -153,7 +153,7 @@ public final class ZeroUtil {
     return emptyList();
   }
 
-  public static <P> List<P> concat(P first, List<? extends P> list) {
+  public static <P> List<P> cons(P first, List<? extends P> list) {
     List<P> builder = new ArrayList<>(list.size() + 1);
     builder.add(first);
     builder.addAll(list);

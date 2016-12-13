@@ -14,15 +14,17 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.references;
 final class VarLife {
 
   final List<List<TypeVariableName>> varLifes;
+  final List<TypeVariableName> start;
 
-  private VarLife(List<List<TypeVariableName>> varLifes) {
+  private VarLife(List<List<TypeVariableName>> varLifes, List<TypeVariableName> start) {
     this.varLifes = varLifes;
+    this.start = start;
   }
 
   private static final Supplier<Stream<List<TypeVariableName>>> emptyLists =
       () -> Stream.generate(ArrayList::new);
 
-  List<List<TypeVariableName>> methodParams(List<TypeVariableName> start) {
+  List<List<TypeVariableName>> methodParams() {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeVariableName> previous = start;
@@ -38,8 +40,7 @@ final class VarLife {
     return builder;
   }
 
-  List<List<TypeVariableName>> typeParams(List<TypeVariableName> typeParameters,
-                                          List<TypeVariableName> start) {
+  List<List<TypeVariableName>> typeParams(List<TypeVariableName> typeParameters) {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeVariableName> previous = start;
@@ -75,7 +76,7 @@ final class VarLife {
     return result;
   }
 
-  List<List<TypeVariableName>> implTypeParams(List<TypeVariableName> start) {
+  List<List<TypeVariableName>> implTypeParams() {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
     List<TypeVariableName> seen = new ArrayList<>();
@@ -105,7 +106,7 @@ final class VarLife {
         }
       }
     }
-    return new VarLife(builder);
+    return new VarLife(builder, dependents);
   }
 
   static List<TypeVariableName> referencingParameters(List<TypeVariableName> init,
@@ -114,7 +115,7 @@ final class VarLife {
     List<TypeVariableName> builder = new ArrayList<>();
     for (TypeName type : parameters) {
       for (TypeVariableName t : extractTypeVars(type)) {
-        if (referencesAny(t, init) && !builder.contains(t)) {
+        if (referencesAny(t, init) && !builder.contains(t) && !init.contains(t)) {
           builder.add(t);
         }
       }
