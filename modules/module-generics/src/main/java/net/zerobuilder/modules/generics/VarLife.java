@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static net.zerobuilder.compiler.generate.ZeroUtil.extractTypeVars;
 import static net.zerobuilder.compiler.generate.ZeroUtil.references;
 
 final class VarLife {
@@ -110,26 +109,16 @@ final class VarLife {
   }
 
   static List<TypeVariableName> referencingParameters(List<TypeVariableName> init,
-                                                      List<TypeName> parameters,
                                                       List<TypeVariableName> ordering) {
     List<TypeVariableName> builder = new ArrayList<>();
-    for (TypeName type : parameters) {
-      for (TypeVariableName t : extractTypeVars(type)) {
-        if (referencesAny(t, init) && !builder.contains(t) && !init.contains(t)) {
-          builder.add(t);
+    for (TypeVariableName type : ordering) {
+      for (TypeVariableName initType : init) {
+        if (references(type, initType) && !builder.contains(type)) {
+          builder.add(type);
         }
       }
     }
-    return sort(builder, ordering);
-  }
-
-  private static boolean referencesAny(TypeName typeVariableName, List<TypeVariableName> type) {
-    for (TypeVariableName variableName : type) {
-      if (references(typeVariableName, variableName)) {
-        return true;
-      }
-    }
-    return false;
+    return builder;
   }
 
   private static int varLifeStart(TypeVariableName typeParameter, List<TypeName> steps, List<TypeVariableName> dependents) {

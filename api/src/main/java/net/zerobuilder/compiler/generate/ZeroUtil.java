@@ -405,13 +405,29 @@ public final class ZeroUtil {
   }
 
   private static boolean maybeTypevars(TypeName type) {
-    return type instanceof ParameterizedTypeName
-        || type instanceof TypeVariableName;
+    if (!(type instanceof ParameterizedTypeName
+        || type instanceof TypeVariableName)) {
+      return false;
+    }
+    if (type instanceof ParameterizedTypeName) {
+      for (TypeName targ : ((ParameterizedTypeName) type).typeArguments) {
+        if (targ instanceof ParameterizedTypeName
+            || targ instanceof TypeVariableName) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return true;
   }
 
   public static boolean references(TypeName type, TypeVariableName test) {
     if (!maybeTypevars(type)) {
       return false;
+    }
+    if (type instanceof TypeVariableName
+        && ((TypeVariableName) type).bounds.isEmpty()) {
+      return type.equals(test);
     }
     TypeWalk walk = new TypeWalk(type);
     while (walk.hasNext()) {
