@@ -191,3 +191,6 @@
 
 * preserve ordering of typevars (if any)
 
+### 2016-12-14 zerobuilder 1.605 released
+
+* bugfix generic instance
