@@ -11,47 +11,44 @@ import static java.util.Collections.emptyList;
 public final class DtoProjectionInfo {
 
   public interface ProjectionInfo {
-    <R, P> R accept(ProjectionInfoCases<R, P> cases, P p);
+    <R, P1, P2> R accept(ProjectionInfoCases<R, P1, P2> cases, P1 p1, P2 p2);
   }
 
-  public interface ProjectionInfoCases<R, P> {
-    R projectionMethod(ProjectionMethod projection, P p);
-    R fieldAccess(FieldAccess projection, P p);
-  }
-
-  private static <R, P> BiFunction<ProjectionInfo, P, R> asFunction(ProjectionInfoCases<R, P> cases) {
-    return (projectionInfo, p) -> projectionInfo.accept(cases, p);
+  public interface ProjectionInfoCases<R, P1, P2> {
+    R projectionMethod(ProjectionMethod projection, P1 p1, P2 p2);
+    R fieldAccess(FieldAccess projection, P1 p1, P2 p2);
   }
 
   private static <R> Function<ProjectionInfo, R> projectionInfoCases(
       Function<ProjectionMethod, R> projectionMethod,
       Function<FieldAccess, R> fieldAccess) {
-    BiFunction<ProjectionInfo, Void, R> function = asFunction(new ProjectionInfoCases<R, Void>() {
+    ProjectionInfoCases<R, Void, Void> cases = new ProjectionInfoCases<R, Void, Void>() {
       @Override
-      public R projectionMethod(ProjectionMethod projection, Void _null) {
+      public R projectionMethod(ProjectionMethod projection, Void _null, Void _null2) {
         return projectionMethod.apply(projection);
       }
       @Override
-      public R fieldAccess(FieldAccess projection, Void _null) {
+      public R fieldAccess(FieldAccess projection, Void _null, Void _null2) {
         return fieldAccess.apply(projection);
       }
-    });
-    return projectionInfo -> function.apply(projectionInfo, null);
+    };
+    return projectionInfo -> projectionInfo.accept(cases, null, null);
   }
 
   public static <R, P> BiFunction<ProjectionInfo, P, R> projectionInfoCases(
       BiFunction<ProjectionMethod, P, R> projectionMethod,
       BiFunction<FieldAccess, P, R> fieldAccess) {
-    return asFunction(new ProjectionInfoCases<R, P>() {
+    ProjectionInfoCases<R, P, Void> cases = new ProjectionInfoCases<R, P, Void>() {
       @Override
-      public R projectionMethod(ProjectionMethod projection, P p) {
+      public R projectionMethod(ProjectionMethod projection, P p, Void _null2) {
         return projectionMethod.apply(projection, p);
       }
       @Override
-      public R fieldAccess(FieldAccess projection, P p) {
+      public R fieldAccess(FieldAccess projection, P p, Void _null2) {
         return fieldAccess.apply(projection, p);
       }
-    });
+    };
+    return (projectionInfo, p) -> projectionInfo.accept(cases, p, null);
   }
 
   public static final class ProjectionMethod implements ProjectionInfo {
@@ -72,8 +69,8 @@ public final class DtoProjectionInfo {
     }
 
     @Override
-    public <R, P> R accept(ProjectionInfoCases<R, P> cases, P p) {
-      return cases.projectionMethod(this, p);
+    public <R, P1, P2> R accept(ProjectionInfoCases<R, P1, P2> cases, P1 p1, P2 p2) {
+      return cases.projectionMethod(this, p1, p2);
     }
   }
 
@@ -89,8 +86,8 @@ public final class DtoProjectionInfo {
     }
 
     @Override
-    public <R, P> R accept(ProjectionInfoCases<R, P> cases, P p) {
-      return cases.fieldAccess(this, p);
+    public <R, P1, P2> R accept(ProjectionInfoCases<R, P1, P2> cases, P1 p1, P2 p2) {
+      return cases.fieldAccess(this, p1, p2);
     }
   }
 

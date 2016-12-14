@@ -7,7 +7,7 @@ import java.util.Map;
 public class GenericInstanceTest {
 
   @Test(expected = NullPointerException.class)
-  public void entry() throws Exception {
+  public void nullBuilder() throws Exception {
     GenericInstance<String> instance = new GenericInstance<>();
     Map.Entry<String, String> d =
         GenericInstanceBuilders.entryBuilder(instance)

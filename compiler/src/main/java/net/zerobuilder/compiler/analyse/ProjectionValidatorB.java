@@ -55,7 +55,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 final class ProjectionValidatorB {
 
   private static final Comparator<TmpAccessorPair> ALPHABETIC_SORT
-      = (a, b) -> a.parameter.name().compareTo(b.parameter.name());
+      = Comparator.comparing(a -> a.parameter.name());
 
   static final Predicate<String> IS_GETTER_NAME = Pattern.compile("^get[A-Z].*$|^is[A-Z].*$").asPredicate()
       .and(name -> !"getClass".equals(name));

@@ -1,5 +1,6 @@
 package net.zerobuilder.modules.updater;
 
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -25,7 +26,6 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.updater.Generator.copyBlock;
 import static net.zerobuilder.modules.updater.Generator.initVarUpdater;
-import static net.zerobuilder.modules.updater.Generator.nullCheckingBlock;
 import static net.zerobuilder.modules.updater.Generator.thrownByProjections;
 import static net.zerobuilder.modules.updater.Generator.toBuilderParameter;
 import static net.zerobuilder.modules.updater.Generator.varUpdater;
@@ -43,7 +43,10 @@ final class InstanceWorld {
             details.instanceTypeParameters,
             details.returnTypeParameters)))
         .returns(factoryType)
-        .addCode(nullCheckingBlock(description))
+        .addCode(CodeBlock.builder()
+            .beginControlFlow("if ($N == null)", parameter)
+            .addStatement("throw new $T($S)", NullPointerException.class, parameter.name)
+            .endControlFlow().build())
         .addStatement("return new $T($N)", factoryType, parameter)
         .addModifiers(details.access(STATIC))
         .build();

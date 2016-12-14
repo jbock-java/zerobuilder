@@ -8,7 +8,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
-import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
@@ -79,10 +78,9 @@ final class Generator {
   }
 
   static CodeBlock nullCheckingBlock(ProjectedRegularGoalDescription description) {
-    ProjectionInfoCases<CodeBlock, ProjectedParameter> nullChecks = nullChecks(description);
     CodeBlock.Builder builder = CodeBlock.builder();
-    for (ProjectedParameter step : description.parameters) {
-      builder.add(step.projectionInfo.accept(nullChecks, step));
+    for (ProjectedParameter parameter : description.parameters) {
+      builder.add(parameter.projectionInfo.accept(Generator.nullChecks, description, parameter));
     }
     return builder.build();
   }
@@ -115,34 +113,38 @@ final class Generator {
     };
   }
 
-  private static ProjectionInfoCases<CodeBlock, ProjectedParameter> nullChecks(ProjectedRegularGoalDescription description) {
-    return new ProjectionInfoCases<CodeBlock, ProjectedParameter>() {
-      @Override
-      public CodeBlock projectionMethod(ProjectionMethod projection, ProjectedParameter step) {
-        if (step.nullPolicy == ALLOW) {
-          return emptyCodeBlock;
+  private static final ProjectionInfoCases<CodeBlock, ProjectedRegularGoalDescription, ProjectedParameter> nullChecks =
+      new ProjectionInfoCases<CodeBlock, ProjectedRegularGoalDescription, ProjectedParameter>() {
+        @Override
+        public CodeBlock projectionMethod(ProjectionMethod projection,
+                                          ProjectedRegularGoalDescription description,
+                                          ProjectedParameter step) {
+          if (step.nullPolicy == ALLOW) {
+            return emptyCodeBlock;
+          }
+          ParameterSpec parameter = toBuilderParameter(description);
+          String name = step.name;
+          return CodeBlock.builder()
+              .beginControlFlow("if ($N.$N() == null)", parameter, projection.methodName)
+              .addStatement("throw new $T($S)", NullPointerException.class, name)
+              .endControlFlow().build();
         }
-        ParameterSpec parameter = toBuilderParameter(description);
-        String name = step.name;
-        return CodeBlock.builder()
-            .beginControlFlow("if ($N.$N() == null)", parameter, projection.methodName)
-            .addStatement("throw new $T($S)", NullPointerException.class, name)
-            .endControlFlow().build();
-      }
-      @Override
-      public CodeBlock fieldAccess(FieldAccess projection, ProjectedParameter step) {
-        if (step.nullPolicy == ALLOW) {
-          return emptyCodeBlock;
+        @Override
+        public CodeBlock fieldAccess(FieldAccess projection,
+                                     ProjectedRegularGoalDescription description,
+                                     ProjectedParameter step) {
+          if (step.nullPolicy == ALLOW) {
+            return emptyCodeBlock;
+          }
+          ParameterSpec parameter = toBuilderParameter(description);
+          String name = step.name;
+          return CodeBlock.builder()
+              .beginControlFlow("if ($N.$N == null)", parameter, name)
+              .addStatement("throw new $T($S)", NullPointerException.class, name)
+              .endControlFlow().build();
         }
-        ParameterSpec parameter = toBuilderParameter(description);
-        String name = step.name;
-        return CodeBlock.builder()
-            .beginControlFlow("if ($N.$N == null)", parameter, name)
-            .addStatement("throw new $T($S)", NullPointerException.class, name)
-            .endControlFlow().build();
-      }
-    };
-  }
+      };
+
 
   static ParameterSpec toBuilderParameter(ProjectedRegularGoalDescription description) {
     AbstractRegularDetails details = description.details;

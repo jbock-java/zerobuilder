@@ -1,5 +1,6 @@
 package net.zerobuilder.examples.beans;
 
+import net.zerobuilder.BeanRejectNull;
 import net.zerobuilder.BeanStep;
 
 abstract class Employee {
@@ -25,6 +26,7 @@ abstract class Employee {
   }
 
   @BeanStep(0)
+  @BeanRejectNull
   String getName() {
     return name;
   }
