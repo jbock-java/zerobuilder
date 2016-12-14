@@ -194,3 +194,7 @@
 ### 2016-12-14 zerobuilder 1.605 released
 
 * bugfix generic instance
+
+### 2016-12-14 zerobuilder 1.606 released
+
+* bugfixes related to null checking
