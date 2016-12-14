@@ -4,12 +4,13 @@ import net.zerobuilder.examples.generics.Gen1.Bar;
 import org.junit.Test;
 
 import static net.zerobuilder.examples.generics.Gen1Builders.barBuilder;
+import static net.zerobuilder.examples.generics.Gen1Builders.barUpdaterFactory;
 
 public class Gen1Test {
 
   @Test(expected = NullPointerException.class)
   public void nullBuilder() throws Exception {
-    Bar<String, String, Integer, Integer> bar = barBuilder(new Gen1<>("1", "2"))
+    barBuilder(new Gen1<>("1", "2"))
         .bc0(3)
         .bc1(null)
         .bd0(5)
@@ -26,7 +27,7 @@ public class Gen1Test {
         .bd0(5)
         .bd1(6)
         .bc2(7);
-    Gen1Builders.barUpdaterFactory(factory)
+    barUpdaterFactory(factory)
         .updater(bar)
         .bd1(null)
         .done();

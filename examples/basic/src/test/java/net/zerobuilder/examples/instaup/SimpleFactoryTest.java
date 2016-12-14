@@ -15,9 +15,9 @@ public class SimpleFactoryTest {
 
   @Test
   public void simple() throws Exception {
-    Simple simple = factory.simple("b");
+    SimpleFactory.Simple simple = factory.simple("b");
     SimpleFactoryBuilders.SimpleUpdater updater = updaterFactory.updater(simple);
-    Simple updatedSimple = updater
+    SimpleFactory.Simple updatedSimple = updater
         .appendix("c")
         .done();
     assertThat(simple.concat(), is("ab"));

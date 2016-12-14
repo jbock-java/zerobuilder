@@ -14,8 +14,8 @@ public class ApexFactoryTest {
   @Test
   public void apex() throws IOException, SQLException {
     ApexFactory<String> factory = new ApexFactory("a");
-    Apex<String> apex = factory.apex("b");
-    Apex<String> updatedApex = apexUpdaterFactory(factory)
+    ApexFactory.Apex<String> apex = factory.apex("b");
+    ApexFactory.Apex<String> updatedApex = apexUpdaterFactory(factory)
         .updater(apex)
         .appendix("c")
         .done();

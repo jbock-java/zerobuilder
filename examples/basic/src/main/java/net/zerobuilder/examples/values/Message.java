@@ -2,6 +2,7 @@ package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builder;
 import net.zerobuilder.Recycle;
+import net.zerobuilder.RejectNull;
 import net.zerobuilder.Updater;
 
 // direct field access
@@ -16,7 +17,10 @@ final class Message {
   @Builder
   @Updater
   @Recycle
-  Message(String sender, String body, String recipient, String subject) {
+  Message(@RejectNull String sender,
+          @RejectNull String body,
+          @RejectNull String recipient,
+          @RejectNull String subject) {
     this.sender = sender;
     this.body = body;
     this.recipient = recipient;
