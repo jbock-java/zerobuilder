@@ -74,7 +74,7 @@ public class GenericsGeneratorInstanceTest {
         asList(keyParameter, valueParameter), goalContext);
 
     GenericsGenerator generator = GenericsGenerator.create(description);
-    assertThat(generator.methodParams, is(asList(singletonList(K), emptyList())));
-    assertThat(generator.implTypeParams, is(asList(asList(S, V), asList(S, V, K))));
+    assertThat(generator.methodParams, is(asList(singletonList(K), asList(S, V))));
+    assertThat(generator.implTypeParams, is(asList(emptyList(), singletonList(K))));
   }
 }

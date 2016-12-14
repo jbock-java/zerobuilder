@@ -5,6 +5,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
@@ -25,8 +26,10 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
+import static net.zerobuilder.compiler.generate.ZeroUtil.cons;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
@@ -37,7 +40,6 @@ import static net.zerobuilder.modules.generics.GenericsContract.contractType;
 import static net.zerobuilder.modules.generics.GenericsContract.implType;
 import static net.zerobuilder.modules.generics.GenericsContract.stepInterfaces;
 import static net.zerobuilder.modules.generics.GenericsContract.stepTypes;
-import static net.zerobuilder.modules.generics.VarLife.referencingParameters;
 
 final class GenericsGenerator {
 
@@ -149,12 +151,11 @@ final class GenericsGenerator {
 
   static GenericsGenerator create(SimpleRegularGoalDescription description) {
     AbstractRegularDetails details = description.details;
-    List<TypeVariableName> dependents = GenericsGenerator.dependents.apply(description.details);
     List<TypeVariableName> typeParameters = GenericsGenerator.allTypeParameters.apply(details);
     VarLife lifes = VarLife.create(
         typeParameters,
-        stepTypes(description),
-        dependents);
+        GenericsGenerator.dependents.apply(description.details, description),
+        isInstance.apply(details));
     List<List<TypeVariableName>> typeParams = lifes.typeParams();
     List<List<TypeVariableName>> implTypeParams = lifes.implTypeParams();
     List<List<TypeVariableName>> methodParams = lifes.methodParams();
@@ -174,14 +175,12 @@ final class GenericsGenerator {
           instanceMethod -> concat(
               instanceMethod.instanceTypeParameters, instanceMethod.typeParameters));
 
-  private static Function<AbstractRegularDetails, List<TypeVariableName>> dependents =
+  private static BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, List<TypeName>> dependents =
       regularDetailsCases(
-          constructor -> emptyList(),
-          staticMethod -> emptyList(),
-          instanceMethod -> concat(
-              instanceMethod.instanceTypeParameters,
-              referencingParameters(
-                  instanceMethod.instanceTypeParameters,
-                  instanceMethod.typeParameters)));
+          (constructor, description) -> stepTypes(description),
+          (staticMethod, description) -> stepTypes(description),
+          (instanceMethod, description) -> cons(
+              description.context.type,
+              stepTypes(description)));
 
 }
