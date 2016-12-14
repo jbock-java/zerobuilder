@@ -154,7 +154,7 @@ final class GenericsGenerator {
     List<TypeVariableName> typeParameters = GenericsGenerator.allTypeParameters.apply(details);
     VarLife lifes = VarLife.create(
         typeParameters,
-        GenericsGenerator.dependents.apply(description.details, description),
+        GenericsGenerator.extendedStepTypes.apply(description.details, description),
         isInstance.apply(details));
     List<List<TypeVariableName>> typeParams = lifes.typeParams();
     List<List<TypeVariableName>> implTypeParams = lifes.implTypeParams();
@@ -175,7 +175,7 @@ final class GenericsGenerator {
           instanceMethod -> concat(
               instanceMethod.instanceTypeParameters, instanceMethod.typeParameters));
 
-  private static BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, List<TypeName>> dependents =
+  private static final BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, List<TypeName>> extendedStepTypes =
       regularDetailsCases(
           (constructor, description) -> stepTypes(description),
           (staticMethod, description) -> stepTypes(description),
