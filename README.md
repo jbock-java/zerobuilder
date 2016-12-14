@@ -12,8 +12,11 @@ It has two different use cases:
 
 ### Non goals
 
-* Generating data types, such as beans. This can be achieved with other tools (see [examples](examples)).
-  Thanks for [mentioning us](https://github.com/jodastephen/compare-beangen) though!
+* Zerobuilder does not generate data types, i.e. beans or value types. 
+  Instead, zerobuilder can be combined with tools that do this, such as 
+  [auto-value](https://github.com/google/auto/tree/master/value) 
+  (more about this [here](values.md)) 
+  and [derive4j](https://github.com/derive4j/derive4j).
 
 ### Quick start
 
