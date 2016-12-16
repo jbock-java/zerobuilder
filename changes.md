@@ -202,3 +202,8 @@
 ### 2016-12-16 zerobuilder 1.607 released
 
 * updater: eager null checking in projections
+
+### 2016-12-16 zerobuilder 1.608 released
+
+* updater: null checking only in done method
+* rename bean annotations (breaking)
