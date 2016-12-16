@@ -10,7 +10,7 @@ It can be used in two different ways:
 * To create <em>instances of</em> mutable JavaBeans and update them with "immutable semantics", i.e. by making shallow copies.
   There's a separate [documentation for beans](beans.md).
 
-In addition, it can be configured to add runtime null checks to the generated builders.
+It can also be configured to add runtime null checks to the generated builders.
 
 ### Non goals
 
