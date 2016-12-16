@@ -32,4 +32,13 @@ public class Gen1Test {
         .bd1(null)
         .done();
   }
+
+  @Test(expected = NullPointerException.class)
+  public void sneakyNull() throws Exception {
+    Gen1<String, String> factory = new Gen1<>("1", "2");
+    Bar<String, String, Integer, Integer> bar = new Gen1.Bar<>("1", "2", null, 4, 5, 6, 7);
+    barUpdaterFactory(factory)
+        .updater(bar)
+        .done();
+  }
 }

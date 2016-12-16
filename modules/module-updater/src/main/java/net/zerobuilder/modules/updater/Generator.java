@@ -31,6 +31,7 @@ import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCas
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
+import static net.zerobuilder.compiler.generate.NullPolicy.REJECT;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -77,7 +78,7 @@ final class Generator {
         .collect(ZeroUtil.joinCodeBlocks);
   }
 
-  static CodeBlock nullCheckingBlock(ProjectedRegularGoalDescription description) {
+  private static CodeBlock nullCheckingBlock(ProjectedRegularGoalDescription description) {
     CodeBlock.Builder builder = CodeBlock.builder();
     for (ProjectedParameter parameter : description.parameters) {
       builder.add(parameter.projectionInfo.accept(Generator.nullChecks, description, parameter));
@@ -88,29 +89,43 @@ final class Generator {
   private static Function<ProjectedParameter, CodeBlock> copyField(ProjectedRegularGoalDescription description) {
     BiFunction<ProjectionInfo, ProjectedParameter, CodeBlock> copy =
         projectionInfoCases(
-            copyFromMethod(description),
-            copyFromField(description));
+            (projection, step) -> copyFromMethod(description, projection, step),
+            (projection, step) -> copyFromField(description, projection, step));
     return step -> copy.apply(step.projectionInfo, step);
   }
 
-  private static BiFunction<FieldAccess, ProjectedParameter, CodeBlock> copyFromField(ProjectedRegularGoalDescription description) {
-    return (FieldAccess projection, ProjectedParameter step) -> {
-      String field = projection.fieldName;
-      ParameterSpec parameter = toBuilderParameter(description);
-      ParameterSpec updater = varUpdater(description);
-      return statement("$N.$N = $N.$N",
-          updater, field, parameter, field);
-    };
+  private static CodeBlock copyFromField(ProjectedRegularGoalDescription description,
+                                         FieldAccess projection, ProjectedParameter step) {
+    String field = projection.fieldName;
+    ParameterSpec parameter = toBuilderParameter(description);
+    ParameterSpec updater = varUpdater(description);
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (step.nullPolicy == REJECT) {
+      builder.add(CodeBlock.builder()
+          .beginControlFlow("if ($N.$N == null)", parameter, field)
+          .addStatement("throw new $T($S)",
+              NullPointerException.class, "projection: " + field)
+          .endControlFlow().build());
+    }
+    return builder.addStatement("$N.$N = $N.$N",
+        updater, field, parameter, field).build();
   }
 
-  private static BiFunction<ProjectionMethod, ProjectedParameter, CodeBlock> copyFromMethod(ProjectedRegularGoalDescription description) {
-    return (ProjectionMethod projection, ProjectedParameter step) -> {
-      ParameterSpec parameter = toBuilderParameter(description);
-      ParameterSpec updater = varUpdater(description);
-      String field = step.name;
-      return statement("$N.$N = $N.$N()",
-          updater, field, parameter, projection.methodName);
-    };
+  private static CodeBlock copyFromMethod(ProjectedRegularGoalDescription description,
+                                          ProjectionMethod projection, ProjectedParameter step) {
+    ParameterSpec parameter = toBuilderParameter(description);
+    ParameterSpec updater = varUpdater(description);
+    String field = step.name;
+    CodeBlock.Builder builder = CodeBlock.builder();
+    if (step.nullPolicy == REJECT) {
+      builder.add(CodeBlock.builder()
+          .beginControlFlow("if ($N.$N() == null)", parameter, projection.methodName)
+          .addStatement("throw new $T($S)",
+              NullPointerException.class, "projection: " + projection.methodName)
+          .endControlFlow().build());
+    }
+    return builder.addStatement("$N.$N = $N.$N()",
+        updater, field, parameter, projection.methodName).build();
   }
 
   private static final ProjectionInfoCases<CodeBlock, ProjectedRegularGoalDescription, ProjectedParameter> nullChecks =
