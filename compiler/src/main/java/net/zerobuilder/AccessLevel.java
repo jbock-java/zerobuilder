@@ -8,7 +8,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Access level of generated static method
+ * Access level of generated static method.
  *
  * @see Builder
  * @see Updater
@@ -16,5 +16,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @Retention(SOURCE)
 @Target({METHOD, CONSTRUCTOR})
 public @interface AccessLevel {
-  Access value() default Access.PUBLIC;
+
+  Level value() default Level.PUBLIC;
 }

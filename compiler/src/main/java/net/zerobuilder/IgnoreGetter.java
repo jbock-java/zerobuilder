@@ -7,9 +7,11 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Null policy for the getter
+ * <p>
+ * Marks a &quot;getter&quot; method as ignored.
+ * </p>
  */
 @Retention(SOURCE)
-@Target(METHOD)
-public @interface BeanRejectNull {
+@Target({METHOD})
+public @interface IgnoreGetter {
 }

@@ -27,8 +27,8 @@ public class RecyclingStaticTest {
         "  @Updater",
         "  @GoalName(\"cuboid\")",
         "  @Recycle",
-        "  @AccessLevel(Access.PACKAGE)",
-        "  static Cube create(double height, List<String> length, @RejectNull String width) {",
+        "  @AccessLevel(Level.PACKAGE)",
+        "  static Cube create(double height, List<String> length, @NotNullStep String width) {",
         "    return null;",
         "  }",
         "}");

@@ -26,7 +26,7 @@ public class RecyclingBeanTest {
         "  private List<String> notes;",
         "  public String getName() { return name; }",
         "  public void setName(String name) { this.name = name; }",
-        "  @BeanRejectNull public List<String> getNotes() {",
+        "  @NotNullGetter public List<String> getNotes() {",
         "    if (notes == null) notes = new ArrayList<>();",
         "    return notes;",
         "  }",

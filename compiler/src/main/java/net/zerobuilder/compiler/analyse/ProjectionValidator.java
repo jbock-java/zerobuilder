@@ -1,9 +1,9 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.BeanRejectNull;
-import net.zerobuilder.BeanStep;
-import net.zerobuilder.RejectNull;
+import net.zerobuilder.NotNullGetter;
+import net.zerobuilder.StepGetter;
+import net.zerobuilder.NotNullStep;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
@@ -70,14 +70,14 @@ final class ProjectionValidator {
     // step position
     final int annotation;
 
-    static NullPolicy nullPolicy(TypeMirror type, RejectNull rejectNullAnnotation, NullPolicy defaultPolicy) {
+    static NullPolicy nullPolicy(TypeMirror type, NotNullStep notNullStepAnnotation, NullPolicy defaultPolicy) {
       if (TypeName.get(type).isPrimitive()) {
         return NullPolicy.ALLOW;
       }
-      return rejectNullAnnotation != null ? NullPolicy.REJECT : defaultPolicy;
+      return notNullStepAnnotation != null ? NullPolicy.REJECT : defaultPolicy;
     }
 
-    static NullPolicy nullPolicy(TypeMirror type, BeanRejectNull rejectNullAnnotation, NullPolicy defaultPolicy) {
+    static NullPolicy nullPolicy(TypeMirror type, NotNullGetter rejectNullAnnotation, NullPolicy defaultPolicy) {
       if (TypeName.get(type).isPrimitive()) {
         return NullPolicy.ALLOW;
       }
@@ -109,7 +109,7 @@ final class ProjectionValidator {
                                      GoalModifiers goalAnnotation) {
       int value = parameter.getAnnotation(Step.class) == null ?
           -1 : parameter.getAnnotation(Step.class).value();
-      RejectNull stepPolicy = parameter.getAnnotation(RejectNull.class);
+      NotNullStep stepPolicy = parameter.getAnnotation(NotNullStep.class);
       NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepPolicy, goalAnnotation.nullPolicy);
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
@@ -133,7 +133,7 @@ final class ProjectionValidator {
                                         GoalModifiers goalAnnotation) {
       int value = parameter.getAnnotation(Step.class) == null ?
           -1 : parameter.getAnnotation(Step.class).value();
-      RejectNull stepPolicy = parameter.getAnnotation(RejectNull.class);
+      NotNullStep stepPolicy = parameter.getAnnotation(NotNullStep.class);
       NullPolicy nullPolicy = TmpValidParameter.nullPolicy(parameter.asType(), stepPolicy, goalAnnotation.nullPolicy);
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
@@ -153,19 +153,19 @@ final class ProjectionValidator {
     static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = parameter -> parameter.parameter;
 
     static TmpAccessorPair accessorPair(ExecutableElement getter, ExecutableElement setter) {
-      int value = getter.getAnnotation(BeanStep.class) == null ?
-          -1 : getter.getAnnotation(BeanStep.class).value();
-      BeanRejectNull beanRejectNull = getter.getAnnotation(BeanRejectNull.class);
+      int value = getter.getAnnotation(StepGetter.class) == null ?
+          -1 : getter.getAnnotation(StepGetter.class).value();
+      NotNullGetter notNullGetter = getter.getAnnotation(NotNullGetter.class);
       TypeName type = TypeName.get(getter.getReturnType());
-      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(getter.getReturnType(), beanRejectNull, NullPolicy.ALLOW);
+      NullPolicy nullPolicy = TmpValidParameter.nullPolicy(getter.getReturnType(), notNullGetter, NullPolicy.ALLOW);
       AbstractBeanParameter accessorPair = DtoBeanParameter.accessorPair(type, getter.getSimpleName().toString(), nullPolicy,
           thrownTypes(getter), thrownTypes(setter));
       return new TmpAccessorPair(getter, value, accessorPair);
     }
 
     static TmpAccessorPair createLoneGetter(ExecutableElement getter, AbstractBeanParameter loneGetter) {
-      int value = getter.getAnnotation(BeanStep.class) == null ?
-          -1 : getter.getAnnotation(BeanStep.class).value();
+      int value = getter.getAnnotation(StepGetter.class) == null ?
+          -1 : getter.getAnnotation(StepGetter.class).value();
       return new TmpAccessorPair(getter, value, loneGetter);
     }
   }

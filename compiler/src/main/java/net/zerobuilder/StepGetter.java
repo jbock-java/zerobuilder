@@ -3,13 +3,14 @@ package net.zerobuilder;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Request null checking
+ * Determines step position of the associated builder step.
  */
 @Retention(SOURCE)
-@Target(PARAMETER)
-public @interface RejectNull {
+@Target(METHOD)
+public @interface StepGetter {
+  int value();
 }

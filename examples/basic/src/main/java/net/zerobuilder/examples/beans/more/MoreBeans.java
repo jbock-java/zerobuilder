@@ -1,7 +1,7 @@
 package net.zerobuilder.examples.beans.more;
 
 import net.zerobuilder.BeanBuilder;
-import net.zerobuilder.BeanIgnore;
+import net.zerobuilder.IgnoreGetter;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -94,7 +94,7 @@ public class MoreBeans {
   @BeanBuilder
   public static class Ignorify {
     private List<Iterable<String>> things;
-    @BeanIgnore
+    @IgnoreGetter
     public String getSocks() throws IOException {
       return "socks";
     }

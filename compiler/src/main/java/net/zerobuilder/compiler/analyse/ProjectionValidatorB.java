@@ -2,9 +2,8 @@ package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.BeanRejectNull;
-import net.zerobuilder.BeanIgnore;
-import net.zerobuilder.Step;
+import net.zerobuilder.NotNullGetter;
+import net.zerobuilder.IgnoreGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter;
@@ -35,11 +34,8 @@ import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_ABSTRACT_CLASS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIND_SETTER;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_IGNORE_AND_STEP;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_DEFAULT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_PRIVATE_CLASS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.IGNORE_ON_SETTER;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_ON_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TYPE_PARAMS_BEAN;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.accessorPair;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.toValidParameter;
@@ -71,7 +67,6 @@ final class ProjectionValidatorB {
           && method.getReturnType().getKind() == TypeKind.VOID
           && IS_SETTER_NAME.test(method.getSimpleName().toString());
 
-
   private static final Predicate<ExecutableElement> LOOKS_LIKE_GETTER = method ->
       method.getKind() == ElementKind.METHOD
           && method.getParameters().isEmpty()
@@ -79,7 +74,8 @@ final class ProjectionValidatorB {
           && !method.getModifiers().contains(STATIC)
           && !method.getModifiers().contains(ABSTRACT)
           && !method.getReturnType().getKind().equals(TypeKind.VOID)
-          && IS_GETTER_NAME.test(method.getSimpleName().toString());
+          && IS_GETTER_NAME.test(method.getSimpleName().toString())
+          && method.getAnnotation(IgnoreGetter.class) == null;
 
   static final Function<BeanGoalElement, BeanGoalDescription> validateBean
       = goal -> {
@@ -99,48 +95,27 @@ final class ProjectionValidatorB {
         : accessorPair(getter, setter);
   }
 
-  private static final Predicate<ExecutableElement> IS_NOT_IGNORED = getter -> {
-    BeanIgnore ignoreAnnotation = getter.getAnnotation(BeanIgnore.class);
-    if (ignoreAnnotation != null && getter.getAnnotation(Step.class) != null) {
-      throw new ValidationException(BEAN_IGNORE_AND_STEP, getter);
-    }
-    return ignoreAnnotation == null;
-  };
-
-  private static final Predicate<ExecutableElement> DOES_NOT_HAVE_STEP_OR_IGNORE_ANNOTATIONS = setter -> {
-    if (setter.getAnnotation(Step.class) != null) {
-      throw new ValidationException(STEP_ON_SETTER, setter);
-    }
-    if (setter.getAnnotation(BeanIgnore.class) != null) {
-      throw new ValidationException(IGNORE_ON_SETTER, setter);
-    }
-    return true;
-  };
-
   private static TmpAccessorPair loneGetter(ExecutableElement getter) {
     TypeMirror type = getter.getReturnType();
     String name = getter.getSimpleName().toString();
     if (!isImplementationOf(type, COLLECTION)) {
       throw new ValidationException(BEAN_COULD_NOT_FIND_SETTER, getter);
     }
-    BeanRejectNull beanRejectNull = getter.getAnnotation(BeanRejectNull.class);
+    NotNullGetter notNullGetter = getter.getAnnotation(NotNullGetter.class);
     TypeName typeName = TypeName.get(type);
-    NullPolicy nullPolicy = TmpValidParameter.nullPolicy(type, beanRejectNull, NullPolicy.ALLOW);
+    NullPolicy nullPolicy = TmpValidParameter.nullPolicy(type, notNullGetter, NullPolicy.ALLOW);
     AbstractBeanParameter loneGetter = DtoBeanParameter.loneGetter(typeName, name, nullPolicy, thrownTypes(getter));
     return TmpAccessorPair.createLoneGetter(getter, loneGetter);
   }
 
   private static Collection<ExecutableElement> getters(BeanGoalElement goal) {
-    Predicate<ExecutableElement> filter = LOOKS_LIKE_GETTER
-        .and(IS_NOT_IGNORED);
-    return getLocalAndInheritedMethods(goal.beanType, filter).values();
+    return getLocalAndInheritedMethods(goal.beanType, LOOKS_LIKE_GETTER).values();
   }
 
   private static Map<String, ExecutableElement> setters(TypeElement beanType,
                                                         Collection<ExecutableElement> getters) {
     Predicate<ExecutableElement> filter = LOOKS_LIKE_SETTER
-        .and(setterSieve(getters))
-        .and(DOES_NOT_HAVE_STEP_OR_IGNORE_ANNOTATIONS);
+        .and(setterSieve(getters));
     return getLocalAndInheritedMethods(beanType, filter);
   }
 

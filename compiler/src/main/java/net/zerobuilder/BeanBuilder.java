@@ -7,9 +7,10 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Request builder + updater
+ * Combination of {@link Builder} and {@link Updater}.
+ * This annotation goes on top of a bean class declaration.
  */
 @Retention(SOURCE)
-@Target({TYPE})
+@Target(TYPE)
 public @interface BeanBuilder {
 }

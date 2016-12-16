@@ -3,8 +3,9 @@ package net.zerobuilder.compiler.analyse;
 import net.zerobuilder.Access;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.GoalName;
+import net.zerobuilder.Level;
 import net.zerobuilder.Recycle;
-import net.zerobuilder.RejectNull;
+import net.zerobuilder.NotNullStep;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.NullPolicy;
 
@@ -28,11 +29,18 @@ final class GoalModifiers {
     this.goalName = goalName;
   }
 
+  private static Access getAccess(ExecutableElement element) {
+    AccessLevel accessLevel = element.getAnnotation(AccessLevel.class);
+    if (accessLevel != null &&
+        accessLevel.value() == Level.PACKAGE) {
+      return Access.PACKAGE;
+    }
+    return Access.PUBLIC;
+  }
+
   static GoalModifiers create(ExecutableElement element) {
-    Access access = element.getAnnotation(AccessLevel.class) == null ?
-        Access.PUBLIC :
-        element.getAnnotation(AccessLevel.class).value();
-    NullPolicy nullPolicy = element.getAnnotation(RejectNull.class) == null ?
+    Access access = getAccess(element);
+    NullPolicy nullPolicy = element.getAnnotation(NotNullStep.class) == null ?
         NullPolicy.ALLOW :
         NullPolicy.REJECT;
     DtoContext.ContextLifecycle lifecycle = element.getAnnotation(Recycle.class) == null ?
