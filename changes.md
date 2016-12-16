@@ -198,3 +198,7 @@
 ### 2016-12-14 zerobuilder 1.606 released
 
 * bugfixes related to null checking
+
+### 2016-12-16 zerobuilder 1.607 released
+
+* updater: eager null checking in projections
