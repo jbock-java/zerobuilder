@@ -1,14 +1,11 @@
 package net.zerobuilder.modules.updater;
 
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
-import net.zerobuilder.compiler.generate.NullPolicy;
-import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +17,6 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.modules.updater.RegularUpdater.implType;
@@ -61,19 +57,10 @@ final class Updater {
     return methodBuilder(name)
         .returns(implType(description))
         .addParameter(parameter)
-        .addCode(nullCheck(step))
         .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();
-  }
-
-  private static CodeBlock nullCheck(ProjectedParameter parameter) {
-    if (parameter.nullPolicy == NullPolicy.ALLOW || parameter.type.isPrimitive()) {
-      return emptyCodeBlock;
-    }
-    String name = parameter.name;
-    return ZeroUtil.nullCheck(name, name);
   }
 
   private Updater() {

@@ -35,6 +35,23 @@ public class Gen1Test {
         .done();
   }
 
+  @Test
+  public void notDone() {
+    Gen1<String, String> factory = new Gen1<>("1", "2");
+    Bar<String, String, Integer, Integer> bar = barBuilder(factory)
+        .bc0(3)
+        .bc1(4)
+        .bd0(5)
+        .bd1(6)
+        .bc2(7);
+    Bar<String, String, Integer, Integer> updated = barUpdaterFactory(factory)
+        .updater(bar)
+        .bd1(null)
+        .bd1(8)
+        .done();
+    assertThat(updated.bd1, is(8));
+  }
+
   @Test(expected = NullPointerException.class)
   public void sneakyNull() {
     Gen1<String, String> factory = new Gen1<>("1", "2");
