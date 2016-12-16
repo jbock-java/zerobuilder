@@ -10,7 +10,6 @@ import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfoCases;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
@@ -28,7 +27,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
-import static net.zerobuilder.compiler.generate.DtoProjectionInfo.projectionInfoCases;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.thrownTypes;
 import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.NullPolicy.REJECT;
@@ -74,7 +72,7 @@ final class Generator {
 
   static CodeBlock copyBlock(ProjectedRegularGoalDescription description) {
     return description.parameters.stream()
-        .map(copyField(description))
+        .map(parameter -> parameter.projectionInfo.accept(copyFromProjection, description, parameter))
         .collect(ZeroUtil.joinCodeBlocks);
   }
 
@@ -86,13 +84,17 @@ final class Generator {
     return builder.build();
   }
 
-  private static Function<ProjectedParameter, CodeBlock> copyField(ProjectedRegularGoalDescription description) {
-    BiFunction<ProjectionInfo, ProjectedParameter, CodeBlock> copy =
-        projectionInfoCases(
-            (projection, step) -> copyFromMethod(description, projection, step),
-            (projection, step) -> copyFromField(description, projection, step));
-    return step -> copy.apply(step.projectionInfo, step);
-  }
+  private static final ProjectionInfoCases<CodeBlock, ProjectedRegularGoalDescription, ProjectedParameter> copyFromProjection =
+      new ProjectionInfoCases<CodeBlock, ProjectedRegularGoalDescription, ProjectedParameter>() {
+        @Override
+        public CodeBlock projectionMethod(ProjectionMethod projection, ProjectedRegularGoalDescription description, ProjectedParameter step) {
+          return copyFromMethod(description, projection, step);
+        }
+        @Override
+        public CodeBlock fieldAccess(FieldAccess projection, ProjectedRegularGoalDescription description, ProjectedParameter step) {
+          return copyFromField(description, projection, step);
+        }
+      };
 
   private static CodeBlock copyFromField(ProjectedRegularGoalDescription description,
                                          FieldAccess projection, ProjectedParameter step) {
