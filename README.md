@@ -2,7 +2,7 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder)
 
-This project generates some variants of the builder pattern.
+This project aims to generate some useful variations of the builder pattern.
 It can be used in two different ways:
 
 * To create and update <em>instances of</em> immutable value objects.
@@ -10,9 +10,11 @@ It can be used in two different ways:
 * To create <em>instances of</em> mutable JavaBeans and update them with "immutable semantics", i.e. by making shallow copies.
   There's a separate [documentation for beans](beans.md).
 
+In addition, it can be configured to add runtime null checks to the generated builders.
+
 ### Non goals
 
-* Zerobuilder does not generate the class files of data objects, like beans or immutable objects.
+* Zerobuilder does not generate the <em>class files of</em> data objects, like beans or immutable objects.
   Instead, zerobuilder can be combined with tools that do this, such as 
   [auto-value](https://github.com/google/auto/tree/master/value) 
   (more about this [here](values.md)) 
