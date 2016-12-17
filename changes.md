@@ -207,3 +207,7 @@
 
 * updater: null checking only in done method
 * rename bean annotations (breaking)
+
+### 2016-12-17 zerobuilder 1.611 released
+
+* rename StepGetter -> GetterOrder (breaking)
