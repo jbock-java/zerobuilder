@@ -49,10 +49,10 @@ The `static businessAnalystBuilder()` method returns an interface called `Age`.
 This is the first step in a linear "chain" of interfaces that ends in an instance of `BusinessAnalyst`.
 
 By default, the builder steps are in alphabetic order.
-This can be overridden by adding a `@BeanStep` annotation to one of the getters:
+This can be overridden by adding a `@GetterOrder` annotation to one of the getters:
 
 ````java
-@BeanStep(0)
+@GetterOrder(0)
 public String getName() { 
   return name; 
 }
@@ -60,28 +60,36 @@ public String getName() {
 
 Now `name` is the first step.
 The remaining steps `age`, `executive` and `notes` are still in alphabetic order.
-In order to make `notes` the second step, add `@Step(1)` to the corresponding getter, and so on.
+In order to make `notes` the second step, add `@GetterOrder(1)` to the corresponding getter, and so on.
 
 ### Null checking
 
-Runtime null can be generated with a `@BeanRejectNull` annotation on getters.
+Runtime null checks can be generated with a `@NotNullGetter` annotation on getters.
 
 ````java
-@BeanRejectNull
+@NotNullGetter
 public String getName() {
   return name;
 }
 ````
 
+The getter is now guaranteed to never return null, under one condition: 
+This only applies if the bean was created or updated using zerobuilder,
+and its setters never directly invoked. 
+
+This condition is why a standard `@NotNull` annotation would be misleading.
+
 ### Ignoring a method
 
 Sometimes a bean may have a getter method without a corresponding setter.
-If  this getter doesn't return a collection type, it's an error.
+There's special logic if this getter returns a `java.util.List`, 
+and the `getClass` method inherited from `java.lang.Object` is also ignored. 
+Otherwise it's an error if the setter doesn't exist.
 
-The `@BeanIgnore` annotation can be used to get around this:
+The `@IgnoreGetter` annotation can be used to ignore the getter altogether:
 
 ````java
-@BeanIgnore
+@IgnoreGetter
 public String getFoo() { 
   return "foo";
 }

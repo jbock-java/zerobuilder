@@ -4,8 +4,8 @@ import net.zerobuilder.Access;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.GoalName;
 import net.zerobuilder.Level;
-import net.zerobuilder.Recycle;
 import net.zerobuilder.NotNullStep;
+import net.zerobuilder.Recycle;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.NullPolicy;
 

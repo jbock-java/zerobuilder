@@ -11,6 +11,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  */
 @Retention(SOURCE)
 @Target(METHOD)
-public @interface StepGetter {
+public @interface GetterOrder {
   int value();
 }

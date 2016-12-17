@@ -8,8 +8,10 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * <p>
- * Marks a &quot;getter&quot; method as ignored.
+ * Marks a getter method as ignored. Only applies to bean goals.
  * </p>
+ *
+ * @see BeanBuilder
  */
 @Retention(SOURCE)
 @Target({METHOD})

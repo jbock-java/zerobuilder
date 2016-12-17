@@ -7,7 +7,13 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Request null checking
+ * <p>
+ * Request null checking in the generated builders for this parameter.
+ * </p>
+ * <p>
+ * Please note that null checking will only happen if the annotated method or constructor
+ * is invoked via the generated builder or updater.
+ * </p>
  */
 @Retention(SOURCE)
 @Target(PARAMETER)
