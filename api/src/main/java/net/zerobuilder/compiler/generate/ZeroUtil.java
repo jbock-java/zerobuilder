@@ -47,12 +47,12 @@ public final class ZeroUtil {
   }
 
   private static final Set<String> reservedWords = new HashSet<>(Arrays.asList(
-      "abstract", "continue", "for", "new", "switch", "assert", "default", "if", "package",
-      "synchronized", "boolean", "do", "goto", "private", "this", "break", "double", "implements",
-      "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
-      "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char", "final",
-      "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
-      "float", "native", "super", "while"));
+      "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class",
+      "const", "continue", "default", "do", "double", "else", "enum", "extends", "final",
+      "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int",
+      "interface", "long", "native", "new", "package", "private", "protected", "public",
+      "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this",
+      "throw", "throws", "transient", "try", "void", "volatile", "while"));
 
   public static final CodeBlock emptyCodeBlock = CodeBlock.of("");
 
@@ -144,13 +144,6 @@ public final class ZeroUtil {
 
   public static <X, E> List<E> transform(Collection<? extends X> input, Function<X, E> function) {
     return input.stream().map(function).collect(toList());
-  }
-
-  public static <P> List<P> presentInstances(Optional<P> optional) {
-    if (optional.isPresent()) {
-      return singletonList(optional.get());
-    }
-    return emptyList();
   }
 
   public static <P> List<P> cons(P first, List<? extends P> list) {

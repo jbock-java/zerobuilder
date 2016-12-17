@@ -10,31 +10,25 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntFunction;
-import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static com.squareup.javapoet.TypeName.VOID;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.Optional.empty;
-import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
+import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.presentInstances;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -53,25 +47,21 @@ final class Builder {
     return description.details.type();
   }
 
-  private static final BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, Optional<FieldSpec>> maybeField =
-      regularDetailsCases(
-          (constructor, description) -> empty(),
-          (staticMethod, description) -> empty(),
-          (method, description) -> Optional.of(instanceField(description)));
-
   static final Function<SimpleRegularGoalDescription, List<FieldSpec>> fields
       = description -> {
     List<SimpleParameter> steps = description.parameters;
-    return Stream.of(
-        presentInstances(maybeField.apply(description.details, description)),
-        description.details.lifecycle == REUSE_INSTANCES ?
-            singletonList(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE)) :
-            Collections.<FieldSpec>emptyList(),
-        steps.stream()
-            .limit(steps.size() - 1)
-            .map(parameter -> fieldSpec(parameter.type, parameter.name, PRIVATE))
-            .collect(toList()))
-        .collect(flatList());
+    ArrayList<FieldSpec> builder = new ArrayList<>(steps.size() + 2);
+    if (isInstance.apply(description.details)) {
+      builder.add(instanceField(description));
+    }
+    if (description.details.lifecycle == REUSE_INSTANCES) {
+      builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
+    }
+    steps.stream()
+        .limit(steps.size() - 1)
+        .map(parameter -> fieldSpec(parameter.type, parameter.name, PRIVATE))
+        .forEach(builder::add);
+    return builder;
   };
 
   static IntFunction<MethodSpec> steps(SimpleRegularGoalDescription description) {

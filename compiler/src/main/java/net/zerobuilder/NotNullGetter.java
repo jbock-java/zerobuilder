@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * <p>
  * The annotated getter will never return null, under one condition:
  * This only applies if the bean was created or updated using the generated {@code xBuilder} and {@code xUpdater}
- * methods, and its setters never directly invoked.
+ * methods, and its setters never invoked directly.
  * </p>
  */
 @Retention(SOURCE)
