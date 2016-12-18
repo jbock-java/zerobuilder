@@ -19,7 +19,6 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeName.VOID;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -47,36 +46,43 @@ final class GenericsImpl {
                            List<List<TypeVariableName>> methodParams,
                            List<List<TypeVariableName>> typeParams) {
     List<TypeSpec> builder = new ArrayList<>(stepSpecs.size());
-    builder.addAll(nCopies(stepSpecs.size(), null));
     ImplFields implFields = new ImplFields(impl, description, stepSpecs, typeParams);
     for (int i = 0; i < stepSpecs.size(); i++) {
-      TypeSpec stepSpec = stepSpecs.get(i);
-      MethodSpec method = stepSpec.methodSpecs.get(0);
-      ParameterSpec parameter = method.parameters.get(0);
-      List<FieldSpec> fields = implFields.fields.apply(description.details, i);
-      TypeName superinterface = parameterizedTypeName(contract.nestedClass(stepSpec.name),
-          stepSpec.typeVariables);
-      builder.set(i, classBuilder(stepSpec.name + "Impl")
-          .addFields(fields)
-          .addSuperinterface(superinterface)
-          .addMethod(createConstructor(fields))
-          .addTypeVariables(typeParams.get(i))
-          .addMethod(methodBuilder(method.name)
-              .addAnnotation(Override.class)
-              .addParameter(parameter)
-              .addTypeVariables(methodParams.get(i))
-              .addModifiers(PUBLIC)
-              .returns(method.returnType)
-              .addCode(getCodeBlock(stepSpecs, i, parameter))
-              .addExceptions(i == description.parameters.size() - 1 ?
-                  description.thrownTypes :
-                  emptyList())
-              .build())
-          .addModifiers(PRIVATE, STATIC, FINAL)
-          .build());
-
+      builder.add(createStep(implFields, stepSpecs, methodParams, typeParams, i));
     }
     return builder;
+  }
+
+  TypeSpec createStep(ImplFields implFields,
+                      List<TypeSpec> stepSpecs,
+                      List<List<TypeVariableName>> methodParams,
+                      List<List<TypeVariableName>> typeParams, int i) {
+    TypeSpec stepSpec = stepSpecs.get(i);
+    MethodSpec method = stepSpec.methodSpecs.get(0);
+    ParameterSpec parameter = method.parameters.get(0);
+    List<FieldSpec> fields = implFields.fields.apply(description.details, i);
+    TypeName superinterface = parameterizedTypeName(contract.nestedClass(stepSpec.name),
+        stepSpec.typeVariables);
+    TypeSpec.Builder builder = classBuilder(stepSpec.name + "Impl");
+    if (!fields.isEmpty()) {
+      builder.addMethod(createConstructor(fields));
+    }
+    return builder.addFields(fields)
+        .addSuperinterface(superinterface)
+        .addTypeVariables(typeParams.get(i))
+        .addMethod(methodBuilder(method.name)
+            .addAnnotation(Override.class)
+            .addParameter(parameter)
+            .addTypeVariables(methodParams.get(i))
+            .addModifiers(PUBLIC)
+            .returns(method.returnType)
+            .addCode(getCodeBlock(stepSpecs, i, parameter))
+            .addExceptions(i == description.parameters.size() - 1 ?
+                description.thrownTypes :
+                emptyList())
+            .build())
+        .addModifiers(PRIVATE, STATIC, FINAL)
+        .build();
   }
 
   private CodeBlock getCodeBlock(List<TypeSpec> stepSpecs, int i, ParameterSpec parameter) {
@@ -152,7 +158,6 @@ final class GenericsImpl {
         .addParameters(parameters)
         .addCode(parameters.stream().map(parameter -> statement("this.$N = $N", parameter, parameter))
             .collect(joinCodeBlocks))
-        .addModifiers(PRIVATE)
         .build();
   }
 
