@@ -46,6 +46,7 @@ final class VarLife {
 
   List<List<TypeVariableName>> methodParams() {
     List<List<TypeVariableName>> builder = emptyLists(varLifes.size() - 1);
+    builder.get(0).addAll(varLifes.get(0));
     for (int i = 1; i < varLifes.size() - 1; i++) {
       for (TypeVariableName t : varLifes.get(i)) {
         if (!varLifes.get(i - 1).contains(t)) {

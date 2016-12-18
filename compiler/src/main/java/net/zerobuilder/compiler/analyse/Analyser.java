@@ -9,6 +9,7 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractRegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
+import net.zerobuilder.compiler.common.LessElements;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.BeanGoalInput;
@@ -32,6 +33,7 @@ import java.util.function.Function;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.Style.IMMUTABLE;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SUBGOALS;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalElementCases;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.regularGoalElementCases;
@@ -42,7 +44,6 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateBuil
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpdater;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
 import static net.zerobuilder.compiler.analyse.Utilities.peer;
-import static net.zerobuilder.compiler.common.LessElements.asExecutable;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
@@ -74,7 +75,7 @@ public final class Analyser {
   private static final Function<AbstractGoalElement, AbstractGoalInput> description =
       goalElementCases(
           regularGoalElementCases(
-              general -> hasTypevars(general.executableElement) ?
+              general -> hasTypevars(general.executableElement) || general.style == IMMUTABLE ?
                   new RegularSimpleGoalInput(GENERICS, validateBuilder.apply(general)) :
                   new RegularSimpleGoalInput(BUILDER, validateBuilder.apply(general)),
               projected -> new ProjectedGoalInput(UPDATER, validateUpdater.apply(projected))),
@@ -82,7 +83,7 @@ public final class Analyser {
               new BeanGoalInput(BEAN_BUILDER, validateBean.apply(bean)) :
               new BeanGoalInput(BEAN_UPDATER, validateBean.apply(bean)));
 
-  private static List<? extends AbstractGoalElement> goals(TypeElement tel, GoalContext context) throws ValidationException {
+  private static List<? extends AbstractGoalElement> goals(TypeElement tel, GoalContext context) {
     return tel.getAnnotation(net.zerobuilder.BeanBuilder.class) != null ?
         beanGoals(tel, context) :
         regularGoals(tel, context);
@@ -92,18 +93,15 @@ public final class Analyser {
     if (!element.getTypeParameters().isEmpty()) {
       return true;
     }
-    if (element.getModifiers().contains(STATIC)) {
-      return false;
-    }
-    return !asTypeElement(element.getEnclosingElement().asType())
-        .getTypeParameters().isEmpty();
+    return !element.getModifiers().contains(STATIC) &&
+        !asTypeElement(element.getEnclosingElement().asType()).getTypeParameters().isEmpty();
   }
 
   private static List<AbstractRegularGoalElement> regularGoals(TypeElement tel, GoalContext context) {
     return tel.getEnclosedElements().stream()
         .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
         .filter(el -> el.getKind() == CONSTRUCTOR || el.getKind() == METHOD)
-        .map(el -> asExecutable(el))
+        .map(LessElements::asExecutable)
         .map(DtoGoalElement.createRegular(context))
         .collect(flatList());
   }

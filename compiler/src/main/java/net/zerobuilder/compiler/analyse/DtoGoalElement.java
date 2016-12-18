@@ -3,9 +3,10 @@ package net.zerobuilder.compiler.analyse;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.Builder;
+import net.zerobuilder.Style;
 import net.zerobuilder.Updater;
+import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
@@ -104,7 +105,7 @@ final class DtoGoalElement {
 
   static final Function<AbstractGoalElement, String> goalName =
       goalElementCases(
-          regular -> regularGoalName.apply(regular),
+          regularGoalName,
           bean -> bean.details.name);
 
   static final Function<AbstractGoalElement, Element> element =
@@ -119,13 +120,15 @@ final class DtoGoalElement {
     final ExecutableElement executableElement;
     final GoalModifiers goalAnnotation;
     final DtoContext.GoalContext context;
+    final Style style;
 
     private RegularGoalElement(ExecutableElement element, AbstractRegularDetails details,
-                               DtoContext.GoalContext context) {
+                               DtoContext.GoalContext context, Style style) {
       this.goalAnnotation = GoalModifiers.create(element);
       this.details = details;
       this.executableElement = element;
       this.context = context;
+      this.style = style;
     }
 
     @Override
@@ -282,12 +285,13 @@ final class DtoGoalElement {
                                                               String methodName,
                                                               List<String> parameterNames,
                                                               DtoContext.GoalContext context) {
+    Builder builderAnnotation = element.getAnnotation(Builder.class);
     if (element.getKind() == CONSTRUCTOR) {
       ConstructorGoalDetails details = ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
           goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element),
           goalModifiers.lifecycle);
-      return new RegularGoalElement(element, details, context);
+      return new RegularGoalElement(element, details, context, builderAnnotation.style());
     }
     AbstractRegularDetails details =
         element.getModifiers().contains(STATIC) ?
@@ -300,7 +304,7 @@ final class DtoGoalElement {
                 instanceTypevars(element),
                 returnTypeInstanceTypevars(element),
                 goalModifiers.lifecycle);
-    return new RegularGoalElement(element, details, context);
+    return new RegularGoalElement(element, details, context, builderAnnotation.style());
   }
 
   private DtoGoalElement() {
