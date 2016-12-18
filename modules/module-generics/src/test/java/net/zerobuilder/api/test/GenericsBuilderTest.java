@@ -28,7 +28,7 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
-import static net.zerobuilder.Access.PRIVATE;
+import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;

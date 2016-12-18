@@ -8,7 +8,6 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.Access;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;

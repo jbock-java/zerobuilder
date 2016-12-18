@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
-import net.zerobuilder.Access;
+import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.GoalName;
 import net.zerobuilder.Level;

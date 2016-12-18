@@ -14,7 +14,7 @@ import org.junit.Test;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static net.zerobuilder.Access.PRIVATE;
+import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;

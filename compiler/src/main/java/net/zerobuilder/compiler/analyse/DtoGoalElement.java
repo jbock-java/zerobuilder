@@ -3,7 +3,7 @@ package net.zerobuilder.compiler.analyse;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.Access;
+import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.generate.DtoContext;

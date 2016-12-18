@@ -4,7 +4,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
-import net.zerobuilder.Access;
 import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 
 import javax.lang.model.element.Modifier;
