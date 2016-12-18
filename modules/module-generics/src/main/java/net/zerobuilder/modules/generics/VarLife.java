@@ -9,19 +9,22 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
+import static net.zerobuilder.compiler.generate.ZeroUtil.cons;
 import static net.zerobuilder.compiler.generate.ZeroUtil.references;
 
 final class VarLife {
 
-  final List<List<TypeVariableName>> varLifes;
-  final List<TypeVariableName> typeParameters;
+  private final List<TypeName> steps;
+  private final List<TypeVariableName> typeParameters;
   private final boolean instance;
+  private final List<List<TypeVariableName>> varLifes;
 
-  private VarLife(List<List<TypeVariableName>> varLifes,
-                  List<TypeVariableName> typeParameters, boolean instance) {
-    this.varLifes = varLifes;
+  private VarLife(List<TypeName> steps, List<TypeVariableName> typeParameters, boolean instance,
+                  List<List<TypeVariableName>> varLifes) {
+    this.steps = steps;
     this.typeParameters = typeParameters;
     this.instance = instance;
+    this.varLifes = varLifes;
   }
 
   private static final Supplier<Stream<List<TypeVariableName>>> emptyLists =
@@ -37,15 +40,13 @@ final class VarLife {
   List<List<TypeVariableName>> methodParams() {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
-    List<TypeVariableName> previous = emptyList();
-    for (int i = 0; i < varLifes.size() - 1; i++) {
-      List<TypeVariableName> typeNames = varLifes.get(i);
-      for (TypeVariableName typeName : typeNames) {
-        if (!previous.contains(typeName)) {
-          builder.get(i).add(typeName);
+    builder.get(0).addAll(varLifes.get(0));
+    for (int i = 1; i < varLifes.size() - 1; i++) {
+      for (TypeVariableName t : varLifes.get(i)) {
+        if (!varLifes.get(i - 1).contains(t)) {
+          builder.get(i).add(t);
         }
       }
-      previous = typeNames;
     }
     return chop(builder);
   }
@@ -53,43 +54,21 @@ final class VarLife {
   List<List<TypeVariableName>> typeParams() {
     List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
     emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
-    List<TypeVariableName> previous = emptyList();
-    List<TypeVariableName> later = new ArrayList<>();
-    for (int i = 0; i < varLifes.size() - 1; i++) {
-      for (TypeVariableName t : later) {
-        if (varLifes.get(i).contains(t)) {
+    for (int i = 1; i < varLifes.size() - 1; i++) {
+      for (TypeVariableName t : varLifes.get(i)) {
+        if (varLifes.get(i - 1).contains(t)) {
           builder.get(i).add(t);
         }
       }
-      later.clear();
-      for (TypeVariableName t : varLifes.get(i)) {
-        if (previous.contains(t)) {
-          if (!builder.get(i).contains(t)) {
-            builder.get(i).add(t);
-          }
-        } else {
-          later.add(t);
-        }
-      }
       builder.set(i, sort(builder.get(i)));
-      previous = varLifes.get(i);
     }
     return chop(builder);
   }
 
   List<List<TypeVariableName>> implTypeParams() {
-    List<List<TypeVariableName>> builder = new ArrayList<>(varLifes.size() - 1);
-    emptyLists.get().limit(varLifes.size() - 1).forEach(builder::add);
-    List<TypeVariableName> seen = new ArrayList<>();
-    for (int i = 0; i < varLifes.size() - 1; i++) {
-      builder.get(i).addAll(seen);
-      for (TypeVariableName typeName : varLifes.get(i)) {
-        if (!seen.contains(typeName)) {
-          seen.add(typeName);
-        }
-      }
-    }
-    return chop(builder);
+    List<List<TypeVariableName>> varLifes = incrementingVarLifes();
+    varLifes = varLifes.subList(0, varLifes.size() - 2);
+    return instance ? varLifes : cons(emptyList(), varLifes);
   }
 
   private List<TypeVariableName> sort(List<TypeVariableName> types) {
@@ -105,9 +84,21 @@ final class VarLife {
     return result;
   }
 
+  /**
+   * @param typeParameters type parameters
+   * @param steps          parameter types; followed by return type;
+   *                       if {@code instance}, preceded by instance type
+   * @param instance       is this an instance method
+   * @return helper object
+   */
   static VarLife create(List<TypeVariableName> typeParameters,
                         List<TypeName> steps,
                         boolean instance) {
+    return new VarLife(steps, typeParameters, instance, varLifes(steps, typeParameters));
+  }
+
+  private static List<List<TypeVariableName>> varLifes(List<TypeName> steps,
+                                                       List<TypeVariableName> typeParameters) {
     List<List<TypeVariableName>> builder = new ArrayList<>(steps.size());
     emptyLists.get().limit(steps.size()).forEach(builder::add);
     for (TypeVariableName typeParameter : typeParameters) {
@@ -119,7 +110,21 @@ final class VarLife {
         }
       }
     }
-    return new VarLife(builder, typeParameters, instance);
+    return builder;
+  }
+
+  private List<List<TypeVariableName>> incrementingVarLifes() {
+    List<List<TypeVariableName>> builder = new ArrayList<>(steps.size());
+    emptyLists.get().limit(steps.size()).forEach(builder::add);
+    for (TypeVariableName typeParameter : typeParameters) {
+      int start = varLifeStart(typeParameter, steps);
+      if (start >= 0) {
+        for (int i = start; i < steps.size(); i++) {
+          builder.get(i).add(typeParameter);
+        }
+      }
+    }
+    return builder;
   }
 
   private static int varLifeStart(TypeVariableName typeParameter, List<TypeName> steps) {
