@@ -211,3 +211,8 @@
 ### 2016-12-17 zerobuilder 1.611 released
 
 * rename StepGetter -> GetterOrder (breaking)
+
+### 2016-12-18 zerobuilder 1.612 released
+
+* maintenance release after refactoring in module-generics
+
