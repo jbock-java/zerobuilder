@@ -128,9 +128,9 @@ public class GenericsBuilderTest {
   }
 
   private void checkValueContract(TypeSpec value) {
-    assertThat(value.methodSpecs.size(), is(1));
+    assertThat(value.methodSpecs.size(), is(2));
     assertThat(value.typeVariables, is(singletonList(K)));
-    MethodSpec method = value.methodSpecs.get(0);
+    MethodSpec method = value.methodSpecs.get(1);
     assertThat(method.typeVariables, is(singletonList(V)));
     assertThat(method.returnType, is(MAP_K_V));
   }

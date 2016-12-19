@@ -14,8 +14,8 @@ It can also be configured to add runtime null checks to the generated builders.
 
 ### Non goals
 
-* Zerobuilder does not generate the <em>class files of</em> data objects, like beans or immutable objects.
-  Instead, zerobuilder can be combined with tools that do this, such as 
+* Zerobuilder does not generate the <em>classes of</em> data objects, like beans or immutable objects.
+  Instead, it can be combined with tools that do this, such as 
   [auto-value](https://github.com/google/auto/tree/master/value) 
   (more about this [here](values.md)) 
   and [derive4j](https://github.com/derive4j/derive4j).

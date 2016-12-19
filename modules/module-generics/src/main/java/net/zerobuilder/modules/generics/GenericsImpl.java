@@ -20,7 +20,6 @@ import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
@@ -50,9 +49,9 @@ final class GenericsImpl {
     return builder;
   }
 
-  TypeSpec createStep(ImplFields implFields,
-                      List<List<TypeVariableName>> methodParams,
-                      List<List<TypeVariableName>> typeParams, int i) {
+  private TypeSpec createStep(ImplFields implFields,
+                              List<List<TypeVariableName>> methodParams,
+                              List<List<TypeVariableName>> typeParams, int i) {
     ParameterSpec parameter = parameterSpec(description.parameters.get(i).type, description.parameters.get(i).name);
     List<FieldSpec> fields = implFields.fields.apply(description.details, i);
     TypeSpec.Builder builder = classBuilder(upcase(description.parameters.get(i).name));
@@ -62,7 +61,6 @@ final class GenericsImpl {
     return builder.addFields(fields)
         .addTypeVariables(typeParams.get(i))
         .addMethod(methodBuilder(description.parameters.get(i).name)
-            .addAnnotation(Override.class)
             .addParameter(parameter)
             .addTypeVariables(methodParams.get(i))
             .addModifiers(PUBLIC)
@@ -72,7 +70,7 @@ final class GenericsImpl {
                 description.thrownTypes :
                 emptyList())
             .build())
-        .addModifiers(PRIVATE, STATIC, FINAL)
+        .addModifiers(PUBLIC, STATIC, FINAL)
         .build();
   }
 
@@ -112,7 +110,7 @@ final class GenericsImpl {
   private CodeBlock instance() {
     CodeBlock.Builder builder = CodeBlock.builder();
     for (int i = description.parameters.size() - 2; i >= 0; i--) {
-      builder.add("$L.", description.parameters.get(i).name);
+      builder.add("$L.", description.parameters.get(i).name + "Acc");
     }
     return builder.add("instance").build();
   }
@@ -122,7 +120,7 @@ final class GenericsImpl {
       CodeBlock.Builder block = CodeBlock.builder();
       for (int j = description.parameters.size() - 3; j >= i; j--) {
         String name = description.parameters.get(j + 1).name;
-        block.add("$L.", name);
+        block.add("$L.", name + "Acc");
       }
       String name = description.parameters.get(i).name;
       block.add("$L", name);

@@ -43,7 +43,7 @@ public class VarLifeTest {
     List<TypeVariableName> typeParameters = asList(K, V);
     VarLife life = create(typeParameters, asList(map(K, V), K, V, listOf(V)), false);
     assertThat(life.methodParams(), is(asList(asList(K, V), emptyList(), emptyList())));
-    assertThat(life.typeParams(), is(asList(emptyList(), asList(K, V), singletonList(V))));
+    assertThat(life.typeParams(), is(asList(emptyList(), asList(K, V), asList(K, V))));
   }
 
   @Test
@@ -59,7 +59,7 @@ public class VarLifeTest {
     List<TypeVariableName> typeParameters = asList(S, K, V);
     List<TypeName> parameters = asList(S, K, V, map(K, V));
     VarLife life = create(typeParameters, parameters, false);
-    assertThat(life.typeParams(), is(asList(emptyList(), emptyList(), singletonList(K))));
+    assertThat(life.typeParams(), is(asList(emptyList(), singletonList(S), asList(S, K))));
     assertThat(life.methodParams(), is(asList(singletonList(S), singletonList(K), singletonList(V))));
   }
 
@@ -68,7 +68,7 @@ public class VarLifeTest {
     List<TypeVariableName> typeParameters = asList(S, K, V);
     List<TypeName> parameters = asList(listOf(S), S, K, V, map(K, V));
     VarLife life = create(typeParameters, parameters, true);
-    assertThat(life.typeParams(), is(asList(singletonList(S), emptyList(), singletonList(K))));
+    assertThat(life.typeParams(), is(asList(singletonList(S), singletonList(S), asList(S, K))));
     assertThat(life.methodParams(), is(asList(emptyList(), singletonList(K), singletonList(V))));
   }
 }

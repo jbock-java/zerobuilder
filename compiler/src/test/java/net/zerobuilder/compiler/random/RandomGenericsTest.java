@@ -43,6 +43,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.extractTypeVars;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static org.junit.Assert.fail;
 
 public class RandomGenericsTest {
 
@@ -51,15 +52,20 @@ public class RandomGenericsTest {
 
   @Test
   public void test() {
+    String s = null;
     for (int i = 0; i < 4; i++) {
-      rand();
+      try {
+        s = "package foo;\n" +
+            topLevelClass().toString();
+        rand(s);
+      } catch (AssertionError e) {
+        System.out.println(s);
+        fail(e.getMessage());
+      }
     }
   }
 
-  private void rand() {
-
-    String s = "package foo;\n" +
-        topLevelClass().toString();
+  private void rand(String s) {
 
     List<String> split = Arrays.stream(s.split("\n", -1))
         .map(line -> line + '\n')

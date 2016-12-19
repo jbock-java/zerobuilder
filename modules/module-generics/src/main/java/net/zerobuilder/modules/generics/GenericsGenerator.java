@@ -5,14 +5,12 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -26,42 +24,34 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
-import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
-import static net.zerobuilder.compiler.generate.ZeroUtil.cons;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.modules.generics.GenericsContract.contractType;
-import static net.zerobuilder.modules.generics.GenericsContract.stepInterfaces;
-import static net.zerobuilder.modules.generics.GenericsContract.stepTypes;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
+import static net.zerobuilder.modules.generics.GenericsContract.implType;
 
 final class GenericsGenerator {
 
-  private final List<TypeSpec> stepSpecs;
   private final ClassName contractType;
   private final List<TypeSpec> stepImpls;
   private final SimpleRegularGoalDescription description;
 
-  private GenericsGenerator(List<TypeSpec> stepSpecs,
-                            SimpleRegularGoalDescription description,
+  private GenericsGenerator(SimpleRegularGoalDescription description,
                             ClassName contractType,
                             List<TypeSpec> stepImpls) {
-    this.stepSpecs = stepSpecs;
     this.contractType = contractType;
     this.description = description;
     this.stepImpls = stepImpls;
   }
 
   TypeSpec defineImpl() {
-    TypeSpec.Builder builder = classBuilder(contractType)
-        .addModifiers(PRIVATE, STATIC, FINAL);
-    builder.addFields(firstStepCache.apply(description.details));
-    return builder
+    return classBuilder(contractType)
+        .addModifiers(PUBLIC, STATIC, FINAL)
+        .addFields(firstStepCache.apply(description.details))
         .addTypes(stepImpls)
         .addMethod(constructorBuilder()
             .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
@@ -84,31 +74,20 @@ final class GenericsGenerator {
         .initializer("new $T()", firstImplType).build());
   }
 
-  TypeSpec defineContract() {
-    return classBuilder(contractType)
-        .addTypes(stepSpecs)
-        .addModifiers(PUBLIC, STATIC, FINAL)
-        .addMethod(constructorBuilder()
-            .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
-            .addModifiers(PRIVATE)
-            .build())
-        .build();
-  }
-
-  DtoGeneratorOutput.BuilderMethod builderMethod(SimpleRegularGoalDescription description) {
+  DtoGeneratorOutput.BuilderMethod builderMethod(SimpleRegularGoalDescription description,
+                                                 VarLife life) {
     ParameterSpec instance = parameterSpec(description.context.type, "instance");
+    List<List<TypeVariableName>> typeParams = life.typeParams();
     MethodSpec.Builder builder = methodBuilder(description.details.name + "Builder")
         .addModifiers(description.details.access(STATIC))
         .returns(parameterizedTypeName(
-            contractType.nestedClass(stepSpecs.get(0).name),
-            stepSpecs.get(0).typeVariables));
+            contractType.nestedClass(upcase(description.parameters.get(0).name)),
+            typeParams.get(0)));
     builder.addCode(goalMethodNullCheck
         .apply(description.details, instance));
     builder.addParameters(
         goalMethodParameters.apply(description.details, instance));
-    builder.addTypeVariables(new HashSet<>(
-        instanceMethodTypeParameters.apply(description.details,
-            stepSpecs.get(0).typeVariables)));
+    builder.addTypeVariables(typeParams.get(0));
     builder.addCode(regularDetailsCases(
         constructor -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name)),
         staticMethod -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name)),
@@ -131,43 +110,12 @@ final class GenericsGenerator {
           (staticMethod, instance) -> emptyList(),
           (instanceMethod, instance) -> singletonList(instance));
 
-  private final BiFunction<AbstractRegularDetails, List<TypeVariableName>, List<TypeVariableName>> instanceMethodTypeParameters =
-      regularDetailsCases(
-          (constructor, firstStepTypeParameters) -> firstStepTypeParameters,
-          (staticMethod, firstStepTypeParameters) -> firstStepTypeParameters,
-          (instanceMethod, firstStepTypeParameters) -> concat(
-              firstStepTypeParameters,
-              instanceMethod.instanceTypeParameters));
-
-  static GenericsGenerator create(SimpleRegularGoalDescription description) {
-    AbstractRegularDetails details = description.details;
-    List<TypeVariableName> typeParameters = GenericsGenerator.allTypeParameters.apply(details);
-    VarLife lifes = VarLife.create(
-        typeParameters,
-        GenericsGenerator.extendedStepTypes.apply(description.details, description),
-        isInstance.apply(details));
+  static GenericsGenerator create(SimpleRegularGoalDescription description, VarLife lifes) {
     List<List<TypeVariableName>> typeParams = lifes.typeParams();
     List<List<TypeVariableName>> methodParams = lifes.methodParams();
-    List<TypeSpec> stepSpecs = stepInterfaces(description, typeParams, methodParams);
-    ClassName contractType = contractType(description);
+    ClassName contractType = implType(description);
     GenericsImpl genericsImpl = new GenericsImpl(contractType, description);
     List<TypeSpec> stepImpls = genericsImpl.stepImpls(methodParams, typeParams);
-    return new GenericsGenerator(stepSpecs, description, contractType, stepImpls);
+    return new GenericsGenerator(description, contractType, stepImpls);
   }
-
-  private static final Function<AbstractRegularDetails, List<TypeVariableName>> allTypeParameters =
-      regularDetailsCases(
-          constructor -> constructor.instanceTypeParameters,
-          staticMethod -> staticMethod.typeParameters,
-          instanceMethod -> concat(
-              instanceMethod.instanceTypeParameters, instanceMethod.typeParameters));
-
-  private static final BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, List<TypeName>> extendedStepTypes =
-      regularDetailsCases(
-          (constructor, description) -> stepTypes(description),
-          (staticMethod, description) -> stepTypes(description),
-          (instanceMethod, description) -> cons(
-              description.context.type,
-              stepTypes(description)));
-
 }

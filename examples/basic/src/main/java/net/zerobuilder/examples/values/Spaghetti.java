@@ -22,8 +22,7 @@ final class Spaghetti {
     this.alDente = alDente;
   }
 
-  static SpaghettiBuilders.SpaghettiBuilder
-      .Cheese napoliBuilder() {
+  static SpaghettiBuilders.SpaghettiBuilder.Cheese napoliBuilder() {
     return SpaghettiBuilders.spaghettiBuilder().sauce("tomato");
   }
 

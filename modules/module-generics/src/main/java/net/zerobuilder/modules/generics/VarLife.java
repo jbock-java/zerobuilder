@@ -18,14 +18,11 @@ final class VarLife {
   private final List<TypeName> steps;
   private final List<TypeVariableName> typeParameters;
   private final boolean instance;
-  private final List<List<TypeVariableName>> varLifes;
 
-  private VarLife(List<TypeName> steps, List<TypeVariableName> typeParameters, boolean instance,
-                  List<List<TypeVariableName>> varLifes) {
+  private VarLife(List<TypeName> steps, List<TypeVariableName> typeParameters, boolean instance) {
     this.steps = steps;
     this.typeParameters = typeParameters;
     this.instance = instance;
-    this.varLifes = varLifes;
   }
 
   private static final Supplier<Stream<List<TypeVariableName>>> emptyLists =
@@ -45,6 +42,7 @@ final class VarLife {
   }
 
   List<List<TypeVariableName>> methodParams() {
+    List<List<TypeVariableName>> varLifes = varLifes(steps, typeParameters);
     List<List<TypeVariableName>> builder = emptyLists(varLifes.size() - 1);
     builder.get(0).addAll(varLifes.get(0));
     for (int i = 1; i < varLifes.size() - 1; i++) {
@@ -73,7 +71,7 @@ final class VarLife {
   static VarLife create(List<TypeVariableName> typeParameters,
                         List<TypeName> steps,
                         boolean instance) {
-    return new VarLife(steps, typeParameters, instance, varLifes(steps, typeParameters));
+    return new VarLife(steps, typeParameters, instance);
   }
 
   private static List<List<TypeVariableName>> varLifes(List<TypeName> steps,

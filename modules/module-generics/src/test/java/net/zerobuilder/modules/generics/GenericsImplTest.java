@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
@@ -63,7 +62,7 @@ public class GenericsImplTest {
         .map(this::typeSpec)
         .collect(toList());
     CodeBlock block = invoke(typeSpecs);
-    assertThat(block, is(CodeBlock.builder().add("key.source, key, defaultValue").build()));
+    assertThat(block, is(CodeBlock.builder().add("keyAcc.source, key, defaultValue").build()));
   }
 
   @Test
@@ -72,12 +71,10 @@ public class GenericsImplTest {
         .map(this::typeSpec)
         .collect(toList());
     CodeBlock block = invoke(typeSpecs);
-    assertThat(block, is(CodeBlock.builder().add("key.source.foo, key.source, key, defaultValue").build()));
+    assertThat(block, is(CodeBlock.builder().add("keyAcc.sourceAcc.foo, keyAcc.source, key, defaultValue").build()));
   }
 
   private SimpleParameter typeSpec(String parameter) {
     return DtoRegularParameter.create(parameter, ClassName.get(String.class), NullPolicy.ALLOW);
   }
-
-
 }
