@@ -13,15 +13,12 @@ import org.junit.Test;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.modules.generics.VarLifeTest.listOf;
 import static net.zerobuilder.modules.generics.VarLifeTest.map;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 public class GenericsGeneratorTest {
 
@@ -62,7 +59,5 @@ public class GenericsGeneratorTest {
         asList(keysParameter, valueParameter), goalContext);
 
     GenericsGenerator generator = GenericsGenerator.create(description);
-    assertThat(generator.methodParams, is(asList(singletonList(K), singletonList(V))));
-    assertThat(generator.implTypeParams, is(asList(emptyList(), singletonList(K))));
   }
 }

@@ -53,7 +53,7 @@ final class GenericsContract {
         .build();
   }
 
-  private static TypeName nextStepType(SimpleRegularGoalDescription description,
+  static TypeName nextStepType(SimpleRegularGoalDescription description,
                                        List<List<TypeVariableName>> typeParams,
                                        int i) {
     if (i == description.parameters.size() - 1) {
@@ -71,11 +71,6 @@ final class GenericsContract {
     String contractName = upcase(description.details.name) + "Builder";
     return description.context
         .generatedType.nestedClass(contractName);
-  }
-
-  static ClassName implType(SimpleRegularGoalDescription description) {
-    String contractName = upcase(description.details.name) + "BuilderImpl";
-    return description.context.generatedType.nestedClass(contractName);
   }
 
   static List<TypeName> stepTypes(SimpleRegularGoalDescription description) {

@@ -37,38 +37,28 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.generics.GenericsContract.contractType;
-import static net.zerobuilder.modules.generics.GenericsContract.implType;
 import static net.zerobuilder.modules.generics.GenericsContract.stepInterfaces;
 import static net.zerobuilder.modules.generics.GenericsContract.stepTypes;
 
 final class GenericsGenerator {
 
   private final List<TypeSpec> stepSpecs;
-  final List<List<TypeVariableName>> methodParams;
-  final List<List<TypeVariableName>> implTypeParams;
-  private final ClassName implType;
   private final ClassName contractType;
   private final List<TypeSpec> stepImpls;
   private final SimpleRegularGoalDescription description;
 
   private GenericsGenerator(List<TypeSpec> stepSpecs,
-                            List<List<TypeVariableName>> methodParams,
-                            List<List<TypeVariableName>> implTypeParams,
                             SimpleRegularGoalDescription description,
-                            ClassName implType,
                             ClassName contractType,
                             List<TypeSpec> stepImpls) {
     this.stepSpecs = stepSpecs;
-    this.methodParams = methodParams;
-    this.implTypeParams = implTypeParams;
-    this.implType = implType;
     this.contractType = contractType;
     this.description = description;
     this.stepImpls = stepImpls;
   }
 
   TypeSpec defineImpl() {
-    TypeSpec.Builder builder = classBuilder(implType)
+    TypeSpec.Builder builder = classBuilder(contractType)
         .addModifiers(PRIVATE, STATIC, FINAL);
     builder.addFields(firstStepCache.apply(description.details));
     return builder
@@ -88,7 +78,7 @@ final class GenericsGenerator {
 
 
   private List<FieldSpec> firstStepCache() {
-    ClassName firstImplType = implType.nestedClass(stepImpls.get(0).name);
+    ClassName firstImplType = contractType.nestedClass(stepImpls.get(0).name);
     return singletonList(FieldSpec.builder(firstImplType,
         downcase(firstImplType.simpleName()), PRIVATE, STATIC, FINAL)
         .initializer("new $T()", firstImplType).build());
@@ -120,9 +110,9 @@ final class GenericsGenerator {
         instanceMethodTypeParameters.apply(description.details,
             stepSpecs.get(0).typeVariables)));
     builder.addCode(regularDetailsCases(
-        constructor -> statement("return $T.$L", implType, downcase(stepImpls.get(0).name)),
-        staticMethod -> statement("return $T.$L", implType, downcase(stepImpls.get(0).name)),
-        instanceMethod -> statement("return new $T($N)", implType.nestedClass(stepImpls.get(0).name), instance)
+        constructor -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name)),
+        staticMethod -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name)),
+        instanceMethod -> statement("return new $T($N)", contractType.nestedClass(stepImpls.get(0).name), instance)
     ).apply(description.details));
     return new DtoGeneratorOutput.BuilderMethod(
         description.details.name,
@@ -157,15 +147,12 @@ final class GenericsGenerator {
         GenericsGenerator.extendedStepTypes.apply(description.details, description),
         isInstance.apply(details));
     List<List<TypeVariableName>> typeParams = lifes.typeParams();
-    List<List<TypeVariableName>> implTypeParams = lifes.implTypeParams();
     List<List<TypeVariableName>> methodParams = lifes.methodParams();
     List<TypeSpec> stepSpecs = stepInterfaces(description, typeParams, methodParams);
-    ClassName implType = implType(description);
     ClassName contractType = contractType(description);
-    GenericsImpl genericsImpl = new GenericsImpl(implType, contractType, description);
-    List<TypeSpec> stepImpls = genericsImpl.stepImpls(stepSpecs, methodParams, implTypeParams);
-    return new GenericsGenerator(stepSpecs, methodParams, implTypeParams, description,
-        implType, contractType, stepImpls);
+    GenericsImpl genericsImpl = new GenericsImpl(contractType, description);
+    List<TypeSpec> stepImpls = genericsImpl.stepImpls(methodParams, typeParams);
+    return new GenericsGenerator(stepSpecs, description, contractType, stepImpls);
   }
 
   private static final Function<AbstractRegularDetails, List<TypeVariableName>> allTypeParameters =

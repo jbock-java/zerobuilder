@@ -58,35 +58,9 @@ final class VarLife {
   }
 
   List<List<TypeVariableName>> typeParams() {
-    List<List<TypeVariableName>> builder = emptyLists(varLifes.size() - 1);
-    for (int i = 1; i < varLifes.size() - 1; i++) {
-      for (TypeVariableName t : varLifes.get(i)) {
-        if (varLifes.get(i - 1).contains(t)) {
-          builder.get(i).add(t);
-        }
-      }
-      builder.set(i, sort(builder.get(i)));
-    }
-    return chop(builder);
-  }
-
-  List<List<TypeVariableName>> implTypeParams() {
     List<List<TypeVariableName>> varLifes = accLife(steps, typeParameters);
     varLifes = varLifes.subList(0, varLifes.size() - 2);
     return instance ? varLifes : cons(emptyList(), varLifes);
-  }
-
-  private List<TypeVariableName> sort(List<TypeVariableName> types) {
-    if (types.size() <= 1) {
-      return types;
-    }
-    List<TypeVariableName> builder = new ArrayList<>();
-    for (TypeVariableName type : typeParameters) {
-      if (types.contains(type)) {
-        builder.add(type);
-      }
-    }
-    return builder;
   }
 
   /**

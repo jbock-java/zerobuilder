@@ -19,8 +19,6 @@ import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.modules.generics.VarLifeTest.map;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 public class GenericsGeneratorInstanceTest {
 
@@ -74,7 +72,5 @@ public class GenericsGeneratorInstanceTest {
         asList(keyParameter, valueParameter), goalContext);
 
     GenericsGenerator generator = GenericsGenerator.create(description);
-    assertThat(generator.methodParams, is(asList(singletonList(K), asList(S, V))));
-    assertThat(generator.implTypeParams, is(asList(emptyList(), singletonList(K))));
   }
 }

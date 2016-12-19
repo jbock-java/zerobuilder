@@ -21,21 +21,19 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class ImplFields {
 
   private final ClassName impl;
   private final SimpleRegularGoalDescription description;
-  private final List<TypeSpec> stepSpecs;
   private final List<List<TypeVariableName>> typeParams;
 
   ImplFields(ClassName impl,
              SimpleRegularGoalDescription description,
-             List<TypeSpec> stepSpecs,
              List<List<TypeVariableName>> typeParams) {
     this.impl = impl;
     this.description = description;
-    this.stepSpecs = stepSpecs;
     this.typeParams = typeParams;
   }
 
@@ -57,14 +55,12 @@ final class ImplFields {
   }
 
   private List<FieldSpec> normalFields(int i) {
-    TypeSpec stepSpec = stepSpecs.get(i - 1);
-    TypeName implType = parameterizedTypeName(impl.nestedClass(stepSpec.name + "Impl"),
+    String name = upcase(description.parameters.get(i - 1).name);
+    TypeName implType = parameterizedTypeName(impl.nestedClass(name),
         typeParams.get(i - 1));
     return asList(
-        FieldSpec.builder(implType, downcase(stepSpec.name) + "Impl",
-            PRIVATE, FINAL)
-            .build(),
-        parameterField(stepSpec));
+        FieldSpec.builder(implType, downcase(name), PRIVATE, FINAL).build(),
+        FieldSpec.builder(description.parameters.get(i).type, description.parameters.get(i).name).build());
   }
 
   private FieldSpec parameterField(TypeSpec type) {
@@ -73,4 +69,39 @@ final class ImplFields {
     return FieldSpec.builder(parameter.type, parameter.name, PRIVATE, FINAL)
         .build();
   }
+
+/*
+  static List<TypeSpec> stepInterfaces(SimpleRegularGoalDescription description,
+                                       List<List<TypeVariableName>> typeParams,
+                                       List<List<TypeVariableName>> methodParams) {
+    List<TypeSpec> builder = new ArrayList<>(description.parameters.size());
+    List<DtoRegularParameter.SimpleParameter> steps = description.parameters;
+    for (int i = 0; i < steps.size(); i++) {
+      DtoRegularParameter.SimpleParameter parameter = steps.get(i);
+      builder.add(TypeSpec.interfaceBuilder(upcase(parameter.name))
+          .addTypeVariables(typeParams.get(i))
+          .addMethod(nextStep(description,
+              typeParams,
+              methodParams, i))
+          .addModifiers(PUBLIC)
+          .build());
+    }
+    return builder;
+  }
+
+    private static MethodSpec nextStep(SimpleRegularGoalDescription description, List<List<TypeVariableName>> typeParams, List<List<TypeVariableName>> methodParams, int i) {
+    List<SimpleParameter> steps = description.parameters;
+    SimpleParameter parameter = steps.get(i);
+    return MethodSpec.methodBuilder(downcase(parameter.name))
+        .addTypeVariables(methodParams.get(i))
+        .addModifiers(PUBLIC, ABSTRACT)
+        .returns(nextStepType(description, typeParams, i))
+        .addExceptions(i == description.parameters.size() - 1 ?
+            description.thrownTypes :
+            emptyList())
+        .addParameter(parameterSpec(parameter.type, parameter.name))
+        .build();
+  }
+
+*/
 }
