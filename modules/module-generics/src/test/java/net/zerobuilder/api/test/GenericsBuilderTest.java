@@ -7,7 +7,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import net.zerobuilder.compiler.generate.DtoContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
@@ -94,14 +93,10 @@ public class GenericsBuilderTest {
         asList(fooParameter, barParameter),
         goalContext);
 
-    // wrap it all together
-    GeneratorInput generatorInput = GeneratorInput.create(
-        goalContext, singletonList(new RegularSimpleGoalInput(
-            new GenericsBuilder(),
-            description)));
-
     // Invoke the generator
-    GeneratorOutput generatorOutput = Generator.generate(generatorInput);
+    GeneratorOutput generatorOutput = Generator.generate(singletonList(new RegularSimpleGoalInput(
+        new GenericsBuilder(),
+        description)));
 
     assertThat(generatorOutput.methods().size(), is(1));
     assertThat(generatorOutput.methods().get(0).name(), is(goalName));

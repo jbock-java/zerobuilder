@@ -66,8 +66,8 @@ public final class DtoGeneratorOutput {
     }
 
     static GeneratorOutput create(List<BuilderMethod> methods, List<TypeSpec> nestedTypes, List<FieldSpec> fields,
-                                  DtoContext.GoalContext context) {
-      return new GeneratorOutput(methods, nestedTypes, fields, context.generatedType);
+                                  ClassName generatedType) {
+      return new GeneratorOutput(methods, nestedTypes, fields, generatedType);
     }
 
 

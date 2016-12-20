@@ -10,7 +10,7 @@ import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.Analyser;
 import net.zerobuilder.compiler.analyse.ValidationException;
 import net.zerobuilder.compiler.common.LessTypes;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.Generator;
 
@@ -75,7 +75,7 @@ public final class ZeroProcessor extends AbstractProcessor {
         if (!done.add(enclosingElement)) {
           continue;
         }
-        GeneratorInput generatorInput = Analyser.analyse(enclosingElement);
+        List<AbstractGoalInput> generatorInput = Analyser.analyse(enclosingElement);
         GeneratorOutput generatorOutput = Generator.generate(generatorInput);
         TypeSpec typeSpec = generatorOutput.typeSpec(generatedAnnotations);
         try {

@@ -8,7 +8,6 @@ import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -108,19 +107,11 @@ public final class DtoGeneratorInput {
     }
   }
 
-  public static final class GeneratorInput {
-    public final List<AbstractGoalInput> goals;
-    public final GoalContext context;
-
-    private GeneratorInput(DtoContext.GoalContext context, List<AbstractGoalInput> goals) {
-      this.goals = goals;
-      this.context = context;
-    }
-
-    public static GeneratorInput create(GoalContext context, List<AbstractGoalInput> goals) {
-      return new GeneratorInput(context, goals);
-    }
-  }
+  static final Function<AbstractGoalInput, GoalContext> getContext =
+      goalInputCases(
+          projected -> projected.description.context,
+          projected -> projected.description.context,
+          projected -> projected.description.details.context);
 
   private DtoGeneratorInput() {
     throw new UnsupportedOperationException("no instances");

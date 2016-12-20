@@ -5,7 +5,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
@@ -68,11 +67,9 @@ public class VoidTest {
         singletonList(parameter),
         goalContext);
 
-    GeneratorInput input = GeneratorInput.create(
-        goalContext, singletonList(new RegularSimpleGoalInput(MODULE_BUILDER, description)));
-
     // Invoke the generator
-    GeneratorOutput output = Generator.generate(input);
+    GeneratorOutput output = Generator.generate(
+        singletonList(new RegularSimpleGoalInput(MODULE_BUILDER, description)));
 
     assertThat(output.methods().size(), is(1));
     assertThat(output.methods().get(0).name(), is(goalName));

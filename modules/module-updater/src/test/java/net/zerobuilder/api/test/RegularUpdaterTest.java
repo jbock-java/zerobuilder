@@ -4,7 +4,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
@@ -75,12 +74,9 @@ public class RegularUpdaterTest {
         singletonList(fooParameter),
         goalContext);
 
-    // wrap it all together
-    GeneratorInput generatorInput = GeneratorInput.create(
-        goalContext, singletonList(new DtoGeneratorInput.ProjectedGoalInput(REGULAR_UPDATER_MODULE, description)));
-
     // Invoke the generator
-    GeneratorOutput generatorOutput = Generator.generate(generatorInput);
+    GeneratorOutput generatorOutput = Generator.generate(
+        singletonList(new DtoGeneratorInput.ProjectedGoalInput(REGULAR_UPDATER_MODULE, description)));
 
     assertThat(generatorOutput.methods().size(), is(1));
     assertThat(generatorOutput.methods().get(0).name(), is(goalName));

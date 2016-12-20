@@ -13,7 +13,6 @@ import net.zerobuilder.compiler.common.LessElements;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.BeanGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.GeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
@@ -59,7 +58,15 @@ public final class Analyser {
   private static final BeanModule BEAN_UPDATER = new BeanUpdater();
   private static final RegularSimpleModule GENERICS = new GenericsBuilder();
 
-  public static GeneratorInput analyse(TypeElement tel) throws ValidationException {
+  /**
+   * Extract all goals from the given type, by inspecting annotations.
+   * Perform validations and bundle each goal with the appropriate module.
+   *
+   * @param tel a type element
+   * @return list of goal inputs
+   * @throws ValidationException if validation fails
+   */
+  public static List<AbstractGoalInput> analyse(TypeElement tel) throws ValidationException {
     validateContextClass(tel);
     TypeName type = parameterizedTypeName(ClassName.get(tel),
         transform(tel.getTypeParameters(), TypeVariableName::get));
@@ -68,11 +75,10 @@ public final class Analyser {
     List<? extends AbstractGoalElement> goals = goals(tel, context);
     checkNameConflict(goals);
     checkAccessLevel(goals);
-    List<AbstractGoalInput> descriptions = transform(goals, description);
-    return GeneratorInput.create(context, descriptions);
+    return transform(goals, assignModule);
   }
 
-  private static final Function<AbstractGoalElement, AbstractGoalInput> description =
+  private static final Function<AbstractGoalElement, AbstractGoalInput> assignModule =
       goalElementCases(
           regularGoalElementCases(
               general -> hasTypevars(general.executableElement) || general.style == IMMUTABLE ?
@@ -90,11 +96,9 @@ public final class Analyser {
   }
 
   private static boolean hasTypevars(ExecutableElement element) {
-    if (!element.getTypeParameters().isEmpty()) {
-      return true;
-    }
-    return !element.getModifiers().contains(STATIC) &&
-        !asTypeElement(element.getEnclosingElement().asType()).getTypeParameters().isEmpty();
+    return !element.getTypeParameters().isEmpty()
+        || !element.getModifiers().contains(STATIC)
+        && !asTypeElement(element.getEnclosingElement().asType()).getTypeParameters().isEmpty();
   }
 
   private static List<AbstractRegularGoalElement> regularGoals(TypeElement tel, GoalContext context) {
