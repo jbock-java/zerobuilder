@@ -1,5 +1,7 @@
 # module-generics
 
-+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder-module-generics/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder-module-generics)
+A zerobuilder module that generates an "immutable" variant of the builder pattern,
+where all fields in the generated code are final. 
 
-A zerobuilder module that generates "telescoping" builder pattern with type parameters.
+The process is reminiscent of a building linked list,
+where each element of the list may be of a different type.
