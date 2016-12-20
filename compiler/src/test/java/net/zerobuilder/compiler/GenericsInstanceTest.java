@@ -68,7 +68,7 @@ public class GenericsInstanceTest {
         "    public static final class Appendix<T extends String> {",
         "      private final ApexFactory<T> instance;",
         "",
-        "      Appendix(ApexFactory<T> instance) {",
+        "      private Appendix(ApexFactory<T> instance) {",
         "        this.instance = instance;",
         "      }",
         "",

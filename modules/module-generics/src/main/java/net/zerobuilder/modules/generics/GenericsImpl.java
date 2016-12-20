@@ -20,6 +20,7 @@ import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
@@ -55,9 +56,7 @@ final class GenericsImpl {
     ParameterSpec parameter = parameterSpec(description.parameters.get(i).type, description.parameters.get(i).name);
     List<FieldSpec> fields = implFields.fields.apply(description.details, i);
     TypeSpec.Builder builder = classBuilder(upcase(description.parameters.get(i).name));
-    if (!fields.isEmpty()) {
-      builder.addMethod(createConstructor(fields));
-    }
+    builder.addMethod(createConstructor(fields));
     return builder.addFields(fields)
         .addTypeVariables(typeParams.get(i))
         .addMethod(methodBuilder(description.parameters.get(i).name)
@@ -140,6 +139,7 @@ final class GenericsImpl {
         .addParameters(parameters)
         .addCode(parameters.stream().map(parameter -> statement("this.$N = $N", parameter, parameter))
             .collect(joinCodeBlocks))
+        .addModifiers(PRIVATE)
         .build();
   }
 

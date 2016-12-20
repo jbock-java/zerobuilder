@@ -117,9 +117,9 @@ public class GenericsBuilderTest {
   }
 
   private void checkKeysContract(TypeSpec keys) {
-    assertThat(keys.methodSpecs.size(), is(1));
+    assertThat(keys.methodSpecs.size(), is(2));
     assertThat(keys.typeVariables.size(), is(0));
-    MethodSpec stepMethod = keys.methodSpecs.get(0);
+    MethodSpec stepMethod = keys.methodSpecs.get(1);
     assertThat(stepMethod.typeVariables, is(singletonList(K)));
     TypeName returnType = stepMethod.returnType;
     assertThat(returnType, is(CoreMatchers.instanceOf(ParameterizedTypeName.class)));
