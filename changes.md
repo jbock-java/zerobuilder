@@ -224,3 +224,7 @@
 ### 2016-12-20 zerobuilder 1.622 released
 
 * immutable builder: make step constructors private
+
+### 2016-12-20 zerobuilder 1.623 released
+
+* repeating 1.622 release (it did not sync to central)
