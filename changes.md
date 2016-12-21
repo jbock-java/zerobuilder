@@ -228,3 +228,7 @@
 ### 2016-12-20 zerobuilder 1.623 released
 
 * repeating 1.622 release (it did not sync to central)
+
+### 2016-12-21 zerobuilder 1.624 released
+
+* repeating 1.622 release (it did not sync to central)
