@@ -2,8 +2,8 @@ package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.NotNullGetter;
 import net.zerobuilder.IgnoreGetter;
+import net.zerobuilder.NotNullGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter;
@@ -14,6 +14,7 @@ import net.zerobuilder.compiler.generate.NullPolicy;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -35,7 +36,7 @@ import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_ABSTRACT_CLASS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIND_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_DEFAULT_CONSTRUCTOR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_PRIVATE_CLASS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.NESTING_KIND;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TYPE_PARAMS_BEAN;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.accessorPair;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.toValidParameter;
@@ -124,7 +125,11 @@ final class ProjectionValidatorB {
       throw new ValidationException(BEAN_NO_DEFAULT_CONSTRUCTOR, beanType);
     }
     if (beanType.getModifiers().contains(PRIVATE)) {
-      throw new ValidationException(BEAN_PRIVATE_CLASS, beanType);
+      throw new ValidationException(NESTING_KIND, beanType);
+    }
+    if (beanType.getNestingKind() == NestingKind.MEMBER &&
+        !beanType.getModifiers().contains(STATIC)) {
+      throw new ValidationException(NESTING_KIND, beanType);
     }
     if (beanType.getModifiers().contains(ABSTRACT)) {
       throw new ValidationException(BEAN_ABSTRACT_CLASS, beanType);

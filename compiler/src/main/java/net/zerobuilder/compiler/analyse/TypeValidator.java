@@ -12,7 +12,6 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.element.NestingKind.TOP_LEVEL;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NESTING_KIND;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.PRIVATE_TYPE;
 
 final class TypeValidator {
 
@@ -23,7 +22,7 @@ final class TypeValidator {
     Set<Modifier> modifiers = type.getModifiers();
     NestingKind nestingKind = type.getNestingKind();
     if (modifiers.contains(PRIVATE)) {
-      throw new ValidationException(PRIVATE_TYPE, type);
+      throw new ValidationException(NESTING_KIND, type);
     }
     if (!ALLOWED_NESTING_KINDS.contains(nestingKind)
         || nestingKind == MEMBER && !modifiers.contains(STATIC)) {

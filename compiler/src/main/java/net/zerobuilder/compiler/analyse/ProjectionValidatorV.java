@@ -83,7 +83,7 @@ final class ProjectionValidatorV {
     List<String> possibleNames = Arrays.asList("get" + upcase(name), "is" + upcase(name), name);
     return findKey(methods, possibleNames)
         .map(methodName -> ProjectionMethod.create(methodName, thrownTypes(methods.get(methodName))))
-        .orElseThrow(() -> new ValidationException(MISSING_PROJECTION, parameter));
+        .orElseThrow(() -> new ValidationException(MISSING_PROJECTION + name, parameter));
   }
 
 
