@@ -16,41 +16,52 @@ public class FailTest {
 
   @Test
   public void twoUnnamedConstructors() {
-    String badLine = "  @Builder Centipede(int a) {}";
     List<String> sourceLines = Arrays.asList(
         "package test;",
         "import net.zerobuilder.*;",
         "class Centipede {",
         "  @Builder Centipede(int a, int b) {}",
-        badLine,
+        "  @Builder Centipede(int a) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
-    int line = sourceLines.indexOf(badLine);
     assertAbout(javaSources()).that(singletonList(javaFile))
         .processedWith(new ZeroProcessor())
         .failsToCompile()
         .withErrorContaining("another goal with this name")
-        .in(javaFile)
-        .onLine(line + 1);
+        .in(javaFile);
   }
 
   @Test
   public void constructorVersusFactory() {
-    String badLine = "  @Builder static Centipede create (int a) {}";
     List<String> sourceLines = Arrays.asList(
         "package test;",
         "import net.zerobuilder.*;",
         "class Centipede {",
         "  @Builder Centipede(int a) {}",
-        badLine,
+        "  @Builder static Centipede create (int a) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
-    int line = sourceLines.indexOf(badLine);
     assertAbout(javaSources()).that(ImmutableList.of(javaFile))
         .processedWith(new ZeroProcessor())
         .failsToCompile()
         .withErrorContaining("another goal with this name")
-        .in(javaFile)
-        .onLine(line + 1);
+        .in(javaFile);
+  }
+
+  @Test
+  public void missingProjection() {
+    List<String> sourceLines = Arrays.asList(
+        "package test;",
+        "import net.zerobuilder.*;",
+        "class Bu {",
+        "  final int foo = 5;",
+        "  @Updater Bu(int foo, int nah) {}",
+        "}");
+    JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
+    assertAbout(javaSources()).that(ImmutableList.of(javaFile))
+        .processedWith(new ZeroProcessor())
+        .failsToCompile()
+        .withErrorContaining("Missing projection: nah")
+        .in(javaFile);
   }
 }
