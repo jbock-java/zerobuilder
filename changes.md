@@ -232,3 +232,7 @@
 ### 2016-12-21 zerobuilder 1.624 released
 
 * repeating 1.622 release (it did not sync to central)
+
+### 2017-01-04 zerobuilder 1.625 released
+
+* improved "missing projection" message
