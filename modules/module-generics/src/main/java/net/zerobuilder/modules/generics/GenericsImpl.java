@@ -24,10 +24,8 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
-import static net.zerobuilder.compiler.generate.NullPolicy.REJECT;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
-import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -75,9 +73,6 @@ final class GenericsImpl {
 
   private CodeBlock getCodeBlock(int i, ParameterSpec parameter) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (description.parameters.get(i).nullPolicy == REJECT) {
-      builder.add(nullCheck(parameter.name, parameter.name));
-    }
     if (i == description.parameters.size() - 1) {
       return builder.add(fullInvoke()).build();
     }

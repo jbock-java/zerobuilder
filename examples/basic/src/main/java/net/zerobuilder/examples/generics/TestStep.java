@@ -2,7 +2,6 @@ package net.zerobuilder.examples.generics;
 
 import net.zerobuilder.Builder;
 import net.zerobuilder.GoalName;
-import net.zerobuilder.NotNullStep;
 import net.zerobuilder.Step;
 
 import java.util.AbstractMap.SimpleEntry;
@@ -12,7 +11,7 @@ public class TestStep {
 
   @Builder
   @GoalName("entry")
-  static <K extends String, V extends Integer> Map.Entry<K, V> entry(@NotNullStep K key,
+  static <K extends String, V extends Integer> Map.Entry<K, V> entry(K key,
                                                                      int suffix,
                                                                      @Step(0) V value) {
     return new SimpleEntry(key + Integer.toString(suffix), value);

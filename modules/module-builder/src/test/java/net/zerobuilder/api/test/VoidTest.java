@@ -25,7 +25,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -61,7 +60,7 @@ public class VoidTest {
         TypeName.VOID, goalName, singletonList("message"),
         "doUpdate", PRIVATE, emptyList(), NEW_INSTANCE);
 
-    SimpleParameter parameter = DtoRegularParameter.create("message", STRING, ALLOW);
+    SimpleParameter parameter = DtoRegularParameter.create("message", STRING);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
         details, singletonList(IO_EXCEPTION),
         singletonList(parameter),

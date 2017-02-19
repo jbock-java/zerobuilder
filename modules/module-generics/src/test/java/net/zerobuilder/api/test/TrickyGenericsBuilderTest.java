@@ -29,7 +29,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -86,9 +85,9 @@ public class TrickyGenericsBuilderTest {
         NEW_INSTANCE);
 
     // use SimpleParameter because the generics module doesn't need projections
-    SimpleParameter fooParameter = DtoRegularParameter.create("source", MAP_K_LIST_V, ALLOW);
-    SimpleParameter barParameter = DtoRegularParameter.create("key", K, ALLOW);
-    SimpleParameter tarParameter = DtoRegularParameter.create("defaultValue", V, ALLOW);
+    SimpleParameter fooParameter = DtoRegularParameter.create("source", MAP_K_LIST_V);
+    SimpleParameter barParameter = DtoRegularParameter.create("key", K);
+    SimpleParameter tarParameter = DtoRegularParameter.create("defaultValue", V);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
         details,
         Collections.emptyList(), // the goal method declares no exceptions

@@ -25,27 +25,4 @@ public class MessageTest {
         .done();
     assertThat(message.body, is("Goodbye"));
   }
-
-  @Test(expected = NullPointerException.class)
-  public void nullBuilder() throws Exception {
-    messageBuilder()
-        .sender(null)
-        .body("Hi")
-        .recipient("Bob")
-        .subject("test");
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void nullUpdater() throws Exception {
-    Message message = messageBuilder()
-        .sender("Alice")
-        .body("Hi")
-        .recipient("Bob")
-        .subject("test");
-    messageUpdater(message)
-        .body(null)
-        .done();
-  }
-
-
 }

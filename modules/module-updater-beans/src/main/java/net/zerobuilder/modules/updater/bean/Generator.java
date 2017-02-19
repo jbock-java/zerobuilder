@@ -21,7 +21,6 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static java.util.Arrays.asList;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
@@ -44,7 +43,6 @@ final class Generator {
             asList(
                 AbstractBeanParameter::getterThrownTypes,
                 AbstractBeanParameter::setterThrownTypes)))
-        .addCode(description.parameters.stream().map(nullChecks(description)).collect(joinCodeBlocks))
         .addCode(initVarUpdater(varUpdater))
         .addCode(description.parameters.stream().map(copy(description)).collect(joinCodeBlocks))
         .addStatement("return $N", varUpdater)
@@ -69,14 +67,6 @@ final class Generator {
     return beanParameterCases(
         accessorPair -> copyRegular(description, accessorPair),
         loneGetter -> copyCollection(description, loneGetter));
-  }
-
-  private static Function<AbstractBeanParameter, CodeBlock> nullChecks(BeanGoalDescription description) {
-    return beanParameterCases(
-        accessorPair -> accessorPair.nullPolicy == ALLOW
-            ? emptyCodeBlock
-            : nullCheck(description, accessorPair),
-        loneGetter -> nullCheck(description, loneGetter));
   }
 
   private static CodeBlock copyCollection(BeanGoalDescription description, LoneGetter step) {

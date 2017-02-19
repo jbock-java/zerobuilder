@@ -1,7 +1,6 @@
 package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builder;
-import net.zerobuilder.NotNullStep;
 import net.zerobuilder.Recycle;
 import net.zerobuilder.Updater;
 
@@ -17,10 +16,10 @@ final class Message {
   @Builder
   @Updater
   @Recycle
-  Message(@NotNullStep String sender,
-          @NotNullStep String body,
-          @NotNullStep String recipient,
-          @NotNullStep String subject) {
+  Message(String sender,
+          String body,
+          String recipient,
+          String subject) {
     this.sender = sender;
     this.body = body;
     this.recipient = recipient;

@@ -22,7 +22,6 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.builder.bean.BeanStep.nextType;
@@ -66,7 +65,6 @@ final class Builder {
         .returns(nextType(i, description))
         .addExceptions(step.getterThrownTypes)
         .addParameter(parameter)
-        .addCode(nullCheck(parameter))
         .beginControlFlow("for ($T $N : $N)",
             iterationVar.type, iterationVar, parameter)
         .addStatement("this.$N.$L().add($N)", description.beanField,
@@ -87,7 +85,6 @@ final class Builder {
         .addParameter(parameter)
         .addModifiers(PUBLIC)
         .returns(nextType(i, description))
-        .addCode(Step.nullCheck.apply(step))
         .addStatement("this.$N.$L($N)", description.beanField, step.setterName(), parameter)
         .addCode(i == description.parameters.size() - 1 ?
             normalReturn(description) :

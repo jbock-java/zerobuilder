@@ -10,8 +10,6 @@ import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescript
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AccessorPair;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
-import net.zerobuilder.compiler.generate.NullPolicy;
-import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import java.util.List;
 import java.util.function.Function;
@@ -22,7 +20,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
 
@@ -51,12 +48,6 @@ final class Updater {
         .returns(implType(description))
         .addExceptions(step.setterThrownTypes)
         .addParameter(parameter)
-        .addCode(step.nullPolicy == NullPolicy.ALLOW ?
-            emptyCodeBlock :
-            CodeBlock.builder()
-                .beginControlFlow("if ($N == null)", parameter)
-                .addStatement("throw new $T($S)", NullPointerException.class, parameter.name)
-                .endControlFlow().build())
         .addStatement("this.$N.$L($N)",
             description.beanField, step.setterName(), parameter)
         .addStatement("return this")
@@ -74,7 +65,6 @@ final class Updater {
         .returns(implType(description))
         .addParameter(parameter)
         .addExceptions(step.getterThrownTypes)
-        .addCode(ZeroUtil.nullCheck(name, name))
         .addCode(clearCollection(description, step))
         .beginControlFlow("for ($T $N : $N)", iterationVar.type, iterationVar, name)
         .addStatement("this.$N.$N().add($N)",

@@ -86,21 +86,6 @@ public final class ZeroUtil {
     return FieldSpec.builder(type, name, modifiers).build();
   }
 
-  public static CodeBlock nullCheck(String varName, String message) {
-    return CodeBlock.builder()
-        .beginControlFlow("if ($N == null)", varName)
-        .addStatement("throw new $T($S)", NullPointerException.class, message)
-        .endControlFlow().build();
-  }
-
-  public static CodeBlock nullCheck(ParameterSpec parameterSpec) {
-    return nullCheck(parameterSpec.name, parameterSpec.name);
-  }
-
-  public static CodeBlock nullCheck(ParameterSpec parameterSpec, String message) {
-    return nullCheck(parameterSpec.name, message);
-  }
-
   static String distinctFrom(String string, String other) {
     if (string.equals(other)) {
       return 'a' + upcase(string);
@@ -175,10 +160,12 @@ public final class ZeroUtil {
       public Supplier<List<CodeBlock>> supplier() {
         return ArrayList::new;
       }
+
       @Override
       public BiConsumer<List<CodeBlock>, CodeBlock> accumulator() {
         return List::add;
       }
+
       @Override
       public BinaryOperator<List<CodeBlock>> combiner() {
         return (left, right) -> {
@@ -186,6 +173,7 @@ public final class ZeroUtil {
           return left;
         };
       }
+
       @Override
       public Function<List<CodeBlock>, CodeBlock> finisher() {
         return blocks -> {
@@ -203,6 +191,7 @@ public final class ZeroUtil {
           return builder.build();
         };
       }
+
       @Override
       public Set<Characteristics> characteristics() {
         return emptySet();
@@ -216,10 +205,12 @@ public final class ZeroUtil {
       public Supplier<List<E>> supplier() {
         return ArrayList::new;
       }
+
       @Override
       public BiConsumer<List<E>, List<E>> accumulator() {
         return List::addAll;
       }
+
       @Override
       public BinaryOperator<List<E>> combiner() {
         return (left, right) -> {
@@ -227,10 +218,12 @@ public final class ZeroUtil {
           return left;
         };
       }
+
       @Override
       public Function<List<E>, List<E>> finisher() {
         return Function.identity();
       }
+
       @Override
       public Set<Characteristics> characteristics() {
         return emptySet();

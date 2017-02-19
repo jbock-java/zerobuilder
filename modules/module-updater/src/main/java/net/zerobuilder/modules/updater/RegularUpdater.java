@@ -14,7 +14,6 @@ import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
-import net.zerobuilder.compiler.generate.NullPolicy;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -56,26 +55,11 @@ public final class RegularUpdater implements ProjectedModule {
           (staticMethod, description) -> staticCall(description, staticMethod),
           (instanceMethod, description) -> instanceCall(description, instanceMethod));
 
-  private static CodeBlock nullCheck(ProjectedParameter step) {
-    if (step.nullPolicy == NullPolicy.ALLOW) {
-      return emptyCodeBlock;
-    }
-    return CodeBlock.builder()
-        .beginControlFlow("if (this.$N == null)", step.name)
-        .addStatement("throw new $T($S)",
-            NullPointerException.class, step.name)
-        .endControlFlow().build();
-  }
-
   private final Function<ProjectedRegularGoalDescription, MethodSpec> doneMethod =
       description -> methodBuilder("done")
           .addModifiers(PUBLIC)
           .addExceptions(description.thrownTypes)
           .returns(description.details.type())
-          .addCode(description.parameters.stream()
-              .filter(parameter -> parameter.nullPolicy == NullPolicy.REJECT)
-              .map(RegularUpdater::nullCheck)
-              .collect(joinCodeBlocks))
           .addCode(regularInvoke.apply(description.details, description))
           .build();
 

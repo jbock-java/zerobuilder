@@ -30,7 +30,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -84,8 +83,8 @@ public class GenericsBuilderTest {
         NEW_INSTANCE);
 
     // use SimpleParameter because the generics module doesn't need projections
-    SimpleParameter fooParameter = DtoRegularParameter.create("keys", LIST_OF_K, ALLOW);
-    SimpleParameter barParameter = DtoRegularParameter.create("value", V, ALLOW);
+    SimpleParameter fooParameter = DtoRegularParameter.create("keys", LIST_OF_K);
+    SimpleParameter barParameter = DtoRegularParameter.create("value", V);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
         details,
         Collections.emptyList(), // the goal method declares no exceptions

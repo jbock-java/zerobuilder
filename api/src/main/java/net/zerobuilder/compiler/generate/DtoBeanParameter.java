@@ -8,17 +8,13 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.ClassName.OBJECT;
-import static net.zerobuilder.compiler.generate.ZeroUtil.distinctFrom;
-import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.onlyTypeArgument;
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.*;
 
 public final class DtoBeanParameter {
 
   interface BeanParameterCases<R> {
     R accessorPair(AccessorPair pair);
+
     R loneGetter(LoneGetter getter);
   }
 
@@ -34,6 +30,7 @@ public final class DtoBeanParameter {
       public R accessorPair(AccessorPair pair) {
         return accessorPairFunction.apply(pair);
       }
+
       @Override
       public R loneGetter(LoneGetter getter) {
         return loneGetterFunction.apply(getter);
@@ -61,12 +58,6 @@ public final class DtoBeanParameter {
     public final TypeName type;
 
     /**
-     * true if null checks should be added
-     */
-    public final NullPolicy nullPolicy;
-
-
-    /**
      * Name of the getter method (could start with {@code "is"})
      */
     public final String getter;
@@ -75,9 +66,8 @@ public final class DtoBeanParameter {
 
     private final String name;
 
-    private AbstractBeanParameter(TypeName type, String getter, NullPolicy nullPolicy, List<TypeName> getterThrownTypes) {
+    private AbstractBeanParameter(TypeName type, String getter, List<TypeName> getterThrownTypes) {
       this.type = type;
-      this.nullPolicy = nullPolicy;
       this.getter = getter;
       this.getterThrownTypes = getterThrownTypes;
       this.name = downcase(getter.substring(getter.startsWith("is") ? 2 : 3));
@@ -104,9 +94,9 @@ public final class DtoBeanParameter {
 
     private final String setterName;
 
-    private AccessorPair(TypeName type, String getter, NullPolicy nullPolicy,
+    private AccessorPair(TypeName type, String getter,
                          List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {
-      super(type, getter, nullPolicy, getterThrownTypes);
+      super(type, getter, getterThrownTypes);
       this.setterThrownTypes = setterThrownTypes;
       this.setterName = "set" + upcase(name());
     }
@@ -146,9 +136,9 @@ public final class DtoBeanParameter {
       return parameterSpec(iterationVar.type, distinctFrom(iterationVar.name, avoid.name));
     }
 
-    private LoneGetter(TypeName type, String getter, NullPolicy nullPolicy, ParameterSpec iterationVar,
+    private LoneGetter(TypeName type, String getter, ParameterSpec iterationVar,
                        List<TypeName> getterThrownTypes) {
-      super(type, getter, nullPolicy, getterThrownTypes);
+      super(type, getter, getterThrownTypes);
       this.iterationVar = iterationVar;
     }
 
@@ -163,14 +153,13 @@ public final class DtoBeanParameter {
    *
    * @param type              the type returned by the getter
    * @param getter            getter name
-   * @param nullPolicy        null policy
    * @param getterThrownTypes thrown types
    * @param setterThrownTypes thrown types
    * @return accessor pair
    */
-  public static AbstractBeanParameter accessorPair(TypeName type, String getter, NullPolicy nullPolicy,
+  public static AbstractBeanParameter accessorPair(TypeName type, String getter,
                                                    List<TypeName> getterThrownTypes, List<TypeName> setterThrownTypes) {
-    return new AccessorPair(type, getter, nullPolicy,
+    return new AccessorPair(type, getter,
         getterThrownTypes, setterThrownTypes);
   }
 
@@ -179,17 +168,16 @@ public final class DtoBeanParameter {
    *
    * @param type              should be a subclass of {@link java.util.Collection}
    * @param getter            getter name
-   * @param nullPolicy        null policy
    * @param getterThrownTypes thrown types
    * @return lone getter
    * @throws IllegalArgumentException if {@code type} has more than one type parameter
    */
-  public static AbstractBeanParameter loneGetter(TypeName type, String getter, NullPolicy nullPolicy,
+  public static AbstractBeanParameter loneGetter(TypeName type, String getter,
                                                  List<TypeName> getterThrownTypes) {
     TypeName collectionType = onlyTypeArgument(type).orElse(OBJECT);
     String name = downcase(simpleName(collectionType));
     ParameterSpec iterationVar = parameterSpec(collectionType, name);
-    return new LoneGetter(type, getter, nullPolicy, iterationVar, getterThrownTypes);
+    return new LoneGetter(type, getter, iterationVar, getterThrownTypes);
   }
 
   private DtoBeanParameter() {

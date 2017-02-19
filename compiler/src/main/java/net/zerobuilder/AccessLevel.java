@@ -17,5 +17,5 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @Target({METHOD, CONSTRUCTOR})
 public @interface AccessLevel {
 
-  Level value() default Level.PUBLIC;
+  Level value();
 }

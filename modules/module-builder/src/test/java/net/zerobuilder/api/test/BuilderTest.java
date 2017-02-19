@@ -22,7 +22,6 @@ import static java.util.Collections.singletonList;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -75,8 +74,8 @@ public class BuilderTest {
         NEW_INSTANCE);
 
     // use SimpleParameter because the builder module doesn't need projections
-    SimpleParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW);
-    SimpleParameter barParameter = DtoRegularParameter.create("bar", INTEGER, ALLOW);
+    SimpleParameter fooParameter = DtoRegularParameter.create("foo", STRING);
+    SimpleParameter barParameter = DtoRegularParameter.create("bar", INTEGER);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
         details,
         Collections.emptyList(), // the goal method declares no exceptions

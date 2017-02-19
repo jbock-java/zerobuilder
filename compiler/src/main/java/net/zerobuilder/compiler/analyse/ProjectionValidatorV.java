@@ -24,7 +24,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -67,8 +66,7 @@ final class ProjectionValidatorV {
         Map<String, VariableElement> fields = fields(type);
         List<TmpProjectedParameter> parameters = transform(goal.executableElement.getParameters(),
             parameter -> TmpProjectedParameter.create(parameter,
-                projectionInfo(methods, fields, parameter),
-                goal.goalAnnotation));
+                projectionInfo(methods, fields, parameter)));
         return createGoalDescription(goal, parameters);
       };
 
@@ -112,10 +110,8 @@ final class ProjectionValidatorV {
 
   static final Function<RegularGoalElement, SimpleRegularGoalDescription> validateBuilder
       = goal -> {
-    List<TmpSimpleParameter> parameters = executableElement.apply(goal).getParameters()
-        .stream()
-        .map(parameter -> TmpSimpleParameter.create(parameter, goal.goalAnnotation))
-        .collect(toList());
+    List<TmpSimpleParameter> parameters = transform(executableElement.apply(goal).getParameters(),
+        TmpSimpleParameter::create);
     List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
     List<TypeName> thrownTypes = thrownTypes(executableElement.apply(goal));
     return SimpleRegularGoalDescription.create(

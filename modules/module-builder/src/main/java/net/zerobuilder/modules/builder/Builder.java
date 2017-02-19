@@ -34,7 +34,6 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.Generator.instanceField;
-import static net.zerobuilder.modules.builder.Step.nullCheck;
 
 final class Builder {
 
@@ -78,7 +77,6 @@ final class Builder {
           .addAnnotation(Override.class)
           .addParameter(parameter)
           .returns(nextType)
-          .addCode(nullCheck.apply(step))
           .addCode(normalAssignment(i, description))
           .addModifiers(PUBLIC)
           .addExceptions(thrownTypes)

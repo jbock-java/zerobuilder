@@ -3,14 +3,11 @@ package net.zerobuilder.compiler.analyse;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import net.zerobuilder.IgnoreGetter;
-import net.zerobuilder.NotNullGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpValidParameter;
 import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
-import net.zerobuilder.compiler.generate.NullPolicy;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -102,10 +99,8 @@ final class ProjectionValidatorB {
     if (!isImplementationOf(type, COLLECTION)) {
       throw new ValidationException(BEAN_COULD_NOT_FIND_SETTER, getter);
     }
-    NotNullGetter notNullGetter = getter.getAnnotation(NotNullGetter.class);
     TypeName typeName = TypeName.get(type);
-    NullPolicy nullPolicy = TmpValidParameter.nullPolicy(type, notNullGetter, NullPolicy.ALLOW);
-    AbstractBeanParameter loneGetter = DtoBeanParameter.loneGetter(typeName, name, nullPolicy, thrownTypes(getter));
+    AbstractBeanParameter loneGetter = DtoBeanParameter.loneGetter(typeName, name, thrownTypes(getter));
     return TmpAccessorPair.createLoneGetter(getter, loneGetter);
   }
 

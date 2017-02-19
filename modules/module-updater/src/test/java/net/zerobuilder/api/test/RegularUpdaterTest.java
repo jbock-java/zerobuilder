@@ -23,7 +23,6 @@ import static java.util.Collections.singletonList;
 import static net.zerobuilder.compiler.generate.Access.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
-import static net.zerobuilder.compiler.generate.NullPolicy.ALLOW;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -66,7 +65,7 @@ public class RegularUpdaterTest {
         NEW_INSTANCE);
 
     // use ProjectedParameter because the updater module requires projections
-    ProjectedParameter fooParameter = DtoRegularParameter.create("foo", STRING, ALLOW,
+    ProjectedParameter fooParameter = DtoRegularParameter.create("foo", STRING,
         ProjectionMethod.create("getFoo", singletonList(IO_EXCEPTION)));
     ProjectedRegularGoalDescription description = ProjectedRegularGoalDescription.create(
         details,

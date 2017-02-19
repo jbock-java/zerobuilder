@@ -6,7 +6,6 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-import net.zerobuilder.compiler.generate.NullPolicy;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -75,6 +74,6 @@ public class GenericsImplTest {
   }
 
   private SimpleParameter typeSpec(String parameter) {
-    return DtoRegularParameter.create(parameter, ClassName.get(String.class), NullPolicy.ALLOW);
+    return DtoRegularParameter.create(parameter, ClassName.get(String.class));
   }
 }

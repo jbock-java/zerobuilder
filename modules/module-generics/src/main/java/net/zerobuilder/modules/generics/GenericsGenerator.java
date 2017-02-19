@@ -26,8 +26,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
-import static net.zerobuilder.compiler.generate.ZeroUtil.nullCheck;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -40,12 +38,18 @@ final class GenericsGenerator {
   private final List<TypeSpec> stepImpls;
   private final SimpleRegularGoalDescription description;
 
+  private final BiFunction<AbstractRegularDetails, ParameterSpec, CodeBlock> returnStatement;
+
   private GenericsGenerator(SimpleRegularGoalDescription description,
                             ClassName contractType,
                             List<TypeSpec> stepImpls) {
     this.contractType = contractType;
     this.description = description;
     this.stepImpls = stepImpls;
+    returnStatement = regularDetailsCases(
+        (constructor, instance) -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name)),
+        (staticMethod, instance) -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name)),
+        (instanceMethod, instance) -> statement("return new $T($N)", contractType.nestedClass(stepImpls.get(0).name), instance));
   }
 
   TypeSpec defineImpl() {
@@ -83,26 +87,14 @@ final class GenericsGenerator {
         .returns(parameterizedTypeName(
             contractType.nestedClass(upcase(description.parameters.get(0).name)),
             typeParams.get(0)));
-    builder.addCode(goalMethodNullCheck
-        .apply(description.details, instance));
     builder.addParameters(
         goalMethodParameters.apply(description.details, instance));
     builder.addTypeVariables(typeParams.get(0));
-    builder.addCode(regularDetailsCases(
-        constructor -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name)),
-        staticMethod -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name)),
-        instanceMethod -> statement("return new $T($N)", contractType.nestedClass(stepImpls.get(0).name), instance)
-    ).apply(description.details));
+    builder.addCode(returnStatement.apply(description.details, instance));
     return new DtoGeneratorOutput.BuilderMethod(
         description.details.name,
         builder.build());
   }
-
-  private final BiFunction<AbstractRegularDetails, ParameterSpec, CodeBlock> goalMethodNullCheck =
-      regularDetailsCases(
-          (constructor, instance) -> emptyCodeBlock,
-          (staticMethod, instance) -> emptyCodeBlock,
-          (instanceMethod, instance) -> nullCheck(instance));
 
   private final BiFunction<AbstractRegularDetails, ParameterSpec, List<ParameterSpec>> goalMethodParameters =
       regularDetailsCases(

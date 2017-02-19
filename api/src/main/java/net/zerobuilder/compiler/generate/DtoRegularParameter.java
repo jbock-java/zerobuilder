@@ -16,18 +16,12 @@ public final class DtoRegularParameter {
     public final TypeName type;
 
     /**
-     * true if null checks should be added
-     */
-    public final NullPolicy nullPolicy;
-
-    /**
      * original parameter name
      */
     public final String name;
 
-    private AbstractRegularParameter(String name, TypeName type, NullPolicy nullPolicy) {
+    private AbstractRegularParameter(String name, TypeName type) {
       this.type = type;
-      this.nullPolicy = nullPolicy;
       this.name = name;
     }
 
@@ -40,28 +34,27 @@ public final class DtoRegularParameter {
 
     public final ProjectionInfo projectionInfo;
 
-    private ProjectedParameter(String name, TypeName type, NullPolicy nullPolicy, ProjectionInfo projectionInfo) {
-      super(name, type, nullPolicy);
+    private ProjectedParameter(String name, TypeName type, ProjectionInfo projectionInfo) {
+      super(name, type);
       this.projectionInfo = projectionInfo;
     }
   }
 
   public static final class SimpleParameter extends AbstractRegularParameter {
-    private SimpleParameter(String name, TypeName type, NullPolicy nullPolicy) {
-      super(name, type, nullPolicy);
+    private SimpleParameter(String name, TypeName type) {
+      super(name, type);
     }
   }
 
   /**
    * Creates a parameter without projection info.
    *
-   * @param name       parameter name
-   * @param type       parameter type
-   * @param nullPolicy null policy
+   * @param name parameter name
+   * @param type parameter type
    * @return a parameter
    */
-  public static SimpleParameter create(String name, TypeName type, NullPolicy nullPolicy) {
-    return new SimpleParameter(name, type, nullPolicy);
+  public static SimpleParameter create(String name, TypeName type) {
+    return new SimpleParameter(name, type);
   }
 
   /**
@@ -69,12 +62,11 @@ public final class DtoRegularParameter {
    *
    * @param name           parameter name
    * @param type           parameter type
-   * @param nullPolicy     null policy
    * @param projectionInfo projection info
    * @return a parameter
    */
-  public static ProjectedParameter create(String name, TypeName type, NullPolicy nullPolicy, ProjectionInfo projectionInfo) {
-    return new ProjectedParameter(name, type, nullPolicy, projectionInfo);
+  public static ProjectedParameter create(String name, TypeName type, ProjectionInfo projectionInfo) {
+    return new ProjectedParameter(name, type, projectionInfo);
   }
 
   private DtoRegularParameter() {

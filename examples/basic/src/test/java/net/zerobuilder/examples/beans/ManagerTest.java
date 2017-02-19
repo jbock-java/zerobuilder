@@ -37,30 +37,4 @@ public class ManagerTest {
     assertThat(bar.getBoss(), is(nullValue()));
     assertThat(bar.getId(), is(12));
   }
-
-  @Test(expected = NullPointerException.class)
-  public void nullBuilder() {
-    Manager foo = managerBuilder()
-        .name(null)
-        .boss(null)
-        .id(12)
-        .salary(13);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void nullUpdater() {
-    Manager foo = managerBuilder()
-        .name("foo")
-        .boss(managerBuilder()
-            .name("123")
-            .boss(null)
-            .id(4)
-            .salary(192873))
-        .id(12)
-        .salary(13);
-    Manager bar = managerUpdater(foo)
-        .name(null)
-        .boss(null)
-        .done();
-  }
 }
