@@ -62,23 +62,6 @@ Now `name` is the first step.
 The remaining steps `age`, `executive` and `notes` are still in alphabetic order.
 In order to make `notes` the second step, add `@GetterOrder(1)` to the corresponding getter, and so on.
 
-### Null checking
-
-Runtime null checks can be generated with a `@NotNullGetter` annotation on getters.
-
-````java
-@NotNullGetter
-public String getName() {
-  return name;
-}
-````
-
-The getter is now guaranteed to never return null, under one condition: 
-This only applies if the bean was created or updated using zerobuilder,
-and its setters never directly invoked. 
-
-This condition is why a standard `@NotNull` annotation would be misleading.
-
 ### Ignoring a method
 
 Sometimes a bean may have a getter method without a corresponding setter.

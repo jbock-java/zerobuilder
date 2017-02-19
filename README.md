@@ -10,8 +10,6 @@ It can be used in two different ways:
 * To create <em>instances of</em> mutable JavaBeans and update them with "immutable semantics", i.e. by making shallow copies.
   There's a separate [documentation for beans](beans.md).
 
-It can also be configured to add runtime null checks to the generated builders.
-
 ### Non goals
 
 * Zerobuilder does not generate the <em>classes of</em> data objects, like beans or immutable objects.

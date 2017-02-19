@@ -130,18 +130,6 @@ The following are valid projections for the `sender` parameter above:
 2. A method `String sender()`
 3. A method `String getSender()`
 
-### Null checking
-
-Runtime null checks are added to the generated code 
-if you put a `@RejectNull` annotation on a parameter.
-
-````java
-@Builder
-public Doo(@RejectNull String foo) {
-  this.foo = foo;
-}
-````
-
 ### Recycling
 
 The builder pattern can be made more efficient by adding a `@Recycle` annotation:
