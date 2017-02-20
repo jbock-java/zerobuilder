@@ -1,7 +1,6 @@
 package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builder;
-import net.zerobuilder.Recycle;
 import net.zerobuilder.Step;
 import net.zerobuilder.Style;
 import net.zerobuilder.Updater;
@@ -15,7 +14,6 @@ final class Spaghetti {
 
   @Builder(style = Style.IMMUTABLE)
   @Updater
-  @Recycle
   Spaghetti(String cheese, @Step(0) String sauce, boolean alDente) {
     this.cheese = cheese;
     this.sauce = sauce;

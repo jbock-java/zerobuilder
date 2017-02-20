@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.AbstractMap;
 
 final class GenericConstructor<K, V> extends AbstractMap.SimpleEntry<K, V> {
-
+123
   @Builder
   @Updater
   GenericConstructor(K key, V value) throws IOException {

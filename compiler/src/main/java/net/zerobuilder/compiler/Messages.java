@@ -23,6 +23,12 @@ public final class Messages {
     public static final String NESTING_KIND =
         "This inner class must be static and not private.";
 
+    public static final String REUSE_GENERICS =
+        "A goal with type variables cannot be recycyled.";
+
+    public static final String REUSE_IMMUTABLE =
+        "An immutable goal cannot be recycyled.";
+
     public static final String STEP_OUT_OF_BOUNDS =
         "The step position must be less than the number of arguments.";
 

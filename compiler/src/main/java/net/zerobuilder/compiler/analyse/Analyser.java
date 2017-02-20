@@ -34,6 +34,8 @@ import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.Style.IMMUTABLE;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SUBGOALS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.REUSE_GENERICS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.REUSE_IMMUTABLE;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalElementCases;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.regularGoalElementCases;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkAccessLevel;
@@ -44,6 +46,7 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpda
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
 import static net.zerobuilder.compiler.analyse.Utilities.peer;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
+import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
@@ -81,9 +84,18 @@ public final class Analyser {
   private static final Function<AbstractGoalElement, AbstractGoalInput> assignModule =
       goalElementCases(
           regularGoalElementCases(
-              general -> hasTypevars(general.executableElement) || general.style == IMMUTABLE ?
-                  new RegularSimpleGoalInput(GENERICS, validateBuilder.apply(general)) :
-                  new RegularSimpleGoalInput(BUILDER, validateBuilder.apply(general)),
+              general -> {
+                boolean hasTypevars = hasTypevars(general.executableElement);
+                if (hasTypevars && general.goalAnnotation.lifecycle == REUSE_INSTANCES) {
+                  throw new ValidationException(REUSE_GENERICS, general.executableElement);
+                }
+                if (general.style == IMMUTABLE && general.goalAnnotation.lifecycle == REUSE_INSTANCES) {
+                  throw new ValidationException(REUSE_IMMUTABLE, general.executableElement);
+                }
+                return hasTypevars || general.style == IMMUTABLE ?
+                    new RegularSimpleGoalInput(GENERICS, validateBuilder.apply(general)) :
+                    new RegularSimpleGoalInput(BUILDER, validateBuilder.apply(general));
+              },
               projected -> new ProjectedGoalInput(UPDATER, validateUpdater.apply(projected))),
           bean -> bean.moduleChoice == ModuleChoice.BUILDER ?
               new BeanGoalInput(BEAN_BUILDER, validateBean.apply(bean)) :
