@@ -236,3 +236,8 @@
 ### 2017-01-04 zerobuilder 1.625 released
 
 * improved "missing projection" message
+
+### 2017-02-21 zerobuilder 1.631 released
+
+* null checking feature removed (use auto-value for this)
+* `@Recycle` will fail the compilation, if not possible

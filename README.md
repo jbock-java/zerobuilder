@@ -2,20 +2,20 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder)
 
-This project aims to generate some useful variations of the builder pattern.
-It can be used in two different ways:
+Zerobuilder is an elegant way to generate <em>builder patterns</em>.
+There are two different classes of use cases:
 
-* To create and update <em>instances of</em> immutable value objects.
+* Creating and updating instances of immutable value objects.
   See the quick start below, and the [detailed documentation](values.md).
-* To create <em>instances of</em> mutable JavaBeans and update them with "immutable semantics", i.e. by making shallow copies.
+* Safe "update" of mutable JavaBeans, by creating shallow copies.
   There's a separate [documentation for beans](beans.md).
 
 ### Non goals
 
-* Zerobuilder does not generate the <em>classes of</em> data objects, like beans or immutable objects.
-  Instead, it can be combined with tools that do this, such as 
+* Zerobuilder does not generate the <em>classes of</em> your "business" data objects, such as beans, or (hopefully) immutable objects.
+  Rather, it can be combined with standard tools that do precisely this, such as 
   [auto-value](https://github.com/google/auto/tree/master/value) 
-  (more about this [here](values.md)) 
+  (more about this [here](values.md))
   and [derive4j](https://github.com/derive4j/derive4j).
 
 ### Quick start
@@ -65,3 +65,5 @@ When used in a maven pom, it should be put in the `provided` scope:
 ### Migrating to 1.6xx
 
 The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater` and `@Recycle` instead.
+`@NonNull` was dropped in 1.631; please use zerobuilder on top of [auto-value](https://github.com/google/auto/tree/master/value)
+if you need this functionality.
