@@ -2,7 +2,7 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder)
 
-Zerobuilder is an elegant way to generate <em>builder patterns</em>.
+Zerobuilder is an elegant way to generate the <em>builder pattern</em>.
 There are two different classes of use cases:
 
 * Creating and updating instances of immutable value objects.
