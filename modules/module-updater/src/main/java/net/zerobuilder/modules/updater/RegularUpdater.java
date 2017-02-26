@@ -13,7 +13,6 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,6 +43,8 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.updater.Generator.goalMethod;
 import static net.zerobuilder.modules.updater.InstanceWorld.factorySpec;
+import static net.zerobuilder.modules.updater.Updater.FACTORY;
+import static net.zerobuilder.modules.updater.Updater.IN_USE;
 
 public final class RegularUpdater implements ProjectedModule {
 
@@ -99,7 +100,7 @@ public final class RegularUpdater implements ProjectedModule {
     ParameterSpec varGoal = parameterSpec(type, '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (isReusable.apply(details)) {
-      builder.addStatement("this._currently_in_use = false");
+      builder.addStatement("this.$L = $L", IN_USE, false);
     }
     return builder.addStatement("$T $N = $T.$N($L)", varGoal.type, varGoal, description.context.type,
         method, details.invocationParameters())
@@ -115,10 +116,10 @@ public final class RegularUpdater implements ProjectedModule {
     ParameterSpec varGoal = parameterSpec(type, '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (isReusable.apply(details)) {
-      builder.addStatement("this._currently_in_use = false");
+      builder.addStatement("this.$L = $L", IN_USE, false);
     }
     return builder
-        .addStatement("$T $N = _factory.$N($L)", varGoal.type, varGoal,
+        .addStatement("$T $N = this.$L.$N($L)", varGoal.type, varGoal, FACTORY,
             method, details.invocationParameters())
         .add(free(description))
         .addStatement("return $N", varGoal)
@@ -132,7 +133,7 @@ public final class RegularUpdater implements ProjectedModule {
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (isReusable.apply(details)) {
-      builder.addStatement("this._currently_in_use = false");
+      builder.addStatement("this.$L = $L", IN_USE, false);
     }
     return builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type,
         details.invocationParameters())

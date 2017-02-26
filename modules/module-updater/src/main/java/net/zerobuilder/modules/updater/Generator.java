@@ -35,6 +35,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 import static net.zerobuilder.modules.updater.RegularUpdater.isReusable;
+import static net.zerobuilder.modules.updater.Updater.IN_USE;
 
 final class Generator {
 
@@ -78,6 +79,7 @@ final class Generator {
         public CodeBlock projectionMethod(ProjectionMethod projection, ProjectedRegularGoalDescription description, ProjectedParameter step) {
           return copyFromMethod(description, projection, step);
         }
+
         @Override
         public CodeBlock fieldAccess(FieldAccess projection, ProjectedRegularGoalDescription description, ProjectedParameter step) {
           return copyFromField(description, projection);
@@ -116,11 +118,11 @@ final class Generator {
       FieldSpec cache = context.cache(rawClassName(varUpdater.type));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varUpdater.type, varUpdater, cache)
-          .beginControlFlow("if ($N._currently_in_use)", varUpdater)
+          .beginControlFlow("if ($N.$L)", varUpdater, IN_USE)
           .addStatement("$N.remove()", cache)
           .addStatement("$N = $N.get()", varUpdater, cache)
           .endControlFlow()
-          .addStatement("$N._currently_in_use = true", varUpdater)
+          .addStatement("$N.$L = $L", varUpdater, IN_USE, true)
           .build();
     } else {
       return statement("$T $N = new $T()", varUpdater.type, varUpdater, varUpdater.type);

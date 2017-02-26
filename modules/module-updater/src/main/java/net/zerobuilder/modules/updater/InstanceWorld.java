@@ -30,6 +30,7 @@ import static net.zerobuilder.modules.updater.Generator.thrownByProjections;
 import static net.zerobuilder.modules.updater.Generator.toBuilderParameter;
 import static net.zerobuilder.modules.updater.Generator.varUpdater;
 import static net.zerobuilder.modules.updater.RegularUpdater.moduleName;
+import static net.zerobuilder.modules.updater.Updater.FACTORY;
 
 final class InstanceWorld {
 
@@ -67,11 +68,11 @@ final class InstanceWorld {
     ParameterSpec factory = parameterSpec(description.context.type, "factory");
     return TypeSpec.classBuilder(simpleName(factoryType(details, description)))
         .addTypeVariables(details.instanceTypeParameters)
-        .addField(fieldSpec(factory.type, "_factory", PRIVATE, FINAL))
+        .addField(fieldSpec(factory.type, FACTORY, PRIVATE, FINAL))
         .addMethod(constructorBuilder()
             .addModifiers(PRIVATE)
             .addParameter(factory)
-            .addStatement("this._factory = $N", factory)
+            .addStatement("this.$L = $N", FACTORY, factory)
             .build())
         .addMethod(methodBuilder("updater")
             .addExceptions(thrownByProjections(description))
@@ -79,7 +80,7 @@ final class InstanceWorld {
             .addTypeVariables(details.typeParameters)
             .returns(updater.type)
             .addCode(initVarUpdater(description, updater))
-            .addStatement("$N._factory = this._factory", updater)
+            .addStatement("$N.$L = this.$L", updater, FACTORY, FACTORY)
             .addCode(copyBlock(description))
             .addStatement("return $N", updater)
             .addModifiers(modifiers(details.access))

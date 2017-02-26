@@ -37,6 +37,8 @@ import static net.zerobuilder.modules.builder.Generator.instanceField;
 
 final class Builder {
 
+  static final String IN_USE = "_currently_in_use";
+
   static TypeName nextType(int i, SimpleRegularGoalDescription description) {
     if (i < description.parameters.size() - 1) {
       return description.context.generatedType
@@ -54,7 +56,7 @@ final class Builder {
       builder.add(instanceField(description));
     }
     if (description.details.lifecycle == REUSE_INSTANCES) {
-      builder.add(fieldSpec(BOOLEAN, "_currently_in_use", PRIVATE));
+      builder.add(fieldSpec(BOOLEAN, IN_USE, PRIVATE));
     }
     steps.stream()
         .limit(steps.size() - 1)
@@ -112,7 +114,7 @@ final class Builder {
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (details.lifecycle == REUSE_INSTANCES) {
-      builder.addStatement("this._currently_in_use = false");
+      builder.addStatement("this.$L = $L", IN_USE, false);
     }
     CodeBlock args = description.invocationParameters();
     builder.addStatement("$T $N = new $T($L)", varGoal.type, varGoal, type, args);
@@ -130,7 +132,7 @@ final class Builder {
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (details.lifecycle == REUSE_INSTANCES) {
-      builder.addStatement("this._currently_in_use = false");
+      builder.addStatement("this.$L = $L", IN_USE, false);
     }
     if (VOID.equals(type)) {
       builder.addStatement("this.$N.$N($L)", instanceField(description),
@@ -157,7 +159,7 @@ final class Builder {
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     if (details.lifecycle == REUSE_INSTANCES) {
-      builder.addStatement("this._currently_in_use = false");
+      builder.addStatement("this.$L = $L", IN_USE, false);
     }
     if (VOID.equals(type)) {
       builder.addStatement("$T.$N($L)", rawClassName(description.context.type),

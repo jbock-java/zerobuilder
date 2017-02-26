@@ -28,6 +28,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
+import static net.zerobuilder.modules.builder.Builder.IN_USE;
 import static net.zerobuilder.modules.builder.RegularBuilder.implType;
 
 final class Generator {
@@ -63,11 +64,11 @@ final class Generator {
       FieldSpec cache = description.context.cache(implType(description));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)
-          .beginControlFlow("if ($N._currently_in_use)", varBuilder)
+          .beginControlFlow("if ($N.$L)", varBuilder, IN_USE)
           .addStatement("$N.remove()", cache)
           .addStatement("$N = $N.get()", varBuilder, cache)
           .endControlFlow()
-          .addStatement("$N._currently_in_use = true", varBuilder)
+          .addStatement("$N.$L = $L", varBuilder, IN_USE, true)
           .addStatement("return $N", varBuilder)
           .build();
     }
@@ -82,11 +83,11 @@ final class Generator {
       FieldSpec cache = description.context.cache(implType(description));
       return CodeBlock.builder()
           .addStatement("$T $N = $N.get()", varBuilder.type, varBuilder, cache)
-          .beginControlFlow("if ($N._currently_in_use)", varBuilder)
+          .beginControlFlow("if ($N.$L)", varBuilder, IN_USE)
           .addStatement("$N.remove()", cache)
           .addStatement("$N = $N.get()", varBuilder, cache)
           .endControlFlow()
-          .addStatement("$N._currently_in_use = true", varBuilder)
+          .addStatement("$N.$L = $L", varBuilder, IN_USE, true)
           .addStatement("$N.$N = $N", varBuilder, instanceField(description), varInstance)
           .addStatement("return $N", varBuilder)
           .build();
