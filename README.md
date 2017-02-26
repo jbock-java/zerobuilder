@@ -12,11 +12,11 @@ There are two different types of use cases:
 
 ### Non goals
 
-* Zerobuilder does not generate your "business" data objects, such as beans, or (hopefully) immutable objects.
-  There are many other tools that do this, such as 
-  [auto-value](https://github.com/google/auto/tree/master/value)
-  and [derive4j](https://github.com/derive4j/derive4j). 
-  Zerobuilder can work "on top" of these; see [here](values.md) for an example with auto-value.
+Zerobuilder does not generate your "business" data objects, such as beans, or (hopefully) immutable objects.
+There are many other tools that do this, such as 
+[auto-value](https://github.com/google/auto/tree/master/value)
+and [derive4j](https://github.com/derive4j/derive4j). 
+Zerobuilder can work "on top" of these. See [here](values.md) for an example with auto-value.
 
 ### Quick start
 
