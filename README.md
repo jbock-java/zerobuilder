@@ -2,8 +2,8 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder)
 
-Zerobuilder is an elegant way to generate the <em>builder pattern</em>.
-There are two different classes of use cases:
+Zerobuilder is an annotation processor that generates the <em>builder pattern</em>.
+There are two different types of use cases:
 
 * Creating and updating instances of immutable value objects.
   See the quick start below, and the [detailed documentation](values.md).
@@ -12,11 +12,11 @@ There are two different classes of use cases:
 
 ### Non goals
 
-* Zerobuilder does not generate the classes of your "business" data objects, such as beans, or (hopefully) immutable objects.
-  Rather, it can be combined with standard tools that do precisely this, such as 
-  [auto-value](https://github.com/google/auto/tree/master/value) 
-  (more about this [here](values.md))
-  and [derive4j](https://github.com/derive4j/derive4j).
+* Zerobuilder does not generate your "business" data objects, such as beans, or (hopefully) immutable objects.
+  There are many other tools that do this, such as 
+  [auto-value](https://github.com/google/auto/tree/master/value)
+  and [derive4j](https://github.com/derive4j/derive4j). 
+  Zerobuilder can work "on top" of these; see [here](values.md) for an example with auto-value.
 
 ### Quick start
 
