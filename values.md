@@ -2,20 +2,20 @@
 
 ### Motivation
 
-Immutable types, also known as values, are quite popular nowadays.
-Their constructors tend to have a lot of arguments, which can lead to code that's hard to read.
+Immutable types, also known as values, are popular nowadays.
+Unfortunately, their constructors tend to have a lot of arguments, which can lead to code that's hard to read.
 
 Replacing the constructor with a classic builder pattern may improve things, but it comes at a price:
 
 * Creating the builder class is too much work, and it has to be kept in sync.
-* Even worse, the builder makes it possible to "forget" a constructor argument. 
+* Even worse, the builder makes it possible to "forget" a constructor argument.
   This is especially a problem when existing code still compiles after an argument is added to the constructor.
 
 Zerobuilder takes care of the boilerplate by generating two different variants of the builder pattern:
 
-* A `Builder` to create new instance. 
+* A `Builder` to create new instance.
   In this [variant of the builder pattern][1], it is impossible to omit a constructor argument.
-* A classical-builder style `Updater` to make modified shallow copies. 
+* A classical-builder style `Updater` to make modified shallow copies.
 
 [1]: http://blog.crisp.se/2013/10/09/perlundholm/another-builder-pattern-for-java
 
@@ -67,8 +67,8 @@ If for some reason you would like to call them in a different order, you can use
 
 ````java
   @Builder
-  Message(@Step(1) String sender, 
-          @Step(2) String body, 
+  Message(@Step(1) String sender,
+          @Step(2) String body,
           @Step(0) String recipient) {
     this.sender = sender;
     this.body = body;
