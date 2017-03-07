@@ -158,7 +158,7 @@ public Doo(String foo) {
 }
 ````
 
-### AutoValue interop
+### <a name="auto-value"></a>auto-value
 
 The projection methods may be abstract.
 This means that `@Builder` and `@Updater` can be used on 
@@ -187,11 +187,11 @@ abstract class Animal {
 The following methods could then also be added to the `Animal` class, for convenience:
 
 ````java
-  static AnimalBuilders.AnimalBuilder.Name builder() {
-    return AnimalBuilders.animalBuilder();
-  }
+static AnimalBuilders.AnimalBuilder.Name builder() {
+  return AnimalBuilders.animalBuilder();
+}
 
-  AnimalBuilders.AnimalUpdater updater() {
-    return AnimalBuilders.animalUpdater(this);
-  }
+AnimalBuilders.AnimalUpdater updater() {
+  return AnimalBuilders.animalUpdater(this);
+}
 ````
