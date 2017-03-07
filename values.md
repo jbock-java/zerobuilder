@@ -2,20 +2,19 @@
 
 ### Motivation
 
-Immutable types, also known as values, are popular nowadays.
-Unfortunately, their constructors tend to have a lot of arguments, which can lead to code that's hard to read.
+Immutable types, also known as values, are increasingly used in place of traditional java beans.
+Their constructors often have lots of arguments. This can lead to code that's hard to read.
 
-Replacing the constructor with a classic builder pattern may improve things, but it comes at a price:
+Using the standard builder pattern may improve readability, but there are downsides:
 
-* Creating the builder class is too much work, and it has to be kept in sync.
-* Even worse, the builder makes it possible to "forget" a constructor argument.
-  This is especially a problem when existing code still compiles after an argument is added to the constructor.
+* Creating the builder class is tedious, and the code has to be kept in sync.
+* The builder pattern makes it possible to "forget" a constructor argument.
+  Extending the argument list of a constructor should cause compile errors elsewhere.
 
 Zerobuilder takes care of the boilerplate by generating two different variants of the builder pattern:
 
-* A `Builder` to create new instance.
-  In this [variant of the builder pattern][1], it is impossible to omit a constructor argument.
-* A classical-builder style `Updater` to make modified shallow copies.
+* A `Builder` that fails at compile time if constructor arguments are missing.
+* A traditional-style `Updater` to make and modify shallow copies.
 
 [1]: http://blog.crisp.se/2013/10/09/perlundholm/another-builder-pattern-for-java
 
