@@ -182,7 +182,7 @@ abstract class Animal {
 ````
 
 This will ensure that the generated `AnimalBuilders` class has both an `animalBuilder` and `animalUpdater` method.
-The following convenience methods could then also be added to `Animals`:
+The following convenience methods could then also be added to `Animal`:
 
 ````java
 static AnimalBuilders.AnimalBuilder.Name builder() {
