@@ -16,7 +16,7 @@ Zerobuilder does not generate your "business" data objects, such as beans, or (h
 There are many other tools that do this, such as 
 [auto-value](https://github.com/google/auto/tree/master/value)
 and [derive4j](https://github.com/derive4j/derive4j). 
-Zerobuilder can work "on top" of these. See [here](values.md#auto-value) for an example with auto-value.
+Zerobuilder is compatible with some of these. See [here](values.md#auto-value) for an example with auto-value.
 
 ### Quick start
 
@@ -25,21 +25,21 @@ You can also add an `@Updater` annotation, if the returned (or constructed) type
 (in this case, the fields `foo` and `bar`):
 
 ````java
-  import net.zerobuilder.Builder;
-  import net.zerobuilder.Updater;
+import net.zerobuilder.Builder;
+import net.zerobuilder.Updater;
 
-  final class Doo {
+final class Doo {
 
-    final String foo;
-    final String bar;
+  final String foo;
+  final String bar;
 
-    @Builder
-    @Updater
-    Doo(String foo, String bar) {
-      this.foo = foo;
-      this.bar = bar;
-    }
+  @Builder
+  @Updater
+  Doo(String foo, String bar) {
+    this.foo = foo;
+    this.bar = bar;
   }
+}
 ````
 
 This will generate a class called `DooBuilders` in the same package.
@@ -64,5 +64,5 @@ In a maven pom, it should have `provided` scope:
 ### Migrating to 1.6xx
 
 The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater` and `@Recycle` instead.
-`@NonNull` was dropped in 1.631; please use [zerobuilder on top of auto-value](values.md#auto-value)
+`@NonNull` was dropped in 1.631; please use [zerobuilder with auto-value](values.md#auto-value)
 if you need this functionality.
