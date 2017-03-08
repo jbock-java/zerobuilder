@@ -17,7 +17,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -28,7 +27,6 @@ import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
-import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.ABSTRACT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.MISSING_PROJECTION;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.executableElement;
@@ -36,6 +34,7 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedP
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.findKey;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
+import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedFields;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.common.LessTypes.isDeclaredType;
@@ -62,8 +61,8 @@ final class ProjectionValidatorV {
         }
         TypeElement type = asTypeElement(mirror);
         validateType(goal, type);
-        Map<String, ExecutableElement> methods = projectionCandidates(type);
-        Map<String, VariableElement> fields = fields(type);
+        Map<String, ExecutableElement> methods = getLocalAndInheritedMethods(type, LOOKS_LIKE_PROJECTION);
+        Map<String, VariableElement> fields = getLocalAndInheritedFields(type);
         List<TmpProjectedParameter> parameters = transform(goal.executableElement.getParameters(),
             parameter -> TmpProjectedParameter.create(parameter,
                 projectionInfo(methods, fields, parameter)));
@@ -78,7 +77,12 @@ final class ProjectionValidatorV {
     if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
       return DtoProjectionInfo.FieldAccess.create(field.getSimpleName().toString());
     }
-    List<String> possibleNames = Arrays.asList("get" + upcase(name), "is" + upcase(name), name);
+    List<String> possibleNames;
+    if (parameter.asType().getKind() == TypeKind.BOOLEAN) {
+      possibleNames = Arrays.asList(name, "is" + upcase(name), "get" + upcase(name));
+    } else {
+      possibleNames = Arrays.asList(name, "get" + upcase(name));
+    }
     return findKey(methods, possibleNames)
         .map(methodName -> ProjectionMethod.create(methodName, thrownTypes(methods.get(methodName))))
         .orElseThrow(() -> new ValidationException(MISSING_PROJECTION + name, parameter));
@@ -91,21 +95,6 @@ final class ProjectionValidatorV {
         && type.getModifiers().contains(ABSTRACT)) {
       throw new ValidationException(ABSTRACT_CONSTRUCTOR, goal.executableElement);
     }
-  }
-
-  private static Map<String, VariableElement> fields(TypeElement type) {
-    List<VariableElement> variableElements = fieldsIn(type.getEnclosedElements());
-    Map<String, VariableElement> map = new HashMap<>();
-    variableElements.stream()
-        .filter(field -> !field.getModifiers().contains(PRIVATE)
-            && !field.getModifiers().contains(STATIC))
-        .forEach(field -> map.computeIfAbsent(
-            field.getSimpleName().toString(), name -> field));
-    return map;
-  }
-
-  private static Map<String, ExecutableElement> projectionCandidates(TypeElement type) {
-    return getLocalAndInheritedMethods(type, LOOKS_LIKE_PROJECTION);
   }
 
   static final Function<RegularGoalElement, SimpleRegularGoalDescription> validateBuilder

@@ -131,11 +131,14 @@ For example, any of the following would be a valid projection for a constructor 
 3. A non-private, non-static method `String getSender()`
 
 The projections are found in this order.
-That is, if the field `sender` exists and is not private,
-any method called `getSender` method will be ignored.
+
+For example, if the field `String sender` exists and is not private,
+then it will be used to initialize the updater.
+Even if the methods `String sender()` or `String getSender()` exist, they will be ignored.
 
 A projection method may be `abstract`.
-Projection fields or methods may be inherited from an ancestor class.
+Fields and methods that are inherited from an ancestor class are treated as if
+they were defined directly.
 
 ### Recycling
 

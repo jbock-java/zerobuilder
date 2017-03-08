@@ -7,15 +7,16 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor6;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 
 import static javax.lang.model.element.ElementKind.PACKAGE;
+import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 
@@ -67,35 +68,54 @@ public final class LessElements {
   public static Map<String, ExecutableElement> getLocalAndInheritedMethods(
       TypeElement type, Predicate<ExecutableElement> predicate) {
     Map<String, ExecutableElement> methods = new LinkedHashMap<>();
-    PackageElement packageElement = getPackage(type);
-    addFromSuperclass(packageElement, type, methods, predicate);
-    addFromInterfaces(packageElement, type, methods, predicate);
+    PackageElement pkg = getPackage(type);
+    addFromSuperclass(pkg, type, methods, predicate);
+    addFromInterfaces(pkg, type, methods, predicate);
     return methods;
+  }
+
+  public static Map<String, VariableElement> getLocalAndInheritedFields(
+      TypeElement type) {
+    Map<String, VariableElement> fields = new LinkedHashMap<>();
+    PackageElement pkg = getPackage(type);
+    addFieldsFromSuperclass(pkg, type, fields);
+    return fields;
+  }
+
+  private static void addFieldsFromSuperclass(
+      PackageElement pkg, TypeElement type, Map<String, VariableElement> methods) {
+    addEnclosedFields(pkg, type, methods);
+    TypeMirror superclass = type.getSuperclass();
+    if (superclass.getKind() == TypeKind.NONE) {
+      return;
+    }
+    addFieldsFromSuperclass(pkg, asTypeElement(superclass), methods);
   }
 
   private static void addFromSuperclass(
       PackageElement pkg, TypeElement type, Map<String, ExecutableElement> methods,
       Predicate<ExecutableElement> predicate) {
-    addEnclosed(pkg, type, methods, predicate);
-    if (type.getSuperclass().getKind() == TypeKind.NONE) {
+    addEnclosedMethods(pkg, type, methods, predicate);
+    TypeMirror superclass = type.getSuperclass();
+    if (superclass.getKind() == TypeKind.NONE) {
       return;
     }
-    addFromSuperclass(pkg, asTypeElement(type.getSuperclass()), methods,
+    addFromSuperclass(pkg, asTypeElement(superclass), methods,
         predicate);
   }
 
   private static void addFromInterfaces(
       PackageElement pkg, TypeElement type, Map<String, ExecutableElement> methods,
       Predicate<ExecutableElement> predicate) {
-    addEnclosed(pkg, type, methods, predicate);
+    addEnclosedMethods(pkg, type, methods, predicate);
     for (TypeMirror superInterface : type.getInterfaces()) {
       addFromInterfaces(pkg, asTypeElement(superInterface), methods,
           predicate);
     }
   }
 
-  private static void addEnclosed(PackageElement pkg, TypeElement type, Map<String, ExecutableElement> methods,
-                                  Predicate<ExecutableElement> predicate) {
+  private static void addEnclosedMethods(PackageElement pkg, TypeElement type, Map<String, ExecutableElement> methods,
+                                         Predicate<ExecutableElement> predicate) {
     methodsIn(type.getEnclosedElements())
         .stream()
         .filter(predicate)
@@ -108,7 +128,19 @@ public final class LessElements {
         });
   }
 
-  private static boolean methodVisibleFromPackage(ExecutableElement method, PackageElement pkg) {
+  private static void addEnclosedFields(PackageElement pkg, TypeElement type, Map<String, VariableElement> fields) {
+    fieldsIn(type.getEnclosedElements())
+        .stream()
+        .forEach(field -> {
+          if (field.getKind() == ElementKind.FIELD
+              && !field.getModifiers().contains(Modifier.STATIC)
+              && methodVisibleFromPackage(field, pkg)) {
+            fields.computeIfAbsent(field.getSimpleName().toString(), name -> field);
+          }
+        });
+  }
+
+  private static boolean methodVisibleFromPackage(Element method, PackageElement pkg) {
     Visibility visibility = Visibility.ofElement(method);
     switch (visibility) {
       case PRIVATE:
