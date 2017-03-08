@@ -56,7 +56,7 @@ In a maven pom, it should have `provided` scope:
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
-    <version>1.631</version>
+    <version>1.632</version>
     <scope>provided</scope>
 </dependency>
 ````

@@ -241,3 +241,8 @@
 
 * null checking feature removed (use auto-value for this)
 * `@Recycle` will fail the compilation, if not possible
+
+### 2017-03-08 zerobuilder 1.632 released
+
+* specify projection precedence
+* consider isFoo projection only for boolean parameters (bugfix)
