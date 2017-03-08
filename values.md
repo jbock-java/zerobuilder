@@ -135,7 +135,7 @@ That is, if the field `sender` exists and is not private,
 any method called `getSender` method will be ignored.
 
 A projection method may be `abstract`.
-Fields or methods may be inherited from a parent class.
+Projection fields or methods may be inherited from an ancestor class.
 
 ### Recycling
 
