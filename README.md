@@ -3,10 +3,10 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder)
 
 Zerobuilder is an annotation processor that generates the <em>builder pattern</em>.
-There are two different types of use cases:
+There are two different kinds of use cases:
 
 * Creating and updating instances of immutable value objects.
-  See the quick start below, and the [detailed documentation](values.md).
+  See the quick start below, or the [detailed documentation](values.md).
 * Safe "update" of mutable JavaBeans, by creating shallow copies.
   There's a separate [documentation for beans](beans.md).
 
@@ -49,9 +49,9 @@ This will generate a class called `DooBuilders` in the same package.
 
 ### Maven note
 
-The generateed code references the annotated class, but is self contained otherwise.
+The generated code references your annotated class, but is self contained otherwise.
 In a maven pom, it should have `provided` scope:
- 
+
 ````xml
 <dependency>
     <groupId>com.github.h908714124</groupId>
@@ -65,4 +65,4 @@ In a maven pom, it should have `provided` scope:
 
 The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater` and `@Recycle` instead.
 `@NonNull` was dropped in 1.631; please use [zerobuilder with auto-value](values.md#auto-value)
-if you need this functionality.
+if you need runtime null-checking.
