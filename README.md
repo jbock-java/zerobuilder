@@ -64,6 +64,7 @@ In a maven pom, therefore, zerobuilder should either be `optional` or have `prov
 
 ### Migrating to 1.6xx
 
-The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater` and `@Recycle` instead.
+The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater`
+and (optionally) `@Recycle` instead.
 `@NonNull` was dropped in 1.631; please use [zerobuilder with auto-value](values.md#auto-value)
 if you need runtime null-checking.
