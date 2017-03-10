@@ -49,8 +49,9 @@ This will generate a class called `DooBuilders` in the same package.
 
 ### Maven note
 
-The generated code references your annotated class, but is self contained otherwise.
-In a maven pom, it should have `provided` scope:
+The generated code will know about the annotated classed,
+but be self-contained otherwise.
+In a maven pom, therefore, zerobuilder should either be `optional` or have `provided` scope:
 
 ````xml
 <dependency>
