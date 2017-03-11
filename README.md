@@ -49,7 +49,7 @@ This will generate a class called `DooBuilders` in the same package, with two `s
 
 ### Maven note
 
-The generated code will know about the annotated classed,
+The generated code will know about the annotated classes,
 but be self-contained otherwise.
 In a maven pom, therefore, zerobuilder should either be `optional` or have `provided` scope:
 
