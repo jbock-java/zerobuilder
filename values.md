@@ -197,7 +197,7 @@ final class Doo {
 }
 ````
 
-Updater instances will only be reused if after `done()` is invoked,
+Updater instances will only be reused after `done()` is invoked,
 and builder instances will only be reused after the final step is invoked.
 
 ### Access level
