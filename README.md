@@ -42,7 +42,7 @@ final class Doo {
 }
 ````
 
-This will generate a class called `DooBuilders` in the same package.
+This will generate a class called `DooBuilders` in the same package, with two `static` methods:
 
 * The static method `DooBuilders.dooBuilder()` returns the builder.
 * The static method `DooBuilders.dooUpdater(Doo doo)` returns the updater.

@@ -159,7 +159,7 @@ Please note that this uses `ThreadLocal`, which may cause problems
 
 ### Recycling / Type parameters
 
- The `@Recycle` annotation is not allowed and will raise a compile error,
+The `@Recycle` annotation is not allowed and will raise a compile error,
 if `Doo` has any type parameters:
 
 ````java
@@ -173,7 +173,7 @@ class Doo<E> {
 
 ### Recycling / Release
 
-Even with recycling, the `dooBuilder` and `dooUpdater` will not always return the same object:
+Even with recycling, the `dooBuilder` and `dooUpdater` methods will not always return the same object:
 
 ````java
 final class Doo {
