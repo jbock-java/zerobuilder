@@ -215,8 +215,7 @@ public Doo(String foo) {
 
 ### <a name="auto-value"></a>auto-value
 
-It is allowed for the projection methods (getters) to be `abstract`.
-This means that not only `@Builder` but also `@Updater` can be used on auto-value's common factory methods:
+Use `@Builder` and optionally `@Updater` on the factory method:
 
 ````java
 import com.google.auto.value.AutoValue;
@@ -237,7 +236,6 @@ abstract class Animal {
 }
 ````
 
-This will ensure that the generated `AnimalBuilders` class has both an `animalBuilder` and `animalUpdater` method.
 The following convenience methods could then also be added to `Animal`:
 
 ````java
