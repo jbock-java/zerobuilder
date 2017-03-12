@@ -1,7 +1,7 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.squareup.javapoet.TypeName;
-import net.zerobuilder.GetterOrder;
+import net.zerobuilder.Getter;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
@@ -132,8 +132,8 @@ final class ProjectionValidator {
     static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = parameter -> parameter.parameter;
 
     static TmpAccessorPair accessorPair(ExecutableElement getter, ExecutableElement setter) {
-      int value = getter.getAnnotation(GetterOrder.class) == null ?
-          -1 : getter.getAnnotation(GetterOrder.class).value();
+      int value = getter.getAnnotation(Getter.class) == null ?
+          -1 : getter.getAnnotation(Getter.class).value();
       TypeName type = TypeName.get(getter.getReturnType());
       AbstractBeanParameter accessorPair = DtoBeanParameter.accessorPair(type, getter.getSimpleName().toString(),
           thrownTypes(getter), thrownTypes(setter));
@@ -141,8 +141,8 @@ final class ProjectionValidator {
     }
 
     static TmpAccessorPair createLoneGetter(ExecutableElement getter, AbstractBeanParameter loneGetter) {
-      int value = getter.getAnnotation(GetterOrder.class) == null ?
-          -1 : getter.getAnnotation(GetterOrder.class).value();
+      int value = getter.getAnnotation(Getter.class) == null ?
+          -1 : getter.getAnnotation(Getter.class).value();
       return new TmpAccessorPair(getter, value, loneGetter);
     }
   }

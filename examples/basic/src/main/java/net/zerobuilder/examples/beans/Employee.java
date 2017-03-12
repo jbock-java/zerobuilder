@@ -1,6 +1,6 @@
 package net.zerobuilder.examples.beans;
 
-import net.zerobuilder.GetterOrder;
+import net.zerobuilder.Getter;
 
 abstract class Employee {
 
@@ -24,7 +24,7 @@ abstract class Employee {
     this.salary = salary;
   }
 
-  @GetterOrder(0)
+  @Getter(0)
   String getName() {
     return name;
   }
