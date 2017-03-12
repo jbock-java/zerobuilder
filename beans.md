@@ -57,12 +57,13 @@ This order can be overridden by adding a `@Getter` annotation to one of the gett
 
 ````java
 @Getter(0)
-getName() { 
+String getName() { 
   return name; 
 }
 ````
 
-Now `name` will be the first step. Alternatively, `@Getter(1) int getAge()` would have the same effect.
+Now `name` will be the first step.
+Alternatively, `@Getter(1) int getAge() { ... }` would have the same effect.
 
 ### Ignoring a method
 
