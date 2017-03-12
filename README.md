@@ -57,7 +57,7 @@ In a maven pom, therefore, zerobuilder should either be `optional` or have `prov
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
-    <version>1.632</version>
+    <version>1.641</version>
     <scope>provided</scope>
 </dependency>
 ````

@@ -18,15 +18,15 @@ if you add the `@BeanBuilder` annotation to a JavaBean:
 
 ````java
 @BeanBuilder
-public class BusinessAnalyst {
+class BusinessAnalyst {
   private String name;
   private int age;
   // 46 more fields
 
-  public String getName() { return name; }
-  public void setName(String name) { this.name = name; }
-  public int getAge() { return age; }
-  public void setAge(int age) { this.age = age; }
+  String getName() { return name; }
+  void setName(String name) { this.name = name; }
+  int getAge() { return age; }
+  void setAge(int age) { this.age = age; }
   // 46 more getter / setter pairs
 }
 ````
@@ -53,18 +53,16 @@ The `static businessAnalystBuilder()` method returns an interface called `Age`.
 This is the first step in a linear "chain" of interfaces that ends in an instance of `BusinessAnalyst`.
 
 By default, the builder steps are in alphabetic order.
-This order can be overridden by adding a `@GetterOrder` annotation to one of the getters:
+This order can be overridden by adding a `@Getter` annotation to one of the getters:
 
 ````java
-@GetterOrder(0)
-public String getName() { 
+@Getter(0)
+getName() { 
   return name; 
 }
 ````
 
-Now `name` will be the first step.
-The remaining steps `age`, `executive` and `notes` are still in alphabetic order.
-In order to make `notes` the second step, add `@GetterOrder(1)` to the corresponding getter, and so on.
+Now `name` will be the first step. Alternatively, `@Getter(1) int getAge()` would have the same effect.
 
 ### Ignoring a method
 

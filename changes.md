@@ -246,3 +246,7 @@
 
 * specify projection precedence
 * consider isFoo projection only for boolean parameters (bugfix)
+
+### 2017-03-12 zerobuilder 1.641 released
+
+* rename @GetterOrder -> @Getter
