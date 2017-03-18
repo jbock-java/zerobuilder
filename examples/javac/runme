@@ -1,0 +1,18 @@
+#!/bin/bash
+if [[ -d target ]] || [[ -f target ]]; then
+  rm -rf target
+fi
+
+mkdir -p target/classes
+mkdir -p target/generated-sources/zerobuilder
+
+THE_JAR=`find ../../compiler/target/ -maxdepth 1 -name *.jar | grep -E '.*/zerobuilder-[0123456789.]+.jar'`
+javac -source 8 -target 8 \
+   -cp $THE_JAR \
+   -d target/classes \
+   -s target/generated-sources/zerobuilder \
+   -processorpath $THE_JAR \
+   src/net/zerobuilder/examples/javac/JavaMan.java
+
+java -cp target/classes/ \
+  net.zerobuilder.examples.javac.JavaMan
