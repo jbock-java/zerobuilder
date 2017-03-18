@@ -10,12 +10,15 @@ There are two different kinds of use cases:
 * Safe "update" of mutable JavaBeans, by creating shallow copies.
   There's a separate [documentation for beans](beans.md).
 
+In general, zerobuilder is more useful the more fields your data classes have.
+Alternatively, you may consider modeling your business case using enums and maps instead.
+
 ### Non goals
 
 Zerobuilder does not generate your "business" data objects, such as beans, or (hopefully) immutable objects.
-There are many other tools that do this, such as 
+There are many other tools that do this, such as
 [auto-value](https://github.com/google/auto/tree/master/value)
-and [derive4j](https://github.com/derive4j/derive4j). 
+and [derive4j](https://github.com/derive4j/derive4j).
 Zerobuilder is compatible with some of these. See [here](values.md#auto-value) for an example with auto-value.
 
 ### Quick start
