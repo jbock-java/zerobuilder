@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [[ ! -d lib ]]; then
+  mkdir lib
+fi
+
+if [[ -f lib/zerobuilder.jar ]]; then
+  exit 0
+fi
+
+function find_jar {
+  find ../../compiler/target -maxdepth 1 -name "*.jar" | \
+    grep -E '.*/zerobuilder-[0123456789.]+(-SNAPSHOT)?.jar'
+}
+
+THE_JAR=`find_jar`
+
+if [[ -z "$THE_JAR" ]]; then
+  mvn package -f ../../pom.xml
+  THE_JAR=`find_jar`
+fi
+
+if [[ -z "$THE_JAR" ]]; then
+  echo "[ERROR] zerobuilder jar not found"
+  exit 1
+else
+  rm -f lib/*.jar
+  cp "$THE_JAR" lib/zerobuilder.jar
+fi

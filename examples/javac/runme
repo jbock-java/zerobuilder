@@ -24,11 +24,11 @@ fi
 if [[ ! -f target/classes/net/zerobuilder/examples/javac/JavaMan.class ]]; then
   rm -rf target
   mkdir -p target/classes
-  mkdir -p target/generated-sources/zerobuilder
+  mkdir -p target/generated-sources/annotations
   javac -source 8 -target 8 \
         -cp $THE_JAR \
         -d target/classes \
-        -s target/generated-sources/zerobuilder \
+        -s target/generated-sources/annotations \
         src/net/zerobuilder/examples/javac/JavaMan.java  
 fi
 

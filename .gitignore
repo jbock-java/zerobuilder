@@ -1,12 +1,8 @@
 target
 .idea
 *.iml
+*~
 /compiler/dependency-reduced-pom.xml
 /deploy
 
-/examples/basic/src/main/java/net/zerobuilder/examples/generics/InstanceBuilders2.java
-/examples/basic/src/main/java/net/zerobuilder/examples/generics/GenericInstanceBuilders2.java
-/examples/basic/src/main/java/net/zerobuilder/examples/values/FieldAccessBuilders2.java
-/examples/basic/src/main/java/net/zerobuilder/examples/beans/UserBuilders2.java
-
-dot/graph2.png
+/dot/*.png
