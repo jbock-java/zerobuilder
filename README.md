@@ -11,7 +11,7 @@ There are two different kinds of use cases:
   There's a separate [documentation for beans](beans.md).
 
 In general, zerobuilder is more useful the more fields your data classes have.
-Alternatively, you may consider modeling your business case using enums and maps instead.
+Alternatively, you may also consider storing the data in `HashMap`s.
 
 ### Non goals
 
