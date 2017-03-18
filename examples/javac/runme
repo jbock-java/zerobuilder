@@ -1,18 +1,27 @@
 #!/bin/bash
-if [[ -d target ]] || [[ -f target ]]; then
-  rm -rf target
+set -e
+
+if [[ ! -d ../../compiler/target ]]; then
+  mvn package -f ../../pom.xml
 fi
 
-mkdir -p target/classes
-mkdir -p target/generated-sources/zerobuilder
+THE_JAR=$(find ../../compiler/target -maxdepth 1 -name "*.jar" | \
+            grep -E '.*/zerobuilder-[0123456789.]+(-SNAPSHOT)?.jar')
 
-THE_JAR=`find ../../compiler/target/ -maxdepth 1 -name *.jar | grep -E '.*/zerobuilder-[0123456789.]+.jar'`
-javac -source 8 -target 8 \
-   -cp $THE_JAR \
-   -d target/classes \
-   -s target/generated-sources/zerobuilder \
-   -processorpath $THE_JAR \
-   src/net/zerobuilder/examples/javac/JavaMan.java
+if [[ -z "$THE_JAR" ]]; then
+  echo "Jar not found"
+  exit 1
+fi
 
-java -cp target/classes/ \
-  net.zerobuilder.examples.javac.JavaMan
+if [[ ! -f target/classes/net/zerobuilder/examples/javac/JavaMan.class ]]; then
+  mkdir -p target/classes
+  mkdir -p target/generated-sources/zerobuilder
+  javac -source 8 -target 8 \
+        -cp $THE_JAR \
+        -d target/classes \
+        -s target/generated-sources/zerobuilder \
+        src/net/zerobuilder/examples/javac/JavaMan.java  
+fi
+
+java -cp target/classes \
+     net.zerobuilder.examples.javac.JavaMan
