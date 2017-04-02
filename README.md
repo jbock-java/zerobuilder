@@ -69,6 +69,19 @@ Since version 1.642, zerobuilder consists of two separate artifacts, for gradle 
 </dependency>
 ````
 
+### Gradle
+
+There's a gradle example in the examples folder.
+
+````groovy
+dependencies {
+    compile 'com.github.h908714124:zerobuilder:1.642'
+    apt 'com.github.h908714124:zerobuilder:1.642'
+    apt 'com.github.h908714124:zerobuilder-compiler:1.642'
+}
+
+````
+
 ### Migrating to 1.6xx
 
 The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater`
