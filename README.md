@@ -50,17 +50,21 @@ This will generate a class called `DooBuilders` in the same package, with two `s
 * The static method `DooBuilders.dooBuilder()` returns the builder.
 * The static method `DooBuilders.dooUpdater(Doo doo)` returns the updater.
 
-### Maven note
+### Maven usage
 
-The generated code will know about the annotated classes,
-but be self-contained otherwise.
-In a maven pom, therefore, zerobuilder should either be `optional` or have `provided` scope:
+Since version 1.642, zerobuilder consists of two separate artifacts, for gradle compatibility.
 
 ````xml
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
-    <version>1.641</version>
+    <version>1.642</version>
+</dependency>
+
+<dependency>
+    <groupId>com.github.h908714124</groupId>
+    <artifactId>zerobuilder-compiler</artifactId>
+    <version>1.642</version>
     <scope>provided</scope>
 </dependency>
 ````

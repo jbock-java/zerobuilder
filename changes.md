@@ -250,3 +250,7 @@
 ### 2017-03-12 zerobuilder 1.641 released
 
 * rename @GetterOrder -> @Getter
+
+### 2017-03-12 zerobuilder 1.642 released
+
+* split into separate artifacts zerobuilder and zerobuilder-compiler

@@ -13,6 +13,7 @@
     <modules>
         <module>api</module>
         <module>modules</module>
+        <module>zerobuilder</module>
         <module>compiler</module>
         <module>examples</module>
     </modules>

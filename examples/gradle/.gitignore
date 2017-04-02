@@ -1,0 +1,6 @@
+/build
+/lib
+/.gradle
+/gradle.ipr
+/gradle.iws
+/gradle
