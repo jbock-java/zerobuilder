@@ -52,19 +52,20 @@ This will generate a class called `DooBuilders` in the same package, with two `s
 
 ### Maven usage
 
-Since version 1.642, zerobuilder consists of two separate artifacts, for gradle compatibility.
+Since version 1.642, zerobuilder consists of two separate artifacts, for compatibility
+with gradle's `apt` or `annotationProcessor` scope.
 
 ````xml
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder</artifactId>
-    <version>1.642</version>
+    <version>1.643</version>
 </dependency>
 
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder-compiler</artifactId>
-    <version>1.642</version>
+    <version>1.643</version>
     <scope>provided</scope>
 </dependency>
 ````
@@ -75,14 +76,13 @@ There's a gradle example in the examples folder.
 
 ````groovy
 dependencies {
-    compile 'com.github.h908714124:zerobuilder:1.642'
-    apt 'com.github.h908714124:zerobuilder:1.642'
-    apt 'com.github.h908714124:zerobuilder-compiler:1.642'
+    compile 'com.github.h908714124:zerobuilder:1.643'
+    apt 'com.github.h908714124:zerobuilder-compiler:1.643'
 }
 
 ````
 
-### Migrating to 1.6xx
+### Migrating from earlier version
 
 The `@Builders` and `@Goal` annotations are gone. Use `@Builder`, `@Updater`
 and (optionally) `@Recycle` instead.

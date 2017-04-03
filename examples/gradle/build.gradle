@@ -11,7 +11,7 @@ buildscript {
 }
 
 repositories {
-    mavenCentral();
+    mavenCentral()
 }
 
 apply plugin: 'java'
@@ -22,7 +22,6 @@ apply plugin: 'application'
 mainClassName = 'net.zerobuilder.examples.gradle.GradleMan'
 
 dependencies {
-    compile 'com.github.h908714124:zerobuilder:1.642'
-    apt 'com.github.h908714124:zerobuilder:1.642'
-    apt 'com.github.h908714124:zerobuilder-compiler:1.642'
+    compile 'com.github.h908714124:zerobuilder:1.643'
+    apt 'com.github.h908714124:zerobuilder-compiler:1.643'
 }

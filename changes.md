@@ -251,6 +251,10 @@
 
 * rename @GetterOrder -> @Getter
 
-### 2017-03-12 zerobuilder 1.642 released
+### 2017-04-02 zerobuilder 1.642 released
 
 * split into separate artifacts zerobuilder and zerobuilder-compiler
+
+### 2017-04-03 zerobuilder 1.643 released
+
+* also include annotation classes in compiler jar

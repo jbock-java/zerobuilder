@@ -31,7 +31,6 @@
       <groupId>com.github.h908714124</groupId>
       <artifactId>zerobuilder</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
