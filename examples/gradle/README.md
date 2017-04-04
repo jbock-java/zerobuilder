@@ -1,6 +1,6 @@
 ### gradle
 
-gradle example
+Non-android gradle example
 
 ````bash
 ./gradlew compileJava
