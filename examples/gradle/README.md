@@ -2,13 +2,13 @@
 
 gradle example
 
-I could run the main method from command line as follows:
-
 ````bash
 ./gradlew compileJava
 ./gradlew run
 ````
 
-For some reason, I could not run it from intellij.
-There was an error about some duplicate class definition.
-I will ask JetBrains about this.
+### Intellij note
+
+Gradle's generated source root is `./build/generated/source/apt/main`.
+To run `GradleMan#main` from intellij, I had to manually mark this folder as "generated sources root",
+and possibly run `./gradlew clean` once.
