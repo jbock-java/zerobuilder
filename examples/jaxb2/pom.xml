@@ -62,12 +62,17 @@
 
   <dependencies>
 
-    <dependency>
-      <groupId>com.github.h908714124</groupId>
-      <artifactId>zerobuilder</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
+        <dependency>
+            <groupId>com.github.h908714124</groupId>
+            <artifactId>zerobuilder</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.h908714124</groupId>
+            <artifactId>zerobuilder-compiler</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
     <dependency>
       <groupId>junit</groupId>
