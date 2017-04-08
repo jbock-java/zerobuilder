@@ -1,3 +1,3 @@
 ### javac
 
-Basic example without maven or other build tools.
+The `runme` script shows how to run the annotation processor without the use of maven or other build tools.

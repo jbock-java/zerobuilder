@@ -24,7 +24,7 @@ Zerobuilder is compatible with some of these. See [here](values.md#auto-value) f
 ### Quick start
 
 Add a `@Builder` annotation to any non-private, non-abstract method or constructor.
-You can also add an `@Updater` annotation, if the returned (or constructed) type has "projections" 
+You can also add an `@Updater` annotation, if the returned (or constructed) type has "projections"
 (in this case, the fields `foo` and `bar`):
 
 ````java
@@ -52,16 +52,14 @@ This will generate a class called `DooBuilders` in the same package, with two `s
 
 ### Maven usage
 
-Since version 1.642, zerobuilder consists of two separate artifacts, for compatibility
-with gradle's `apt` or `annotationProcessor` scope.
+Since version 1.642, zerobuilder consists of two separate artifacts. This is to make use of
+gradle's `apt` or `annotationProcessor` scope.
+
+In maven, there is no corresponding scope. Since `zerobuilder-compiler` is self-contained,
+and its annotations are stripped from the `.class` files,
+it is sufficient to put this artifact alone in `provided` scope:
 
 ````xml
-<dependency>
-    <groupId>com.github.h908714124</groupId>
-    <artifactId>zerobuilder</artifactId>
-    <version>1.643</version>
-</dependency>
-
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder-compiler</artifactId>
@@ -73,6 +71,7 @@ with gradle's `apt` or `annotationProcessor` scope.
 ### Gradle
 
 There's a gradle example in the examples folder.
+For android, use `annotationProcessor` scope instead of `apt`.
 
 ````groovy
 dependencies {

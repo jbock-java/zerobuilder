@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
+mvn clean
 mvn install -Psource -f api/
-mvn -o install -Psource -f modules/
-mvn -o install -f compiler/
-mvn -o clean test -f examples/
+mvn install -Psource -f modules/
+mvn install -f zerobuilder/
+mvn install -f compiler/
+mvn test -f examples/

@@ -15,11 +15,6 @@
     <dependencies>
         <dependency>
             <groupId>com.github.h908714124</groupId>
-            <artifactId>zerobuilder</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.h908714124</groupId>
             <artifactId>zerobuilder-compiler</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -43,12 +38,24 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.1</version>
                 <configuration>
                     <source>8</source>
                     <target>8</target>
                 </configuration>
             </plugin>
+       <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.5.2</version>
+            <executions>
+                <execution>
+                    <id>default-install</id>
+                    <phase>none</phase>
+                </execution>
+            </executions>
+        </plugin>
+
         </plugins>
     </build>
 

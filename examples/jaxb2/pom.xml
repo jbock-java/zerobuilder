@@ -22,7 +22,7 @@
             <id>xjc</id>
             <configuration>
               <xjbSources>
-                <xjbSource>${basedir}/src/main/xjb/bindings.xjb</xjbSource>
+                <xjbSource>${project.basedir}/src/main/xjb/bindings.xjb</xjbSource>
               </xjbSources>
               <extension>true</extension>
               <arguments>
@@ -57,16 +57,22 @@
           <target>1.7</target>
         </configuration>
       </plugin>
+       <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-install-plugin</artifactId>
+            <executions>
+                <execution>
+                    <id>default-install</id>
+                    <phase>none</phase>
+                </execution>
+            </executions>
+        </plugin>
+
     </plugins>
   </build>
 
   <dependencies>
 
-        <dependency>
-            <groupId>com.github.h908714124</groupId>
-            <artifactId>zerobuilder</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.github.h908714124</groupId>
             <artifactId>zerobuilder-compiler</artifactId>

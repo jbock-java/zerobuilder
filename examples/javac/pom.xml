@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.github.h908714124</groupId>
+  <artifactId>zerobuilder-examples-javac</artifactId>
+  <version>0-SNAPSHOT</version>
+
+<properties>
+<version.zerobuilder>1.643</version.zerobuilder>
+</properties>
+
+  <build>
+    <plugins>
+  <plugin>
+    <artifactId>maven-clean-plugin</artifactId>
+    <version>3.0.0</version>
+    <configuration>
+      <filesets>
+        <fileset>
+          <directory>${project.basedir}/lib</directory>
+        </fileset>
+      </filesets>
+    </configuration>
+  </plugin>
+       <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.6.1</version>
+            <executions>
+                <execution>
+                    <id>default-compile</id>
+                    <phase>none</phase>
+                </execution>
+            </executions>
+        </plugin>
+       <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.5.2</version>
+            <executions>
+                <execution>
+                    <id>default-install</id>
+                    <phase>none</phase>
+                </execution>
+            </executions>
+        </plugin>
+
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+	<version>3.0.0</version>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+            <groupId>com.github.h908714124</groupId>
+            <artifactId>zerobuilder-compiler</artifactId>
+                  <version>${version.zerobuilder}</version>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.basedir}/lib</outputDirectory>
+                  <destFileName>zerobuilder-compiler.jar</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+
+        <executions>
+          <execution>
+            <id>copy-zerobuilder</id>
+            <phase>test-compile</phase>
+            <goals><goal>copy</goal></goals>
+          </execution>
+        </executions>
+        <dependencies>
+        <dependency>
+            <groupId>com.github.h908714124</groupId>
+            <artifactId>zerobuilder-compiler</artifactId>
+            <version>${version.zerobuilder}</version>
+        </dependency>
+        </dependencies>
+      </plugin>
+<plugin>
+  <artifactId>exec-maven-plugin</artifactId>
+  <groupId>org.codehaus.mojo</groupId>
+  <version>1.6.0</version>
+  <executions>
+    <execution>
+      <id>runme</id>
+      <phase>test</phase>
+      <goals>
+        <goal>exec</goal>
+      </goals>
+    </execution>
+  </executions>
+      <configuration>
+        <executable>${project.basedir}/runme</executable>
+      </configuration>
+
+</plugin>
+
+    </plugins>
+  </build>
+
+</project>

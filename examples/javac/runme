@@ -1,36 +1,31 @@
 #!/bin/bash
 
-if [[ ! -d ../../compiler/target ]]; then
-  mkdir -p ../../compiler/target
-fi
-
 function find_jar {
-  find ../../compiler/target -maxdepth 1 -name "*.jar" | \
-    grep -E '.*/zerobuilder-[0123456789.]+(-SNAPSHOT)?.jar'
+  local JAR="lib/zerobuilder-compiler.jar"
+  if [[ ! -f "$JAR" ]]; then
+    echo "[ERROR] $JAR not found"
+    exit 1
+  fi
+  echo -n "$JAR"
 }
 
 THE_JAR=`find_jar`
+echo "Using $THE_JAR"
 
-if [[ -z "$THE_JAR" ]]; then
-  mvn package -f ../../pom.xml
-  THE_JAR=`find_jar`
-fi
+rm -rf target
+mkdir -p target/classes target/generated
 
-if [[ -z "$THE_JAR" ]]; then
-  echo "[ERROR] zerobuilder jar not found"
+javac -source 8 \
+      -cp $THE_JAR \
+      -d target/classes \
+      -s target/generated \
+      src/net/zerobuilder/examples/javac/JavaMan.java
+
+RESULT=`java -cp target/classes net.zerobuilder.examples.javac.JavaMan`
+echo $RESULT
+
+if [[ "$RESULT" != "Hello world!" ]]; then
+  echo "Something went wrong..."
   exit 1
 fi
 
-if [[ ! -f target/classes/net/zerobuilder/examples/javac/JavaMan.class ]]; then
-  rm -rf target
-  mkdir -p target/classes
-  mkdir -p target/generated-sources/annotations
-  javac -source 8 -target 8 \
-        -cp $THE_JAR \
-        -d target/classes \
-        -s target/generated-sources/annotations \
-        src/net/zerobuilder/examples/javac/JavaMan.java  
-fi
-
-java -cp target/classes \
-     net.zerobuilder.examples.javac.JavaMan
