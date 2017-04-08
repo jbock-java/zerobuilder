@@ -19,6 +19,7 @@
         <module>jaxb2</module>
         <module>jpa</module>
         <module>javac</module>
+        <module>ant</module>
   </modules>
 <build>
 <plugins>

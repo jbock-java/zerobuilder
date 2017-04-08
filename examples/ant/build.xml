@@ -1,31 +1,24 @@
 <project name="zerobuilder-example-ant" basedir="." default="main">
-  <property name="lib.dir" value="lib"/>
+  <property name="lib.dir" value="${basedir}/lib"/>
   
   <path id="classpath">
     <fileset dir="${lib.dir}" includes="*.jar"/>
   </path>
   
-  <property name="src.dir" value="src"/>
+  <property name="src.dir" value="${basedir}/src"/>
   
-  <property name="build.dir" value="build"/>
+  <property name="build.dir" value="${basedir}/build"/>
   <property name="classes.dir" value="${build.dir}/classes"/>
   <property name="gensrc.dir" value="${build.dir}/generated-sources/annotations"/>
   <property name="jar.dir" value="${build.dir}/jar"/>
   
   <property name="main-class" value="net.zerobuilder.examples.ant.JavaMan"/>
-  <property name="getlib.path"
-            location="${basedir}/getlib"/>
-
-  <target name="getlib">
-    <mkdir dir="${lib.dir}"/>
-    <exec executable="${getlib.path}" />
-  </target>
   
   <target name="clean">
     <delete dir="${build.dir}"/>
   </target>
   
-  <target name="compile" depends="getlib">
+  <target name="compile">
     <mkdir dir="${classes.dir}"/>
     <mkdir dir="${gensrc.dir}"/>
     <javac includeantruntime="false"
