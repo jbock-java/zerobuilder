@@ -55,9 +55,10 @@ This will generate a class called `DooBuilders` in the same package, with two `s
 Since version 1.642, zerobuilder consists of two separate artifacts. This is to make use of
 gradle's `apt` or `annotationProcessor` scope.
 
-In maven, there is no corresponding scope. Since `zerobuilder-compiler` is self-contained,
+In maven, there is no corresponding scope. However since
+the artifact `zerobuilder-compiler` is self-contained,
 and its annotations are stripped from the `.class` files,
-it is sufficient to put this artifact alone in `provided` scope:
+it is sufficient to put this alone in `provided` scope:
 
 ````xml
 <dependency>
