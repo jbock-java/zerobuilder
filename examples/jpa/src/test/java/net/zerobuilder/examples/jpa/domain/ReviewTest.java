@@ -31,7 +31,6 @@ public class ReviewTest {
 
   @Test
   public void test() throws Exception {
-    assertThat(getReviews().getSize(), is(greaterThan(0)));
     getReviews().forEach(r -> assertThat(r.getTitle(), is(not("FooBar"))));
     getReviews()
         .map(r -> ReviewBuilders.reviewUpdater(r)
@@ -43,6 +42,8 @@ public class ReviewTest {
 
   private Page<Review> getReviews() {
     Hotel hotel = hotelService.getHotel(cityService.getCity("Bath", "UK"), "Bath Travelodge");
-    return hotelService.getReviews(hotel, new PageRequest(0, 10));
+    Page<Review> reviews = hotelService.getReviews(hotel, new PageRequest(0, 10));
+    assertThat(reviews.getSize(), is(greaterThan(0)));
+    return reviews;
   }
 }
