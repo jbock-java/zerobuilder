@@ -57,7 +57,7 @@ gradle's `apt` or `annotationProcessor` scope.
 
 In maven, there is no corresponding scope. However since
 the artifact `zerobuilder-compiler` is self-contained,
-and its annotations are stripped from the `.class` files,
+and the annotations it contains cannot make it into the `.class` files,
 it is sufficient to put this alone in `provided` scope:
 
 ````xml
