@@ -1,7 +1,7 @@
 # A flexible builder scheme
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.h908714124/zerobuilder)
-[![Circle CI](https://circleci.com/gh/h908714124/zerobuilder.svg?style=shield)](https://circleci.com/h908714124/zerobuilder)
+[![Circle CI](https://circleci.com/gh/h908714124/zerobuilder.svg?style=shield)](https://circleci.com/gh/h908714124/zerobuilder)
 
 
 Zerobuilder is an annotation processor that generates the <em>builder pattern</em>.
