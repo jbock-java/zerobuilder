@@ -1,27 +1,14 @@
-
-buildscript {
-    repositories {
-        maven {
-            url 'https://plugins.gradle.org/m2/'
-        }
-    }
-    dependencies {
-        classpath 'net.ltgt.gradle:gradle-apt-plugin:0.10'
-    }
+plugins {
+    id 'net.ltgt.apt' version '0.10'
+    id 'java'
 }
 
 repositories {
     mavenCentral()
 }
 
-apply plugin: 'java'
-apply plugin: 'net.ltgt.apt'
-apply plugin: 'idea'
-apply plugin: 'application'
-
-mainClassName = 'net.zerobuilder.examples.gradle.GradleMan'
-
 dependencies {
     compile 'com.github.h908714124:zerobuilder:1.643'
     apt 'com.github.h908714124:zerobuilder-compiler:1.643'
+    testCompile 'junit:junit:4.12'
 }
