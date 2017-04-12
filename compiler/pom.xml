@@ -104,6 +104,12 @@
         <version>2.4.3</version>
         <configuration>
           <minimizeJar>false</minimizeJar>
+              <relocations>
+                <relocation>
+                  <pattern>com.squareup.javapoet</pattern>
+                  <shadedPattern>net.zerobuilder.com.squareup.javapoet</shadedPattern>
+                </relocation>
+          </relocations>
         </configuration>
         <executions>
           <execution>
