@@ -7,20 +7,20 @@ import net.zerobuilder.Updater;
 // see GettersTest
 final class Getters {
 
-  private final double lenght;
+  private final double length;
   private final double width;
   private final double height;
 
   @Builder
   @Updater
-  Getters(double lenght, double width, double height) {
-    this.lenght = lenght;
+  Getters(double length, double width, double height) {
+    this.length = length;
     this.width = width;
     this.height = height;
   }
 
-  double getLenght() {
-    return lenght;
+  double getLength() {
+    return length;
   }
 
   double getWidth() {

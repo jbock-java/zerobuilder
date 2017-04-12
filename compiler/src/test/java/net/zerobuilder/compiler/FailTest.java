@@ -64,4 +64,21 @@ public class FailTest {
         .withErrorContaining("Missing projection: nah")
         .in(javaFile);
   }
+
+  @Test
+  public void projectionWrongType() {
+    List<String> sourceLines = Arrays.asList(
+        "package test;",
+        "import net.zerobuilder.*;",
+        "class Bu {",
+        "  String getFoo() { return null; }",
+        "  @Updater Bu(int foo) {}",
+        "}");
+    JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
+    assertAbout(javaSources()).that(ImmutableList.of(javaFile))
+        .processedWith(new ZeroProcessor())
+        .failsToCompile()
+        .withErrorContaining("Missing projection: foo")
+        .in(javaFile);
+  }
 }

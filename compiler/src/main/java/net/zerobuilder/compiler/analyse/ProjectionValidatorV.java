@@ -5,7 +5,7 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularProjectableGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpSimpleParameter;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
@@ -32,7 +32,6 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.MISSING_PROJECTION
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.executableElement;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
-import static net.zerobuilder.compiler.analyse.Utilities.findKey;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedFields;
 import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
@@ -74,8 +73,9 @@ final class ProjectionValidatorV {
                                                VariableElement parameter) {
     String name = parameter.getSimpleName().toString();
     VariableElement field = fields.get(name);
-    if (field != null && TypeName.get(field.asType()).equals(TypeName.get(parameter.asType()))) {
-      return DtoProjectionInfo.FieldAccess.create(field.getSimpleName().toString());
+    TypeName parameterType = TypeName.get(parameter.asType());
+    if (field != null && TypeName.get(field.asType()).equals(parameterType)) {
+      return FieldAccess.create(field.getSimpleName().toString());
     }
     List<String> possibleNames;
     if (parameter.asType().getKind() == TypeKind.BOOLEAN) {
@@ -83,9 +83,13 @@ final class ProjectionValidatorV {
     } else {
       possibleNames = Arrays.asList(name, "get" + upcase(name));
     }
-    return findKey(methods, possibleNames)
-        .map(methodName -> ProjectionMethod.create(methodName, thrownTypes(methods.get(methodName))))
-        .orElseThrow(() -> new ValidationException(MISSING_PROJECTION + name, parameter));
+    for (String possibleName : possibleNames) {
+      if (methods.containsKey(possibleName) &&
+          TypeName.get(methods.get(possibleName).getReturnType()).equals(parameterType)) {
+        return ProjectionMethod.create(possibleName, thrownTypes(methods.get(possibleName)));
+      }
+    }
+    throw new ValidationException(MISSING_PROJECTION + name, parameter);
   }
 
 

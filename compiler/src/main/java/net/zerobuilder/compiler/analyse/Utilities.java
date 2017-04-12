@@ -55,7 +55,7 @@ final class Utilities {
   static <E> List<E> sortedCopy(List<E> input, Comparator<E> comparator) {
     ArrayList<E> sorted = new ArrayList<>(input.size());
     sorted.addAll(input);
-    Collections.sort(sorted, comparator);
+    sorted.sort(comparator);
     return sorted;
   }
 
