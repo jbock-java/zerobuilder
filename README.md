@@ -66,7 +66,7 @@ it is sufficient to put this alone in `provided` scope:
 <dependency>
     <groupId>com.github.h908714124</groupId>
     <artifactId>zerobuilder-compiler</artifactId>
-    <version>1.643</version>
+    <version>1.644</version>
     <scope>provided</scope>
 </dependency>
 ````
@@ -78,8 +78,8 @@ For android, use `annotationProcessor` scope instead of `apt`.
 
 ````groovy
 dependencies {
-    compile 'com.github.h908714124:zerobuilder:1.643'
-    apt 'com.github.h908714124:zerobuilder-compiler:1.643'
+    compile 'com.github.h908714124:zerobuilder:1.644'
+    apt 'com.github.h908714124:zerobuilder-compiler:1.644'
 }
 
 ````

@@ -1,10 +1,19 @@
 #!/bin/bash
 if [[ -z "$1" ]]; then echo arg: version; exit 1; fi
-(cd api; ./release $1)
-(cd modules/module-builder; ./release $1)
-(cd modules/module-builder-beans; ./release $1)
-(cd modules/module-updater; ./release $1)
-(cd modules/module-updater-beans; ./release $1)
-(cd modules/module-generics; ./release $1)
+
+version="$1"
+
+function installVersion() {
+  mvn versions:set -DnewVersion="$version" &>/dev/null
+  mvn clean install
+  mv pom.xml.versionsBackup pom.xml
+}
+
+(cd api; installVersion)
+(cd modules/module-builder; installVersion)
+(cd modules/module-builder-beans; installVersion)
+(cd modules/module-updater; installVersion)
+(cd modules/module-updater-beans; installVersion)
+(cd modules/module-generics; installVersion)
 (cd zerobuilder; ./release $1)
 (cd compiler; ./release $1)

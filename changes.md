@@ -258,3 +258,8 @@
 ### 2017-04-03 zerobuilder 1.643 released
 
 * also include annotation classes in compiler jar
+
+### 2017-04-13 zerobuilder 1.644 released
+
+* relocate the shaded javapoet classes
+* bugfix where the return type of projection method was not validated
