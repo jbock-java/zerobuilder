@@ -8,7 +8,3 @@ else
 fi
 mv dependency-reduced-pom.xml target/zerobuilder-compiler-$1.pom
 mv pom.xml.versionsBackup pom.xml
-if ! [[ "$1" =~ .*SNAPSHOT ]]; then
-  cd target
-  gpg -ab zerobuilder-compiler-$1.pom
-fi

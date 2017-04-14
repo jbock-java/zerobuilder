@@ -10,9 +10,4 @@ public final class GradleMan {
   GradleMan (String message) {
     this.message = message;
   }
-
-  public static void main(String[] args) {
-    GradleMan gradleMan = GradleManBuilders.gradleManBuilder().message("Hello gradle!");
-    System.out.println(gradleMan.message);
-  }
 }
