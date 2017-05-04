@@ -21,7 +21,9 @@ Zerobuilder does not generate your data classes, such as beans, or (hopefully) i
 There are many other tools that do this, such as
 [auto-value](https://github.com/google/auto/tree/master/value)
 and [derive4j](https://github.com/derive4j/derive4j).
-Zerobuilder is compatible with some of these. See [here](values.md#auto-value) for an example with auto-value.
+Zerobuilder is compatible with some of these. <strike>See [here](values.md#auto-value) for an example with auto-value.</strike>
+
+UPDATE: There's now a dedicated builder for auto-value users: <https://github.com/h908714124/auto-builder>
 
 ### Quick start
 

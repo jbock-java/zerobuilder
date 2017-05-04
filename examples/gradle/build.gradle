@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.h908714124:zerobuilder:1.643'
+    compileOnly 'com.github.h908714124:zerobuilder:1.643'
     apt 'com.github.h908714124:zerobuilder-compiler:1.643'
     testCompile 'junit:junit:4.12'
 }
