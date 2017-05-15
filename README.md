@@ -13,4 +13,4 @@ If you are primarily using the `@Updater` annotation, please consider migrating 
 * <https://github.com/h908714124/auto-builder> for auto-value users
 
 If you are interested in the telescoping pattern that's generated via `@Builder`:
-There's no replacement for that yet.
+There's no replacement yet, but there's some [work in progress](https://github.com/h908714124/crate).
