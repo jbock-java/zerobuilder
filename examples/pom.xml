@@ -20,7 +20,6 @@
         <module>jpa</module>
         <module>javac</module>
         <module>ant</module>
-        <module>gradle</module>
   </modules>
 <build>
 <plugins>

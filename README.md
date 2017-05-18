@@ -3,8 +3,9 @@
 
 # DEPRECATION WARNING
 
-In May 2017, the core `@Updater` functionality of zerobuilder has been split into smaller projects.
-These are easier to maintain, generate fewer LOC and have extra features like `Optional` support.
+In May 2017, the core `@Updater` functionality of zerobuilder has been split into several smaller projects,
+most of them well below 1000 LOC.
+These are easier to maintain, generate less code and have extra features, such as `Optional` support.
 
 If you are primarily using the `@Updater` annotation, please consider migrating to one of these:
 
@@ -12,5 +13,5 @@ If you are primarily using the `@Updater` annotation, please consider migrating 
 * <https://github.com/h908714124/bean-standard> for beans
 * <https://github.com/h908714124/auto-builder> for auto-value users
 
-If you are interested in the telescoping pattern that's generated via `@Builder`:
-There's no replacement yet, but there's some [work in progress](https://github.com/h908714124/crate).
+If you are interested in the telescoping pattern that's generated via `@Builder`,
+you could switch to [crate](https://github.com/h908714124/crate).
