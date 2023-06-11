@@ -1,0 +1,152 @@
+plugins {
+    id('java')
+    id('maven-publish')
+    id('com.github.johnrengelman.shadow') version('8.1.1')
+    id('signing')
+}
+
+group = 'com.github.h908714124'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    sourceCompatibility = '11'
+    targetCompatibility = '11'
+    options.compilerArgs << '--release'
+    options.compilerArgs << '11'
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    mavenCentral()
+}
+
+shadowJar {
+    minimize()
+    archiveClassifier.set('')
+}
+
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.withType(GenerateModuleMetadata) {
+    enabled = true
+}
+
+shadowJar {
+    minimize()
+    archiveClassifier.set('')
+    relocate('io.jbock.javapoet', 'io.jbock.zerobuilder.javapoet')
+}
+
+dependencies {
+    def api = project(':api')
+    def zerobuilder = project(':zerobuilder')
+    def javapoet = 'io.github.jbock-java:javapoet:1.15'
+    shadow(zerobuilder)
+    implementation(javapoet)
+    implementation(api)
+    implementation(project(':module-builder'))
+    implementation(project(':module-updater'))
+    implementation(project(':module-updater-beans'))
+    implementation(project(':module-builder-beans'))
+    implementation(project(':module-generics'))
+    testImplementation('io.github.jbock-java:compile-testing:0.19.12')
+    testImplementation('org.junit.jupiter:junit-jupiter:5.9.2')
+    testImplementation(zerobuilder)
+}
+
+jar {
+    manifest {
+        attributes(
+                'Implementation-Version': project.properties['version']
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events('failed')
+    }
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    archiveClassifier.set('javadoc')
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier.set('sources')
+}
+
+artifacts {
+    archives(javadocJar, sourcesJar)
+}
+
+// https://central.sonatype.org/pages/gradle.html
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+            artifactId = 'zerobuilder-compiler'
+
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                name = 'zerobuilder-compiler'
+                packaging = 'jar'
+                description = 'zerobuilder annotation processor'
+                url = 'https://github.com/h908714124/zerobuilder'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'Various'
+                        name = 'Various'
+                        email = 'jbock-java@gmx.de'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/h908714124/zerobuilder.git'
+                    developerConnection = 'scm:git:https://github.com/h908714124/zerobuilder.git'
+                    url = 'https://github.com/h908714124/zerobuilder'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+            credentials {
+                username = System.getenv('OSS_USER')
+                password = System.getenv('OSS_PASS')
+            }
+        }
+    }
+}
+
+// https://docs.gradle.org/current/userguide/signing_plugin.html
+signing {
+    def signingKey = findProperty('signingKey')
+    def signingPassword = findProperty('signingPassword')
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.shadow
+}

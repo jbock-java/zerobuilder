@@ -1,8 +1,8 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeVariableName;
+import io.jbock.javapoet.ClassName;
+import io.jbock.javapoet.TypeName;
+import io.jbock.javapoet.TypeVariableName;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;

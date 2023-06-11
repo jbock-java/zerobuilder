@@ -1,14 +1,13 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import io.jbock.testing.compile.Compilation;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static net.zerobuilder.compiler.test_util.GeneratedLines.GENERATED_ANNOTATION;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
 public class RecyclingBeanTest {
 
@@ -31,20 +30,20 @@ public class RecyclingBeanTest {
         "    return notes;",
         "  }",
         "}");
-    JavaFileObject expected =
-        forSourceLines("beans.BusinessAnalystBuilders",
+    Compilation compilation = simpleCompiler().compile(businessAnalyst);
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("beans.BusinessAnalystBuilders")
+        .containsLines(
             "package beans;",
-            "import javax.annotation.Generated;",
+            "import javax.annotation.processing.Generated;",
             "",
-            GENERATED_ANNOTATION,
             "public final class BusinessAnalystBuilders {",
-            "",
             "  private BusinessAnalystBuilders() {",
             "    throw new UnsupportedOperationException(\"no instances\");",
             "  }",
             "",
             "  public static BusinessAnalystBuilder.Name businessAnalystBuilder() {",
-            "    return new BusinessAnalystBuilderImpl()",
+            "    return new BusinessAnalystBuilderImpl();",
             "  }",
             "",
             "  public static BusinessAnalystUpdater businessAnalystUpdater(BusinessAnalyst businessAnalyst) {",
@@ -56,19 +55,20 @@ public class RecyclingBeanTest {
             "    return _updater;",
             "  }",
             "",
-            "  private static final class BusinessAnalystBuilderImpl",
-            "        implements BusinessAnalystBuilder.Name, BusinessAnalystBuilder.Notes {",
+            "  private static final class BusinessAnalystBuilderImpl implements BusinessAnalystBuilder.Name, BusinessAnalystBuilder.Notes {",
             "    private final BusinessAnalyst businessAnalyst;",
             "    BusinessAnalystBuilderImpl() {",
             "      this.businessAnalyst = new BusinessAnalyst();",
             "    }",
             "",
-            "    @Override public BusinessAnalystBuilder.Notes name(String name) {",
+            "    @Override",
+            "    public BusinessAnalystBuilder.Notes name(String name) {",
             "      this.businessAnalyst.setName(name);",
             "      return this;",
             "    }",
             "",
-            "    @Override public BusinessAnalyst notes(Iterable<? extends String> notes) {",
+            "    @Override",
+            "    public BusinessAnalyst notes(Iterable<? extends String> notes) {",
             "      for (String string : notes) {",
             "        this.businessAnalyst.getNotes().add(string);",
             "      }",
@@ -81,7 +81,9 @@ public class RecyclingBeanTest {
             "    private BusinessAnalystBuilder() {",
             "      throw new UnsupportedOperationException(\"no instances\");",
             "    }",
-            "    public interface Name { Notes name(String name); }",
+            "    public interface Name {",
+            "      Notes name(String name);",
+            "    }",
             "    public interface Notes {",
             "      BusinessAnalyst notes(Iterable<? extends String> notes);",
             "    }",
@@ -112,9 +114,5 @@ public class RecyclingBeanTest {
             "    }",
             "  }",
             "}");
-    assertAbout(javaSources()).that(ImmutableList.of(businessAnalyst))
-        .processedWith(new ZeroProcessor())
-        .compilesWithoutError()
-        .and().generatesSources(expected);
   }
 }

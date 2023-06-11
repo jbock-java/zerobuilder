@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.TypeName;
+import io.jbock.javapoet.TypeName;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
 public final class DtoRegularParameter {

@@ -1,14 +1,13 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import io.jbock.testing.compile.Compilation;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static net.zerobuilder.compiler.test_util.GeneratedLines.GENERATED_ANNOTATION;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
 public class RecyclingConstructorTest {
 
@@ -30,27 +29,28 @@ public class RecyclingConstructorTest {
         "    this.length = length;",
         "  }",
         "}");
-    JavaFileObject expected =
-        forSourceLines("cube.CubeBuilders",
+    Compilation compilation = simpleCompiler().compile(cube);
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("cube.CubeBuilders")
+        .containsLines(
             "package cube;",
             "import java.util.List;",
-            "import javax.annotation.Generated;",
+            "import javax.annotation.processing.Generated;",
             "",
-            GENERATED_ANNOTATION,
             "public final class CubeBuilders {",
             "  private static final ThreadLocal<CubeBuilderImpl> cubeBuilderImpl = new ThreadLocal<CubeBuilderImpl>() {",
             "    @Override",
             "    protected CubeBuilderImpl initialValue() {",
             "      return new CubeBuilderImpl();",
             "    }",
-            "  }",
+            "  };",
             "",
             "  private static final ThreadLocal<CubeUpdater> cubeUpdater = new ThreadLocal<CubeUpdater>() {",
             "    @Override",
             "    protected CubeUpdater initialValue() {",
             "      return new CubeUpdater();",
             "    }",
-            "  }",
+            "  };",
             "",
             "  private CubeBuilders() {",
             "    throw new UnsupportedOperationException(\"no instances\");",
@@ -78,20 +78,22 @@ public class RecyclingConstructorTest {
             "    return _updater;",
             "  }",
             "",
-            "  private static final class CubeBuilderImpl implements",
-            "        CubeBuilder.Width , CubeBuilder.Length {",
+            "  private static final class CubeBuilderImpl implements CubeBuilder.Width, CubeBuilder.Length {",
             "    private boolean _currently_in_use;",
             "    private String width;",
-            "    CubeBuilderImpl() {}",
-            "",
-            "    @Override public CubeBuilder.Length width(String width) {",
-            "      this.width = width;",
-            "      return this; ",
+            "    CubeBuilderImpl() {",
             "    }",
             "",
-            "    @Override public Cube length(List<String> length) {",
+            "    @Override",
+            "    public CubeBuilder.Length width(String width) {",
+            "      this.width = width;",
+            "      return this;",
+            "    }",
+            "",
+            "    @Override",
+            "    public Cube length(List<String> length) {",
             "      this._currently_in_use = false;",
-            "      Cube _cube = new Cube( width, length );",
+            "      Cube _cube = new Cube(width, length);",
             "      this.width = null;",
             "      return _cube;",
             "    }",
@@ -101,7 +103,9 @@ public class RecyclingConstructorTest {
             "    private CubeBuilder() {",
             "      throw new UnsupportedOperationException(\"no instances\");",
             "    }",
-            "    public interface Width { Length width(String width); }",
+            "    public interface Width {",
+            "      Length width(String width);",
+            "    }",
             "    public interface Length {",
             "      Cube length(List<String> length);",
             "    }",
@@ -111,7 +115,8 @@ public class RecyclingConstructorTest {
             "    private boolean _currently_in_use;",
             "    private String width;",
             "    private List<String> length;",
-            "    private CubeUpdater() {}",
+            "    private CubeUpdater() {",
+            "    }",
             "",
             "    public CubeUpdater width(String width) {",
             "      this.width = width;",
@@ -125,17 +130,12 @@ public class RecyclingConstructorTest {
             "",
             "    public Cube done() {",
             "      this._currently_in_use = false;",
-            "      Cube _cube = new Cube( width, length );",
+            "      Cube _cube = new Cube(width, length);",
             "      this.width = null;",
             "      this.length = null;",
             "      return _cube;",
             "    }",
             "  }",
             "}");
-    assertAbout(javaSources()).that(ImmutableList.of(cube))
-        .processedWith(new ZeroProcessor())
-        .compilesWithoutError()
-        .and().generatesSources(expected);
   }
-
 }

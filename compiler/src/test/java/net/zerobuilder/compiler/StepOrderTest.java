@@ -1,14 +1,13 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import io.jbock.testing.compile.Compilation;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static net.zerobuilder.compiler.test_util.GeneratedLines.GENERATED_ANNOTATION;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
 public class StepOrderTest {
 
@@ -27,12 +26,13 @@ public class StepOrderTest {
         "    this.sauce = sauce;",
         "  }",
         "}");
-    JavaFileObject expected =
-        forSourceLines("cube.SpaghettiBuilders",
+    Compilation compilation = simpleCompiler().compile(cube);
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("cube.SpaghettiBuilders")
+        .containsLines(
             "package cube;",
-            "import javax.annotation.Generated;",
+            "import javax.annotation.processing.Generated;",
             "",
-            GENERATED_ANNOTATION,
             "public final class SpaghettiBuilders {",
             "  private SpaghettiBuilders() {",
             "    throw new UnsupportedOperationException(\"no instances\");",
@@ -45,7 +45,8 @@ public class StepOrderTest {
             "  private static final class SpaghettiBuilderImpl implements SpaghettiBuilder.Sauce, SpaghettiBuilder.Cheese {",
             "    private String sauce;",
             "",
-            "    SpaghettiBuilderImpl() {}",
+            "    SpaghettiBuilderImpl() {",
+            "    }",
             "",
             "    @Override",
             "    public SpaghettiBuilder.Cheese sauce(String sauce) {",
@@ -72,9 +73,5 @@ public class StepOrderTest {
             "    }",
             "  }",
             "}");
-    assertAbout(javaSources()).that(ImmutableList.of(cube))
-        .processedWith(new ZeroProcessor())
-        .compilesWithoutError()
-        .and().generatesSources(expected);
   }
 }

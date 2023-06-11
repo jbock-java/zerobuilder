@@ -1,14 +1,13 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import io.jbock.testing.compile.Compilation;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static net.zerobuilder.compiler.test_util.GeneratedLines.GENERATED_ANNOTATION;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
 public class GenericsInstanceTest {
 
@@ -41,14 +40,13 @@ public class GenericsInstanceTest {
         "    this.appendix = appendix;",
         "  }",
         "}");
-    JavaFileObject expected = forSourceLines(
-        "cube.ApexFactoryBuilders",
+    Compilation compilation = simpleCompiler().compile(apexFactory, apex);
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("cube.ApexFactoryBuilders").containsLines(
         "package cube;",
-        "import javax.annotation.Generated;",
+        "import javax.annotation.processing.Generated;",
         "",
-        GENERATED_ANNOTATION,
         "public final class ApexFactoryBuilders {",
-        "",
         "  private ApexFactoryBuilders() {",
         "    throw new UnsupportedOperationException(\"no instances\");",
         "  }",
@@ -75,9 +73,5 @@ public class GenericsInstanceTest {
         "    }",
         "  }",
         "}");
-    assertAbout(javaSources()).that(ImmutableList.of(apexFactory, apex))
-        .processedWith(new ZeroProcessor())
-        .compilesWithoutError()
-        .and().generatesSources(expected);
   }
 }

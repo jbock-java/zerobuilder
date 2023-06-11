@@ -1,13 +1,13 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeVariableName;
+import io.jbock.javapoet.ClassName;
+import io.jbock.javapoet.CodeBlock;
+import io.jbock.javapoet.FieldSpec;
+import io.jbock.javapoet.MethodSpec;
+import io.jbock.javapoet.ParameterSpec;
+import io.jbock.javapoet.ParameterizedTypeName;
+import io.jbock.javapoet.TypeName;
+import io.jbock.javapoet.TypeVariableName;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-import static com.squareup.javapoet.MethodSpec.constructorBuilder;
+import static io.jbock.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isUpperCase;
 import static java.util.Arrays.copyOf;
 import static java.util.Collections.emptyList;

@@ -1,9 +1,9 @@
 package net.zerobuilder.compiler;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.TypeSpec;
+import io.jbock.javapoet.AnnotationSpec;
+import io.jbock.javapoet.ClassName;
+import io.jbock.javapoet.JavaFile;
+import io.jbock.javapoet.TypeSpec;
 import net.zerobuilder.BeanBuilder;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;

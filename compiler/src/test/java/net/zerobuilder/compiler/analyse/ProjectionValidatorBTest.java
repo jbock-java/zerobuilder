@@ -1,10 +1,10 @@
 package net.zerobuilder.compiler.analyse;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.IS_GETTER_NAME;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ProjectionValidatorBTest {
 
@@ -18,5 +18,4 @@ public class ProjectionValidatorBTest {
     assertFalse(IS_GETTER_NAME.test("is99"));
     assertFalse(IS_GETTER_NAME.test("foobar"));
   }
-
 }

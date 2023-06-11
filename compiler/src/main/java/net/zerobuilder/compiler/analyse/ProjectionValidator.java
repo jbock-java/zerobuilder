@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.squareup.javapoet.TypeName;
+import io.jbock.javapoet.TypeName;
 import net.zerobuilder.Getter;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;

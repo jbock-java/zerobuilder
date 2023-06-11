@@ -1,13 +1,13 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import io.jbock.testing.compile.Compilation;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
 public class HardGenericsTest {
 
@@ -54,8 +54,7 @@ public class HardGenericsTest {
         "    }",
         "  }",
         "}");
-    assertAbout(javaSources()).that(ImmutableList.of(apexFactory))
-        .processedWith(new ZeroProcessor())
-        .compilesWithoutError();
+    Compilation compilation = simpleCompiler().compile(apexFactory);
+    assertThat(compilation).succeeded();
   }
 }

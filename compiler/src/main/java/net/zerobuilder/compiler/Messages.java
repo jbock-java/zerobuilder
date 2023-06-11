@@ -1,8 +1,8 @@
 package net.zerobuilder.compiler;
 
-import com.squareup.javapoet.AnnotationSpec;
+import io.jbock.javapoet.AnnotationSpec;
 
-import javax.annotation.Generated;
+import javax.annotation.processing.Generated;
 import javax.lang.model.util.Elements;
 import java.util.Collections;
 import java.util.List;
@@ -67,14 +67,10 @@ public final class Messages {
     public static final String GENERATED_COMMENTS = "https://github.com/h908714124/zerobuilder";
 
     static List<AnnotationSpec> generatedAnnotations(Elements elements) {
-      if (elements.getTypeElement("javax.annotation.Generated") != null) {
-        return singletonList(AnnotationSpec.builder(Generated.class)
-            .addMember("value", "$S", ZeroProcessor.class.getName())
-            .addMember("comments", "$S", GENERATED_COMMENTS)
-            .build());
-      }
-      return Collections.emptyList();
-
+      return List.of(AnnotationSpec.builder(Generated.class)
+          .addMember("value", "$S", ZeroProcessor.class.getName())
+          .addMember("comments", "$S", GENERATED_COMMENTS)
+          .build());
     }
 
     private JavadocMessages() {

@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.TypeName;
+import io.jbock.javapoet.TypeName;
 
 import java.util.List;
 import java.util.function.Function;

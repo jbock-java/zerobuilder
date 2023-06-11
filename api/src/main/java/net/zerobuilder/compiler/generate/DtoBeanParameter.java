@@ -1,13 +1,13 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeName;
+import io.jbock.javapoet.ParameterSpec;
+import io.jbock.javapoet.TypeName;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import static com.squareup.javapoet.ClassName.OBJECT;
+import static io.jbock.javapoet.ClassName.OBJECT;
 import static net.zerobuilder.compiler.generate.ZeroUtil.*;
 
 public final class DtoBeanParameter {

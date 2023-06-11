@@ -1,8 +1,8 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.TypeSpec;
+import io.jbock.javapoet.ClassName;
+import io.jbock.javapoet.FieldSpec;
+import io.jbock.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;

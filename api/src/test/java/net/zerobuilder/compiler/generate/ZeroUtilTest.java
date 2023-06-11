@@ -1,9 +1,9 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeVariableName;
-import org.junit.Test;
+import io.jbock.javapoet.ClassName;
+import io.jbock.javapoet.ParameterizedTypeName;
+import io.jbock.javapoet.TypeVariableName;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,10 +13,9 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.extractTypeVars;
 import static net.zerobuilder.compiler.generate.ZeroUtil.references;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ZeroUtilTest {
 
@@ -25,8 +24,6 @@ public class ZeroUtilTest {
 
   private static final ParameterizedTypeName LIST_OF_K =
       ParameterizedTypeName.get(ClassName.get(List.class), K);
-  private static final ParameterizedTypeName LIST_OF_V =
-      ParameterizedTypeName.get(ClassName.get(List.class), V);
   private static final ParameterizedTypeName MAP_K_V =
       ParameterizedTypeName.get(ClassName.get(Map.class), K, V);
   private static final ParameterizedTypeName MAP_V_LIST_OF_K =
@@ -34,7 +31,7 @@ public class ZeroUtilTest {
 
 
   @Test
-  public void testReferences() throws Exception {
+  public void testReferences() {
     assertTrue(references(LIST_OF_K, K));
     assertFalse(references(LIST_OF_K, V));
     assertTrue(references(MAP_K_V, V));
@@ -69,6 +66,6 @@ public class ZeroUtilTest {
     ParameterizedTypeName dabcab = ParameterizedTypeName.get(ClassName.get(HashMap.class), dabca, b);
     ParameterizedTypeName ddabcab = ParameterizedTypeName.get(ClassName.get(HashMap.class), d, dabcab);
     List<TypeVariableName> vars = extractTypeVars(ddabcab);
-    assertThat(new HashSet<>(vars), is(new HashSet<>(asList(a, b, c, d))));
+    assertEquals(new HashSet<>(asList(a, b, c, d)), new HashSet<>(vars));
   }
 }

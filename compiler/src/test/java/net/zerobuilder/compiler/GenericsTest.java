@@ -1,14 +1,13 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import io.jbock.testing.compile.Compilation;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static net.zerobuilder.compiler.test_util.GeneratedLines.GENERATED_ANNOTATION;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
 public class GenericsTest {
 
@@ -31,16 +30,15 @@ public class GenericsTest {
         "    return m;",
         "  }",
         "}");
-    JavaFileObject expected = forSourceLines(
-        "cube.FuchurBuilders",
+    Compilation compilation = simpleCompiler().compile(cube);
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("cube.FuchurBuilders").containsLines(
         "package cube;",
         "import java.util.List;",
         "import java.util.Map;",
-        "import javax.annotation.Generated;",
+        "import javax.annotation.processing.Generated;",
         "",
-        GENERATED_ANNOTATION,
         "public final class FuchurBuilders {",
-        "",
         "  private FuchurBuilders() {",
         "    throw new UnsupportedOperationException(\"no instances\");",
         "  }",
@@ -50,7 +48,6 @@ public class GenericsTest {
         "  }",
         "",
         "  public static final class MapBuilder {",
-        "",
         "    private static final Keys keys = new Keys();",
         "",
         "    private MapBuilder() {",
@@ -58,7 +55,8 @@ public class GenericsTest {
         "    }",
         "",
         "    public static final class Keys {",
-        "      private Keys() {}",
+        "      private Keys() {",
+        "      }",
         "      public <K> Value<K> keys(List<K> keys) {",
         "        return new Value(this, keys);",
         "      }",
@@ -79,9 +77,5 @@ public class GenericsTest {
         "    }",
         "  }",
         "}");
-    assertAbout(javaSources()).that(ImmutableList.of(cube))
-        .processedWith(new ZeroProcessor())
-        .compilesWithoutError()
-        .and().generatesSources(expected);
   }
 }

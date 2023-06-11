@@ -1,14 +1,13 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import io.jbock.testing.compile.Compilation;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static net.zerobuilder.compiler.test_util.GeneratedLines.GENERATED_ANNOTATION;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
 public class InstanceTest {
 
@@ -25,12 +24,13 @@ public class InstanceTest {
         "  int sum(int b) { return a  + b; };",
         "  Sum (int a) { this.a = a; }",
         "}");
-    JavaFileObject expected =
-        forSourceLines("cube.SumBuilders",
+    Compilation compilation = simpleCompiler().compile(cube);
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("cube.SumBuilders")
+        .containsLines(
             "package cube;",
-            "import javax.annotation.Generated;",
+            "import javax.annotation.processing.Generated;",
             "",
-            GENERATED_ANNOTATION,
             "public final class SumBuilders {",
             "  private SumBuilders() {",
             "    throw new UnsupportedOperationException(\"no instances\");",
@@ -42,8 +42,11 @@ public class InstanceTest {
             "",
             "  private static final class SumBuilderImpl implements SumBuilder.B {",
             "    private final Sum _sum;",
-            "    StepsImpl(Sum sum) { this._sum = sum; }",
-            "    @Override public int b(int b) {",
+            "    SumBuilderImpl(Sum sum) {",
+            "      this._sum = sum;",
+            "    }",
+            "    @Override",
+            "    public int b(int b) {",
             "      int _integer = this._sum.sum(b);",
             "      return _integer;",
             "    }",
@@ -53,12 +56,10 @@ public class InstanceTest {
             "    private SumBuilder() {",
             "      throw new UnsupportedOperationException(\"no instances\");",
             "    }",
-            "    public interface B { int b(int b); }",
+            "    public interface B {",
+            "      int b(int b);",
+            "    }",
             "  }",
             "}");
-    assertAbout(javaSources()).that(ImmutableList.of(cube))
-        .processedWith(new ZeroProcessor())
-        .compilesWithoutError()
-        .and().generatesSources(expected);
   }
 }

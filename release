@@ -1,19 +1,36 @@
 #!/bin/bash
-if [[ -z "$1" ]]; then echo arg: version; exit 1; fi
 
-version="$1"
-
-function installVersion() {
-  mvn versions:set -DnewVersion="$version" &>/dev/null
-  mvn clean install
-  mv pom.xml.versionsBackup pom.xml
+die () {
+    echo "$*"
+    exit 1
 }
 
-(cd api; installVersion)
-(cd modules/module-builder; installVersion)
-(cd modules/module-builder-beans; installVersion)
-(cd modules/module-updater; installVersion)
-(cd modules/module-updater-beans; installVersion)
-(cd modules/module-generics; installVersion)
-(cd zerobuilder; ./release "$version")
-(cd compiler; ./release "$version")
+if [[ $(git status --porcelain) ]]; then
+  die "dirty workspace"
+fi
+
+VERSION="$1"
+
+if [[ -z "$VERSION" ]]; then
+  die "Usage: release <version>"
+fi
+
+if ! git pull origin $(git rev-parse --abbrev-ref HEAD); then
+  die "pull failed"
+fi
+
+if ! ./gradlew clean -Pversion=${VERSION} zerobuilder:publish; then
+  die "build failed"
+fi
+
+
+if ! ./gradlew clean -Pversion=${VERSION} compiler:publish; then
+  die "build failed"
+fi
+
+read -e -p "Upload successful. Also tag? [y/N]"
+if [[ "$REPLY" == [Yy]* ]]; then
+  git tag "${VERSION}"
+  git push origin --tags
+fi
+

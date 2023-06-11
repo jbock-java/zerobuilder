@@ -1,8 +1,8 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
+import io.jbock.javapoet.ClassName;
+import io.jbock.javapoet.ParameterizedTypeName;
+import io.jbock.javapoet.TypeName;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.ArrayList;

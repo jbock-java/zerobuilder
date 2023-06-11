@@ -1,16 +1,15 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import io.jbock.testing.compile.Compilation;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static java.util.Collections.singletonList;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
 public class FailTest {
 
@@ -24,11 +23,9 @@ public class FailTest {
         "  @Builder Centipede(int a) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
-    assertAbout(javaSources()).that(singletonList(javaFile))
-        .processedWith(new ZeroProcessor())
-        .failsToCompile()
-        .withErrorContaining("another goal with this name")
-        .in(javaFile);
+    Compilation compilation = simpleCompiler().compile(javaFile);
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("another goal with this name");
   }
 
   @Test
@@ -41,11 +38,9 @@ public class FailTest {
         "  @Builder static Centipede create (int a) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
-    assertAbout(javaSources()).that(ImmutableList.of(javaFile))
-        .processedWith(new ZeroProcessor())
-        .failsToCompile()
-        .withErrorContaining("another goal with this name")
-        .in(javaFile);
+    Compilation compilation = simpleCompiler().compile(javaFile);
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("another goal with this name");
   }
 
   @Test
@@ -58,11 +53,9 @@ public class FailTest {
         "  @Updater Bu(int foo, int nah) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
-    assertAbout(javaSources()).that(ImmutableList.of(javaFile))
-        .processedWith(new ZeroProcessor())
-        .failsToCompile()
-        .withErrorContaining("Missing projection: nah")
-        .in(javaFile);
+    Compilation compilation = simpleCompiler().compile(javaFile);
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Missing projection: nah");
   }
 
   @Test
@@ -75,10 +68,8 @@ public class FailTest {
         "  @Updater Bu(int foo) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
-    assertAbout(javaSources()).that(ImmutableList.of(javaFile))
-        .processedWith(new ZeroProcessor())
-        .failsToCompile()
-        .withErrorContaining("Missing projection: foo")
-        .in(javaFile);
+    Compilation compilation = simpleCompiler().compile(javaFile);
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Missing projection: foo");
   }
 }

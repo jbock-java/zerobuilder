@@ -1,19 +1,18 @@
 package net.zerobuilder.compiler.random;
 
-import com.google.common.collect.Sets;
-import com.google.common.primitives.Chars;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.TypeVariableName;
+import io.jbock.javapoet.ClassName;
+import io.jbock.javapoet.FieldSpec;
+import io.jbock.javapoet.ParameterSpec;
+import io.jbock.javapoet.ParameterizedTypeName;
+import io.jbock.javapoet.TypeName;
+import io.jbock.javapoet.TypeSpec;
+import io.jbock.javapoet.TypeVariableName;
+import io.jbock.testing.compile.Compilation;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
-import net.zerobuilder.compiler.ZeroProcessor;
 import net.zerobuilder.compiler.generate.ZeroUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 import java.util.ArrayList;
@@ -23,27 +22,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static com.squareup.javapoet.MethodSpec.constructorBuilder;
-import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static io.jbock.javapoet.MethodSpec.constructorBuilder;
+import static io.jbock.javapoet.MethodSpec.methodBuilder;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
-import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.extractTypeVars;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static org.junit.Assert.fail;
 
 public class RandomGenericsTest {
 
@@ -56,11 +54,11 @@ public class RandomGenericsTest {
     for (int i = 0; i < 4; i++) {
       try {
         s = "package foo;\n" +
-            topLevelClass().toString();
+            topLevelClass();
         rand(s);
       } catch (AssertionError e) {
         System.out.println(s);
-        fail(e.getMessage());
+        Assertions.fail(e.getMessage());
       }
     }
   }
@@ -71,15 +69,14 @@ public class RandomGenericsTest {
         .map(line -> line + '\n')
         .collect(toList());
     JavaFileObject jfo = forSourceLines("foo.Foo", split);
-
-    assertAbout(javaSources()).that(singletonList(jfo))
-        .processedWith(new ZeroProcessor())
-        .compilesWithoutError();
+    Compilation compilation = simpleCompiler().compile(jfo);
+    assertThat(compilation).succeeded();
   }
 
   private List<TypeVariableName> randomVars(String in) {
-    return Chars.asList(in.toCharArray())
-        .stream()
+    List<Character> characters = new ArrayList<>();
+    in.chars().forEach((int c) -> characters.add((char) c));
+    return characters.stream()
         .map(c -> TypeVariableName.get(c.toString()))
         .collect(toList());
   }
@@ -128,8 +125,7 @@ public class RandomGenericsTest {
     List<Parameter> allParams = concat(paramsOuter, paramsInner);
     List<TypeVariableName> allTypevars = new ArrayList<>(allParams.stream()
         .map(Parameter::typevars)
-        .map(List::stream)
-        .flatMap(identity())
+        .flatMap(List::stream)
         .collect(toSet()));
 
     ClassName generated = ClassName.get("foo", "Foo");
@@ -155,13 +151,12 @@ public class RandomGenericsTest {
         .addMethod(methodBuilder("bar")
             .addAnnotation(Updater.class)
             .addAnnotation(Builder.class)
-            .addTypeVariables(Sets.difference(new HashSet<>(allTypevars), paramsOuter.stream()
+            .addTypeVariables(difference(new HashSet<>(allTypevars), paramsOuter.stream()
                 .map(Parameter::typevars)
-                .map(List::stream)
-                .flatMap(identity())
+                .flatMap(List::stream)
                 .collect(toSet())))
             .returns(ParameterizedTypeName.get(ClassName.get("", "Bar"),
-                allTypevars.toArray(new TypeVariableName[allTypevars.size()])))
+                allTypevars.toArray(new TypeVariableName[0])))
             .addParameters(paramsInner.stream()
                 .map(Parameter::toSpec)
                 .collect(toList()))
@@ -179,7 +174,7 @@ public class RandomGenericsTest {
     Random random = ThreadLocalRandom.current();
     List<Integer> powers = Stream.generate(() -> random.nextInt(3) + 1)
         .limit(typevars.size())
-        .collect(toList());
+        .toList();
     List<TypeName> builder = new ArrayList<>(powers.stream().mapToInt(i -> i).sum());
     for (int i = 0; i < typevars.size(); i++) {
       for (int j = 0; j < powers.get(i); j++) {
@@ -261,5 +256,11 @@ public class RandomGenericsTest {
       j++;
     }
     return asList(in.get(i), in.get(j));
+  }
+  
+  private static <E> Set<E> difference(Set<E> a, Set<E> b) {
+    HashSet<E> result = new HashSet<>(a);
+    result.removeAll(b);
+    return result;
   }
 }

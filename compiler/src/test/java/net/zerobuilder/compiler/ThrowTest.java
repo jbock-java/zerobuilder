@@ -1,14 +1,13 @@
 package net.zerobuilder.compiler;
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import io.jbock.testing.compile.Compilation;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaFileObjects.forSourceLines;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static net.zerobuilder.compiler.test_util.GeneratedLines.GENERATED_ANNOTATION;
+import static io.jbock.testing.compile.CompilationSubject.assertThat;
+import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
+import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
 public class ThrowTest {
 
@@ -25,13 +24,14 @@ public class ThrowTest {
         "    throw new IOException();",
         "  }",
         "}");
-    JavaFileObject expected =
-        forSourceLines("cube.ThrowBuilders",
+    Compilation compilation = simpleCompiler().compile(cube);
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("cube.ThrowBuilders")
+        .containsLines(
             "package cube;",
             "import java.io.IOException;",
-            "import javax.annotation.Generated;",
+            "import javax.annotation.processing.Generated;",
             "",
-            GENERATED_ANNOTATION,
             "public final class ThrowBuilders {",
             "  private ThrowBuilders() {",
             "    throw new UnsupportedOperationException(\"no instances\");",
@@ -42,8 +42,10 @@ public class ThrowTest {
             "  }",
             "",
             "  private static final class VoidBuilderImpl implements VoidBuilder.Message {",
-            "    VoidBuilderImpl() {}",
-            "    @Override public void message(String message) throws IOException {",
+            "    VoidBuilderImpl() {",
+            "    }",
+            "    @Override",
+            "    public void message(String message) throws IOException {",
             "      Throw.doUpdate(message);",
             "    }",
             "  }",
@@ -57,9 +59,5 @@ public class ThrowTest {
             "    }",
             "  }",
             "}");
-    assertAbout(javaSources()).that(ImmutableList.of(cube))
-        .processedWith(new ZeroProcessor())
-        .compilesWithoutError()
-        .and().generatesSources(expected);
   }
 }

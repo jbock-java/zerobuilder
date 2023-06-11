@@ -1,7 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.TypeSpec;
+import io.jbock.javapoet.FieldSpec;
+import io.jbock.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
 import java.util.List;

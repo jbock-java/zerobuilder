@@ -1,7 +1,7 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;
+import io.jbock.javapoet.ClassName;
+import io.jbock.javapoet.TypeName;
 import net.zerobuilder.IgnoreGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
@@ -24,7 +24,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.squareup.javapoet.ClassName.OBJECT;
+import static io.jbock.javapoet.ClassName.OBJECT;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
