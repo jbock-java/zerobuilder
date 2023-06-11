@@ -4,7 +4,7 @@ plugins {
     id('signing')
 }
 
-group = 'com.github.h908714124'
+group = 'io.github.jbock-java'
 
 java {
     toolchain {
