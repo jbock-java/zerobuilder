@@ -1,7 +1,7 @@
 package net.zerobuilder.api.test;
 
-import io.jbock.javapoet.ClassName;
-import io.jbock.javapoet.TypeSpec;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
@@ -89,16 +89,16 @@ public class BuilderTest {
 
     assertEquals(1, generatorOutput.methods().size());
     assertEquals(goalName, generatorOutput.methods().get(0).name());
-    assertEquals("myGoalBuilder", generatorOutput.methods().get(0).method().name);
-    assertEquals(0, generatorOutput.methods().get(0).method().parameters.size());
-    assertTrue(generatorOutput.methods().get(0).method().modifiers.contains(Modifier.STATIC));
-    assertTrue(generatorOutput.methods().get(0).method().modifiers.contains(Modifier.PRIVATE));
+    assertEquals("myGoalBuilder", generatorOutput.methods().get(0).method().name());
+    assertEquals(0, generatorOutput.methods().get(0).method().parameters().size());
+    assertTrue(generatorOutput.methods().get(0).method().modifiers().contains(Modifier.STATIC));
+    assertTrue(generatorOutput.methods().get(0).method().modifiers().contains(Modifier.PRIVATE));
     assertEquals(GENERATED_TYPE.nestedClass("MyGoalBuilder")
-        .nestedClass("Foo"), generatorOutput.methods().get(0).method().returnType);
+        .nestedClass("Foo"), generatorOutput.methods().get(0).method().returnType());
 
     // Prints nicely
     TypeSpec typeSpec = generatorOutput.typeSpec();
-    assertEquals("MyTypeBuilders", typeSpec.name);
-    assertEquals(2, typeSpec.methodSpecs.size()); // myGoalBuilder, constructor
+    assertEquals("MyTypeBuilders", typeSpec.name());
+    assertEquals(2, typeSpec.methodSpecs().size()); // myGoalBuilder, constructor
   }
 }

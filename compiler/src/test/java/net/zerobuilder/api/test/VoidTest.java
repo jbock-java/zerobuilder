@@ -1,9 +1,9 @@
 package net.zerobuilder.api.test;
 
-import io.jbock.javapoet.ClassName;
-import io.jbock.javapoet.MethodSpec;
-import io.jbock.javapoet.TypeName;
-import io.jbock.javapoet.TypeSpec;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeSpec;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
@@ -72,16 +72,16 @@ public class VoidTest {
     assertEquals(1, output.methods().size());
     assertEquals(goalName, output.methods().get(0).name());
     MethodSpec method = output.methods().get(0).method();
-    assertEquals("VoidBuilder", method.name);
-    assertEquals(0, method.parameters.size());
-    assertEquals(0, method.exceptions.size());
+    assertEquals("VoidBuilder", method.name());
+    assertEquals(0, method.parameters().size());
+    assertEquals(0, method.exceptions().size());
     assertEquals(2, output.nestedTypes().size());
-    Map<String, List<TypeSpec>> specs = output.nestedTypes().stream().collect(groupingBy(type -> type.name));
+    Map<String, List<TypeSpec>> specs = output.nestedTypes().stream().collect(groupingBy(type -> type.name()));
     assertEquals(1, specs.get("VoidBuilderImpl").size());
-    assertEquals(2, specs.get("VoidBuilderImpl").get(0).methodSpecs.size());
-    MethodSpec messageMethod = specs.get("VoidBuilderImpl").get(0).methodSpecs.get(1);
-    assertEquals("message", messageMethod.name);
-    assertEquals(1, messageMethod.exceptions.size());
-    assertEquals(IO_EXCEPTION, messageMethod.exceptions.get(0));
+    assertEquals(2, specs.get("VoidBuilderImpl").get(0).methodSpecs().size());
+    MethodSpec messageMethod = specs.get("VoidBuilderImpl").get(0).methodSpecs().get(1);
+    assertEquals("message", messageMethod.name());
+    assertEquals(1, messageMethod.exceptions().size());
+    assertEquals(IO_EXCEPTION, messageMethod.exceptions().get(0));
   }
 }

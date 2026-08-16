@@ -1,7 +1,7 @@
 package net.zerobuilder.modules.generics;
 
-import io.jbock.javapoet.ClassName;
-import io.jbock.javapoet.CodeBlock;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.CodeBlock;
 import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;

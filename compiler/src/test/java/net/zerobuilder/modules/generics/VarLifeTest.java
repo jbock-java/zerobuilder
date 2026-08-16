@@ -1,9 +1,9 @@
 package net.zerobuilder.modules.generics;
 
-import io.jbock.javapoet.ClassName;
-import io.jbock.javapoet.ParameterizedTypeName;
-import io.jbock.javapoet.TypeName;
-import io.jbock.javapoet.TypeVariableName;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.ParameterizedTypeName;
+import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeVariableName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
