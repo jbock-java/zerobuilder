@@ -1,5 +1,5 @@
-[![zerobilder-compiler](https://maven-badges.herokuapp.com/maven-central/io.github.jbock-java/zerobuilder-compiler/badge.svg?color=grey)](https://maven-badges.herokuapp.com/maven-central/io.github.jbock-java/zerobuilder-compiler)
-[![zerobilder](https://maven-badges.herokuapp.com/maven-central/io.github.jbock-java/zerobuilder/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.jbock-java/zerobuilder)
+[![zerobilder-compiler](https://img.shields.io/maven-central/v/io.github.jbock-java/zerobuilder-compiler?label=zerobuilder-compiler)](https://central.sonatype.com/artifact/io.github.jbock-java/zerobuilder-compiler)
+[![zerobuilder](https://img.shields.io/maven-central/v/io.github.jbock-java/zerobuilder?label=zerobuilder)](https://central.sonatype.com/artifact/io.github.jbock-java/zerobuilder)
 
 # zerobuilder
 
