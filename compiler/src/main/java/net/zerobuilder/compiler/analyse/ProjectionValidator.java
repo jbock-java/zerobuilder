@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
-import io.jbock.javapoet.TypeName;
+import com.palantir.javapoet.TypeName;
 import net.zerobuilder.Getter;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;

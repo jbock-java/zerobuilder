@@ -1,9 +1,9 @@
 package net.zerobuilder.compiler;
 
-import io.jbock.javapoet.AnnotationSpec;
-import io.jbock.javapoet.ClassName;
-import io.jbock.javapoet.JavaFile;
-import io.jbock.javapoet.TypeSpec;
+import com.palantir.javapoet.AnnotationSpec;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.JavaFile;
+import com.palantir.javapoet.TypeSpec;
 import net.zerobuilder.BeanBuilder;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
@@ -105,7 +105,7 @@ public final class ZeroProcessor extends AbstractProcessor {
         .build();
     JavaFileObject sourceFile = processingEnv.getFiler()
         .createSourceFile(generatedType.toString(),
-            javaFile.typeSpec.originatingElements.toArray(new Element[0]));
+            javaFile.typeSpec().originatingElements().toArray(new Element[0]));
     try (Writer writer = sourceFile.openWriter()) {
       writer.write(javaFile.toString());
     }

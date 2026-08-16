@@ -1,12 +1,12 @@
 package net.zerobuilder.compiler.random;
 
-import io.jbock.javapoet.ClassName;
-import io.jbock.javapoet.FieldSpec;
-import io.jbock.javapoet.ParameterSpec;
-import io.jbock.javapoet.ParameterizedTypeName;
-import io.jbock.javapoet.TypeName;
-import io.jbock.javapoet.TypeSpec;
-import io.jbock.javapoet.TypeVariableName;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.FieldSpec;
+import com.palantir.javapoet.ParameterSpec;
+import com.palantir.javapoet.ParameterizedTypeName;
+import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeSpec;
+import com.palantir.javapoet.TypeVariableName;
 import io.jbock.testing.compile.Compilation;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
@@ -26,8 +26,8 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
-import static io.jbock.javapoet.MethodSpec.constructorBuilder;
-import static io.jbock.javapoet.MethodSpec.methodBuilder;
+import static com.palantir.javapoet.MethodSpec.constructorBuilder;
+import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static io.jbock.testing.compile.CompilationSubject.assertThat;
 import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
 import static java.util.Arrays.asList;
@@ -88,7 +88,7 @@ public class RandomGenericsTest {
     for (int i = 0; i < builder.size(); i++) {
       TypeVariableName var = in.get(i);
       if (i > 0 && random.nextBoolean()) {
-        TypeVariableName foo = TypeVariableName.get(var.name, in.get(random.nextInt(i)));
+        TypeVariableName foo = TypeVariableName.get(var.name(), in.get(random.nextInt(i)));
         builder.set(i, foo);
       } else {
         builder.set(i, var);

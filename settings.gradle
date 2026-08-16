@@ -1,9 +1,2 @@
-include 'zerobuilder'
-include 'api'
-include 'module-builder-beans'
-include 'module-builder'
-include 'module-generics'
-include 'module-updater-beans'
-include 'module-updater'
-include 'compiler'
-include 'basic-example'
+include("zerobuilder")
+include("compiler")

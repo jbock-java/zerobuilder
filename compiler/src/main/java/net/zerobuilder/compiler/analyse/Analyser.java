@@ -1,8 +1,8 @@
 package net.zerobuilder.compiler.analyse;
 
-import io.jbock.javapoet.ClassName;
-import io.jbock.javapoet.TypeName;
-import io.jbock.javapoet.TypeVariableName;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeVariableName;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;

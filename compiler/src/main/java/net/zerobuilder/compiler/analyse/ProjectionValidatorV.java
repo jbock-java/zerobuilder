@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
-import io.jbock.javapoet.TypeName;
+import com.palantir.javapoet.TypeName;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularProjectableGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;

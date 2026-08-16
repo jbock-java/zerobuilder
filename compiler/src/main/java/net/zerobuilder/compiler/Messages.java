@@ -1,6 +1,6 @@
 package net.zerobuilder.compiler;
 
-import io.jbock.javapoet.AnnotationSpec;
+import com.palantir.javapoet.AnnotationSpec;
 
 import javax.annotation.processing.Generated;
 import javax.lang.model.util.Elements;

@@ -1,8 +1,8 @@
 package net.zerobuilder.compiler.analyse;
 
-import io.jbock.javapoet.ClassName;
-import io.jbock.javapoet.ParameterizedTypeName;
-import io.jbock.javapoet.TypeName;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.ParameterizedTypeName;
+import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.ArrayList;
