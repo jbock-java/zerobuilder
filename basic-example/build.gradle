@@ -1,23 +1,14 @@
 plugins {
-    id('java')
+    id("java")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
 }
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
-compileJava {
-    options.encoding = 'UTF-8'
-    sourceCompatibility = '11'
-    targetCompatibility = '11'
-    options.compilerArgs << '--release'
-    options.compilerArgs << '11'
-}
-
-javadoc {
-    options.encoding = 'UTF-8'
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 repositories {
@@ -25,8 +16,14 @@ repositories {
 }
 
 dependencies {
-    implementation(project(':zerobuilder'))
-    annotationProcessor(project(':compiler'))
-    annotationProcessor(project(':zerobuilder'))
-    testImplementation('org.junit.jupiter:junit-jupiter:5.9.2')
+    implementation(project(":zerobuilder"))
+    annotationProcessor(project(":compiler"))
+    annotationProcessor(project(":zerobuilder"))
+    testImplementation(platform("org.junit:junit-bom:6.1.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
 }
