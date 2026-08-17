@@ -1,8 +1,8 @@
 package net.zerobuilder.compiler.generate;
 
-import io.jbock.javapoet.ClassName;
-import io.jbock.javapoet.ParameterizedTypeName;
-import io.jbock.javapoet.TypeVariableName;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.ParameterizedTypeName;
+import com.palantir.javapoet.TypeVariableName;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;

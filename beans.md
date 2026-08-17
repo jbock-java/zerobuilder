@@ -16,7 +16,7 @@ After all, someone recently told us that mutation is bad.
 The javacode that solves all your problems will be generated _for free_,
 if you add the `@BeanBuilder` annotation to a JavaBean:
 
-````java
+```java
 @BeanBuilder
 class BusinessAnalyst {
   private String name;
@@ -29,7 +29,7 @@ class BusinessAnalyst {
   void setAge(int age) { this.age = age; }
   // 46 more getter / setter pairs
 }
-````
+```
 
 A class called `BusinessAnalystBuilders` will be generated in the same package.
 `mvn compile` will put the generated java source somewhere under `target`, so be sure to
@@ -37,13 +37,13 @@ add that folder to the classpath in your IDE as well.
 
 The generated class has two _important_ static methods:
 
-````java
+```java
 @Generated
 public final class BusinessAnalystBuilders {
   public static BusinessAnalystBuilder.Age businessAnalystBuilder() { ... }
   public static BusinessAnalystUpdater businessAnalystToUpdater(BusinessAnalyst businessAnalyst) { ... }
 }
-````
+```
 
 These can be used to create new instances, as well as (modified) shallow copies, of `BusinessAnalystBuilder`.
 
@@ -55,12 +55,12 @@ This is the first step in a linear "chain" of interfaces that ends in an instanc
 By default, the builder steps are in alphabetic order.
 This order can be overridden by adding a `@Getter` annotation to one of the getters:
 
-````java
+```java
 @Getter(0)
 String getName() { 
   return name; 
 }
-````
+```
 
 Now `name` will be the first step.
 Alternatively, `@Getter(1) int getAge() { ... }` would have the same effect.
@@ -74,9 +74,9 @@ Otherwise it's a compile error if the setter doesn't exist.
 
 The `@IgnoreGetter` annotation can be used in this case, to ignore the getter altogether:
 
-````java
+```java
 @IgnoreGetter
 public String getFoo() { 
   return "foo";
 }
-````
+```
