@@ -115,7 +115,7 @@ final class ProjectionValidatorB {
     return getLocalAndInheritedMethods(beanType, filter);
   }
 
-  private static TypeElement validateBeanType(TypeElement beanType) {
+  private static void validateBeanType(TypeElement beanType) {
     if (!hasParameterlessConstructor(beanType)) {
       throw new ValidationException(BEAN_NO_DEFAULT_CONSTRUCTOR, beanType);
     }
@@ -132,7 +132,6 @@ final class ProjectionValidatorB {
     if (!beanType.getTypeParameters().isEmpty()) {
       throw new ValidationException(TYPE_PARAMS_BEAN, beanType);
     }
-    return beanType;
   }
 
   private static final class SetterTest implements Predicate<ExecutableElement> {
@@ -168,7 +167,7 @@ final class ProjectionValidatorB {
   private static Predicate<ExecutableElement> setterSieve(Collection<ExecutableElement> getters) {
     List<SetterTest> setterTests = getters.stream()
         .map(SetterTest::fromGetter)
-        .collect(Collectors.toList());
+        .toList();
     return setter -> {
       for (SetterTest test : setterTests) {
         if (test.test(setter)) {

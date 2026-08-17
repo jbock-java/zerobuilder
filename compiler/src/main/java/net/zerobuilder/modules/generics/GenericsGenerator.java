@@ -64,7 +64,7 @@ final class GenericsGenerator {
         .build();
   }
 
-  private Function<AbstractRegularDetails, List<FieldSpec>> firstStepCache =
+  private final Function<AbstractRegularDetails, List<FieldSpec>> firstStepCache =
       regularDetailsCases(
           constructor -> firstStepCache(),
           staticMethod -> firstStepCache(),

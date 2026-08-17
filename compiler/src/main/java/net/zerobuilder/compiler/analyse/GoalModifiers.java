@@ -39,9 +39,10 @@ final class GoalModifiers {
     DtoContext.ContextLifecycle lifecycle = element.getAnnotation(Recycle.class) == null ?
         DtoContext.ContextLifecycle.NEW_INSTANCE :
         DtoContext.ContextLifecycle.REUSE_INSTANCES;
-    String goalName = element.getAnnotation(GoalName.class) == null ?
+    GoalName annotation = element.getAnnotation(GoalName.class);
+    String goalName = annotation == null ?
         downcase(simpleName(goalType(element))) :
-        element.getAnnotation(GoalName.class).value();
+        annotation.value();
     return new GoalModifiers(access, lifecycle, goalName);
   }
 }

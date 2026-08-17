@@ -7,7 +7,7 @@ import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.TypeVisitor;
-import javax.lang.model.util.SimpleTypeVisitor6;
+import javax.lang.model.util.SimpleTypeVisitor14;
 
 import static net.zerobuilder.compiler.common.LessElements.asType;
 
@@ -17,7 +17,7 @@ import static net.zerobuilder.compiler.common.LessElements.asType;
 public final class LessTypes {
 
   private static final TypeVisitor<Element, Void> AS_ELEMENT_VISITOR =
-      new SimpleTypeVisitor6<Element, Void>() {
+      new SimpleTypeVisitor14<>() {
         @Override
         protected Element defaultAction(TypeMirror e, Void p) {
           return null;

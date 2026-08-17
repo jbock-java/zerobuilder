@@ -213,12 +213,10 @@ final class DtoGoalElement {
   }
 
   static TypeName goalType(ExecutableElement goal) {
-    switch (goal.getKind()) {
-      case CONSTRUCTOR:
-        return ClassName.get(goal.getEnclosingElement().asType());
-      default:
-        return TypeName.get(goal.getReturnType());
+    if (goal.getKind() == CONSTRUCTOR) {
+      return ClassName.get(goal.getEnclosingElement().asType());
     }
+    return TypeName.get(goal.getReturnType());
   }
 
   static Function<ExecutableElement, List<AbstractRegularGoalElement>> createRegular(DtoContext.GoalContext context) {
