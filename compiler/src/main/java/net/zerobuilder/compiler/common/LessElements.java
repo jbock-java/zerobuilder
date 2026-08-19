@@ -1,5 +1,8 @@
 package net.zerobuilder.compiler.common;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Predicate;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
@@ -11,9 +14,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor14;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.function.Predicate;
 
 import static javax.lang.model.element.ElementKind.PACKAGE;
 import static javax.lang.model.util.ElementFilter.fieldsIn;

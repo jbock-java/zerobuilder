@@ -152,7 +152,7 @@ public final class ZeroUtil {
       = joinCodeBlocks("");
 
   public static Collector<CodeBlock, List<CodeBlock>, CodeBlock> joinCodeBlocks(String delimiter) {
-    return new Collector<CodeBlock, List<CodeBlock>, CodeBlock>() {
+    return new Collector<>() {
       @Override
       public Supplier<List<CodeBlock>> supplier() {
         return ArrayList::new;
@@ -197,7 +197,7 @@ public final class ZeroUtil {
   }
 
   public static <E> Collector<List<E>, List<E>, List<E>> flatList() {
-    return new Collector<List<E>, List<E>, List<E>>() {
+    return new Collector<>() {
       @Override
       public Supplier<List<E>> supplier() {
         return ArrayList::new;
@@ -229,7 +229,7 @@ public final class ZeroUtil {
   }
 
   static <E, R> Collector<E, List<E>, R> listCollector(Function<List<E>, R> finisher) {
-    return new Collector<E, List<E>, R>() {
+    return new Collector<>() {
 
       @Override
       public Supplier<List<E>> supplier() {

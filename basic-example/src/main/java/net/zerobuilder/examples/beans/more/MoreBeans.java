@@ -40,8 +40,15 @@ public class MoreBeans {
 
   // inheritance
   @BeanBuilder
-  public static class AeroExperiment extends Experiment {
+  public static class AeroExperiment {
+    private int yield;
     private int altitude;
+    public int getYield() {
+      return yield;
+    }
+    public void setYield(int yield) {
+      this.yield = yield;
+    }
     public int getAltitude() {
       return altitude;
     }
@@ -84,7 +91,7 @@ public class MoreBeans {
 
     public List<Iterable<String>> getThings() {
       if (things == null) {
-        things = new ArrayList();
+        things = new ArrayList<>();
       }
       return things;
     }
@@ -100,7 +107,7 @@ public class MoreBeans {
     }
     public List<Iterable<String>> getThings() {
       if (things == null) {
-        things = new ArrayList();
+        things = new ArrayList<>();
       }
       return things;
     }
