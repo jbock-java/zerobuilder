@@ -34,7 +34,7 @@ public class BeanTest {
         "",
         "@Generated(",
         "    value = \"net.zerobuilder.compiler.ZeroProcessor\",",
-        "    comments = \"https://github.com/h908714124/zerobuilder\"",
+        "    comments = \"https://github.com/jbock-java/zerobuilder\"",
         ")",
         "public final class BusinessAnalystBuilders {",
         "  private BusinessAnalystBuilders() {",

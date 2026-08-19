@@ -3,11 +3,7 @@ package net.zerobuilder.compiler;
 import com.palantir.javapoet.AnnotationSpec;
 
 import javax.annotation.processing.Generated;
-import javax.lang.model.util.Elements;
-import java.util.Collections;
 import java.util.List;
-
-import static java.util.Collections.singletonList;
 
 public final class Messages {
 
@@ -20,14 +16,20 @@ public final class Messages {
         "An abstract class may not have constructor goals." +
             " Try using a static factory method instead.";
 
+    public static final String BEAN_NO_SUPERCLASS =
+        "The bean class must not extend anything.";
+
+    public static final String BEAN_NO_INTERFACES =
+        "The bean class must not implement anything.";
+
     public static final String NESTING_KIND =
         "This inner class must be static and not private.";
 
     public static final String REUSE_GENERICS =
-        "A goal with type variables cannot be recycyled.";
+        "A goal with type variables cannot be recycled.";
 
     public static final String REUSE_IMMUTABLE =
-        "An immutable goal cannot be recycyled.";
+        "An immutable goal cannot be recycled.";
 
     public static final String STEP_OUT_OF_BOUNDS =
         "The step position must be less than the number of arguments.";
@@ -64,9 +66,9 @@ public final class Messages {
 
   public static final class JavadocMessages {
 
-    public static final String GENERATED_COMMENTS = "https://github.com/h908714124/zerobuilder";
+    public static final String GENERATED_COMMENTS = "https://github.com/jbock-java/zerobuilder";
 
-    static List<AnnotationSpec> generatedAnnotations(Elements elements) {
+    static List<AnnotationSpec> generatedAnnotations() {
       return List.of(AnnotationSpec.builder(Generated.class)
           .addMember("value", "$S", ZeroProcessor.class.getName())
           .addMember("comments", "$S", GENERATED_COMMENTS)

@@ -2,14 +2,11 @@ package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
-
-import javax.lang.model.element.ExecutableElement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import javax.lang.model.element.ExecutableElement;
 
 import static java.util.stream.Collectors.toList;
 
@@ -45,15 +42,6 @@ final class Utilities {
     sorted.addAll(input);
     sorted.sort(comparator);
     return sorted;
-  }
-
-  static <K> Optional<K> findKey(Map<K, ?> map, List<K> keys) {
-    for (K key : keys) {
-      if (map.containsKey(key)) {
-        return Optional.of(key);
-      }
-    }
-    return Optional.empty();
   }
 
   static List<TypeName> thrownTypes(ExecutableElement executableElement) {

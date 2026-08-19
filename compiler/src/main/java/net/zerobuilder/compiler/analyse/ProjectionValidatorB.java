@@ -2,6 +2,13 @@ package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
+import java.util.Optional;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementVisitor;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeVisitor;
+import javax.lang.model.util.SimpleElementVisitor9;
+import javax.lang.model.util.SimpleTypeVisitor9;
 import net.zerobuilder.IgnoreGetter;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
@@ -34,6 +41,8 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_ABSTRACT_CLAS
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_COULD_NOT_FIND_SETTER;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_DEFAULT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.NESTING_KIND;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_SUPERCLASS;
+import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_NO_INTERFACES;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.TYPE_PARAMS_BEAN;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.accessorPair;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair.toValidParameter;
@@ -115,7 +124,50 @@ final class ProjectionValidatorB {
     return getLocalAndInheritedMethods(beanType, filter);
   }
 
+  private abstract static class OptionalTypeVisitor<E> extends SimpleTypeVisitor9<Optional<E>, Void> {
+
+    @Override
+    protected final Optional<E> defaultAction(TypeMirror e, Void nothing) {
+      return Optional.empty();
+    }
+  }
+
+  public static final TypeVisitor<Optional<DeclaredType>, Void> AS_DECLARED = new OptionalTypeVisitor<>() {
+    @Override
+    public Optional<DeclaredType> visitDeclared(DeclaredType declaredType, Void nothing) {
+      return Optional.of(declaredType);
+    }
+  };
+
+  public static final ElementVisitor<Optional<TypeElement>, Void> AS_TYPE_ELEMENT = new SimpleElementVisitor9<>() {
+    @Override
+    public Optional<TypeElement> visitType(TypeElement typeElement, Void nothing) {
+      return Optional.of(typeElement);
+    }
+
+    @Override
+    protected Optional<TypeElement> defaultAction(Element e, Void nothing) {
+      return Optional.empty();
+    }
+  };
+
+  static void validateNoInterfaces(TypeElement beanType) {
+    AS_DECLARED.visit(beanType.getSuperclass())
+        .map(DeclaredType::asElement)
+        .flatMap(AS_TYPE_ELEMENT::visit)
+        .flatMap(superClass -> superClass.getSuperclass().getKind() == TypeKind.NONE ?
+            Optional.empty() :
+            Optional.of(BEAN_NO_SUPERCLASS))
+        .ifPresent(error -> {
+          throw new ValidationException(error, beanType);
+        });
+    if (!beanType.getInterfaces().isEmpty()) {
+      throw new ValidationException(BEAN_NO_INTERFACES, beanType);
+    }
+  }
+
   private static void validateBeanType(TypeElement beanType) {
+    validateNoInterfaces(beanType);
     if (!hasParameterlessConstructor(beanType)) {
       throw new ValidationException(BEAN_NO_DEFAULT_CONSTRUCTOR, beanType);
     }
@@ -134,15 +186,7 @@ final class ProjectionValidatorB {
     }
   }
 
-  private static final class SetterTest implements Predicate<ExecutableElement> {
-
-    private final String name;
-    private final TypeName type;
-
-    private SetterTest(String name, TypeName type) {
-      this.name = name;
-      this.type = type;
-    }
+  private record SetterTest(String name, TypeName type) implements Predicate<ExecutableElement> {
 
     private static SetterTest fromGetter(ExecutableElement getter) {
       String name = getter.getSimpleName().toString();

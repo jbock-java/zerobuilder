@@ -1,27 +1,48 @@
 package net.zerobuilder.examples.beans;
 
 import net.zerobuilder.BeanBuilder;
+import net.zerobuilder.Getter;
 
 // inheritance + overrides
 @BeanBuilder
-final class Manager extends Employee {
+final class Manager {
+
+  private int id;
+  private int salary;
+  private String name;
 
   private Manager boss;
-
-  @Override
-  int getSalary() {
-    return super.getSalary();
-  }
-
-  @Override
-  void setSalary(int salary) {
-    super.setSalary(salary);
-  }
 
   public Manager getBoss() {
     return boss;
   }
+
   public void setBoss(Manager boss) {
     this.boss = boss;
+  }
+
+  int getId() {
+    return id;
+  }
+
+  void setId(int id) {
+    this.id = id;
+  }
+
+  int getSalary() {
+    return salary;
+  }
+
+  void setSalary(int salary) {
+    this.salary = salary;
+  }
+
+  @Getter(0)
+  String getName() {
+    return name;
+  }
+
+  void setName(String name) {
+    this.name = name;
   }
 }

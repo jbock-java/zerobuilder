@@ -4,6 +4,21 @@ import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.TypeSpec;
+import java.io.IOException;
+import java.io.Writer;
+import java.lang.annotation.Annotation;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.tools.JavaFileObject;
 import net.zerobuilder.BeanBuilder;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
@@ -14,24 +29,7 @@ import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.Generator;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.tools.JavaFileObject;
-import java.io.IOException;
-import java.io.Writer;
-import java.lang.annotation.Annotation;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -58,7 +56,7 @@ public final class ZeroProcessor extends AbstractProcessor {
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
     Elements elements = processingEnv.getElementUtils();
-    List<AnnotationSpec> generatedAnnotations = generatedAnnotations(elements);
+    List<AnnotationSpec> generatedAnnotations = generatedAnnotations();
     Set<TypeElement> types = new HashSet<>();
     for (Class<? extends Annotation> c : asList(Builder.class, Updater.class)) {
       types.addAll(Stream.concat(
@@ -67,7 +65,7 @@ public final class ZeroProcessor extends AbstractProcessor {
           .map(ExecutableElement::getEnclosingElement)
           .map(Element::asType)
           .map(LessTypes::asTypeElement)
-          .collect(toList()));
+          .toList());
     }
     types.addAll(typesIn(env.getElementsAnnotatedWith(BeanBuilder.class)));
     for (TypeElement enclosingElement : types) {
@@ -89,7 +87,6 @@ public final class ZeroProcessor extends AbstractProcessor {
       } catch (ValidationException e) {
         processingEnv.getMessager().printMessage(e.kind, e.getMessage(), e.about);
       } catch (RuntimeException e) {
-        e.printStackTrace();
         String message = "Error processing "
             + ClassName.get(enclosingElement) + ": " + e.getMessage();
         processingEnv.getMessager().printMessage(ERROR, message, enclosingElement);
