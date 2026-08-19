@@ -52,9 +52,9 @@ final class ProjectionValidatorV {
 
   static final Function<RegularProjectableGoalElement, ProjectedRegularGoalDescription> validateUpdater =
       goal -> {
-        TypeMirror mirror = goal.executableElement.getKind() == CONSTRUCTOR ?
-            goal.executableElement.getEnclosingElement().asType() :
-            goal.executableElement.getReturnType();
+        TypeMirror mirror = goal.executableElement().getKind() == CONSTRUCTOR ?
+            goal.executableElement().getEnclosingElement().asType() :
+            goal.executableElement().getReturnType();
         if (!isDeclaredType(mirror)) {
           return createGoalDescription(goal, emptyList());
         }
@@ -62,7 +62,7 @@ final class ProjectionValidatorV {
         validateType(goal, type);
         Map<String, ExecutableElement> methods = getLocalAndInheritedMethods(type, LOOKS_LIKE_PROJECTION);
         Map<String, VariableElement> fields = getLocalAndInheritedFields(type);
-        List<TmpProjectedParameter> parameters = transform(goal.executableElement.getParameters(),
+        List<TmpProjectedParameter> parameters = transform(goal.executableElement().getParameters(),
             parameter -> TmpProjectedParameter.create(parameter,
                 projectionInfo(methods, fields, parameter)));
         return createGoalDescription(goal, parameters);
@@ -95,31 +95,31 @@ final class ProjectionValidatorV {
 
   private static void validateType(RegularProjectableGoalElement goal,
                                    TypeElement type) {
-    if (goal.executableElement.getKind() == CONSTRUCTOR
+    if (goal.executableElement().getKind() == CONSTRUCTOR
         && type.getModifiers().contains(ABSTRACT)) {
-      throw new ValidationException(ABSTRACT_CONSTRUCTOR, goal.executableElement);
+      throw new ValidationException(ABSTRACT_CONSTRUCTOR, goal.executableElement());
     }
   }
 
   static final Function<RegularGoalElement, SimpleRegularGoalDescription> validateBuilder
       = goal -> {
-    List<TmpSimpleParameter> parameters = transform(executableElement.apply(goal).getParameters(),
+    List<TmpSimpleParameter> parameters = transform(executableElement(goal).getParameters(),
         TmpSimpleParameter::create);
     List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
-    List<TypeName> thrownTypes = thrownTypes(executableElement.apply(goal));
+    List<TypeName> thrownTypes = thrownTypes(executableElement(goal));
     return SimpleRegularGoalDescription.create(
-        goal.details,
+        goal.details(),
         thrownTypes,
         transform(shuffled, parameter -> parameter.parameter),
-        goal.context);
+        goal.context());
   };
 
   private static ProjectedRegularGoalDescription createGoalDescription(RegularProjectableGoalElement goal,
                                                                        List<TmpProjectedParameter> parameters) {
     List<TmpProjectedParameter> shuffled = shuffledParameters(parameters);
     return ProjectedRegularGoalDescription.create(
-        goal.details, thrownTypes(goal.executableElement),
-        transform(shuffled, toValidParameter), goal.context);
+        goal.details(), thrownTypes(goal.executableElement()),
+        transform(shuffled, toValidParameter), goal.context());
   }
 
   private ProjectionValidatorV() {

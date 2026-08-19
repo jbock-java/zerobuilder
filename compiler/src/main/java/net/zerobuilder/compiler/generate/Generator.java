@@ -3,20 +3,18 @@ package net.zerobuilder.compiler.generate;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.FieldSpec;
 import com.palantir.javapoet.TypeSpec;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collector;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collector;
-
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static net.zerobuilder.compiler.generate.DtoGeneratorInput.goalInputCases;
-import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.listCollector;
 
 public final class Generator {
@@ -69,13 +67,15 @@ public final class Generator {
   private static List<TypeSpec> types(List<ModuleOutput> outputs) {
     return outputs.stream()
         .map(ModuleOutput::typeSpecs)
-        .collect(flatList());
+        .flatMap(List::stream)
+        .toList();
   }
 
   private static List<FieldSpec> fields(List<ModuleOutput> outputs) {
     return outputs.stream()
         .map(ModuleOutput::cacheFields)
-        .collect(flatList());
+        .flatMap(List::stream)
+        .toList();
   }
 
   private static final Function<AbstractGoalInput, ModuleOutput> process =

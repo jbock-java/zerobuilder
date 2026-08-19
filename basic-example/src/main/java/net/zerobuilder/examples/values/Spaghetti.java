@@ -12,7 +12,7 @@ final class Spaghetti {
   final String sauce;
   final boolean alDente;
 
-  @Builder(style = Style.IMMUTABLE)
+  @Builder
   @Updater
   Spaghetti(String cheese, @Step(0) String sauce, boolean alDente) {
     this.cheese = cheese;

@@ -86,9 +86,9 @@ final class ProjectionValidatorB {
 
   static final Function<BeanGoalElement, BeanGoalDescription> validateBean
       = goal -> {
-    validateBeanType(goal.beanType);
+    validateBeanType(goal.beanType());
     Collection<ExecutableElement> getters = getters(goal);
-    Map<String, ExecutableElement> settersByName = setters(goal.beanType, getters);
+    Map<String, ExecutableElement> settersByName = setters(goal.beanType(), getters);
     List<TmpAccessorPair> builder = getters.stream()
         .map(getter -> tmpAccessorPair(settersByName, getter))
         .collect(Collectors.toList());
@@ -114,7 +114,7 @@ final class ProjectionValidatorB {
   }
 
   private static Collection<ExecutableElement> getters(BeanGoalElement goal) {
-    return getLocalAndInheritedMethods(goal.beanType, LOOKS_LIKE_GETTER).values();
+    return getLocalAndInheritedMethods(goal.beanType(), LOOKS_LIKE_GETTER).values();
   }
 
   private static Map<String, ExecutableElement> setters(TypeElement beanType,
@@ -198,7 +198,7 @@ final class ProjectionValidatorB {
     public boolean test(ExecutableElement setter) {
       return setter.getParameters().size() == 1
           && name.equals(setter.getSimpleName().toString())
-          && type.equals(TypeName.get(setter.getParameters().get(0).asType()));
+          && type.equals(TypeName.get(setter.getParameters().getFirst().asType()));
     }
   }
 
@@ -241,12 +241,12 @@ final class ProjectionValidatorB {
     List<TmpAccessorPair> sorted = sortedCopy(tmpAccessorPairs, ALPHABETIC_SORT);
     List<AbstractBeanParameter> validBeanParameters
         = transform(shuffledParameters(sorted), toValidParameter);
-    return BeanGoalDescription.create(goal.details, validBeanParameters,
+    return BeanGoalDescription.create(goal.details(), validBeanParameters,
         beanConstructorExceptions(goal));
   }
 
   private static List<TypeName> beanConstructorExceptions(BeanGoalElement goal) {
-    for (ExecutableElement constructor : constructorsIn(goal.beanType.getEnclosedElements())) {
+    for (ExecutableElement constructor : constructorsIn(goal.beanType().getEnclosedElements())) {
       if (constructor.getParameters().isEmpty()) {
         return thrownTypes(constructor);
       }

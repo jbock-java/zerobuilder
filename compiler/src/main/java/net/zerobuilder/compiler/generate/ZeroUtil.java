@@ -119,7 +119,7 @@ public final class ZeroUtil {
     List<TypeName> types = typeArguments(typeName);
     return switch (types.size()) {
       case 0 -> Optional.empty();
-      case 1 -> Optional.of(types.get(0));
+      case 1 -> Optional.of(types.getFirst());
       default -> throw new IllegalArgumentException("multiple type arguments");
     };
   }
@@ -184,41 +184,9 @@ public final class ZeroUtil {
               builder.add(delimiter);
             }
           }
-          builder.add(blocks.get(blocks.size() - 1));
+          builder.add(blocks.getLast());
           return builder.build();
         };
-      }
-
-      @Override
-      public Set<Characteristics> characteristics() {
-        return emptySet();
-      }
-    };
-  }
-
-  public static <E> Collector<List<E>, List<E>, List<E>> flatList() {
-    return new Collector<>() {
-      @Override
-      public Supplier<List<E>> supplier() {
-        return ArrayList::new;
-      }
-
-      @Override
-      public BiConsumer<List<E>, List<E>> accumulator() {
-        return List::addAll;
-      }
-
-      @Override
-      public BinaryOperator<List<E>> combiner() {
-        return (left, right) -> {
-          left.addAll(right);
-          return left;
-        };
-      }
-
-      @Override
-      public Function<List<E>, List<E>> finisher() {
-        return Function.identity();
       }
 
       @Override
@@ -264,7 +232,7 @@ public final class ZeroUtil {
   static <R> Supplier<R> memoize(Supplier<R> supplier) {
     List<R> ref = new ArrayList<>(singletonList(null));
     return () -> {
-      R element = ref.get(0);
+      R element = ref.getFirst();
       if (element == null) {
         element = supplier.get();
         ref.set(0, element);

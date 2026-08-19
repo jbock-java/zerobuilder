@@ -3,8 +3,14 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Builder;
-import net.zerobuilder.Style;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoContext;
@@ -13,14 +19,6 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -36,134 +34,63 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 final class DtoGoalElement {
 
-  interface GoalElementCases<R> {
-    R regularGoal(AbstractRegularGoalElement goal);
-    R beanGoal(BeanGoalElement goal);
+  sealed interface AbstractGoalElement permits BeanGoalElement, RegularGoalElement, RegularProjectableGoalElement {
   }
 
-  private static <R> Function<AbstractGoalElement, R> asFunction(GoalElementCases<R> cases) {
-    return goal -> goal.accept(cases);
+  sealed interface AbstractRegularGoalElement permits RegularGoalElement, RegularProjectableGoalElement {
   }
 
-  interface AbstractGoalElement {
-    <R> R accept(GoalElementCases<R> goalElementCases);
+  static ExecutableElement executableElement(AbstractRegularGoalElement element) {
+    return switch (element) {
+      case RegularGoalElement regular -> regular.executableElement;
+      case RegularProjectableGoalElement projected -> projected.executableElement;
+    };
   }
 
-  interface RegularGoalElementCases<R> {
-    R general(RegularGoalElement regular);
-    R projectable(RegularProjectableGoalElement projectable);
+  static String goalName(AbstractGoalElement element) {
+    return switch (element) {
+      case BeanGoalElement bean -> bean.details.name;
+      case RegularGoalElement regular -> regular.details.name;
+      case RegularProjectableGoalElement projected -> projected.details.name;
+    };
   }
 
-  interface AbstractRegularGoalElement extends AbstractGoalElement {
-    <R> R accept(RegularGoalElementCases<R> cases);
+  static Element element(AbstractGoalElement element) {
+    return switch (element) {
+      case BeanGoalElement bean -> bean.beanType;
+      case RegularGoalElement regular -> regular.executableElement;
+      case RegularProjectableGoalElement projected -> projected.executableElement;
+    };
   }
 
-  private static <R> Function<AbstractRegularGoalElement, R> asFunction(RegularGoalElementCases<R> cases) {
-    return element -> element.accept(cases);
+  private static RegularGoalElement createRegularGoalElement(
+      ExecutableElement element,
+      AbstractRegularDetails details,
+      DtoContext.GoalContext context) {
+    return new RegularGoalElement(details, element, GoalModifiers.create(element), context);
   }
 
-  static <R> Function<AbstractRegularGoalElement, R> regularGoalElementCases(
-      Function<? super RegularGoalElement, ? extends R> generalFunction,
-      Function<? super RegularProjectableGoalElement, ? extends R> projectableFunction) {
-    return asFunction(new RegularGoalElementCases<R>() {
-      @Override
-      public R general(RegularGoalElement regular) {
-        return generalFunction.apply(regular);
-      }
-      @Override
-      public R projectable(RegularProjectableGoalElement projectable) {
-        return projectableFunction.apply(projectable);
-      }
-    });
+  record RegularGoalElement(
+      AbstractRegularDetails details,
+      ExecutableElement executableElement,
+      GoalModifiers goalAnnotation,
+      DtoContext.GoalContext context
+  ) implements AbstractGoalElement, AbstractRegularGoalElement {
   }
 
-  static final Function<AbstractRegularGoalElement, ExecutableElement> executableElement =
-      regularGoalElementCases(
-          general -> general.executableElement,
-          projectable -> projectable.executableElement);
-
-  static <R> Function<AbstractGoalElement, R> goalElementCases(
-      Function<? super AbstractRegularGoalElement, ? extends R> regularGoalFunction,
-      Function<? super BeanGoalElement, ? extends R> beanGoalFunction) {
-    return asFunction(new GoalElementCases<R>() {
-      @Override
-      public R regularGoal(AbstractRegularGoalElement executableGoal) {
-        return regularGoalFunction.apply(executableGoal);
-      }
-
-      @Override
-      public R beanGoal(BeanGoalElement beanGoal) {
-        return beanGoalFunction.apply(beanGoal);
-      }
-    });
+  private static RegularProjectableGoalElement createRegularProjectableGoalElement(
+      ExecutableElement element,
+      AbstractRegularDetails details,
+      DtoContext.GoalContext context) {
+    return new RegularProjectableGoalElement(details, element, GoalModifiers.create(element), context);
   }
 
-  private static final Function<AbstractRegularGoalElement, String> regularGoalName =
-      regularGoalElementCases(
-          general -> general.details.name,
-          projected -> projected.details.name);
-
-  static final Function<AbstractGoalElement, String> goalName =
-      goalElementCases(
-          regularGoalName,
-          bean -> bean.details.name);
-
-  static final Function<AbstractGoalElement, Element> element =
-      goalElementCases(
-          regularGoalElementCases(
-              regular -> regular.executableElement,
-              projected -> projected.executableElement),
-          bean -> bean.beanType);
-
-  static final class RegularGoalElement implements AbstractRegularGoalElement {
-    final AbstractRegularDetails details;
-    final ExecutableElement executableElement;
-    final GoalModifiers goalAnnotation;
-    final DtoContext.GoalContext context;
-    final Style style;
-
-    private RegularGoalElement(ExecutableElement element, AbstractRegularDetails details,
-                               DtoContext.GoalContext context, Style style) {
-      this.goalAnnotation = GoalModifiers.create(element);
-      this.details = details;
-      this.executableElement = element;
-      this.context = context;
-      this.style = style;
-    }
-
-    @Override
-    public <R> R accept(GoalElementCases<R> goalElementCases) {
-      return goalElementCases.regularGoal(this);
-    }
-
-    @Override
-    public <R> R accept(RegularGoalElementCases<R> cases) {
-      return cases.general(this);
-    }
-  }
-
-  static final class RegularProjectableGoalElement implements AbstractRegularGoalElement {
-    final AbstractRegularDetails details;
-    final ExecutableElement executableElement;
-    final GoalModifiers goalAnnotation;
-    final DtoContext.GoalContext context;
-
-    private RegularProjectableGoalElement(ExecutableElement element, AbstractRegularDetails details, DtoContext.GoalContext context) {
-      this.goalAnnotation = GoalModifiers.create(element);
-      this.details = details;
-      this.executableElement = element;
-      this.context = context;
-    }
-
-    @Override
-    public <R> R accept(GoalElementCases<R> goalElementCases) {
-      return goalElementCases.regularGoal(this);
-    }
-
-    @Override
-    public <R> R accept(RegularGoalElementCases<R> cases) {
-      return cases.projectable(this);
-    }
+  record RegularProjectableGoalElement(
+      AbstractRegularDetails details,
+      ExecutableElement executableElement,
+      GoalModifiers goalAnnotation,
+      DtoContext.GoalContext context
+  ) implements AbstractGoalElement, AbstractRegularGoalElement {
   }
 
   private static List<String> parameterNames(ExecutableElement element) {
@@ -171,30 +98,31 @@ final class DtoGoalElement {
         parameter -> parameter.getSimpleName().toString());
   }
 
-  static final class BeanGoalElement implements AbstractGoalElement {
-    final BeanGoalDetails details;
-    final TypeElement beanType;
-    final ModuleChoice moduleChoice;
+  static BeanGoalElement createBeanGoalElement(
+      ClassName goalType,
+      String name,
+      TypeElement beanType,
+      ModuleChoice moduleChoice,
+      DtoContext.GoalContext context
+  ) {
+    return new BeanGoalElement(new BeanGoalDetails(goalType, name, Access.PUBLIC, context), beanType, moduleChoice);
+  }
 
-    private BeanGoalElement(ClassName goalType, String name, TypeElement beanType,
-                            ModuleChoice moduleChoice, DtoContext.GoalContext context) {
-      this.moduleChoice = moduleChoice;
-      this.details = new BeanGoalDetails(goalType, name, Access.PUBLIC, context);
-      this.beanType = beanType;
-    }
+  static List<BeanGoalElement> createBeanGoalElements(
+      TypeElement beanType,
+      DtoContext.GoalContext context) {
+    ClassName goalType = ClassName.get(beanType);
+    String name = downcase(simpleName(goalType));
+    List<ModuleChoice> goalOptions = Arrays.asList(BUILDER, UPDATER);
+    return transform(goalOptions,
+        goalOption -> createBeanGoalElement(goalType, name, beanType, goalOption, context));
+  }
 
-    static List<BeanGoalElement> create(TypeElement beanType, DtoContext.GoalContext context) {
-      ClassName goalType = ClassName.get(beanType);
-      String name = downcase(simpleName(goalType));
-      List<ModuleChoice> goalOptions = Arrays.asList(BUILDER, UPDATER);
-      return transform(goalOptions,
-          goalOption -> new BeanGoalElement(goalType, name, beanType, goalOption, context));
-    }
-
-    @Override
-    public <R> R accept(GoalElementCases<R> goalElementCases) {
-      return goalElementCases.beanGoal(this);
-    }
+  record BeanGoalElement(
+      BeanGoalDetails details,
+      TypeElement beanType,
+      ModuleChoice moduleChoice
+  ) implements AbstractGoalElement {
   }
 
   enum ModuleChoice {
@@ -219,7 +147,7 @@ final class DtoGoalElement {
     return TypeName.get(goal.getReturnType());
   }
 
-  static Function<ExecutableElement, List<AbstractRegularGoalElement>> createRegular(DtoContext.GoalContext context) {
+  static Function<ExecutableElement, List<? extends AbstractGoalElement>> createRegular(DtoContext.GoalContext context) {
     return element -> {
       TypeName goalType = goalType(element);
       GoalModifiers modifiers = GoalModifiers.create(element);
@@ -235,13 +163,15 @@ final class DtoGoalElement {
     };
   }
 
-  private static AbstractRegularGoalElement createUpdaterGoal(ExecutableElement element, TypeName goalType,
-                                                              GoalModifiers goalModifiers,
-                                                              String methodName,
-                                                              List<String> parameterNames,
-                                                              DtoContext.GoalContext context) {
+  private static AbstractGoalElement createUpdaterGoal(
+      ExecutableElement element,
+      TypeName goalType,
+      GoalModifiers goalModifiers,
+      String methodName,
+      List<String> parameterNames,
+      DtoContext.GoalContext context) {
     if (element.getKind() == CONSTRUCTOR) {
-      return new RegularProjectableGoalElement(element, ConstructorGoalDetails.create(
+      return createRegularProjectableGoalElement(element, ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
           goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element),
           goalModifiers.lifecycle), context);
@@ -256,7 +186,7 @@ final class DtoGoalElement {
                 instanceTypevars(element),
                 returnTypeInstanceTypevars(element),
                 goalModifiers.lifecycle);
-    return new RegularProjectableGoalElement(element, details, context);
+    return createRegularProjectableGoalElement(element, details, context);
   }
 
   private static List<TypeVariableName> instanceTypevars(ExecutableElement element) {
@@ -278,18 +208,19 @@ final class DtoGoalElement {
         .collect(toList());
   }
 
-  private static AbstractRegularGoalElement createBuilderGoal(ExecutableElement element, TypeName goalType,
-                                                              GoalModifiers goalModifiers,
-                                                              String methodName,
-                                                              List<String> parameterNames,
-                                                              DtoContext.GoalContext context) {
-    Builder builderAnnotation = element.getAnnotation(Builder.class);
+  private static AbstractGoalElement createBuilderGoal(
+      ExecutableElement element,
+      TypeName goalType,
+      GoalModifiers goalModifiers,
+      String methodName,
+      List<String> parameterNames,
+      DtoContext.GoalContext context) {
     if (element.getKind() == CONSTRUCTOR) {
       ConstructorGoalDetails details = ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
           goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element),
           goalModifiers.lifecycle);
-      return new RegularGoalElement(element, details, context, builderAnnotation.style());
+      return createRegularGoalElement(element, details, context);
     }
     AbstractRegularDetails details =
         element.getModifiers().contains(STATIC) ?
@@ -302,7 +233,7 @@ final class DtoGoalElement {
                 instanceTypevars(element),
                 returnTypeInstanceTypevars(element),
                 goalModifiers.lifecycle);
-    return new RegularGoalElement(element, details, context, builderAnnotation.style());
+    return createRegularGoalElement(element, details, context);
   }
 
   private DtoGoalElement() {
