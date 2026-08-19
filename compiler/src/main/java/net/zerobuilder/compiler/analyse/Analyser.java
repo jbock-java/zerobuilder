@@ -3,10 +3,12 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
+import java.util.List;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractRegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
 import net.zerobuilder.compiler.common.LessElements;
@@ -24,20 +26,12 @@ import net.zerobuilder.modules.generics.GenericsBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
 import net.zerobuilder.modules.updater.bean.BeanUpdater;
 
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import java.util.List;
-import java.util.function.Function;
-
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.Style.IMMUTABLE;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SUBGOALS;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.REUSE_GENERICS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.REUSE_IMMUTABLE;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalElementCases;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.regularGoalElementCases;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.createBeanGoalElements;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkAccessLevel;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkNameConflict;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean;
@@ -48,7 +42,6 @@ import static net.zerobuilder.compiler.analyse.Utilities.peer;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
-import static net.zerobuilder.compiler.generate.ZeroUtil.flatList;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
@@ -78,28 +71,27 @@ public final class Analyser {
     List<? extends AbstractGoalElement> goals = goals(tel, context);
     checkNameConflict(goals);
     checkAccessLevel(goals);
-    return transform(goals, assignModule);
+    return transform(goals, Analyser::assignModule);
   }
 
-  private static final Function<AbstractGoalElement, AbstractGoalInput> assignModule =
-      goalElementCases(
-          regularGoalElementCases(
-              general -> {
-                boolean hasTypevars = hasTypevars(general.executableElement);
-                if (hasTypevars && general.goalAnnotation.lifecycle == REUSE_INSTANCES) {
-                  throw new ValidationException(REUSE_GENERICS, general.executableElement);
-                }
-                if (general.style == IMMUTABLE && general.goalAnnotation.lifecycle == REUSE_INSTANCES) {
-                  throw new ValidationException(REUSE_IMMUTABLE, general.executableElement);
-                }
-                return hasTypevars || general.style == IMMUTABLE ?
-                    new RegularSimpleGoalInput(GENERICS, validateBuilder.apply(general)) :
-                    new RegularSimpleGoalInput(BUILDER, validateBuilder.apply(general));
-              },
-              projected -> new ProjectedGoalInput(UPDATER, validateUpdater.apply(projected))),
-          bean -> bean.moduleChoice == ModuleChoice.BUILDER ?
-              new BeanGoalInput(BEAN_BUILDER, validateBean.apply(bean)) :
-              new BeanGoalInput(BEAN_UPDATER, validateBean.apply(bean)));
+  private static AbstractGoalInput assignModule(AbstractGoalElement element) {
+    return switch (element) {
+      case BeanGoalElement bean -> bean.moduleChoice() == ModuleChoice.BUILDER ?
+          new BeanGoalInput(BEAN_BUILDER, validateBean.apply(bean)) :
+          new BeanGoalInput(BEAN_UPDATER, validateBean.apply(bean));
+      case DtoGoalElement.RegularGoalElement regular -> {
+        boolean hasTypevars = hasTypevars(regular.executableElement());
+        if (hasTypevars && regular.goalAnnotation().lifecycle == REUSE_INSTANCES) {
+          throw new ValidationException(REUSE_GENERICS, regular.executableElement());
+        }
+        yield hasTypevars ?
+            new RegularSimpleGoalInput(GENERICS, validateBuilder.apply(regular)) :
+            new RegularSimpleGoalInput(BUILDER, validateBuilder.apply(regular));
+      }
+      case DtoGoalElement.RegularProjectableGoalElement projected ->
+          new ProjectedGoalInput(UPDATER, validateUpdater.apply(projected));
+    };
+  }
 
   private static List<? extends AbstractGoalElement> goals(TypeElement tel, GoalContext context) {
     return tel.getAnnotation(net.zerobuilder.BeanBuilder.class) != null ?
@@ -113,13 +105,14 @@ public final class Analyser {
         && !asTypeElement(element.getEnclosingElement().asType()).getTypeParameters().isEmpty();
   }
 
-  private static List<AbstractRegularGoalElement> regularGoals(TypeElement tel, GoalContext context) {
+  private static List<? extends AbstractGoalElement> regularGoals(TypeElement tel, GoalContext context) {
     return tel.getEnclosedElements().stream()
         .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
         .filter(el -> el.getKind() == CONSTRUCTOR || el.getKind() == METHOD)
         .map(LessElements::asExecutable)
         .map(DtoGoalElement.createRegular(context))
-        .collect(flatList());
+        .flatMap(List::stream)
+        .toList();
   }
 
   private static List<BeanGoalElement> beanGoals(TypeElement buildElement, GoalContext context) {
@@ -129,7 +122,7 @@ public final class Analyser {
         .ifPresent(el -> {
           throw new ValidationException(BEAN_SUBGOALS, el);
         });
-    return BeanGoalElement.create(buildElement, context);
+    return createBeanGoalElements(buildElement, context);
   }
 
   private Analyser() {
