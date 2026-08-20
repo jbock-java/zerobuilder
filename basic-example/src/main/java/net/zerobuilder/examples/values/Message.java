@@ -15,7 +15,6 @@ final class Message {
 
   @Builder
   @Updater
-  @Recycle
   Message(String sender,
           String body,
           String recipient,

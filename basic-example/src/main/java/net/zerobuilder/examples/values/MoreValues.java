@@ -1,11 +1,9 @@
 package net.zerobuilder.examples.values;
 
+import java.io.IOException;
 import net.zerobuilder.Builder;
 import net.zerobuilder.GoalName;
-import net.zerobuilder.Recycle;
 import net.zerobuilder.Updater;
-
-import java.io.IOException;
 
 class MoreValues {
 
@@ -25,7 +23,6 @@ class MoreValues {
   static class Nothing {
 
     @Builder
-    @Recycle
     @GoalName("append")
     static void append(StringBuilder sb, String word) {
       sb.append(word);
@@ -36,7 +33,6 @@ class MoreValues {
   static class Sum {
 
     @Builder
-    @Recycle
     @GoalName("sum")
     static int sum(int a, int b) {
       return a + b;
@@ -49,7 +45,6 @@ class MoreValues {
 
     @Builder
     @Updater
-    @Recycle
     NothingSpecial(String foo) {
       this.foo = foo;
     }
