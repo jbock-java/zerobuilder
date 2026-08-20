@@ -11,13 +11,11 @@ final class MessageFactory {
   final String sender;
 
   @Builder
-  @Recycle
   MessageFactory(String sender) {
     this.sender = sender;
   }
 
   @Builder
-  @Recycle
   Message create(String body, String recipient, String subject) {
     return MessageFactory_MessageBuilders.messageBuilder()
         .sender(sender)
@@ -34,7 +32,6 @@ final class MessageFactory {
 
     @Builder
     @Updater
-    @Recycle
     Message(String sender, String body, String recipient, String subject) {
       this.sender = sender;
       this.body = body;
