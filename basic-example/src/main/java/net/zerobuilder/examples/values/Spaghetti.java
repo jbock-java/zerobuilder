@@ -2,7 +2,6 @@ package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builder;
 import net.zerobuilder.Step;
-import net.zerobuilder.Style;
 import net.zerobuilder.Updater;
 
 // changing step order

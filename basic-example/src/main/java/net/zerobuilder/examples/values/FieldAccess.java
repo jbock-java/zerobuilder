@@ -2,7 +2,6 @@ package net.zerobuilder.examples.values;
 
 
 import net.zerobuilder.Builder;
-import net.zerobuilder.Recycle;
 import net.zerobuilder.Updater;
 
 // projections: field access
@@ -15,7 +14,6 @@ final class FieldAccess {
 
   @Builder
   @Updater
-  @Recycle
   FieldAccess(double length, double width, double height) {
     this.length = length;
     this.width = width;

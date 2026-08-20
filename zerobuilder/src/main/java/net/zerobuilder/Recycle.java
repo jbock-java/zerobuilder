@@ -10,6 +10,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 /**
  * Request builder / updater reuse
  */
+@Deprecated(forRemoval = true)
 @Retention(SOURCE)
 @Target({METHOD, CONSTRUCTOR})
 public @interface Recycle {

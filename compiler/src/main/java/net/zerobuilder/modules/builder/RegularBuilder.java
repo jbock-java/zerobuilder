@@ -18,13 +18,11 @@ import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
@@ -88,9 +86,6 @@ public final class RegularBuilder implements RegularSimpleModule {
           (constructor, description) -> constructor(),
           (staticMethod, description) -> constructor(),
           (method, description) -> {
-            if (description.details.lifecycle == REUSE_INSTANCES) {
-              return constructor();
-            }
             TypeName type = description.context.type;
             ParameterSpec parameter = parameterSpec(type, downcase(simpleName(type)));
             return constructorBuilder()
@@ -116,8 +111,6 @@ public final class RegularBuilder implements RegularSimpleModule {
         asList(
             defineBuilderImpl(description),
             defineContract(description)),
-        description.details.lifecycle == REUSE_INSTANCES ?
-            singletonList(description.context.cache(implType(description))) :
-            emptyList());
+        emptyList());
   }
 }
