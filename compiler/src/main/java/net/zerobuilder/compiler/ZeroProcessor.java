@@ -17,10 +17,11 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
 import net.zerobuilder.BeanBuilder;
 import net.zerobuilder.Builder;
+import net.zerobuilder.RecordBuilder;
+import net.zerobuilder.RecordUpdater;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.Analyser;
 import net.zerobuilder.compiler.analyse.ValidationException;
@@ -43,7 +44,12 @@ public final class ZeroProcessor extends AbstractProcessor {
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
-    return Stream.of(Builder.class, Updater.class, BeanBuilder.class)
+    return Stream.of(
+            Builder.class,
+            Updater.class,
+            BeanBuilder.class,
+            RecordBuilder.class,
+            RecordUpdater.class)
         .map(Class::getName)
         .collect(toSet());
   }
@@ -55,19 +61,20 @@ public final class ZeroProcessor extends AbstractProcessor {
 
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
-    Elements elements = processingEnv.getElementUtils();
     List<AnnotationSpec> generatedAnnotations = generatedAnnotations();
     Set<TypeElement> types = new HashSet<>();
     for (Class<? extends Annotation> c : asList(Builder.class, Updater.class)) {
       types.addAll(Stream.concat(
-          methodsIn(env.getElementsAnnotatedWith(c)).stream(),
-          constructorsIn(env.getElementsAnnotatedWith(c)).stream())
+              methodsIn(env.getElementsAnnotatedWith(c)).stream(),
+              constructorsIn(env.getElementsAnnotatedWith(c)).stream())
           .map(ExecutableElement::getEnclosingElement)
           .map(Element::asType)
           .map(LessTypes::asTypeElement)
           .toList());
     }
     types.addAll(typesIn(env.getElementsAnnotatedWith(BeanBuilder.class)));
+    //types.addAll(typesIn(env.getElementsAnnotatedWith(RecordBuilder.class)));
+    //types.addAll(typesIn(env.getElementsAnnotatedWith(RecordUpdater.class)));
     for (TypeElement enclosingElement : types) {
       try {
         if (!done.add(enclosingElement)) {
