@@ -4,63 +4,36 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-
-import javax.lang.model.element.Modifier;
 import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import javax.lang.model.element.Modifier;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
 public final class DtoGoalDetails {
 
-  interface RegularGoalDetailsCases<R, P> {
-    R method(InstanceMethodGoalDetails details, P p);
+  public sealed interface AbstractRegularDetails permits InstanceMethodGoalDetails, ConstructorGoalDetails, StaticMethodGoalDetails {
 
-    R staticMethod(StaticMethodGoalDetails details, P p);
+    TypeName type();
 
-    R constructor(ConstructorGoalDetails details, P p);
+    Modifier[] access(Modifier modifiers);
+
+    String name();
+
+    List<String> parameterNames();
   }
 
-  private static <R, P> BiFunction<AbstractRegularDetails, P, R> asFunction(RegularGoalDetailsCases<R, P> cases) {
-    return (details, p) -> details.accept(cases, p);
-  }
-
-  public static <R, P> BiFunction<AbstractRegularDetails, P, R> regularDetailsCases(
-      BiFunction<? super ConstructorGoalDetails, ? super P, ? extends R> constructorFunction,
-      BiFunction<? super StaticMethodGoalDetails, ? super P, ? extends R> staticFunction,
-      BiFunction<? super InstanceMethodGoalDetails, ? super P, ? extends R> instanceFunction) {
-    return asFunction(new RegularGoalDetailsCases<R, P>() {
-      @Override
-      public R method(InstanceMethodGoalDetails details, P p) {
-        return instanceFunction.apply(details, p);
-      }
-
-      @Override
-      public R staticMethod(StaticMethodGoalDetails details, P p) {
-        return staticFunction.apply(details, p);
-      }
-
-      @Override
-      public R constructor(ConstructorGoalDetails details, P p) {
-        return constructorFunction.apply(details, p);
-      }
-    });
-  }
-
-  public static <R> Function<AbstractRegularDetails, R> regularDetailsCases(
-      Function<ConstructorGoalDetails, R> constructorFunction,
-      Function<StaticMethodGoalDetails, R> staticFunction,
-      Function<InstanceMethodGoalDetails, R> instanceFunction) {
-    BiFunction<AbstractRegularDetails, Void, R> biFunction =
-        regularDetailsCases(
-            (x, _null) -> constructorFunction.apply(x),
-            (x, _null) -> staticFunction.apply(x),
-            (x, _null) -> instanceFunction.apply(x));
-    return details -> biFunction.apply(details, null);
-  }
-
-  public static abstract class AbstractRegularDetails {
+  public static abstract class LessAbstractRegularDetails {
+    /**
+     * @param name           goal name
+     * @param parameterNames parameter names in original order
+     * @param access         goal options
+     */
+    LessAbstractRegularDetails(String name, List<String> parameterNames,
+                               Access access) {
+      this.name = name;
+      this.access = access;
+      this.parameterNames = parameterNames;
+    }
 
     public final String name;
     public final Access access;
@@ -69,6 +42,10 @@ public final class DtoGoalDetails {
      * parameter names in original order
      */
     final List<String> parameterNames;
+
+    public List<String> parameterNames() {
+      return parameterNames;
+    }
 
     public final String name() {
       return name;
@@ -81,25 +58,9 @@ public final class DtoGoalDetails {
     public final CodeBlock invocationParameters() {
       return CodeBlock.of(String.join(", ", parameterNames));
     }
-
-    public abstract TypeName type();
-
-    /**
-     * @param name           goal name
-     * @param parameterNames parameter names in original order
-     * @param access         goal options
-     */
-    AbstractRegularDetails(String name, List<String> parameterNames,
-                           Access access) {
-      this.name = name;
-      this.access = access;
-      this.parameterNames = parameterNames;
-    }
-
-    abstract <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p);
   }
 
-  public static final class ConstructorGoalDetails extends AbstractRegularDetails {
+  public static final class ConstructorGoalDetails extends LessAbstractRegularDetails implements AbstractRegularDetails {
 
     public final TypeName goalType;
     public final List<TypeVariableName> instanceTypeParameters;
@@ -128,14 +89,9 @@ public final class DtoGoalDetails {
     public TypeName type() {
       return goalType;
     }
-
-    @Override
-    <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p) {
-      return cases.constructor(this, p);
-    }
   }
 
-  public static final class InstanceMethodGoalDetails extends AbstractRegularDetails {
+  public static final class InstanceMethodGoalDetails extends LessAbstractRegularDetails implements AbstractRegularDetails {
     public final String methodName;
     public final TypeName goalType;
 
@@ -178,18 +134,13 @@ public final class DtoGoalDetails {
     public TypeName type() {
       return goalType;
     }
-
-    @Override
-    <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p) {
-      return cases.method(this, p);
-    }
   }
 
 
   /**
    * Describes static method goal.
    */
-  public static final class StaticMethodGoalDetails extends AbstractRegularDetails {
+  public static final class StaticMethodGoalDetails extends LessAbstractRegularDetails implements AbstractRegularDetails {
 
     public final List<TypeVariableName> typeParameters;
     public final String methodName;
@@ -219,11 +170,6 @@ public final class DtoGoalDetails {
     public TypeName type() {
       return goalType;
     }
-
-    @Override
-    <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p) {
-      return cases.staticMethod(this, p);
-    }
   }
 
   public static final class BeanGoalDetails {
@@ -244,11 +190,13 @@ public final class DtoGoalDetails {
     }
   }
 
-  public static final Function<AbstractRegularDetails, Boolean> isInstance =
-      regularDetailsCases(
-          constructor -> false,
-          staticMethod -> false,
-          instanceMethod -> true);
+  public static boolean isInstance(AbstractRegularDetails details) {
+    return switch (details) {
+      case ConstructorGoalDetails constructor -> false;
+      case StaticMethodGoalDetails staticMethod -> false;
+      case InstanceMethodGoalDetails instanceMethod -> true;
+    };
+  }
 
   private DtoGoalDetails() {
     throw new UnsupportedOperationException("no instances");

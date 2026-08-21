@@ -101,8 +101,7 @@ final class ProjectionValidatorV {
     }
   }
 
-  static final Function<RegularGoalElement, SimpleRegularGoalDescription> validateBuilder
-      = goal -> {
+  static SimpleRegularGoalDescription validateBuilder(RegularGoalElement goal) {
     List<TmpSimpleParameter> parameters = transform(executableElement(goal).getParameters(),
         TmpSimpleParameter::create);
     List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
@@ -112,7 +111,7 @@ final class ProjectionValidatorV {
         thrownTypes,
         transform(shuffled, parameter -> parameter.parameter),
         goal.context());
-  };
+  }
 
   private static ProjectedRegularGoalDescription createGoalDescription(RegularProjectableGoalElement goal,
                                                                        List<TmpProjectedParameter> parameters) {

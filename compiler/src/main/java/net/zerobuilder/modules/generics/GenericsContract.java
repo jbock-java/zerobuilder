@@ -14,9 +14,10 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class GenericsContract {
 
-  static TypeName nextStepType(SimpleRegularGoalDescription description,
-                               List<List<TypeVariableName>> typeParams,
-                               int i) {
+  static TypeName nextStepType(
+      SimpleRegularGoalDescription description,
+      List<List<TypeVariableName>> typeParams,
+      int i) {
     if (i == description.parameters.size() - 1) {
       return description.details.type();
     }
@@ -29,7 +30,7 @@ final class GenericsContract {
   }
 
   static ClassName implType(SimpleRegularGoalDescription description) {
-    String contractName = upcase(description.details.name) + "Builder";
+    String contractName = upcase(description.details.name()) + "Builder";
     return description.context
         .generatedType.nestedClass(contractName);
   }

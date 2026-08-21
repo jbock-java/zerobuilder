@@ -4,15 +4,13 @@ import com.palantir.javapoet.FieldSpec;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
-import static com.palantir.javapoet.TypeName.BOOLEAN;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -20,7 +18,6 @@ import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.modules.updater.RegularUpdater.implType;
-import static net.zerobuilder.modules.updater.RegularUpdater.isReusable;
 
 final class Updater {
 
@@ -29,10 +26,7 @@ final class Updater {
 
   static List<FieldSpec> fields(ProjectedRegularGoalDescription description) {
     List<FieldSpec> builder = new ArrayList<>();
-    if (isReusable.apply(description.details)) {
-      builder.add(fieldSpec(BOOLEAN, IN_USE, PRIVATE));
-    }
-    if (isInstance.apply(description.details)) {
+    if (isInstance(description.details)) {
       builder.add(fieldSpec(description.context.type, FACTORY, PRIVATE));
     }
     for (ProjectedParameter step : description.parameters) {

@@ -2,13 +2,12 @@ package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.TypeName;
+import java.util.List;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-
-import java.util.List;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
@@ -58,12 +57,13 @@ public final class DtoRegularGoalDescription {
       this.context = context;
     }
 
-    public static SimpleRegularGoalDescription create(AbstractRegularDetails details,
-                                                      List<TypeName> thrownTypes,
-                                                      List<SimpleParameter> parameters,
-                                                      GoalContext context) {
-      checkParameterNames(details.parameterNames, parameters);
-      int[] ranking = createUnshuffle(parameters, details.parameterNames);
+    public static SimpleRegularGoalDescription create(
+        AbstractRegularDetails details,
+        List<TypeName> thrownTypes,
+        List<SimpleParameter> parameters,
+        GoalContext context) {
+      checkParameterNames(details.parameterNames(), parameters);
+      int[] ranking = createUnshuffle(parameters, details.parameterNames());
       return new SimpleRegularGoalDescription(details, thrownTypes, parameters, context, ranking);
     }
   }
@@ -90,7 +90,7 @@ public final class DtoRegularGoalDescription {
                                                          List<TypeName> thrownTypes,
                                                          List<ProjectedParameter> parameters,
                                                          GoalContext context) {
-      checkParameterNames(details.parameterNames, parameters);
+      checkParameterNames(details.parameterNames(), parameters);
       return new ProjectedRegularGoalDescription(details, thrownTypes, parameters, context);
     }
   }

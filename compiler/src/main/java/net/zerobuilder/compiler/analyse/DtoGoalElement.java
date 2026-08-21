@@ -3,6 +3,13 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Name;
 import net.zerobuilder.Updater;
@@ -13,14 +20,6 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -52,8 +51,8 @@ final class DtoGoalElement {
   static String goalName(AbstractGoalElement element) {
     return switch (element) {
       case BeanGoalElement bean -> bean.details.name;
-      case RegularGoalElement regular -> regular.details.name;
-      case RegularProjectableGoalElement projected -> projected.details.name;
+      case RegularGoalElement regular -> regular.details.name();
+      case RegularProjectableGoalElement projected -> projected.details.name();
     };
   }
 
