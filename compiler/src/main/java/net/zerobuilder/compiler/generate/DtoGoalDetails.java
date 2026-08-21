@@ -4,7 +4,6 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-import net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
@@ -17,7 +16,9 @@ public final class DtoGoalDetails {
 
   interface RegularGoalDetailsCases<R, P> {
     R method(InstanceMethodGoalDetails details, P p);
+
     R staticMethod(StaticMethodGoalDetails details, P p);
+
     R constructor(ConstructorGoalDetails details, P p);
   }
 
@@ -34,10 +35,12 @@ public final class DtoGoalDetails {
       public R method(InstanceMethodGoalDetails details, P p) {
         return instanceFunction.apply(details, p);
       }
+
       @Override
       public R staticMethod(StaticMethodGoalDetails details, P p) {
         return staticFunction.apply(details, p);
       }
+
       @Override
       public R constructor(ConstructorGoalDetails details, P p) {
         return constructorFunction.apply(details, p);
@@ -61,7 +64,6 @@ public final class DtoGoalDetails {
 
     public final String name;
     public final Access access;
-    public final ContextLifecycle lifecycle;
 
     /**
      * parameter names in original order
@@ -86,14 +88,12 @@ public final class DtoGoalDetails {
      * @param name           goal name
      * @param parameterNames parameter names in original order
      * @param access         goal options
-     * @param lifecycle      lifecycle
      */
     AbstractRegularDetails(String name, List<String> parameterNames,
-                           Access access, ContextLifecycle lifecycle) {
+                           Access access) {
       this.name = name;
       this.access = access;
       this.parameterNames = parameterNames;
-      this.lifecycle = lifecycle;
     }
 
     abstract <R, P> R accept(RegularGoalDetailsCases<R, P> cases, P p);
@@ -104,18 +104,24 @@ public final class DtoGoalDetails {
     public final TypeName goalType;
     public final List<TypeVariableName> instanceTypeParameters;
 
-    private ConstructorGoalDetails(ClassName goalType, String name, List<String> parameterNames,
-                                   Access access, List<TypeVariableName> instanceTypeParameters,
-                                   ContextLifecycle lifecycle) {
-      super(name, parameterNames, access, lifecycle);
+    private ConstructorGoalDetails(
+        ClassName goalType,
+        String name,
+        List<String> parameterNames,
+        Access access,
+        List<TypeVariableName> instanceTypeParameters) {
+      super(name, parameterNames, access);
       this.goalType = parameterizedTypeName(goalType, instanceTypeParameters);
       this.instanceTypeParameters = instanceTypeParameters;
     }
 
-    public static ConstructorGoalDetails create(ClassName goalType, String name, List<String> parameterNames,
-                                                Access access, List<TypeVariableName> instanceTypeParameters,
-                                                ContextLifecycle lifecycle) {
-      return new ConstructorGoalDetails(goalType, name, parameterNames, access, instanceTypeParameters, lifecycle);
+    public static ConstructorGoalDetails create(
+        ClassName goalType,
+        String name,
+        List<String> parameterNames,
+        Access access,
+        List<TypeVariableName> instanceTypeParameters) {
+      return new ConstructorGoalDetails(goalType, name, parameterNames, access, instanceTypeParameters);
     }
 
     @Override
@@ -147,9 +153,8 @@ public final class DtoGoalDetails {
                                       Access access,
                                       List<TypeVariableName> typeParameters,
                                       List<TypeVariableName> instanceTypeParameters,
-                                      List<TypeVariableName> returnTypeParameters,
-                                      ContextLifecycle lifecycle) {
-      super(name, parameterNames, access, lifecycle);
+                                      List<TypeVariableName> returnTypeParameters) {
+      super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
@@ -164,10 +169,9 @@ public final class DtoGoalDetails {
                                                    Access access,
                                                    List<TypeVariableName> typeParameters,
                                                    List<TypeVariableName> instanceTypeParameters,
-                                                   List<TypeVariableName> returnTypeParameters,
-                                                   ContextLifecycle lifecycle) {
+                                                   List<TypeVariableName> returnTypeParameters) {
       return new InstanceMethodGoalDetails(goalType, name, parameterNames, methodName,
-          access, typeParameters, instanceTypeParameters, returnTypeParameters, lifecycle);
+          access, typeParameters, instanceTypeParameters, returnTypeParameters);
     }
 
     @Override
@@ -195,9 +199,8 @@ public final class DtoGoalDetails {
                                     List<String> parameterNames,
                                     String methodName,
                                     Access access,
-                                    List<TypeVariableName> typeParameters,
-                                    ContextLifecycle lifecycle) {
-      super(name, parameterNames, access, lifecycle);
+                                    List<TypeVariableName> typeParameters) {
+      super(name, parameterNames, access);
       this.goalType = goalType;
       this.methodName = methodName;
       this.typeParameters = typeParameters;
@@ -208,9 +211,8 @@ public final class DtoGoalDetails {
                                                  List<String> parameterNames,
                                                  String methodName,
                                                  Access access,
-                                                 List<TypeVariableName> typeParameters,
-                                                 ContextLifecycle lifecycle) {
-      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters, lifecycle);
+                                                 List<TypeVariableName> typeParameters) {
+      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters);
     }
 
     @Override
@@ -229,6 +231,7 @@ public final class DtoGoalDetails {
     public final String name;
     public final Access access;
     public final DtoContext.GoalContext context;
+
     public BeanGoalDetails(ClassName goalType, String name, Access access, DtoContext.GoalContext context) {
       this.name = name;
       this.access = access;

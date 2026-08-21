@@ -6,8 +6,6 @@ import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 
-import java.util.function.Supplier;
-
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.anonymousClassBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -16,13 +14,8 @@ import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.ClassNames.THREAD_LOCAL;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.memoize;
 
 public final class DtoContext {
-
-  public enum ContextLifecycle {
-    REUSE_INSTANCES, NEW_INSTANCE;
-  }
 
   public static final class GoalContext {
 
@@ -77,23 +70,6 @@ public final class DtoContext {
   public static GoalContext createContext(TypeName type,
                                           ClassName generatedType) {
     return new GoalContext(type, generatedType);
-  }
-
-  private static Supplier<FieldSpec> memoizeCache(ClassName generatedType) {
-    ParameterizedTypeName type = ParameterizedTypeName.get(THREAD_LOCAL, generatedType);
-    TypeSpec initializer = anonymousClassBuilder("")
-        .addSuperinterface(type)
-        .addMethod(methodBuilder("initialValue")
-            .addAnnotation(Override.class)
-            .addModifiers(PROTECTED)
-            .returns(generatedType)
-            .addStatement("return new $T()", generatedType)
-            .build())
-        .build();
-    return memoize(() -> FieldSpec.builder(type, "INSTANCE")
-        .initializer("$L", initializer)
-        .addModifiers(PRIVATE, STATIC, FINAL)
-        .build());
   }
 
   private DtoContext() {

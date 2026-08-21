@@ -1,9 +1,9 @@
 package net.zerobuilder.examples.beans.more;
 
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-import static java.util.Arrays.asList;
+import java.util.List;
+
 import static net.zerobuilder.examples.beans.more.VibeCoderBuilders.vibeCoderBuilder;
 import static net.zerobuilder.examples.beans.more.VibeCoderBuilders.vibeCoderUpdater;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +22,7 @@ class VibeCoderTest {
     VibeCoder updated = vibeCoderUpdater(peter)
         .isExecutive(true)
         .age(37)
-        .notes(asList("entry0", "entry1"))
+        .notes(List.of("entry0", "entry1"))
         .done();
     assertEquals(36, peter.age());
     assertEquals("Peter", peter.name());

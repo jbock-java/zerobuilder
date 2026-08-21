@@ -2,15 +2,13 @@ package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import net.zerobuilder.IgnoreGetter;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
+import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
+import net.zerobuilder.compiler.generate.DtoBeanParameter;
+import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
@@ -21,14 +19,17 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
-import javax.lang.model.util.SimpleElementVisitor9;
-import javax.lang.model.util.SimpleTypeVisitor9;
-import net.zerobuilder.IgnoreGetter;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpAccessorPair;
-import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
-import net.zerobuilder.compiler.generate.DtoBeanParameter;
-import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
+import javax.lang.model.util.SimpleElementVisitor14;
+import javax.lang.model.util.SimpleTypeVisitor14;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.palantir.javapoet.ClassName.OBJECT;
 import static javax.lang.model.element.Modifier.ABSTRACT;
@@ -123,7 +124,7 @@ final class ProjectionValidatorB {
     return getLocalAndInheritedMethods(beanType, filter);
   }
 
-  private abstract static class OptionalTypeVisitor<E> extends SimpleTypeVisitor9<Optional<E>, Void> {
+  private abstract static class OptionalTypeVisitor<E> extends SimpleTypeVisitor14<Optional<E>, Void> {
 
     @Override
     protected final Optional<E> defaultAction(TypeMirror e, Void nothing) {
@@ -138,7 +139,7 @@ final class ProjectionValidatorB {
     }
   };
 
-  public static final ElementVisitor<Optional<TypeElement>, Void> AS_TYPE_ELEMENT = new SimpleElementVisitor9<>() {
+  public static final ElementVisitor<Optional<TypeElement>, Void> AS_TYPE_ELEMENT = new SimpleElementVisitor14<>() {
     @Override
     public Optional<TypeElement> visitType(TypeElement typeElement, Void nothing) {
       return Optional.of(typeElement);

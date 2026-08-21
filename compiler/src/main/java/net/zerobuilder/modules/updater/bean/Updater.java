@@ -16,10 +16,7 @@ import java.util.function.Function;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.WildcardTypeName.subtypeOf;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.modules.updater.bean.BeanUpdater.implType;
 
@@ -28,22 +25,23 @@ final class Updater {
   private static final ClassName ITERABLE = ClassName.get(Iterable.class);
 
   final static Function<BeanGoalDescription, List<FieldSpec>> fields =
-      description -> singletonList(description.beanField);
+      description -> List.of(description.beanField);
 
   final static Function<BeanGoalDescription, List<MethodSpec>> stepMethods =
       description -> description.parameters.stream()
-          .map(stepToMethods(description))
-          .collect(toList());
+          .map(parameter -> stepToMethods(parameter, description))
+          .toList();
 
-  private static Function<AbstractBeanParameter, MethodSpec> stepToMethods(BeanGoalDescription description) {
-    return beanParameterCases(
-        accessorPair -> normalUpdate(accessorPair, description),
-        loneGetter -> iterateCollection(description, loneGetter));
+  private static MethodSpec stepToMethods(AbstractBeanParameter parameter, BeanGoalDescription description) {
+    return switch (parameter) {
+      case AccessorPair accessorPair -> normalUpdate(accessorPair, description);
+      case LoneGetter loneGetter -> iterateCollection(description, loneGetter);
+    };
   }
 
   private static MethodSpec normalUpdate(AccessorPair step, BeanGoalDescription description) {
     String name = step.name();
-    ParameterSpec parameter = parameterSpec(step.type, step.name());
+    ParameterSpec parameter = parameterSpec(step.type(), step.name());
     return methodBuilder(name)
         .returns(implType(description))
         .addExceptions(step.setterThrownTypes)
@@ -68,7 +66,7 @@ final class Updater {
         .addCode(clearCollection(description, step))
         .beginControlFlow("for ($T $N : $N)", iterationVar.type(), iterationVar, name)
         .addStatement("this.$N.$N().add($N)",
-            description.beanField, step.getter, iterationVar)
+            description.beanField, step.getter(), iterationVar)
         .endControlFlow()
         .addStatement("return this")
         .addModifiers(PUBLIC)
@@ -77,7 +75,7 @@ final class Updater {
 
   private static CodeBlock clearCollection(BeanGoalDescription description, LoneGetter step) {
     return CodeBlock.builder().addStatement("this.$N.$N().clear()",
-        description.beanField, step.getter).build();
+        description.beanField, step.getter()).build();
   }
 
   private Updater() {

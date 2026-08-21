@@ -3,13 +3,6 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.generate.Access;
@@ -19,6 +12,14 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
+
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -173,19 +174,17 @@ final class DtoGoalElement {
     if (element.getKind() == CONSTRUCTOR) {
       return createRegularProjectableGoalElement(element, ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
-          goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element),
-          goalModifiers.lifecycle), context);
+          goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element)), context);
     }
     AbstractRegularDetails details =
         element.getModifiers().contains(STATIC) ?
             StaticMethodGoalDetails.create(goalType, goalModifiers.goalName, parameterNames, methodName,
-                goalModifiers.access, methodTypevars(element), goalModifiers.lifecycle) :
+                goalModifiers.access, methodTypevars(element)) :
             InstanceMethodGoalDetails.create(goalType, goalModifiers.goalName, parameterNames, methodName,
                 goalModifiers.access,
                 methodTypevars(element),
                 instanceTypevars(element),
-                returnTypeInstanceTypevars(element),
-                goalModifiers.lifecycle);
+                returnTypeInstanceTypevars(element));
     return createRegularProjectableGoalElement(element, details, context);
   }
 
@@ -218,21 +217,19 @@ final class DtoGoalElement {
     if (element.getKind() == CONSTRUCTOR) {
       ConstructorGoalDetails details = ConstructorGoalDetails.create(
           ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
-          goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element),
-          goalModifiers.lifecycle);
+          goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element));
       return createRegularGoalElement(element, details, context);
     }
     AbstractRegularDetails details =
         element.getModifiers().contains(STATIC) ?
             StaticMethodGoalDetails.create(goalType, goalModifiers.goalName, parameterNames, methodName,
                 goalModifiers.access,
-                methodTypevars(element), goalModifiers.lifecycle) :
+                methodTypevars(element)) :
             InstanceMethodGoalDetails.create(goalType, goalModifiers.goalName, parameterNames, methodName,
                 goalModifiers.access,
                 methodTypevars(element),
                 instanceTypevars(element),
-                returnTypeInstanceTypevars(element),
-                goalModifiers.lifecycle);
+                returnTypeInstanceTypevars(element));
     return createRegularGoalElement(element, details, context);
   }
 

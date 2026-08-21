@@ -5,21 +5,21 @@ import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import javax.lang.model.element.Modifier;
 import net.zerobuilder.compiler.generate.DtoBeanGoalDescription.BeanGoalDescription;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.LoneGetter;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 
+import javax.lang.model.element.Modifier;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static java.util.Arrays.asList;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -41,7 +41,9 @@ final class Generator {
                 AbstractBeanParameter::getterThrownTypes,
                 AbstractBeanParameter::setterThrownTypes)))
         .addCode(initVarUpdater(varUpdater))
-        .addCode(description.parameters.stream().map(copy(description)).collect(joinCodeBlocks))
+        .addCode(description.parameters.stream()
+            .map(parameter -> copy(parameter, description))
+            .collect(joinCodeBlocks))
         .addStatement("return $N", varUpdater)
         .addModifiers(modifiers)
         .build();
@@ -61,10 +63,11 @@ final class Generator {
     return thrownTypes;
   }
 
-  private static Function<AbstractBeanParameter, CodeBlock> copy(BeanGoalDescription description) {
-    return beanParameterCases(
-        accessorPair -> copyRegular(description, accessorPair),
-        loneGetter -> copyCollection(description, loneGetter));
+  private static CodeBlock copy(AbstractBeanParameter parameter, BeanGoalDescription description) {
+    return switch (parameter) {
+      case DtoBeanParameter.AccessorPair accessorPair -> copyRegular(description, accessorPair);
+      case LoneGetter loneGetter -> copyCollection(description, loneGetter);
+    };
   }
 
   private static CodeBlock copyCollection(BeanGoalDescription description, LoneGetter step) {
@@ -74,10 +77,10 @@ final class Generator {
     return CodeBlock.builder()
         .beginControlFlow("for ($T $N : $N.$N())",
             iterationVar.type(), iterationVar, parameter,
-            step.getter)
+            step.getter())
         .addStatement("$N.$N.$N().add($N)", updaterInstance(description),
             downcase(type.simpleName()),
-            step.getter,
+            step.getter(),
             iterationVar)
         .endControlFlow()
         .build();
@@ -92,19 +95,8 @@ final class Generator {
             description.beanField,
             step.setterName(),
             parameter,
-            step.getter)
+            step.getter())
         .build();
-  }
-
-  private static CodeBlock nullCheck(BeanGoalDescription description, AbstractBeanParameter beanParameter) {
-    ClassName type = description.details.goalType;
-    ParameterSpec parameter = parameterSpec(type, downcase(type.simpleName()));
-    return CodeBlock.builder()
-        .beginControlFlow("if ($N.$N() == null)", parameter,
-            beanParameter.getter)
-        .addStatement("throw new $T($S)",
-            NullPointerException.class, beanParameter.name())
-        .endControlFlow().build();
   }
 
   private static CodeBlock initVarUpdater(ParameterSpec varUpdater) {

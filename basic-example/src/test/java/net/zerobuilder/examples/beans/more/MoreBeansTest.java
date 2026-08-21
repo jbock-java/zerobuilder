@@ -11,8 +11,6 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.examples.beans.more.MoreBeans_AeroExperimentBuilders.aeroExperimentBuilder;
 import static net.zerobuilder.examples.beans.more.MoreBeans_AeroExperimentBuilders.aeroExperimentUpdater;
@@ -58,21 +56,21 @@ public class MoreBeansTest {
   @Test
   public void biologicalTest() {
     BioExperiment experiment1 = bioExperimentBuilder()
-        .candidates(singletonList(asList("Goku", "Frieza")));
+        .candidates(List.of(List.of("Goku", "Frieza")));
     BioExperiment experiment2 = bioExperimentUpdater(experiment1)
-        .candidates(singletonList(List.of("Gohan")))
+        .candidates(List.of(List.of("Gohan")))
         .done();
-    assertEquals(singletonList(asList("Goku", "Frieza")), experiment1.getCandidates());
-    assertEquals(singletonList(List.of("Gohan")), experiment2.getCandidates());
+    assertEquals(List.of(List.of("Goku", "Frieza")), experiment1.getCandidates());
+    assertEquals(List.of(List.of("Gohan")), experiment2.getCandidates());
   }
 
   @Test
   @SuppressWarnings("rawtypes")
   public void objectTest() {
     RawExperiment experiment1 = rawExperimentBuilder()
-        .things(asList(1, "one"));
+        .things(List.of(1, "one"));
     RawExperiment experiment2 = rawExperimentUpdater(experiment1)
-        .things(asList(2))
+        .things(List.of(2))
         .done();
     List expectedList1 = new ArrayList();
     expectedList1.add(1);
@@ -86,26 +84,26 @@ public class MoreBeansTest {
   @Test
   public void iterableTest() {
     IterableExperiment experiment1 = iterableExperimentBuilder()
-        .things(asList(asList("1")));
+        .things(List.of(List.of("1")));
     IterableExperiment experiment2 = iterableExperimentUpdater(experiment1)
-        .things(asList(asList("2")))
+        .things(List.of(List.of("2")))
         .done();
     List<Iterable<String>> expectedList1 = new ArrayList();
-    expectedList1.add(asList("1"));
+    expectedList1.add(List.of("1"));
     List<Iterable<String>> expectedList2 = new ArrayList();
-    expectedList2.add(asList("2"));
+    expectedList2.add(List.of("2"));
     assertEquals(expectedList1, experiment1.getThings());
     assertEquals(expectedList2, experiment2.getThings());
   }
 
   @Test
   public void ignoreTest() {
-    Ignorify nothing = ignorifyBuilder().things(emptyList());
+    Ignorify nothing = ignorifyBuilder().things(List.of());
     Ignorify something = ignorifyUpdater(nothing)
         .things(singletonList(singletonList("a")))
         .done();
     Ignorify nothing2 = ignorifyUpdater(nothing)
-        .things(emptyList())
+        .things(List.of())
         .done();
     assertEquals(0, nothing.getThings().size());
     assertEquals(1, something.getThings().size());

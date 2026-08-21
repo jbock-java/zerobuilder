@@ -33,7 +33,7 @@ public final class BeanBuilder implements BeanModule {
 
   private List<TypeSpec> stepInterfaces(BeanGoalDescription description) {
     return IntStream.range(0, description.parameters.size())
-        .mapToObj(beanStepInterface(description))
+        .mapToObj(i -> beanStepInterface(description.parameters.get(i), description, i))
         .collect(toList());
   }
 

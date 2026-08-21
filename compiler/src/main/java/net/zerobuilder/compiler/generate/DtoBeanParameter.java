@@ -3,53 +3,39 @@ package net.zerobuilder.compiler.generate;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 import static com.palantir.javapoet.ClassName.OBJECT;
-import static net.zerobuilder.compiler.generate.ZeroUtil.*;
+import static net.zerobuilder.compiler.generate.ZeroUtil.distinctFrom;
+import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
+import static net.zerobuilder.compiler.generate.ZeroUtil.onlyTypeArgument;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class DtoBeanParameter {
 
-  interface BeanParameterCases<R> {
-    R accessorPair(AccessorPair pair);
+  public sealed interface AbstractBeanParameter permits AccessorPair, LoneGetter {
 
-    R loneGetter(LoneGetter getter);
+    /**
+     * the type that's returned by the getter,
+     * or equivalently the type of the setter parameter
+     */
+    TypeName type();
+
+    /**
+     * Name of the getter method (could start with {@code "is"})
+     */
+    String getter();
+
+    List<TypeName> getterThrownTypes();
+
+    List<TypeName> setterThrownTypes();
+
+    String name();
   }
 
-  private static <R> Function<AbstractBeanParameter, R> asFunction(BeanParameterCases<R> cases) {
-    return parameter -> parameter.accept(cases);
-  }
-
-  public static <R> Function<AbstractBeanParameter, R> beanParameterCases(
-      Function<AccessorPair, R> accessorPairFunction,
-      Function<LoneGetter, R> loneGetterFunction) {
-    return asFunction(new BeanParameterCases<R>() {
-      @Override
-      public R accessorPair(AccessorPair pair) {
-        return accessorPairFunction.apply(pair);
-      }
-
-      @Override
-      public R loneGetter(LoneGetter getter) {
-        return loneGetterFunction.apply(getter);
-      }
-    });
-  }
-
-  private static final Function<AbstractBeanParameter, List<TypeName>> getterThrownTypes =
-      beanParameterCases(
-          accessorPair -> accessorPair.getterThrownTypes,
-          loneGetter -> loneGetter.getterThrownTypes);
-
-  private static final Function<AbstractBeanParameter, List<TypeName>> setterThrownTypes =
-      beanParameterCases(
-          accessorPair -> accessorPair.setterThrownTypes,
-          loneGetter -> Collections.emptyList());
-
-
-  public static abstract class AbstractBeanParameter {
+  static abstract class LessAbstractBeanParameter {
 
     /**
      * the type that's returned by the getter,
@@ -60,35 +46,33 @@ public final class DtoBeanParameter {
     /**
      * Name of the getter method (could start with {@code "is"})
      */
-    public final String getter;
+    private final String getter;
 
     public final List<TypeName> getterThrownTypes;
 
     private final String name;
 
-    private AbstractBeanParameter(TypeName type, String getter, List<TypeName> getterThrownTypes) {
+    private LessAbstractBeanParameter(TypeName type, String getter, List<TypeName> getterThrownTypes) {
       this.type = type;
       this.getter = getter;
       this.getterThrownTypes = getterThrownTypes;
       this.name = downcase(getter.substring(getter.startsWith("is") ? 2 : 3));
     }
 
-    public final List<TypeName> getterThrownTypes() {
-      return DtoBeanParameter.getterThrownTypes.apply(this);
+    public final TypeName type() {
+      return type;
     }
 
-    public final List<TypeName> setterThrownTypes() {
-      return DtoBeanParameter.setterThrownTypes.apply(this);
+    public final String getter() {
+      return getter;
     }
 
     public final String name() {
       return name;
     }
-
-    public abstract <R> R accept(BeanParameterCases<R> cases);
   }
 
-  public static final class AccessorPair extends AbstractBeanParameter {
+  public static final class AccessorPair extends LessAbstractBeanParameter implements AbstractBeanParameter {
 
     public final List<TypeName> setterThrownTypes;
 
@@ -106,12 +90,17 @@ public final class DtoBeanParameter {
     }
 
     @Override
-    public <R> R accept(BeanParameterCases<R> cases) {
-      return cases.accessorPair(this);
+    public List<TypeName> getterThrownTypes() {
+      return getterThrownTypes;
+    }
+
+    @Override
+    public List<TypeName> setterThrownTypes() {
+      return setterThrownTypes;
     }
   }
 
-  public static final class LoneGetter extends AbstractBeanParameter {
+  public static final class LoneGetter extends LessAbstractBeanParameter implements AbstractBeanParameter {
 
     /**
      * Example: If getter returns {@code List<String>}, then this would be a variable of type
@@ -143,8 +132,13 @@ public final class DtoBeanParameter {
     }
 
     @Override
-    public <R> R accept(BeanParameterCases<R> cases) {
-      return cases.loneGetter(this);
+    public List<TypeName> getterThrownTypes() {
+      return getterThrownTypes;
+    }
+
+    @Override
+    public List<TypeName> setterThrownTypes() {
+      return List.of();
     }
   }
 
