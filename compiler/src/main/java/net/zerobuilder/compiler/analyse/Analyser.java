@@ -3,6 +3,9 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
+import java.util.List;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
@@ -22,10 +25,6 @@ import net.zerobuilder.modules.builder.bean.BeanBuilder;
 import net.zerobuilder.modules.generics.GenericsBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
 import net.zerobuilder.modules.updater.bean.BeanUpdater;
-
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import java.util.List;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
@@ -79,8 +78,8 @@ public final class Analyser {
           new BeanGoalInput(BEAN_BUILDER, validateBean.apply(bean)) :
           new BeanGoalInput(BEAN_UPDATER, validateBean.apply(bean));
       case DtoGoalElement.RegularGoalElement regular -> hasTypevars(regular.executableElement()) ?
-          new RegularSimpleGoalInput(GENERICS, validateBuilder.apply(regular)) :
-          new RegularSimpleGoalInput(BUILDER, validateBuilder.apply(regular));
+          new RegularSimpleGoalInput(GENERICS, validateBuilder(regular)) :
+          new RegularSimpleGoalInput(BUILDER, validateBuilder(regular));
       case DtoGoalElement.RegularProjectableGoalElement projected ->
           new ProjectedGoalInput(UPDATER, validateUpdater.apply(projected));
     };

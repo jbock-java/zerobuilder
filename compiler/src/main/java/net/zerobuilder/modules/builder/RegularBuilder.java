@@ -5,14 +5,13 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
+import java.util.List;
+import java.util.stream.IntStream;
+import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
-
-import java.util.List;
-import java.util.function.BiFunction;
-import java.util.stream.IntStream;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -23,7 +22,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -57,14 +55,14 @@ public final class RegularBuilder implements RegularSimpleModule {
   }
 
   static String methodName(SimpleRegularGoalDescription description) {
-    return description.details.name + upcase(moduleName);
+    return description.details.name() + upcase(moduleName);
   }
 
   private TypeSpec defineBuilderImpl(SimpleRegularGoalDescription description) {
     return classBuilder(implType(description))
         .addSuperinterfaces(stepInterfaceTypes(description))
         .addFields(fields.apply(description))
-        .addMethod(regularConstructor.apply(description.details, description))
+        .addMethod(regularConstructor(description.details, description))
         .addMethods(steps(description))
         .addModifiers(PRIVATE, STATIC, FINAL)
         .build();
@@ -81,18 +79,20 @@ public final class RegularBuilder implements RegularSimpleModule {
         .build();
   }
 
-  private static final BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, MethodSpec> regularConstructor =
-      regularDetailsCases(
-          (constructor, description) -> constructor(),
-          (staticMethod, description) -> constructor(),
-          (method, description) -> {
-            TypeName type = description.context.type;
-            ParameterSpec parameter = parameterSpec(type, downcase(simpleName(type)));
-            return constructorBuilder()
-                .addParameter(parameter)
-                .addStatement("this.$N = $N", instanceField(description), parameter)
-                .build();
-          });
+  private static MethodSpec regularConstructor(AbstractRegularDetails details, SimpleRegularGoalDescription description) {
+    return switch (details) {
+      case DtoGoalDetails.ConstructorGoalDetails constructor -> constructor();
+      case DtoGoalDetails.StaticMethodGoalDetails staticMethod -> constructor();
+      case DtoGoalDetails.InstanceMethodGoalDetails method -> {
+        TypeName type = description.context.type;
+        ParameterSpec parameter = parameterSpec(type, downcase(simpleName(type)));
+        yield constructorBuilder()
+            .addParameter(parameter)
+            .addStatement("this.$N = $N", instanceField(description), parameter)
+            .build();
+      }
+    };
+  }
 
   private List<ClassName> stepInterfaceTypes(SimpleRegularGoalDescription description) {
     return transform(description.parameters,
@@ -100,7 +100,7 @@ public final class RegularBuilder implements RegularSimpleModule {
   }
 
   static ClassName contractType(SimpleRegularGoalDescription description) {
-    String contractName = upcase(description.details.name) + upcase(moduleName);
+    String contractName = upcase(description.details.name()) + upcase(moduleName);
     return description.context.generatedType.nestedClass(contractName);
   }
 

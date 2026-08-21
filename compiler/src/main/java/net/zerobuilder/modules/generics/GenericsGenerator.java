@@ -7,24 +7,21 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeSpec;
 import com.palantir.javapoet.TypeVariableName;
+import java.util.List;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
-
-import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
@@ -38,7 +35,16 @@ final class GenericsGenerator {
   private final List<TypeSpec> stepImpls;
   private final SimpleRegularGoalDescription description;
 
-  private final BiFunction<AbstractRegularDetails, ParameterSpec, CodeBlock> returnStatement;
+  private CodeBlock returnStatement(AbstractRegularDetails details, ParameterSpec instance) {
+    return switch (details) {
+      case ConstructorGoalDetails constructor ->
+          statement("return $T.$L", contractType, downcase(stepImpls.getFirst().name()));
+      case StaticMethodGoalDetails staticMethod ->
+          statement("return $T.$L", contractType, downcase(stepImpls.getFirst().name()));
+      case InstanceMethodGoalDetails instanceMethod ->
+          statement("return new $T($N)", contractType.nestedClass(stepImpls.getFirst().name()), instance);
+    };
+  }
 
   private GenericsGenerator(SimpleRegularGoalDescription description,
                             ClassName contractType,
@@ -46,16 +52,12 @@ final class GenericsGenerator {
     this.contractType = contractType;
     this.description = description;
     this.stepImpls = stepImpls;
-    returnStatement = regularDetailsCases(
-        (constructor, instance) -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name())),
-        (staticMethod, instance) -> statement("return $T.$L", contractType, downcase(stepImpls.get(0).name())),
-        (instanceMethod, instance) -> statement("return new $T($N)", contractType.nestedClass(stepImpls.get(0).name()), instance));
   }
 
   TypeSpec defineImpl() {
     return classBuilder(contractType)
         .addModifiers(PUBLIC, STATIC, FINAL)
-        .addFields(firstStepCache.apply(description.details))
+        .addFields(firstStepCache(description.details))
         .addTypes(stepImpls)
         .addMethod(constructorBuilder()
             .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
@@ -64,17 +66,19 @@ final class GenericsGenerator {
         .build();
   }
 
-  private final Function<AbstractRegularDetails, List<FieldSpec>> firstStepCache =
-      regularDetailsCases(
-          constructor -> firstStepCache(),
-          staticMethod -> firstStepCache(),
-          instanceMethod -> emptyList());
+  List<FieldSpec> firstStepCache(AbstractRegularDetails details) {
+    return switch (details) {
+      case ConstructorGoalDetails constructor -> firstStepCache();
+      case StaticMethodGoalDetails staticMethod -> firstStepCache();
+      case InstanceMethodGoalDetails instanceMethod -> List.of();
+    };
+  }
 
 
   private List<FieldSpec> firstStepCache() {
-    ClassName firstImplType = contractType.nestedClass(stepImpls.get(0).name());
-    return singletonList(FieldSpec.builder(firstImplType,
-        downcase(firstImplType.simpleName()), PRIVATE, STATIC, FINAL)
+    ClassName firstImplType = contractType.nestedClass(stepImpls.getFirst().name());
+    return List.of(FieldSpec.builder(firstImplType,
+            downcase(firstImplType.simpleName()), PRIVATE, STATIC, FINAL)
         .initializer("new $T()", firstImplType).build());
   }
 
@@ -82,25 +86,27 @@ final class GenericsGenerator {
                                                  VarLife life) {
     ParameterSpec instance = parameterSpec(description.context.type, "instance");
     List<List<TypeVariableName>> typeParams = life.typeParams();
-    MethodSpec.Builder builder = methodBuilder(description.details.name + "Builder")
+    MethodSpec.Builder builder = methodBuilder(description.details.name() + "Builder")
         .addModifiers(description.details.access(STATIC))
         .returns(parameterizedTypeName(
-            contractType.nestedClass(upcase(description.parameters.get(0).name)),
-            typeParams.get(0)));
+            contractType.nestedClass(upcase(description.parameters.getFirst().name)),
+            typeParams.getFirst()));
     builder.addParameters(
-        goalMethodParameters.apply(description.details, instance));
-    builder.addTypeVariables(typeParams.get(0));
-    builder.addCode(returnStatement.apply(description.details, instance));
+        goalMethodParameters(description.details, instance));
+    builder.addTypeVariables(typeParams.getFirst());
+    builder.addCode(returnStatement(description.details, instance));
     return new DtoGeneratorOutput.BuilderMethod(
-        description.details.name,
+        description.details.name(),
         builder.build());
   }
 
-  private final BiFunction<AbstractRegularDetails, ParameterSpec, List<ParameterSpec>> goalMethodParameters =
-      regularDetailsCases(
-          (constructor, instance) -> emptyList(),
-          (staticMethod, instance) -> emptyList(),
-          (instanceMethod, instance) -> singletonList(instance));
+  private List<ParameterSpec> goalMethodParameters(AbstractRegularDetails details, ParameterSpec instance) {
+    return switch (details) {
+      case ConstructorGoalDetails constructor -> List.of();
+      case StaticMethodGoalDetails staticMethod -> List.of();
+      case InstanceMethodGoalDetails instanceMethod -> List.of(instance);
+    };
+  }
 
   static GenericsGenerator create(SimpleRegularGoalDescription description, VarLife lifes) {
     List<List<TypeVariableName>> typeParams = lifes.typeParams();

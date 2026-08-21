@@ -4,18 +4,14 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.FieldSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
+import java.util.List;
+import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
-import java.util.List;
-import java.util.function.BiFunction;
-
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
@@ -33,20 +29,19 @@ final class ImplFields {
     this.typeParams = typeParams;
   }
 
-  final BiFunction<AbstractRegularDetails, Integer, List<FieldSpec>> fields = fields();
-
-  private BiFunction<AbstractRegularDetails, Integer, List<FieldSpec>> fields() {
-    return regularDetailsCases(
-        (constructor, i) -> i == 0 ?
-            emptyList() :
-            normalFields(i),
-        (staticMethod, i) -> i == 0 ?
-            emptyList() :
-            normalFields(i),
-        (instanceMethod, i) -> i == 0 ?
-            singletonList(FieldSpec.builder(description.context.type, "instance",
-                PRIVATE, FINAL).build()) :
-            normalFields(i));
+  List<FieldSpec> fields(AbstractRegularDetails details, int i) {
+    return switch (details) {
+      case DtoGoalDetails.ConstructorGoalDetails constructor -> i == 0 ?
+          List.of() :
+          normalFields(i);
+      case DtoGoalDetails.StaticMethodGoalDetails staticMethod -> i == 0 ?
+          List.of() :
+          normalFields(i);
+      case DtoGoalDetails.InstanceMethodGoalDetails instanceMethod -> i == 0 ?
+          List.of(FieldSpec.builder(description.context.type, "instance",
+              PRIVATE, FINAL).build()) :
+          normalFields(i);
+    };
   }
 
   private List<FieldSpec> normalFields(int i) {

@@ -7,12 +7,12 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeSpec;
 import com.palantir.javapoet.TypeVariableName;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
+import net.zerobuilder.compiler.generate.DtoGoalDetails;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeName.VOID;
@@ -23,7 +23,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -52,7 +51,7 @@ final class GenericsImpl {
                               List<List<TypeVariableName>> methodParams,
                               List<List<TypeVariableName>> typeParams, int i) {
     ParameterSpec parameter = parameterSpec(description.parameters.get(i).type, description.parameters.get(i).name);
-    List<FieldSpec> fields = implFields.fields.apply(description.details, i);
+    List<FieldSpec> fields = implFields.fields(description.details, i);
     TypeSpec.Builder builder = classBuilder(upcase(description.parameters.get(i).name));
     builder.addMethod(createConstructor(fields));
     return builder.addFields(fields)
@@ -85,20 +84,20 @@ final class GenericsImpl {
     CodeBlock invoke = description.unshuffle(blocks)
         .stream()
         .collect(joinCodeBlocks(", "));
-    return regularDetailsCases(
-        constructor -> statement("return new $T($L)",
-            rawClassName(description.context.type), invoke),
-        staticMethod -> CodeBlock.builder()
-            .add(staticMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))
-            .addStatement("$T.$L($L)",
-                rawClassName(description.context.type),
-                staticMethod.methodName, invoke).build(),
-        instanceMethod -> CodeBlock.builder()
-            .add(instanceMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))
-            .addStatement("$L.$L($L)",
-                instance(),
-                instanceMethod.methodName, invoke).build())
-        .apply(description.details);
+    return switch (description.details) {
+      case DtoGoalDetails.ConstructorGoalDetails constructor -> statement("return new $T($L)",
+          rawClassName(description.context.type), invoke);
+      case DtoGoalDetails.StaticMethodGoalDetails staticMethod -> CodeBlock.builder()
+          .add(staticMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))
+          .addStatement("$T.$L($L)",
+              rawClassName(description.context.type),
+              staticMethod.methodName, invoke).build();
+      case DtoGoalDetails.InstanceMethodGoalDetails instanceMethod -> CodeBlock.builder()
+          .add(instanceMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))
+          .addStatement("$L.$L($L)",
+              instance(),
+              instanceMethod.methodName, invoke).build();
+    };
   }
 
   private CodeBlock instance() {

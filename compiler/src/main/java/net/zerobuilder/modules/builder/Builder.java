@@ -5,16 +5,14 @@ import com.palantir.javapoet.FieldSpec;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.IntFunction;
 import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.IntFunction;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeName.VOID;
@@ -22,7 +20,6 @@ import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -48,7 +45,7 @@ final class Builder {
       = description -> {
     List<SimpleParameter> steps = description.parameters;
     ArrayList<FieldSpec> builder = new ArrayList<>(steps.size() + 2);
-    if (isInstance.apply(description.details)) {
+    if (isInstance(description.details)) {
       builder.add(instanceField(description));
     }
     steps.stream()
@@ -85,7 +82,7 @@ final class Builder {
     String name = step.name;
     ParameterSpec parameter = parameterSpec(type, name);
     if (i == description.parameters.size() - 1) {
-      return regularInvoke.apply(description.details, description);
+      return regularInvoke(description.details, description);
     } else {
       return CodeBlock.builder()
           .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
@@ -94,11 +91,13 @@ final class Builder {
     }
   }
 
-  private static final BiFunction<AbstractRegularDetails, SimpleRegularGoalDescription, CodeBlock> regularInvoke =
-      regularDetailsCases(
-          (constructor, description) -> constructorCall(description, constructor),
-          (staticMethod, description) -> staticCall(description, staticMethod),
-          (instanceMethod, description) -> instanceCall(description, instanceMethod));
+  private static CodeBlock regularInvoke(AbstractRegularDetails details, SimpleRegularGoalDescription description) {
+    return switch (details) {
+      case DtoGoalDetails.ConstructorGoalDetails constructor -> constructorCall(description, constructor);
+      case DtoGoalDetails.StaticMethodGoalDetails staticMethod -> staticCall(description, staticMethod);
+      case DtoGoalDetails.InstanceMethodGoalDetails instanceMethod -> instanceCall(description, instanceMethod);
+    };
+  }
 
   private static CodeBlock constructorCall(SimpleRegularGoalDescription description,
                                            DtoGoalDetails.ConstructorGoalDetails details) {
