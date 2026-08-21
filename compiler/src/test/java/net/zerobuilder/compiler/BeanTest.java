@@ -1,18 +1,17 @@
 package net.zerobuilder.compiler;
 
 import io.jbock.testing.compile.Compilation;
-import org.junit.jupiter.api.Test;
-
 import javax.tools.JavaFileObject;
+import org.junit.jupiter.api.Test;
 
 import static io.jbock.testing.compile.CompilationSubject.assertThat;
 import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
 import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
-public class BeanTest {
+class BeanTest {
 
   @Test
-  public void noRecycling() {
+  void noRecycling() {
     JavaFileObject businessAnalyst = forSourceLines("beans.BusinessAnalyst",
         "package beans;",
         "import net.zerobuilder.*;",

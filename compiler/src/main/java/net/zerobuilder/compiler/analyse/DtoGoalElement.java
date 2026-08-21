@@ -4,6 +4,7 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
 import net.zerobuilder.Builder;
+import net.zerobuilder.Name;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoContext;
@@ -96,7 +97,10 @@ final class DtoGoalElement {
 
   private static List<String> parameterNames(ExecutableElement element) {
     return transform(element.getParameters(),
-        parameter -> parameter.getSimpleName().toString());
+        parameter -> {
+          Name nameAnnotation = parameter.getAnnotation(Name.class);
+          return nameAnnotation == null ? parameter.getSimpleName().toString() : nameAnnotation.value();
+        });
   }
 
   static BeanGoalElement createBeanGoalElement(

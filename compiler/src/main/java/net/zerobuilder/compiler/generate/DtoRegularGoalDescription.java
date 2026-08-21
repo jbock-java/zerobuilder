@@ -106,8 +106,8 @@ public final class DtoRegularGoalDescription {
     int[] positions = new int[parameterNames.size()];
     for (AbstractRegularParameter parameter : parameters) {
       int i = parameterNames.indexOf(parameter.name);
-      if (positions[i]++ != 0) {
-        throw new IllegalArgumentException("parameter names mismatch");
+      if (i < 0 || positions[i]++ != 0) {
+        throw new IllegalArgumentException("parameter names mismatch: " + parameter.name);
       }
     }
   }

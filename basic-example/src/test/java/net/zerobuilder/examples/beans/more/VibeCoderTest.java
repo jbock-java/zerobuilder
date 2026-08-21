@@ -18,9 +18,9 @@ class VibeCoderTest {
         .name("Peter")
         .age(36)
         .notes(List.of("entry"))
-        .isExecutive(false);
+        .executive(false);
     VibeCoder updated = vibeCoderUpdater(peter)
-        .isExecutive(true)
+        .executive(true)
         .age(37)
         .notes(List.of("entry0", "entry1"))
         .done();

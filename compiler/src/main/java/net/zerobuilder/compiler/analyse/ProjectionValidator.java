@@ -1,7 +1,14 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.TypeName;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
 import net.zerobuilder.Getter;
+import net.zerobuilder.Name;
 import net.zerobuilder.Step;
 import net.zerobuilder.compiler.generate.DtoBeanParameter;
 import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
@@ -9,13 +16,6 @@ import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
 
 import static java.util.Collections.nCopies;
 import static javax.tools.Diagnostic.Kind.ERROR;
@@ -90,8 +90,9 @@ final class ProjectionValidator {
 
     static TmpSimpleParameter create(VariableElement parameter) {
       Step step = parameter.getAnnotation(Step.class);
+      Name nameAnnotation = parameter.getAnnotation(Name.class);
       int value = step == null ? -1 : step.value();
-      String name = parameter.getSimpleName().toString();
+      String name = nameAnnotation == null ? parameter.getSimpleName().toString() : nameAnnotation.value();
       TypeName type = TypeName.get(parameter.asType());
       DtoRegularParameter.SimpleParameter regularParameter =
           DtoRegularParameter.create(name, type);
@@ -113,7 +114,8 @@ final class ProjectionValidator {
     static TmpProjectedParameter create(VariableElement parameter, ProjectionInfo projectionInfo) {
       Step step = parameter.getAnnotation(Step.class);
       int value = step == null ? -1 : step.value();
-      String name = parameter.getSimpleName().toString();
+      Name nameAnnotation = parameter.getAnnotation(Name.class);
+      String name = nameAnnotation == null ? parameter.getSimpleName().toString() : nameAnnotation.value();
       TypeName type = TypeName.get(parameter.asType());
       ProjectedParameter regularParameter =
           DtoRegularParameter.create(name, type, projectionInfo);
