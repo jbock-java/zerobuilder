@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -30,7 +31,6 @@ import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.Generator;
 
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -62,19 +62,19 @@ public final class ZeroProcessor extends AbstractProcessor {
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
     List<AnnotationSpec> generatedAnnotations = generatedAnnotations();
-    Set<TypeElement> types = new HashSet<>();
-    for (Class<? extends Annotation> c : asList(Builder.class, Updater.class)) {
-      types.addAll(Stream.concat(
+    Set<TypeElement> types = new LinkedHashSet<>();
+    for (Class<? extends Annotation> c : List.of(Builder.class, Updater.class)) {
+      Stream.concat(
               methodsIn(env.getElementsAnnotatedWith(c)).stream(),
               constructorsIn(env.getElementsAnnotatedWith(c)).stream())
           .map(ExecutableElement::getEnclosingElement)
           .map(Element::asType)
           .map(LessTypes::asTypeElement)
-          .toList());
+          .forEach(types::add);
     }
     types.addAll(typesIn(env.getElementsAnnotatedWith(BeanBuilder.class)));
-    //types.addAll(typesIn(env.getElementsAnnotatedWith(RecordBuilder.class)));
-    //types.addAll(typesIn(env.getElementsAnnotatedWith(RecordUpdater.class)));
+    types.addAll(typesIn(env.getElementsAnnotatedWith(RecordBuilder.class)));
+    types.addAll(typesIn(env.getElementsAnnotatedWith(RecordUpdater.class)));
     for (TypeElement enclosingElement : types) {
       try {
         if (!done.add(enclosingElement)) {

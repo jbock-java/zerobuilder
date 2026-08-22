@@ -1,10 +1,12 @@
 package net.zerobuilder.examples.beans.more;
 
 import java.util.List;
-import net.zerobuilder.Builder;
 import net.zerobuilder.Name;
-import net.zerobuilder.Updater;
+import net.zerobuilder.RecordBuilder;
+import net.zerobuilder.RecordUpdater;
 
+@RecordBuilder
+@RecordUpdater
 public record VibeCoder(
     String name,
     int age,
@@ -12,9 +14,4 @@ public record VibeCoder(
     @Name("executive")
     boolean isExecutive) {
 
-  @Builder
-  @Updater
-  public VibeCoder {
-
-  }
 }

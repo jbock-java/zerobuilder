@@ -7,13 +7,13 @@ import static net.zerobuilder.examples.values.MessageFactoryBuilders.messageFact
 import static net.zerobuilder.examples.values.MessageFactory_MessageBuilders.messageUpdater;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class MessageFactoryTest {
+class MessageFactoryTest {
 
-  final MessageFactory messageFactory = messageFactoryBuilder()
+  private final MessageFactory messageFactory = messageFactoryBuilder()
       .sender("Alice");
 
   @Test
-  public void message() {
+  void message() {
     Message message = messageFactory.messageBuilder()
         .body("Hi")
         .recipient("Bob")
@@ -23,7 +23,7 @@ public class MessageFactoryTest {
     assertEquals("Bob", message.recipient);
     assertEquals("test", message.subject);
     assertEquals("Goodbye",
-        messageUpdater(message).body("Goodbye").done().body);
+        messageUpdater(message).body("Goodbye").build().body);
   }
 
 }

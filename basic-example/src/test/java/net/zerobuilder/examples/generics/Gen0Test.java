@@ -21,26 +21,27 @@ public class Gen0Test {
   @Test
   public void bar() {
     Gen0<Number, Integer> gen = new Gen0<>(1L, 2f, 3d, 4);
-    Gen0.Bar<Number, Integer> bar = barBuilder(gen).map0(emptyMap())
-        .map1(emptyMap())
-        .map2(emptyMap())
-        .map3(emptyMap());
-    Gen0.Bar<Number, Integer> updated = barUpdaterFactory(gen).updater(bar).map0(m).done();
-    assertEquals(updated.aa0, 1L);
-    assertEquals(updated.aa1, 2f);
-    assertEquals(updated.aa2, 3d);
-    assertEquals(updated.ab0, 4);
-    assertEquals(updated.map0, m);
-    assertEquals(updated.map1, emptyMap());
-    assertEquals(updated.map2, emptyMap());
-    assertEquals(updated.map3, emptyMap());
-    assertEquals(bar.aa0, 1L);
-    assertEquals(bar.aa1, 2f);
-    assertEquals(bar.aa2, 3d);
-    assertEquals(bar.ab0, 4);
-    assertEquals(bar.map0, emptyMap());
-    assertEquals(bar.map1, emptyMap());
-    assertEquals(bar.map2, emptyMap());
-    assertEquals(bar.map3, emptyMap());
+    Gen0.Bar<Number, Integer> bar = barBuilder(gen)
+        .map0(Map.of())
+        .map1(Map.of())
+        .map2(Map.of())
+        .map3(Map.of());
+    Gen0.Bar<Number, Integer> updated = barUpdaterFactory(gen).updater(bar).map0(m).build();
+    assertEquals(1L, updated.aa0);
+    assertEquals(2f, updated.aa1);
+    assertEquals(3d, updated.aa2);
+    assertEquals(4, updated.ab0);
+    assertEquals(m, updated.map0);
+    assertEquals(Map.of(), updated.map1);
+    assertEquals(Map.of(), updated.map2);
+    assertEquals(Map.of(), updated.map3);
+    assertEquals(1L, bar.aa0);
+    assertEquals(2f, bar.aa1);
+    assertEquals(3d, bar.aa2);
+    assertEquals(4, bar.ab0);
+    assertEquals(Map.of(), bar.map0);
+    assertEquals(Map.of(), bar.map1);
+    assertEquals(Map.of(), bar.map2);
+    assertEquals(Map.of(), bar.map3);
   }
 }
