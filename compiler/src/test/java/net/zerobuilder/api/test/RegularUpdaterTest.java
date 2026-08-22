@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 import net.zerobuilder.compiler.generate.DtoContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
@@ -70,16 +70,16 @@ public class RegularUpdaterTest {
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(
-        List.of(new DtoGeneratorInput.ProjectedGoalInput(REGULAR_UPDATER_MODULE, description)));
+        List.of(new ProjectedGoalInput(REGULAR_UPDATER_MODULE, description)));
 
     assertEquals(1, generatorOutput.methods().size());
-    assertEquals(goalName, generatorOutput.methods().get(0).name());
-    assertEquals("myGoalUpdater", generatorOutput.methods().get(0).method().name());
-    assertEquals(1, generatorOutput.methods().get(0).method().parameters().size());
-    assertEquals(List.of(IO_EXCEPTION), generatorOutput.methods().get(0).method().exceptions());
-    assertTrue(generatorOutput.methods().get(0).method().modifiers().contains(Modifier.STATIC));
+    assertEquals(goalName, generatorOutput.methods().getFirst().name());
+    assertEquals("myGoalUpdater", generatorOutput.methods().getFirst().method().name());
+    assertEquals(1, generatorOutput.methods().getFirst().method().parameters().size());
+    assertEquals(List.of(IO_EXCEPTION), generatorOutput.methods().getFirst().method().exceptions());
+    assertTrue(generatorOutput.methods().getFirst().method().modifiers().contains(Modifier.STATIC));
     assertEquals(GENERATED_TYPE.nestedClass("MyGoalUpdater"),
-        generatorOutput.methods().get(0).method().returnType());
+        generatorOutput.methods().getFirst().method().returnType());
 
     // Get the definition of the generated type
     TypeSpec typeSpec = generatorOutput.typeSpec();

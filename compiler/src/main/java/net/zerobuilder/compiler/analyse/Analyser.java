@@ -3,14 +3,20 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
+import java.util.ArrayList;
 import java.util.List;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import net.zerobuilder.Builder;
+import net.zerobuilder.RecordBuilder;
+import net.zerobuilder.RecordUpdater;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularProjectableGoalElement;
 import net.zerobuilder.compiler.common.LessElements;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
@@ -31,8 +37,11 @@ import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SUBGOALS;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.createBeanGoalElements;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.createRegular;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkAccessLevel;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkNameConflict;
+import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.AS_DECLARED;
+import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.AS_TYPE_ELEMENT;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateBuilder;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpdater;
@@ -77,11 +86,10 @@ public final class Analyser {
       case BeanGoalElement bean -> bean.moduleChoice() == ModuleChoice.BUILDER ?
           new BeanGoalInput(BEAN_BUILDER, validateBean.apply(bean)) :
           new BeanGoalInput(BEAN_UPDATER, validateBean.apply(bean));
-      case DtoGoalElement.RegularGoalElement regular -> hasTypevars(regular.executableElement()) ?
+      case RegularGoalElement regular -> hasTypevars(regular.executableElement()) ?
           new RegularSimpleGoalInput(GENERICS, validateBuilder(regular)) :
           new RegularSimpleGoalInput(BUILDER, validateBuilder(regular));
-      case DtoGoalElement.RegularProjectableGoalElement projected ->
-          new ProjectedGoalInput(UPDATER, validateUpdater(projected));
+      case RegularProjectableGoalElement projected -> new ProjectedGoalInput(UPDATER, validateUpdater(projected));
     };
   }
 
@@ -98,13 +106,48 @@ public final class Analyser {
   }
 
   private static List<? extends AbstractGoalElement> regularGoals(TypeElement tel, GoalContext context) {
+    RecordBuilder recordBuilderAnnotation = tel.getAnnotation(RecordBuilder.class);
+    RecordUpdater recordUpdaterAnnotation = tel.getAnnotation(RecordUpdater.class);
+    if (recordBuilderAnnotation != null || recordUpdaterAnnotation != null) {
+      TypeElement typeElement = AS_DECLARED.visit(tel.getSuperclass())
+          .map(DeclaredType::asElement)
+          .flatMap(AS_TYPE_ELEMENT::visit)
+          .orElseThrow(() -> new ValidationException("", tel));
+      if (!typeElement.getQualifiedName().contentEquals("java.lang.Record")) {
+        throw new ValidationException("Not a record type", tel);
+      }
+      List<ModuleChoice> options = new ArrayList<>(2);
+      if (recordBuilderAnnotation != null) {
+        options.add(ModuleChoice.BUILDER);
+      }
+      if (recordUpdaterAnnotation != null) {
+        options.add(ModuleChoice.UPDATER);
+      }
+      return tel.getEnclosedElements().stream()
+          .filter(el -> el.getKind() == CONSTRUCTOR)
+          .map(LessElements::asExecutable)
+          .map(element -> createRegular(context, element, options))
+          .flatMap(List::stream)
+          .toList();
+    }
     return tel.getEnclosedElements().stream()
         .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
         .filter(el -> el.getKind() == CONSTRUCTOR || el.getKind() == METHOD)
         .map(LessElements::asExecutable)
-        .map(DtoGoalElement.createRegular(context))
+        .map(element -> createRegular(context, element, goalOptions(element)))
         .flatMap(List::stream)
         .toList();
+  }
+
+  private static List<ModuleChoice> goalOptions(ExecutableElement element) {
+    List<ModuleChoice> options = new ArrayList<>(2);
+    if (element.getAnnotation(Builder.class) != null) {
+      options.add(ModuleChoice.BUILDER);
+    }
+    if (element.getAnnotation(Updater.class) != null) {
+      options.add(ModuleChoice.UPDATER);
+    }
+    return options;
   }
 
   private static List<BeanGoalElement> beanGoals(TypeElement buildElement, GoalContext context) {

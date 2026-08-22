@@ -20,7 +20,7 @@ class RecordTest {
         "import net.zerobuilder.Name;",
         "import java.util.List;",
         "",
-        "public record VibeCoder (",
+        "record VibeCoder (",
         "  String name,",
         "  int age,",
         "  List<String> notes,",
@@ -29,10 +29,52 @@ class RecordTest {
         "",
         "  @Builder",
         "  @Updater",
-        "  public VibeCoder {",
+        "  VibeCoder {",
         "  }",
         "}");
     Compilation compilation = simpleCompiler().compile(businessAnalyst);
     assertThat(compilation).succeeded();
+  }
+
+  @Test
+  void recordBuilderTest() {
+    JavaFileObject businessAnalyst = forSourceLines("beans.VibeCoder",
+        "package beans;",
+        "",
+        "import net.zerobuilder.RecordBuilder;",
+        "import net.zerobuilder.RecordUpdater;",
+        "import net.zerobuilder.Name;",
+        "import java.util.List;",
+        "",
+        "@RecordBuilder",
+        "@RecordUpdater",
+        "record VibeCoder (",
+        "  String name,",
+        "  int age,",
+        "  List<String> notes,",
+        "  @Name(\"executive\")",
+        "  boolean isExecutive) {",
+        "}");
+    Compilation compilation = simpleCompiler().compile(businessAnalyst);
+    assertThat(compilation).succeeded();
+  }
+
+  @Test
+  void notRecord() {
+    JavaFileObject businessAnalyst = forSourceLines("beans.VibeCoder",
+        "package beans;",
+        "",
+        "import net.zerobuilder.RecordUpdater;",
+        "",
+        "@RecordUpdater",
+        "class VibeCoder {",
+        "  final String name;",
+        "  VibeCoder(String name) {",
+        "    this.name = name;",
+        "  }",
+        "}");
+    Compilation compilation = simpleCompiler().compile(businessAnalyst);
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Not a record type");
   }
 }

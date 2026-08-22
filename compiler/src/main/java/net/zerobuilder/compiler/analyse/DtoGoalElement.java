@@ -3,16 +3,11 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import net.zerobuilder.Builder;
 import net.zerobuilder.Name;
-import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
@@ -21,8 +16,6 @@ import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.InstanceMethodGoalDetails;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.StaticMethodGoalDetails;
 
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
@@ -117,7 +110,7 @@ final class DtoGoalElement {
       DtoContext.GoalContext context) {
     ClassName goalType = ClassName.get(beanType);
     String name = downcase(simpleName(goalType));
-    List<ModuleChoice> goalOptions = Arrays.asList(BUILDER, UPDATER);
+    List<ModuleChoice> goalOptions = List.of(BUILDER, UPDATER);
     return transform(goalOptions,
         goalOption -> createBeanGoalElement(goalType, name, beanType, goalOption, context));
   }
@@ -133,17 +126,6 @@ final class DtoGoalElement {
     UPDATER, BUILDER
   }
 
-  private static List<ModuleChoice> goalOptions(ExecutableElement element) {
-    ArrayList<ModuleChoice> options = new ArrayList<>(2);
-    if (element.getAnnotation(Builder.class) != null) {
-      options.add(BUILDER);
-    }
-    if (element.getAnnotation(Updater.class) != null) {
-      options.add(UPDATER);
-    }
-    return options;
-  }
-
   static TypeName goalType(ExecutableElement goal) {
     if (goal.getKind() == CONSTRUCTOR) {
       return ClassName.get(goal.getEnclosingElement().asType());
@@ -151,20 +133,20 @@ final class DtoGoalElement {
     return TypeName.get(goal.getReturnType());
   }
 
-  static Function<ExecutableElement, List<? extends AbstractGoalElement>> createRegular(DtoContext.GoalContext context) {
-    return element -> {
-      TypeName goalType = goalType(element);
-      GoalModifiers modifiers = GoalModifiers.create(element);
-      List<ModuleChoice> goalOptions = goalOptions(element);
-      String methodName = element.getSimpleName().toString();
-      return transform(goalOptions,
-          goalOption ->
-              goalOption == BUILDER ?
-                  createBuilderGoal(element, goalType, modifiers, methodName,
-                      parameterNames(element), context) :
-                  createUpdaterGoal(element, goalType, modifiers, methodName,
-                      parameterNames(element), context));
-    };
+  static List<? extends AbstractGoalElement> createRegular(
+      DtoContext.GoalContext context,
+      ExecutableElement element,
+      List<ModuleChoice> goalOptions) {
+    TypeName goalType = goalType(element);
+    GoalModifiers modifiers = GoalModifiers.create(element);
+    String methodName = element.getSimpleName().toString();
+    return transform(goalOptions,
+        goalOption ->
+            goalOption == BUILDER ?
+                createBuilderGoal(element, goalType, modifiers, methodName,
+                    parameterNames(element), context) :
+                createUpdaterGoal(element, goalType, modifiers, methodName,
+                    parameterNames(element), context));
   }
 
   private static AbstractGoalElement createUpdaterGoal(
@@ -196,18 +178,20 @@ final class DtoGoalElement {
     return transform(type.getTypeParameters(), TypeVariableName::get);
   }
 
-  private static List<TypeVariableName> returnTypeInstanceTypevars(ExecutableElement element) {
+  private static List<TypeVariableName> returnTypeInstanceTypevars(
+      ExecutableElement element) {
     if (!isDeclaredType(element.getReturnType())) {
-      return emptyList();
+      return List.of();
     }
     TypeElement type = asTypeElement(element.getReturnType());
     return transform(type.getTypeParameters(), TypeVariableName::get);
   }
 
-  private static List<TypeVariableName> methodTypevars(ExecutableElement element) {
+  private static List<TypeVariableName> methodTypevars(
+      ExecutableElement element) {
     return element.getTypeParameters().stream()
         .map(TypeVariableName::get)
-        .collect(toList());
+        .toList();
   }
 
   private static AbstractGoalElement createBuilderGoal(

@@ -22,7 +22,7 @@ public class Gen1Test {
         .updater(bar)
         .bd1(null)
         .bd1("10")
-        .done();
+        .build();
     assertEquals("10", updated.bd1);
   }
 
@@ -33,7 +33,7 @@ public class Gen1Test {
     Bar<String, String, Integer, Integer> updated = barUpdaterFactory(factory)
         .updater(bar)
         .bc0(3)
-        .done();
+        .build();
     assertEquals(3, updated.bc0);
   }
 }

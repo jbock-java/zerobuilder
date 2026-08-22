@@ -1,10 +1,9 @@
 package net.zerobuilder.examples.values;
 
+import java.io.IOException;
 import net.zerobuilder.examples.values.MoreValues.Interface;
 import net.zerobuilder.examples.values.MoreValues.NothingSpecial;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
 
 import static net.zerobuilder.examples.values.MoreValues_InterfaceBuilders.interfaceBuilder;
 import static net.zerobuilder.examples.values.MoreValues_NothingBuilders.appendBuilder;
@@ -13,16 +12,16 @@ import static net.zerobuilder.examples.values.MoreValues_NothingSpecialBuilders.
 import static net.zerobuilder.examples.values.MoreValues_SumBuilders.sumBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class MoreValuesTest {
+class MoreValuesTest {
 
   @Test
-  public void testDefault() {
+  void testDefault() {
     Interface foo = interfaceBuilder().foo("foo");
     assertEquals("foo", foo.foo);
   }
 
   @Test
-  public void testNothing() {
+  void testNothing() {
     StringBuilder sb = new StringBuilder();
     appendBuilder().sb(sb).word("Hello");
     appendBuilder().sb(sb).word(", ");
@@ -31,18 +30,18 @@ public class MoreValuesTest {
   }
 
   @Test
-  public void testSum() {
+  void testSum() {
     int sum = sumBuilder().a(5).b(8);
     assertEquals(13, sum);
   }
 
   @Test
-  public void testNothingSpecial() throws IOException {
+  void testNothingSpecial() throws IOException {
     NothingSpecial foo = nothingSpecialBuilder()
         .foo("foo");
     NothingSpecial bar = nothingSpecialUpdater(foo)
         .foo("bar")
-        .done();
+        .build();
     assertEquals("foo", foo.foo());
     assertEquals("bar", bar.foo());
   }

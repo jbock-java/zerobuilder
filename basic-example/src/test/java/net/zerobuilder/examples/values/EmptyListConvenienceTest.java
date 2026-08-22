@@ -1,32 +1,31 @@
 package net.zerobuilder.examples.values;
 
+import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
 import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.emptyListConvenienceBuilder;
 import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.emptyListConvenienceUpdater;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class EmptyListConvenienceTest {
+class EmptyListConvenienceTest {
 
   @Test
-  public void emptyTest() {
+  void emptyTest() {
     EmptyListConvenience empty = emptyListConvenienceBuilder()
-        .things(emptyList())
-        .strings(emptyList())
-        .collection(emptyList())
-        .iterables(emptyList())
-        .sets(emptySet());
+        .things(List.of())
+        .strings(List.of())
+        .collection(List.of())
+        .iterables(List.of())
+        .sets(Set.of());
     EmptyListConvenience notEmpty = emptyListConvenienceUpdater(empty)
-        .strings(singletonList(""))
-        .things(singletonList(""))
-        .collection(singletonList(singletonList("")))
-        .sets(emptySet())
-        .iterables(emptyList())
-        .done();
+        .strings(List.of(""))
+        .things(List.of(""))
+        .collection(List.of(List.of("")))
+        .sets(Set.of())
+        .iterables(List.of())
+        .build();
     assertEquals(0, empty.collection.size());
     assertEquals(0, empty.sets.size());
     assertEquals(0, empty.strings.size());

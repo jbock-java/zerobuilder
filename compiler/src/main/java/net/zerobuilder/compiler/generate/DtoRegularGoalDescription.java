@@ -45,11 +45,12 @@ public final class DtoRegularGoalDescription {
           .collect(joinCodeBlocks(", "));
     }
 
-    private SimpleRegularGoalDescription(AbstractRegularDetails details,
-                                         List<TypeName> thrownTypes,
-                                         List<SimpleParameter> parameters,
-                                         GoalContext context,
-                                         int[] ranking) {
+    private SimpleRegularGoalDescription(
+        AbstractRegularDetails details,
+        List<TypeName> thrownTypes,
+        List<SimpleParameter> parameters,
+        GoalContext context,
+        int[] ranking) {
       this.details = details;
       this.thrownTypes = thrownTypes;
       this.ranking = ranking;
@@ -77,26 +78,29 @@ public final class DtoRegularGoalDescription {
     public final List<TypeName> thrownTypes;
     public final GoalContext context;
 
-    private ProjectedRegularGoalDescription(AbstractRegularDetails details,
-                                            List<TypeName> thrownTypes,
-                                            List<ProjectedParameter> parameters, GoalContext context) {
+    private ProjectedRegularGoalDescription(
+        AbstractRegularDetails details,
+        List<TypeName> thrownTypes,
+        List<ProjectedParameter> parameters, GoalContext context) {
       this.details = details;
       this.thrownTypes = thrownTypes;
       this.parameters = parameters;
       this.context = context;
     }
 
-    public static ProjectedRegularGoalDescription create(AbstractRegularDetails details,
-                                                         List<TypeName> thrownTypes,
-                                                         List<ProjectedParameter> parameters,
-                                                         GoalContext context) {
+    public static ProjectedRegularGoalDescription create(
+        AbstractRegularDetails details,
+        List<TypeName> thrownTypes,
+        List<ProjectedParameter> parameters,
+        GoalContext context) {
       checkParameterNames(details.parameterNames(), parameters);
       return new ProjectedRegularGoalDescription(details, thrownTypes, parameters, context);
     }
   }
 
-  private static void checkParameterNames(List<String> parameterNames,
-                                          List<? extends AbstractRegularParameter> parameters) {
+  private static void checkParameterNames(
+      List<String> parameterNames,
+      List<? extends AbstractRegularParameter> parameters) {
     if (parameters.isEmpty()) {
       throw new IllegalArgumentException("need at least one parameter");
     }

@@ -8,19 +8,19 @@ import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessBui
 import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessUpdater;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FieldAccessTest {
+class FieldAccessTest {
 
   @Test
-  public void basicTest() {
+  void basicTest() {
     FieldAccessBuilder.Length builder = fieldAccessBuilder();
     FieldAccess original = builder.length(12).width(10).height(11);
     FieldAccessUpdater updater = fieldAccessUpdater(original);
-    FieldAccess updated = updater.length(0).done();
-    assertEquals(original.length, 12d);
-    assertEquals(original.width, 10d);
-    assertEquals(original.height, 11d);
-    assertEquals(updated.length, 0d);
-    assertEquals(updated.width, 10d);
-    assertEquals(updated.height, 11d);
+    FieldAccess updated = updater.length(0).build();
+    assertEquals(12d, original.length);
+    assertEquals(10d, original.width);
+    assertEquals(11d, original.height);
+    assertEquals(0d, updated.length);
+    assertEquals(10d, updated.width);
+    assertEquals(11d, updated.height);
   }
 }

@@ -6,10 +6,10 @@ import static net.zerobuilder.examples.values.MessageBuilders.messageBuilder;
 import static net.zerobuilder.examples.values.MessageBuilders.messageUpdater;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class MessageTest {
+class MessageTest {
 
   @Test
-  public void message() throws Exception {
+  void message() {
     Message message = messageBuilder()
         .sender("Alice")
         .body("Hi")
@@ -21,7 +21,7 @@ public class MessageTest {
     assertEquals("test", message.subject);
     message = messageUpdater(message)
         .body("Goodbye")
-        .done();
+        .build();
     assertEquals("Goodbye", message.body);
   }
 }

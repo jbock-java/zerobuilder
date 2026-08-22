@@ -48,7 +48,7 @@ public final class RegularUpdater implements ProjectedModule {
   }
 
   private final Function<ProjectedRegularGoalDescription, MethodSpec> doneMethod =
-      description -> methodBuilder("done")
+      description -> methodBuilder("build")
           .addModifiers(PUBLIC)
           .addExceptions(description.thrownTypes)
           .returns(description.details.type())

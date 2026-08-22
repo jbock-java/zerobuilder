@@ -1,8 +1,7 @@
 package net.zerobuilder.examples.beans.more;
 
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
+import org.junit.jupiter.api.Test;
 
 import static net.zerobuilder.examples.beans.more.VibeCoderBuilders.vibeCoderBuilder;
 import static net.zerobuilder.examples.beans.more.VibeCoderBuilders.vibeCoderUpdater;
@@ -13,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class VibeCoderTest {
 
   @Test
-  public void testCollectionOneToTwo() {
+  void testCollectionOneToTwo() {
     VibeCoder peter = vibeCoderBuilder()
         .name("Peter")
         .age(36)
@@ -23,7 +22,7 @@ class VibeCoderTest {
         .executive(true)
         .age(37)
         .notes(List.of("entry0", "entry1"))
-        .done();
+        .build();
     assertEquals(36, peter.age());
     assertEquals("Peter", peter.name());
     assertEquals(List.of("entry"), peter.notes());

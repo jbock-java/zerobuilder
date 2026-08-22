@@ -7,23 +7,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class SpaghettiTest {
+class SpaghettiTest {
 
   @Test
-  public void napoliBuilder() {
+  void napoliBuilder() {
     Spaghetti spaghetti = Spaghetti.napoliBuilder()
         .cheese("reggiano")
         .alDente(true);
     assertTrue(spaghetti.alDente);
-    assertEquals(spaghetti.cheese, "reggiano");
-    assertEquals(spaghetti.sauce, "tomato");
+    assertEquals("reggiano", spaghetti.cheese);
+    assertEquals("tomato", spaghetti.sauce);
     spaghetti = spaghettiUpdater(spaghetti)
         .sauce("hot salsa")
         .cheese("cheddar")
-        .alDente(false).done();
+        .alDente(false)
+        .build();
     assertFalse(spaghetti.alDente);
     assertEquals("cheddar", spaghetti.cheese);
     assertEquals("hot salsa", spaghetti.sauce);
   }
-
 }
