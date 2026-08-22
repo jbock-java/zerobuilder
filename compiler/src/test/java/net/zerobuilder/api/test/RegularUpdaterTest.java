@@ -2,11 +2,13 @@ package net.zerobuilder.api.test;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeSpec;
+import java.io.IOException;
+import java.util.List;
+import javax.lang.model.element.Modifier;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionMethod;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
@@ -14,12 +16,9 @@ import net.zerobuilder.compiler.generate.Generator;
 import net.zerobuilder.modules.updater.RegularUpdater;
 import org.junit.jupiter.api.Test;
 
-import javax.lang.model.element.Modifier;
-import java.io.IOException;
-import java.util.List;
-
 import static net.zerobuilder.compiler.generate.Access.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
+import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createGetterMethod;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -62,7 +61,7 @@ public class RegularUpdaterTest {
 
     // use ProjectedParameter because the updater module requires projections
     ProjectedParameter fooParameter = DtoRegularParameter.create("foo", STRING,
-        ProjectionMethod.create("getFoo", List.of(IO_EXCEPTION)));
+        createGetterMethod("getFoo", List.of(IO_EXCEPTION)));
     ProjectedRegularGoalDescription description = ProjectedRegularGoalDescription.create(
         details,
         List.of(),

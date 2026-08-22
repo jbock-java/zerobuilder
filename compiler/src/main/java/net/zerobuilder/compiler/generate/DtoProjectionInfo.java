@@ -1,59 +1,32 @@
 package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.TypeName;
-
 import java.util.List;
-import java.util.function.Function;
-
-import static java.util.Collections.emptyList;
 
 public final class DtoProjectionInfo {
 
-  public interface ProjectionInfo {
-    <R, P1, P2> R accept(ProjectionInfoCases<R, P1, P2> cases, P1 p1, P2 p2);
+  public sealed interface ProjectionInfo permits FieldAccess, GetterMethod {
   }
 
-  public interface ProjectionInfoCases<R, P1, P2> {
-    R projectionMethod(ProjectionMethod projection, P1 p1, P2 p2);
-    R fieldAccess(FieldAccess projection, P1 p1, P2 p2);
+  public static GetterMethod createGetterMethod(String methodName, List<TypeName> thrownTypes) {
+    return new GetterMethod(methodName, thrownTypes);
   }
 
-  private static <R> Function<ProjectionInfo, R> projectionInfoCases(
-      Function<ProjectionMethod, R> projectionMethod,
-      Function<FieldAccess, R> fieldAccess) {
-    ProjectionInfoCases<R, Void, Void> cases = new ProjectionInfoCases<R, Void, Void>() {
-      @Override
-      public R projectionMethod(ProjectionMethod projection, Void _null, Void _null2) {
-        return projectionMethod.apply(projection);
-      }
-      @Override
-      public R fieldAccess(FieldAccess projection, Void _null, Void _null2) {
-        return fieldAccess.apply(projection);
-      }
-    };
-    return projectionInfo -> projectionInfo.accept(cases, null, null);
+  public static GetterMethod createGetterMethod(String methodName) {
+    return new GetterMethod(methodName, List.of());
   }
 
-  public static final class ProjectionMethod implements ProjectionInfo {
+  public static FieldAccess createFieldAccess(String fieldName) {
+    return new FieldAccess(fieldName);
+  }
+
+  public static final class GetterMethod implements ProjectionInfo {
     public final String methodName;
     final List<TypeName> thrownTypes;
 
-    private ProjectionMethod(String methodName, List<TypeName> thrownTypes) {
+    private GetterMethod(String methodName, List<TypeName> thrownTypes) {
       this.methodName = methodName;
       this.thrownTypes = thrownTypes;
-    }
-
-    public static ProjectionMethod create(String methodName, List<TypeName> thrownTypes) {
-      return new ProjectionMethod(methodName, thrownTypes);
-    }
-
-    public static ProjectionMethod create(String methodName) {
-      return new ProjectionMethod(methodName, emptyList());
-    }
-
-    @Override
-    public <R, P1, P2> R accept(ProjectionInfoCases<R, P1, P2> cases, P1 p1, P2 p2) {
-      return cases.projectionMethod(this, p1, p2);
     }
   }
 
@@ -64,20 +37,14 @@ public final class DtoProjectionInfo {
       this.fieldName = fieldName;
     }
 
-    public static FieldAccess create(String fieldName) {
-      return new FieldAccess(fieldName);
-    }
-
-    @Override
-    public <R, P1, P2> R accept(ProjectionInfoCases<R, P1, P2> cases, P1 p1, P2 p2) {
-      return cases.fieldAccess(this, p1, p2);
-    }
   }
 
-  public static final Function<ProjectionInfo, List<TypeName>> thrownTypes =
-      projectionInfoCases(
-          projection -> projection.thrownTypes,
-          projection -> emptyList());
+  public static List<TypeName> thrownTypes(ProjectionInfo projectionInfo) {
+    return switch (projectionInfo) {
+      case GetterMethod getter -> getter.thrownTypes;
+      case FieldAccess fieldAccess -> List.of();
+    };
+  }
 
   private DtoProjectionInfo() {
     throw new UnsupportedOperationException("no instances");
