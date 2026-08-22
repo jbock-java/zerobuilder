@@ -7,8 +7,8 @@ import net.zerobuilder.RecordUpdater;
 
 @RecordBuilder
 @RecordUpdater
-record VibeCoder(
-    String name,
+record SnailCat<E>(
+    E name,
     int age,
     List<String> notes,
     @Name("executive")

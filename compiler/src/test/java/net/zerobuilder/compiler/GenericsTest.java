@@ -9,10 +9,10 @@ import static io.jbock.testing.compile.CompilationSubject.assertThat;
 import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
 import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
-public class GenericsTest {
+class GenericsTest {
 
   @Test
-  public void staticMethod() {
+  void staticMethod() {
     JavaFileObject cube = forSourceLines("cube.Fuchur",
         "package cube;",
         "import net.zerobuilder.*;",

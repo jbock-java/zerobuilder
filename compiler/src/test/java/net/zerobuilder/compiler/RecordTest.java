@@ -47,7 +47,6 @@ class RecordTest {
         "import java.util.List;",
         "",
         "@RecordBuilder",
-        "@RecordUpdater",
         "record VibeCoder (",
         "  String name,",
         "  int age,",
@@ -57,6 +56,50 @@ class RecordTest {
         "}");
     Compilation compilation = simpleCompiler().compile(businessAnalyst);
     assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("beans.VibeCoderBuilders").containsLines(
+        "package beans;",
+        "import java.util.List;",
+        "import javax.annotation.processing.Generated;",
+        "",
+        "public final class VibeCoderBuilders {",
+        "",
+        "  public static VibeCoderBuilder.Name vibeCoderBuilder() {",
+        "    return new VibeCoderBuilderImpl();",
+        "  }",
+        "}");
+  }
+
+  @Test
+  void genericRecordBuilderTest() {
+    JavaFileObject businessAnalyst = forSourceLines("beans.VibeCoder",
+        "package beans;",
+        "",
+        "import net.zerobuilder.RecordBuilder;",
+        "import net.zerobuilder.RecordUpdater;",
+        "import net.zerobuilder.Name;",
+        "import net.zerobuilder.Step;",
+        "import java.util.List;",
+        "",
+        "@RecordBuilder",
+        "record SnailCat<E>(",
+        "  E name,",
+        "  List<String> notes,",
+        "  @Name(\"executive\")",
+        "  boolean isExecutive) {",
+        "}");
+    Compilation compilation = simpleCompiler().compile(businessAnalyst);
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("beans.SnailCatBuilders").containsLines(
+        "package beans;",
+        "import java.util.List;",
+        "import javax.annotation.processing.Generated;",
+        "",
+        "public final class SnailCatBuilders {",
+        "",
+        "  public static SnailCatBuilder.Name snailCatBuilder() {",
+        "    return SnailCatBuilder.name;",
+        "  }",
+        "}");
   }
 
   @Test
