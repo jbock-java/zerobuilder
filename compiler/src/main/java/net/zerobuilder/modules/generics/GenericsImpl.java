@@ -11,11 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
-import net.zerobuilder.compiler.generate.DtoGoalDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
-import static com.palantir.javapoet.TypeName.VOID;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -23,7 +21,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.ZeroUtil.emptyCodeBlock;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
@@ -47,11 +44,12 @@ final class GenericsImpl {
     return builder;
   }
 
-  private TypeSpec createStep(ImplFields implFields,
-                              List<List<TypeVariableName>> methodParams,
-                              List<List<TypeVariableName>> typeParams, int i) {
+  private TypeSpec createStep(
+      ImplFields implFields,
+      List<List<TypeVariableName>> methodParams,
+      List<List<TypeVariableName>> typeParams, int i) {
     ParameterSpec parameter = parameterSpec(description.parameters.get(i).type, description.parameters.get(i).name);
-    List<FieldSpec> fields = implFields.fields(description.details, i);
+    List<FieldSpec> fields = implFields.fields(i);
     TypeSpec.Builder builder = classBuilder(upcase(description.parameters.get(i).name));
     builder.addMethod(createConstructor(fields));
     return builder.addFields(fields)
@@ -84,28 +82,8 @@ final class GenericsImpl {
     CodeBlock invoke = description.unshuffle(blocks)
         .stream()
         .collect(joinCodeBlocks(", "));
-    return switch (description.details) {
-      case DtoGoalDetails.ConstructorGoalDetails constructor -> statement("return new $T($L)",
-          rawClassName(description.context.type), invoke);
-      case DtoGoalDetails.StaticMethodGoalDetails staticMethod -> CodeBlock.builder()
-          .add(staticMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))
-          .addStatement("$T.$L($L)",
-              rawClassName(description.context.type),
-              staticMethod.methodName, invoke).build();
-      case DtoGoalDetails.InstanceMethodGoalDetails instanceMethod -> CodeBlock.builder()
-          .add(instanceMethod.goalType == VOID ? emptyCodeBlock : CodeBlock.of("return "))
-          .addStatement("$L.$L($L)",
-              instance(),
-              instanceMethod.methodName, invoke).build();
-    };
-  }
-
-  private CodeBlock instance() {
-    CodeBlock.Builder builder = CodeBlock.builder();
-    for (int i = description.parameters.size() - 2; i >= 0; i--) {
-      builder.add("$L.", description.parameters.get(i).name + "Acc");
-    }
-    return builder.add("instance").build();
+    return statement("return new $T($L)",
+        rawClassName(description.context.type), invoke);
   }
 
   private IntFunction<CodeBlock> invokeFn() {

@@ -14,7 +14,6 @@ import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.modules.updater.RegularUpdater.implType;
@@ -26,9 +25,6 @@ final class Updater {
 
   static List<FieldSpec> fields(ProjectedRegularGoalDescription description) {
     List<FieldSpec> builder = new ArrayList<>();
-    if (isInstance(description.details)) {
-      builder.add(fieldSpec(description.context.type, FACTORY, PRIVATE));
-    }
     for (ProjectedParameter step : description.parameters) {
       String name = step.name;
       TypeName type = step.type;

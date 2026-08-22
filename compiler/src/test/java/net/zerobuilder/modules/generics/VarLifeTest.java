@@ -4,14 +4,10 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static net.zerobuilder.modules.generics.VarLife.create;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -31,43 +27,34 @@ public class VarLifeTest {
 
   @Test
   public void test_LK_V_MKV() {
-    List<TypeVariableName> typeParameters = asList(K, V);
-    VarLife life = create(typeParameters, asList(listOf(K), V, map(K, V)), false);
-    assertEquals(asList(singletonList(K), singletonList(V)), life.methodParams());
-    assertEquals(asList(emptyList(), singletonList(K)), life.typeParams());
+    List<TypeVariableName> typeParameters = List.of(K, V);
+    VarLife life = create(typeParameters, List.of(listOf(K), V, map(K, V)));
+    assertEquals(List.of(List.of(K), List.of(V)), life.methodParams());
+    assertEquals(List.of(List.of(), List.of(K)), life.typeParams());
   }
 
   @Test
   public void test_MKV_K_V_LV() {
-    List<TypeVariableName> typeParameters = asList(K, V);
-    VarLife life = create(typeParameters, asList(map(K, V), K, V, listOf(V)), false);
-    assertEquals(asList(asList(K, V), emptyList(), emptyList()), life.methodParams());
-    assertEquals(asList(emptyList(), asList(K, V), asList(K, V)), life.typeParams());
+    List<TypeVariableName> typeParameters = List.of(K, V);
+    VarLife life = create(typeParameters, List.of(map(K, V), K, V, listOf(V)));
+    assertEquals(List.of(List.of(K, V), List.of(), List.of()), life.methodParams());
+    assertEquals(List.of(List.of(), List.of(K, V), List.of(K, V)), life.typeParams());
   }
 
   @Test
   public void test_K_V_LK_V() {
-    List<TypeVariableName> typeParameters = asList(K, V);
-    VarLife life = create(typeParameters, asList(K, V, listOf(K), V), false);
-    assertEquals(asList(singletonList(K), singletonList(V), emptyList()), life.methodParams());
-    assertEquals(asList(emptyList(), singletonList(K), asList(K, V)), life.typeParams());
+    List<TypeVariableName> typeParameters = List.of(K, V);
+    VarLife life = create(typeParameters, List.of(K, V, listOf(K), V));
+    assertEquals(List.of(List.of(K), List.of(V), List.of()), life.methodParams());
+    assertEquals(List.of(List.of(), List.of(K), List.of(K, V)), life.typeParams());
   }
 
   @Test
   public void testStatic() {
-    List<TypeVariableName> typeParameters = asList(S, K, V);
-    List<TypeName> parameters = asList(S, K, V, map(K, V));
-    VarLife life = create(typeParameters, parameters, false);
-    assertEquals(asList(emptyList(), singletonList(S), asList(S, K)), life.typeParams());
-    assertEquals(asList(singletonList(S), singletonList(K), singletonList(V)), life.methodParams());
-  }
-
-  @Test
-  public void testInstance() {
-    List<TypeVariableName> typeParameters = asList(S, K, V);
-    List<TypeName> parameters = asList(listOf(S), S, K, V, map(K, V));
-    VarLife life = create(typeParameters, parameters, true);
-    assertEquals(asList(singletonList(S), singletonList(S), asList(S, K)), life.typeParams());
-    assertEquals(asList(emptyList(), singletonList(K), singletonList(V)), life.methodParams());
+    List<TypeVariableName> typeParameters = List.of(S, K, V);
+    List<TypeName> parameters = List.of(S, K, V, map(K, V));
+    VarLife life = create(typeParameters, parameters);
+    assertEquals(List.of(List.of(), List.of(S), List.of(S, K)), life.typeParams());
+    assertEquals(List.of(List.of(S), List.of(K), List.of(V)), life.methodParams());
   }
 }

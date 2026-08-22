@@ -2,13 +2,9 @@ package net.zerobuilder.modules.builder;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
-import com.palantir.javapoet.ParameterSpec;
-import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.util.List;
 import java.util.stream.IntStream;
-import net.zerobuilder.compiler.generate.DtoGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
 import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
@@ -23,14 +19,10 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
-import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.Builder.fields;
 import static net.zerobuilder.modules.builder.Generator.builderMethod;
-import static net.zerobuilder.modules.builder.Generator.instanceField;
 import static net.zerobuilder.modules.builder.Step.stepInterface;
 
 public final class RegularBuilder implements RegularSimpleModule {
@@ -62,7 +54,7 @@ public final class RegularBuilder implements RegularSimpleModule {
     return classBuilder(implType(description))
         .addSuperinterfaces(stepInterfaceTypes(description))
         .addFields(fields.apply(description))
-        .addMethod(regularConstructor(description.details, description))
+        .addMethod(constructor())
         .addMethods(steps(description))
         .addModifiers(PRIVATE, STATIC, FINAL)
         .build();
@@ -77,21 +69,6 @@ public final class RegularBuilder implements RegularSimpleModule {
             .addModifiers(PRIVATE)
             .build())
         .build();
-  }
-
-  private static MethodSpec regularConstructor(AbstractRegularDetails details, SimpleRegularGoalDescription description) {
-    return switch (details) {
-      case DtoGoalDetails.ConstructorGoalDetails constructor -> constructor();
-      case DtoGoalDetails.StaticMethodGoalDetails staticMethod -> constructor();
-      case DtoGoalDetails.InstanceMethodGoalDetails method -> {
-        TypeName type = description.context.type;
-        ParameterSpec parameter = parameterSpec(type, downcase(simpleName(type)));
-        yield constructorBuilder()
-            .addParameter(parameter)
-            .addStatement("this.$N = $N", instanceField(description), parameter)
-            .build();
-      }
-    };
   }
 
   private List<ClassName> stepInterfaceTypes(SimpleRegularGoalDescription description) {

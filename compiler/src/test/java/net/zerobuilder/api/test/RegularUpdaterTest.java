@@ -8,7 +8,7 @@ import javax.lang.model.element.Modifier;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.ConstructorGoalDetails;
+import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
@@ -54,7 +54,7 @@ public class RegularUpdaterTest {
     DtoContext.GoalContext goalContext = createContext(TYPE, GENERATED_TYPE);
 
     String goalName = "myGoal";
-    ConstructorGoalDetails details = ConstructorGoalDetails.create(
+    AbstractRegularDetails details = AbstractRegularDetails.create(
         TYPE, goalName, List.of("foo"),
         PUBLIC,
         List.of());

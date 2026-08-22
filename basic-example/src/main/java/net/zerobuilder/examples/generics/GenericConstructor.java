@@ -1,10 +1,8 @@
 package net.zerobuilder.examples.generics;
 
-import net.zerobuilder.Builder;
-import net.zerobuilder.Updater;
-
 import java.io.IOException;
 import java.util.AbstractMap;
+import net.zerobuilder.Builder;
 
 final class GenericConstructor<K, V> extends AbstractMap.SimpleEntry<K, V> {
 

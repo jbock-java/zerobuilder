@@ -29,21 +29,6 @@ public class FailTest {
   }
 
   @Test
-  public void constructorVersusFactory() {
-    List<String> sourceLines = Arrays.asList(
-        "package test;",
-        "import net.zerobuilder.*;",
-        "class Centipede {",
-        "  @Builder Centipede(int a) {}",
-        "  @Builder static Centipede create (int a) {}",
-        "}");
-    JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
-    Compilation compilation = simpleCompiler().compile(javaFile);
-    assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("another goal with this name");
-  }
-
-  @Test
   public void missingProjection() {
     List<String> sourceLines = Arrays.asList(
         "package test;",

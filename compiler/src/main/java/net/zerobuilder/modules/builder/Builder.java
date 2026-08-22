@@ -9,28 +9,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.IntFunction;
-import net.zerobuilder.compiler.generate.DtoGoalDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
-import static com.palantir.javapoet.TypeName.VOID;
 import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.builder.Generator.instanceField;
 
 final class Builder {
-
-  static final String IN_USE = "_currently_in_use";
 
   static TypeName nextType(int i, SimpleRegularGoalDescription description) {
     if (i < description.parameters.size() - 1) {
@@ -45,9 +37,6 @@ final class Builder {
       = description -> {
     List<SimpleParameter> steps = description.parameters;
     ArrayList<FieldSpec> builder = new ArrayList<>(steps.size() + 2);
-    if (isInstance(description.details)) {
-      builder.add(instanceField(description));
-    }
     steps.stream()
         .limit(steps.size() - 1)
         .map(parameter -> fieldSpec(parameter.type, parameter.name, PRIVATE))
@@ -82,7 +71,7 @@ final class Builder {
     String name = step.name;
     ParameterSpec parameter = parameterSpec(type, name);
     if (i == description.parameters.size() - 1) {
-      return regularInvoke(description.details, description);
+      return constructorCall(description);
     } else {
       return CodeBlock.builder()
           .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
@@ -91,64 +80,15 @@ final class Builder {
     }
   }
 
-  private static CodeBlock regularInvoke(AbstractRegularDetails details, SimpleRegularGoalDescription description) {
-    return switch (details) {
-      case DtoGoalDetails.ConstructorGoalDetails constructor -> constructorCall(description, constructor);
-      case DtoGoalDetails.StaticMethodGoalDetails staticMethod -> staticCall(description, staticMethod);
-      case DtoGoalDetails.InstanceMethodGoalDetails instanceMethod -> instanceCall(description, instanceMethod);
-    };
-  }
-
-  private static CodeBlock constructorCall(SimpleRegularGoalDescription description,
-                                           DtoGoalDetails.ConstructorGoalDetails details) {
-    TypeName type = details.type();
+  private static CodeBlock constructorCall(
+      SimpleRegularGoalDescription description) {
+    TypeName type = description.details.type();
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     CodeBlock args = description.invocationParameters();
     builder.addStatement("$T $N = new $T($L)", varGoal.type(), varGoal, type, args);
     return builder.addStatement("return $N", varGoal).build();
-  }
-
-  private static CodeBlock instanceCall(SimpleRegularGoalDescription description,
-                                        DtoGoalDetails.InstanceMethodGoalDetails details) {
-    TypeName type = details.goalType;
-    String method = details.methodName;
-    ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(simpleName(type)));
-    CodeBlock.Builder builder = CodeBlock.builder();
-    if (VOID.equals(type)) {
-      builder.addStatement("this.$N.$N($L)", instanceField(description),
-          method, description.invocationParameters());
-    } else {
-      builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type(), varGoal, instanceField(description),
-          method, description.invocationParameters());
-    }
-    if (!VOID.equals(type)) {
-      builder.addStatement("return $N", varGoal);
-    }
-    return builder.build();
-  }
-
-  private static CodeBlock staticCall(SimpleRegularGoalDescription description,
-                                      DtoGoalDetails.StaticMethodGoalDetails details) {
-    TypeName type = details.goalType;
-    String method = details.methodName;
-    ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(simpleName(type)));
-    CodeBlock.Builder builder = CodeBlock.builder();
-    if (VOID.equals(type)) {
-      builder.addStatement("$T.$N($L)", rawClassName(description.context.type),
-          method, description.invocationParameters());
-    } else {
-      builder.addStatement("$T $N = $T.$N($L)", varGoal.type(), varGoal,
-          rawClassName(description.context.type),
-          method, description.invocationParameters());
-    }
-    if (!VOID.equals(type)) {
-      builder.addStatement("return $N", varGoal);
-    }
-    return builder.build();
   }
 
   private Builder() {

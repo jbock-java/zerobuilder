@@ -11,15 +11,34 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
 public final class DtoGoalDetails {
 
-  public sealed interface AbstractRegularDetails permits InstanceMethodGoalDetails, ConstructorGoalDetails, StaticMethodGoalDetails {
+  public static final class AbstractRegularDetails extends LessAbstractRegularDetails {
 
-    TypeName type();
+    public final TypeName goalType;
+    public final List<TypeVariableName> instanceTypeParameters;
 
-    Modifier[] access(Modifier modifiers);
+    private AbstractRegularDetails(
+        ClassName goalType,
+        String name,
+        List<String> parameterNames,
+        Access access,
+        List<TypeVariableName> instanceTypeParameters) {
+      super(name, parameterNames, access);
+      this.goalType = parameterizedTypeName(goalType, instanceTypeParameters);
+      this.instanceTypeParameters = instanceTypeParameters;
+    }
 
-    String name();
+    public static AbstractRegularDetails create(
+        ClassName goalType,
+        String name,
+        List<String> parameterNames,
+        Access access,
+        List<TypeVariableName> instanceTypeParameters) {
+      return new AbstractRegularDetails(goalType, name, parameterNames, access, instanceTypeParameters);
+    }
 
-    List<String> parameterNames();
+    public TypeName type() {
+      return goalType;
+    }
   }
 
   public static abstract class LessAbstractRegularDetails {
@@ -60,118 +79,6 @@ public final class DtoGoalDetails {
     }
   }
 
-  public static final class ConstructorGoalDetails extends LessAbstractRegularDetails implements AbstractRegularDetails {
-
-    public final TypeName goalType;
-    public final List<TypeVariableName> instanceTypeParameters;
-
-    private ConstructorGoalDetails(
-        ClassName goalType,
-        String name,
-        List<String> parameterNames,
-        Access access,
-        List<TypeVariableName> instanceTypeParameters) {
-      super(name, parameterNames, access);
-      this.goalType = parameterizedTypeName(goalType, instanceTypeParameters);
-      this.instanceTypeParameters = instanceTypeParameters;
-    }
-
-    public static ConstructorGoalDetails create(
-        ClassName goalType,
-        String name,
-        List<String> parameterNames,
-        Access access,
-        List<TypeVariableName> instanceTypeParameters) {
-      return new ConstructorGoalDetails(goalType, name, parameterNames, access, instanceTypeParameters);
-    }
-
-    @Override
-    public TypeName type() {
-      return goalType;
-    }
-  }
-
-  public static final class InstanceMethodGoalDetails extends LessAbstractRegularDetails implements AbstractRegularDetails {
-    public final String methodName;
-    public final TypeName goalType;
-
-    // typevars of the method
-    public final List<TypeVariableName> typeParameters;
-
-    // typevars of the enclosing class
-    public final List<TypeVariableName> instanceTypeParameters;
-
-    // typevars of the returned type
-    public final List<TypeVariableName> returnTypeParameters;
-
-
-    private InstanceMethodGoalDetails(TypeName goalType, String name, List<String> parameterNames, String methodName,
-                                      Access access,
-                                      List<TypeVariableName> typeParameters,
-                                      List<TypeVariableName> instanceTypeParameters,
-                                      List<TypeVariableName> returnTypeParameters) {
-      super(name, parameterNames, access);
-      this.goalType = goalType;
-      this.methodName = methodName;
-      this.typeParameters = typeParameters;
-      this.instanceTypeParameters = instanceTypeParameters;
-      this.returnTypeParameters = returnTypeParameters;
-    }
-
-    public static InstanceMethodGoalDetails create(TypeName goalType,
-                                                   String name,
-                                                   List<String> parameterNames,
-                                                   String methodName,
-                                                   Access access,
-                                                   List<TypeVariableName> typeParameters,
-                                                   List<TypeVariableName> instanceTypeParameters,
-                                                   List<TypeVariableName> returnTypeParameters) {
-      return new InstanceMethodGoalDetails(goalType, name, parameterNames, methodName,
-          access, typeParameters, instanceTypeParameters, returnTypeParameters);
-    }
-
-    @Override
-    public TypeName type() {
-      return goalType;
-    }
-  }
-
-
-  /**
-   * Describes static method goal.
-   */
-  public static final class StaticMethodGoalDetails extends LessAbstractRegularDetails implements AbstractRegularDetails {
-
-    public final List<TypeVariableName> typeParameters;
-    public final String methodName;
-    public final TypeName goalType;
-
-    private StaticMethodGoalDetails(TypeName goalType, String name,
-                                    List<String> parameterNames,
-                                    String methodName,
-                                    Access access,
-                                    List<TypeVariableName> typeParameters) {
-      super(name, parameterNames, access);
-      this.goalType = goalType;
-      this.methodName = methodName;
-      this.typeParameters = typeParameters;
-    }
-
-    public static StaticMethodGoalDetails create(TypeName goalType,
-                                                 String name,
-                                                 List<String> parameterNames,
-                                                 String methodName,
-                                                 Access access,
-                                                 List<TypeVariableName> typeParameters) {
-      return new StaticMethodGoalDetails(goalType, name, parameterNames, methodName, access, typeParameters);
-    }
-
-    @Override
-    public TypeName type() {
-      return goalType;
-    }
-  }
-
   public static final class BeanGoalDetails {
     public final ClassName goalType;
     public final String name;
@@ -188,14 +95,6 @@ public final class DtoGoalDetails {
     public Modifier[] access(Modifier modifiers) {
       return ZeroUtil.modifiers(access, modifiers);
     }
-  }
-
-  public static boolean isInstance(AbstractRegularDetails details) {
-    return switch (details) {
-      case ConstructorGoalDetails constructor -> false;
-      case StaticMethodGoalDetails staticMethod -> false;
-      case InstanceMethodGoalDetails instanceMethod -> true;
-    };
   }
 
   private DtoGoalDetails() {
