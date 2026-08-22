@@ -81,7 +81,7 @@ public final class Analyser {
           new RegularSimpleGoalInput(GENERICS, validateBuilder(regular)) :
           new RegularSimpleGoalInput(BUILDER, validateBuilder(regular));
       case DtoGoalElement.RegularProjectableGoalElement projected ->
-          new ProjectedGoalInput(UPDATER, validateUpdater.apply(projected));
+          new ProjectedGoalInput(UPDATER, validateUpdater(projected));
     };
   }
 
