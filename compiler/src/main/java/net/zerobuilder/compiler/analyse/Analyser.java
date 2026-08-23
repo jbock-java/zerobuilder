@@ -13,15 +13,15 @@ import net.zerobuilder.RecordUpdater;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularProjectableGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.BuilderGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.UpdaterGoalElement;
 import net.zerobuilder.compiler.common.LessElements;
-import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
-import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
-import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.UpdaterGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.BuilderGoalInput;
+import net.zerobuilder.compiler.generate.DtoModule.BuilderModule;
+import net.zerobuilder.compiler.generate.DtoModule.UpdaterModule;
+import net.zerobuilder.compiler.generate.GoalContext;
 import net.zerobuilder.modules.builder.RegularBuilder;
 import net.zerobuilder.modules.generics.GenericsBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
@@ -37,16 +37,15 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpda
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
 import static net.zerobuilder.compiler.analyse.Utilities.peer;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
-import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class Analyser {
 
-  private static final RegularSimpleModule BUILDER = new RegularBuilder();
-  private static final ProjectedModule UPDATER = new RegularUpdater();
-  private static final RegularSimpleModule GENERICS = new GenericsBuilder();
+  private static final BuilderModule BUILDER = new RegularBuilder();
+  private static final UpdaterModule UPDATER = new RegularUpdater();
+  private static final BuilderModule GENERICS = new GenericsBuilder();
 
   /**
    * Extract all goals from the given type, by inspecting annotations.
@@ -61,7 +60,7 @@ public final class Analyser {
     TypeName type = parameterizedTypeName(ClassName.get(tel),
         transform(tel.getTypeParameters(), TypeVariableName::get));
     ClassName generatedType = peer(rawClassName(type), "Builders");
-    GoalContext context = createContext(type, generatedType);
+    GoalContext context = new GoalContext(type, generatedType);
     List<? extends AbstractGoalElement> goals = regularGoals(tel, context);
     checkNameConflict(goals);
     checkAccessLevel(goals);
@@ -70,10 +69,10 @@ public final class Analyser {
 
   private static AbstractGoalInput assignModule(AbstractGoalElement element) {
     return switch (element) {
-      case RegularGoalElement regular -> hasTypevars(regular.executableElement()) ?
-          new RegularSimpleGoalInput(GENERICS, validateBuilder(regular)) :
-          new RegularSimpleGoalInput(BUILDER, validateBuilder(regular));
-      case RegularProjectableGoalElement projected -> new ProjectedGoalInput(UPDATER, validateUpdater(projected));
+      case BuilderGoalElement regular -> hasTypevars(regular.executableElement()) ?
+          new BuilderGoalInput(GENERICS, validateBuilder(regular)) :
+          new BuilderGoalInput(BUILDER, validateBuilder(regular));
+      case UpdaterGoalElement projected -> new UpdaterGoalInput(UPDATER, validateUpdater(projected));
     };
   }
 

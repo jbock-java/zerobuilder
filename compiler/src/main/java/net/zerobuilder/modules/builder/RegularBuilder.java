@@ -5,9 +5,9 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeSpec;
 import java.util.List;
 import java.util.stream.IntStream;
-import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoModule.BuilderModule;
+import net.zerobuilder.compiler.generate.ModuleOutput;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -25,69 +25,46 @@ import static net.zerobuilder.modules.builder.Builder.fields;
 import static net.zerobuilder.modules.builder.Generator.builderMethod;
 import static net.zerobuilder.modules.builder.Step.stepInterface;
 
-public final class RegularBuilder implements RegularSimpleModule {
+public final class RegularBuilder implements BuilderModule {
 
-  private static final String moduleName = "builder";
+  private static final String MODULE_NAME = "builder";
 
-  private List<TypeSpec> stepInterfaces(SimpleRegularGoalDescription description) {
-    return IntStream.range(0, description.parameters.size())
-        .mapToObj(stepInterface(description))
-        .collect(toList());
+  private List<TypeSpec> stepInterfaces(BuilderGoalDescription description) {
+    return IntStream.range(0, description.parameters().size()).mapToObj(i -> stepInterface(description, i)).collect(toList());
   }
 
-  private List<MethodSpec> steps(SimpleRegularGoalDescription description) {
-    return IntStream.range(0, description.parameters.size())
-        .mapToObj(Builder.steps(description))
-        .collect(toList());
+  private List<MethodSpec> steps(BuilderGoalDescription description) {
+    return IntStream.range(0, description.parameters().size()).mapToObj(i -> Builder.steps(description, i)).collect(toList());
   }
 
-  static ClassName implType(SimpleRegularGoalDescription description) {
+  static ClassName implType(BuilderGoalDescription description) {
     ClassName contract = contractType(description);
     return contract.peerClass(contract.simpleName() + "Impl");
   }
 
-  static String methodName(SimpleRegularGoalDescription description) {
-    return description.details.name() + upcase(moduleName);
+  static String methodName(BuilderGoalDescription description) {
+    return description.details().name() + upcase(MODULE_NAME);
   }
 
-  private TypeSpec defineBuilderImpl(SimpleRegularGoalDescription description) {
-    return classBuilder(implType(description))
-        .addSuperinterfaces(stepInterfaceTypes(description))
-        .addFields(fields.apply(description))
-        .addMethod(constructor())
-        .addMethods(steps(description))
-        .addModifiers(PRIVATE, STATIC, FINAL)
-        .build();
+  private TypeSpec defineBuilderImpl(BuilderGoalDescription description) {
+    return classBuilder(implType(description)).addSuperinterfaces(stepInterfaceTypes(description)).addFields(fields.apply(description)).addMethod(constructor()).addMethods(steps(description)).addModifiers(PRIVATE, STATIC, FINAL).build();
   }
 
-  private TypeSpec defineContract(SimpleRegularGoalDescription description) {
-    return classBuilder(contractType(description))
-        .addTypes(stepInterfaces(description))
-        .addModifiers(PUBLIC, STATIC, FINAL)
-        .addMethod(constructorBuilder()
-            .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
-            .addModifiers(PRIVATE)
-            .build())
-        .build();
+  private TypeSpec defineContract(BuilderGoalDescription description) {
+    return classBuilder(contractType(description)).addTypes(stepInterfaces(description)).addModifiers(PUBLIC, STATIC, FINAL).addMethod(constructorBuilder().addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances").addModifiers(PRIVATE).build()).build();
   }
 
-  private List<ClassName> stepInterfaceTypes(SimpleRegularGoalDescription description) {
-    return transform(description.parameters,
-        step -> contractType(description).nestedClass(upcase(step.name)));
+  private List<ClassName> stepInterfaceTypes(BuilderGoalDescription description) {
+    return transform(description.parameters(), step -> contractType(description).nestedClass(upcase(step.name())));
   }
 
-  static ClassName contractType(SimpleRegularGoalDescription description) {
-    String contractName = upcase(description.details.name()) + upcase(moduleName);
-    return description.context.generatedType.nestedClass(contractName);
+  static ClassName contractType(BuilderGoalDescription description) {
+    String contractName = upcase(description.details().name()) + upcase(MODULE_NAME);
+    return description.context().generatedType().nestedClass(contractName);
   }
 
   @Override
-  public ModuleOutput process(SimpleRegularGoalDescription description) {
-    return new ModuleOutput(
-        builderMethod(description),
-        asList(
-            defineBuilderImpl(description),
-            defineContract(description)),
-        emptyList());
+  public ModuleOutput process(BuilderGoalDescription description) {
+    return new ModuleOutput(builderMethod(description), asList(defineBuilderImpl(description), defineContract(description)), emptyList());
   }
 }

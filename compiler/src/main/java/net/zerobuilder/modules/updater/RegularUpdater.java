@@ -5,12 +5,11 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
-import com.palantir.javapoet.TypeVariableName;
 import java.util.List;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
-import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
-import net.zerobuilder.compiler.generate.DtoModuleOutput.ModuleOutput;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
+import net.zerobuilder.compiler.generate.GoalDetails;
+import net.zerobuilder.compiler.generate.DtoModule.UpdaterModule;
+import net.zerobuilder.compiler.generate.ModuleOutput;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -26,47 +25,43 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.updater.Generator.goalMethod;
 
-public final class RegularUpdater implements ProjectedModule {
+public final class RegularUpdater implements UpdaterModule {
 
-  static final String moduleName = "updater";
+  private static final String MODULE_NAME = "updater";
 
-  private MethodSpec doneMethod(ProjectedRegularGoalDescription description) {
+  private MethodSpec doneMethod(UpdaterGoalDescription description) {
     return methodBuilder("build")
         .addModifiers(PUBLIC)
-        .addExceptions(description.thrownTypes)
-        .returns(description.details.type())
-        .addCode(constructorCall(description.details))
+        .addExceptions(description.thrownTypes())
+        .returns(description.details().goalType())
+        .addCode(constructorCall(description.details()))
         .build();
   }
 
-  private TypeSpec defineUpdater(ProjectedRegularGoalDescription description) {
+  private TypeSpec defineUpdater(UpdaterGoalDescription description) {
     return classBuilder(simpleName(implType(description)))
         .addFields(Updater.fields(description))
         .addMethods(Updater.stepMethods(description))
-        .addTypeVariables(implTypeParameters(description.details))
+        .addTypeVariables(description.details().instanceTypeParameters())
         .addMethod(doneMethod(description))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructor(PRIVATE))
         .build();
   }
 
-  static TypeName implType(ProjectedRegularGoalDescription description) {
+  static TypeName implType(UpdaterGoalDescription description) {
     return parameterizedTypeName(
-        description.context.generatedType.nestedClass(implTypeName(description)),
-        implTypeParameters(description.details));
+        description.context().generatedType().nestedClass(implTypeName(description)),
+        description.details().instanceTypeParameters());
   }
 
-  private static String implTypeName(ProjectedRegularGoalDescription description) {
-    return upcase(description.details.name()) + upcase(moduleName);
-  }
-
-  private static List<TypeVariableName> implTypeParameters(AbstractRegularDetails details) {
-    return details.instanceTypeParameters;
+  private static String implTypeName(UpdaterGoalDescription description) {
+    return upcase(description.details().name()) + upcase(MODULE_NAME);
   }
 
   private CodeBlock constructorCall(
-      AbstractRegularDetails details) {
-    TypeName type = details.goalType;
+      GoalDetails details) {
+    TypeName type = details.goalType();
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
@@ -76,12 +71,12 @@ public final class RegularUpdater implements ProjectedModule {
         .build();
   }
 
-  static String methodName(ProjectedRegularGoalDescription description) {
-    return description.details.name() + upcase(moduleName);
+  static String methodName(UpdaterGoalDescription description) {
+    return description.details().name() + upcase(MODULE_NAME);
   }
 
   @Override
-  public ModuleOutput process(ProjectedRegularGoalDescription description) {
+  public ModuleOutput process(UpdaterGoalDescription description) {
     return new ModuleOutput(
         goalMethod(description),
         List.of(defineUpdater(description)),

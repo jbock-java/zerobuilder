@@ -14,7 +14,7 @@ import static net.zerobuilder.compiler.analyse.DtoGoalElement.element;
 final class MoreValidations {
 
   static void checkNameConflict(List<? extends AbstractGoalElement> goals) throws ValidationException {
-    Map<String, AbstractGoalElement> m = new HashMap<>();
+    Map<String, AbstractGoalElement> m = new HashMap<>(Math.max(16, (int) (goals.size() * 1.5)));
     for (AbstractGoalElement goal : goals) {
       Element exist = element(m.get(DtoGoalElement.goalName(goal)));
       Element el = element(goal);

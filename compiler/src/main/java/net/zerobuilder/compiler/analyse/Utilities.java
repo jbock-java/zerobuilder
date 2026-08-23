@@ -2,24 +2,12 @@ package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import javax.lang.model.element.ExecutableElement;
 
 import static java.util.stream.Collectors.toList;
 
 final class Utilities {
-
-  static final class ClassNames {
-
-    static final ClassName COLLECTION = ClassName.get(Collection.class);
-
-    private ClassNames() {
-      throw new UnsupportedOperationException("no instances");
-    }
-  }
 
   /**
    * <p>If {@code type} is a top level class, this returns a class in the same package,
@@ -35,13 +23,6 @@ final class Utilities {
   static ClassName peer(ClassName type, String suffix) {
     String name = String.join("_", type.simpleNames()) + suffix;
     return type.topLevelClassName().peerClass(name);
-  }
-
-  static <E> List<E> sortedCopy(List<E> input, Comparator<E> comparator) {
-    ArrayList<E> sorted = new ArrayList<>(input.size());
-    sorted.addAll(input);
-    sorted.sort(comparator);
-    return sorted;
   }
 
   static List<TypeName> thrownTypes(ExecutableElement executableElement) {

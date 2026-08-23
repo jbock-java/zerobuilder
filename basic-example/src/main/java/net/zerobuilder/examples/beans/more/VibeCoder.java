@@ -13,4 +13,7 @@ record VibeCoder(
     List<String> notes,
     @Name("executive")
     boolean isExecutive) {
+  String executive() {
+    return null;
+  }
 }

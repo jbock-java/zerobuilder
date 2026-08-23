@@ -8,42 +8,27 @@ public final class DtoRegularParameter {
   /**
    * Represents one method (or constructor) parameter.
    */
-  static abstract class AbstractRegularParameter {
+  public sealed interface AbstractParameter permits SimpleParameter, ProjectedParameter {
+    String name();
 
-    /**
-     * original parameter type
-     */
-    public final TypeName type;
-
-    /**
-     * original parameter name
-     */
-    public final String name;
-
-    private AbstractRegularParameter(String name, TypeName type) {
-      this.type = type;
-      this.name = name;
-    }
-
-    public final String name() {
-      return name;
-    }
+    TypeName type();
   }
 
-  public static final class ProjectedParameter extends AbstractRegularParameter {
-
-    public final ProjectionInfo projectionInfo;
-
-    private ProjectedParameter(String name, TypeName type, ProjectionInfo projectionInfo) {
-      super(name, type);
-      this.projectionInfo = projectionInfo;
-    }
+  public record ProjectedParameter(
+      String name,
+      TypeName type,
+      ProjectionInfo projectionInfo
+  ) implements AbstractParameter {
   }
 
-  public static final class SimpleParameter extends AbstractRegularParameter {
-    private SimpleParameter(String name, TypeName type) {
-      super(name, type);
-    }
+  /**
+   * @param name original parameter name
+   * @param type original parameter type
+   */
+  public record SimpleParameter(
+      String name,
+      TypeName type
+  ) implements AbstractParameter {
   }
 
   /**

@@ -8,8 +8,6 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-
-import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,13 +23,13 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import javax.lang.model.element.Modifier;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isUpperCase;
 import static java.util.Arrays.copyOf;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
@@ -196,51 +194,6 @@ public final class ZeroUtil {
     };
   }
 
-  static <E, R> Collector<E, List<E>, R> listCollector(Function<List<E>, R> finisher) {
-    return new Collector<>() {
-
-      @Override
-      public Supplier<List<E>> supplier() {
-        return ArrayList::new;
-      }
-
-      @Override
-      public BiConsumer<List<E>, E> accumulator() {
-        return List::add;
-      }
-
-      @Override
-      public BinaryOperator<List<E>> combiner() {
-        return (left, right) -> {
-          left.addAll(right);
-          return left;
-        };
-      }
-
-      @Override
-      public Function<List<E>, R> finisher() {
-        return finisher;
-      }
-
-      @Override
-      public Set<Characteristics> characteristics() {
-        return emptySet();
-      }
-    };
-  }
-
-  static <R> Supplier<R> memoize(Supplier<R> supplier) {
-    List<R> ref = new ArrayList<>(singletonList(null));
-    return () -> {
-      R element = ref.getFirst();
-      if (element == null) {
-        element = supplier.get();
-        ref.set(0, element);
-      }
-      return element;
-    };
-  }
-
   public static MethodSpec constructor(Modifier... modifiers) {
     return constructorBuilder().addModifiers(modifiers).build();
   }
@@ -318,14 +271,6 @@ public final class ZeroUtil {
         access == Access.PRIVATE ?
             addModifier(Modifier.PRIVATE, new Modifier[]{modifiers}) :
             new Modifier[]{modifiers};
-  }
-
-  public static Modifier[] modifiers(Access access) {
-    return access == Access.PUBLIC ?
-        new Modifier[]{Modifier.PUBLIC} :
-        access == Access.PRIVATE ?
-            new Modifier[]{Modifier.PRIVATE} :
-            new Modifier[0];
   }
 
   private static final class TypeWalk implements Iterator<TypeName> {

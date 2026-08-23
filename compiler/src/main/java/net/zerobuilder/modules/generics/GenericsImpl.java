@@ -9,9 +9,8 @@ import com.palantir.javapoet.TypeSpec;
 import com.palantir.javapoet.TypeVariableName;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.IntFunction;
 import java.util.stream.IntStream;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -29,16 +28,13 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.generics.GenericsContract.nextStepType;
 
-final class GenericsImpl {
-
-  private final ClassName contract;
-  private final SimpleRegularGoalDescription description;
+record GenericsImpl(ClassName contract, BuilderGoalDescription description) {
 
   List<TypeSpec> stepImpls(List<List<TypeVariableName>> methodParams,
                            List<List<TypeVariableName>> typeParams) {
-    List<TypeSpec> builder = new ArrayList<>(description.parameters.size());
+    List<TypeSpec> builder = new ArrayList<>(description.parameters().size());
     ImplFields implFields = new ImplFields(contract, description, typeParams);
-    for (int i = 0; i < description.parameters.size(); i++) {
+    for (int i = 0; i < description.parameters().size(); i++) {
       builder.add(createStep(implFields, methodParams, typeParams, i));
     }
     return builder;
@@ -48,20 +44,20 @@ final class GenericsImpl {
       ImplFields implFields,
       List<List<TypeVariableName>> methodParams,
       List<List<TypeVariableName>> typeParams, int i) {
-    ParameterSpec parameter = parameterSpec(description.parameters.get(i).type, description.parameters.get(i).name);
+    ParameterSpec parameter = parameterSpec(description.parameters().get(i).type(), description.parameters().get(i).name());
     List<FieldSpec> fields = implFields.fields(i);
-    TypeSpec.Builder builder = classBuilder(upcase(description.parameters.get(i).name));
+    TypeSpec.Builder builder = classBuilder(upcase(description.parameters().get(i).name()));
     builder.addMethod(createConstructor(fields));
     return builder.addFields(fields)
         .addTypeVariables(typeParams.get(i))
-        .addMethod(methodBuilder(description.parameters.get(i).name)
+        .addMethod(methodBuilder(description.parameters().get(i).name())
             .addParameter(parameter)
             .addTypeVariables(methodParams.get(i))
             .addModifiers(PUBLIC)
             .returns(nextStepType(description, typeParams, i))
             .addCode(getCodeBlock(i, parameter))
-            .addExceptions(i == description.parameters.size() - 1 ?
-                description.thrownTypes :
+            .addExceptions(i == description.parameters().size() - 1 ?
+                description.thrownTypes() :
                 emptyList())
             .build())
         .addModifiers(PUBLIC, STATIC, FINAL)
@@ -70,10 +66,10 @@ final class GenericsImpl {
 
   private CodeBlock getCodeBlock(int i, ParameterSpec parameter) {
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (i == description.parameters.size() - 1) {
+    if (i == description.parameters().size() - 1) {
       return builder.add(fullInvoke()).build();
     }
-    ClassName next = contract.nestedClass(upcase(description.parameters.get(i + 1).name));
+    ClassName next = contract.nestedClass(upcase(description.parameters().get(i + 1).name()));
     return builder.addStatement("return new $T(this, $N)", next, parameter).build();
   }
 
@@ -83,25 +79,23 @@ final class GenericsImpl {
         .stream()
         .collect(joinCodeBlocks(", "));
     return statement("return new $T($L)",
-        rawClassName(description.context.type), invoke);
+        rawClassName(description.context().type()), invoke);
   }
 
-  private IntFunction<CodeBlock> invokeFn() {
-    return i -> {
-      CodeBlock.Builder block = CodeBlock.builder();
-      for (int j = description.parameters.size() - 3; j >= i; j--) {
-        String name = description.parameters.get(j + 1).name;
-        block.add("$L.", name + "Acc");
-      }
-      String name = description.parameters.get(i).name;
-      block.add("$L", name);
-      return block.build();
-    };
+  private CodeBlock invokeFn(int i) {
+    CodeBlock.Builder block = CodeBlock.builder();
+    for (int j = description.parameters().size() - 3; j >= i; j--) {
+      String name = description.parameters().get(j + 1).name();
+      block.add("$L.", name + "Acc");
+    }
+    String name = description.parameters().get(i).name();
+    block.add("$L", name);
+    return block.build();
   }
 
   List<CodeBlock> basicInvoke() {
-    return IntStream.range(0, description.parameters.size())
-        .mapToObj(invokeFn())
+    return IntStream.range(0, description.parameters().size())
+        .mapToObj(this::invokeFn)
         .collect(toList());
   }
 
@@ -113,10 +107,5 @@ final class GenericsImpl {
             .collect(joinCodeBlocks))
         .addModifiers(PRIVATE)
         .build();
-  }
-
-  GenericsImpl(ClassName contract, SimpleRegularGoalDescription description) {
-    this.contract = contract;
-    this.description = description;
   }
 }

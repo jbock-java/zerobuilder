@@ -53,6 +53,7 @@ class RecordTest {
         "  List<String> notes,",
         "  @Name(\"executive\")",
         "  boolean isExecutive) {",
+        "    String foo() { return null; }",
         "}");
     Compilation compilation = simpleCompiler().compile(businessAnalyst);
     assertThat(compilation).succeeded();

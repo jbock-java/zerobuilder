@@ -1,9 +1,8 @@
 package net.zerobuilder.compiler;
 
 import com.palantir.javapoet.AnnotationSpec;
-
-import javax.annotation.processing.Generated;
 import java.util.List;
+import javax.annotation.processing.Generated;
 
 public final class Messages {
 
@@ -16,17 +15,8 @@ public final class Messages {
         "An abstract class may not have constructor goals." +
             " Try using a static factory method instead.";
 
-    public static final String BEAN_NO_SUPERCLASS =
-        "The bean class must not extend anything.";
-
-    public static final String BEAN_NO_INTERFACES =
-        "The bean class must not implement anything.";
-
     public static final String NESTING_KIND =
         "This inner class must be static and not private.";
-
-    public static final String REUSE_GENERICS =
-        "A goal with type variables cannot be recycled.";
 
     public static final String STEP_OUT_OF_BOUNDS =
         "The step position must be less than the number of arguments.";
@@ -38,23 +28,8 @@ public final class Messages {
         "There is another goal with this name. " +
             "This naming conflict can be resolved by using the @GoalName annotation.";
 
-    public static final String BEAN_NO_DEFAULT_CONSTRUCTOR =
-        "A non-private constructor with no arguments must exist.";
-
-    public static final String BEAN_ABSTRACT_CLASS =
-        "This class may not be abstract.";
-
-    public static final String BEAN_COULD_NOT_FIND_SETTER =
-        "Could not find the setter.";
-
     public static final String MISSING_PROJECTION =
         "Missing projection: ";
-
-    public static final String BEAN_SUBGOALS =
-        "Bean goals may not have subgoals.";
-
-    public static final String TYPE_PARAMS_BEAN =
-        "Type parameters are not allowed in bean goals.";
 
     private ErrorMessages() {
       throw new UnsupportedOperationException("no instances");

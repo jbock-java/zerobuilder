@@ -55,11 +55,15 @@ final class VarLife {
    *                       if {@code instance}, preceded by instance type
    * @return helper object
    */
-  static VarLife create(List<TypeVariableName> typeParameters, List<TypeName> steps) {
+  static VarLife create(
+      List<TypeVariableName> typeParameters,
+      List<TypeName> steps) {
     return new VarLife(steps, typeParameters);
   }
 
-  private static List<List<TypeVariableName>> varLifes(List<TypeName> steps, List<TypeVariableName> typeParameters) {
+  private static List<List<TypeVariableName>> varLifes(
+      List<TypeName> steps,
+      List<TypeVariableName> typeParameters) {
     List<List<TypeVariableName>> inc = accLife(steps, typeParameters);
     List<List<TypeVariableName>> dec = reverse(accLife(reverse(steps), typeParameters));
     List<List<TypeVariableName>> builder = emptyLists(steps.size());
@@ -86,7 +90,9 @@ final class VarLife {
     return builder;
   }
 
-  private static int varLifeStart(TypeVariableName typeParameter, List<TypeName> steps) {
+  private static int varLifeStart(
+      TypeVariableName typeParameter,
+      List<TypeName> steps) {
     for (int i = 0; i < steps.size(); i++) {
       TypeName step = steps.get(i);
       if (references(step, typeParameter)) {

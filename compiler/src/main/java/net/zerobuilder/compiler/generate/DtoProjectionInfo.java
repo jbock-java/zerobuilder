@@ -42,7 +42,7 @@ public final class DtoProjectionInfo {
   public static List<TypeName> thrownTypes(ProjectionInfo projectionInfo) {
     return switch (projectionInfo) {
       case GetterMethod getter -> getter.thrownTypes;
-      case FieldAccess fieldAccess -> List.of();
+      case FieldAccess _ -> List.of();
     };
   }
 

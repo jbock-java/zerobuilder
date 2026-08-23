@@ -7,7 +7,7 @@ import com.palantir.javapoet.TypeName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
@@ -20,37 +20,34 @@ import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 
 final class Updater {
 
-  static final String IN_USE = "_currently_in_use";
-  static final String FACTORY = "_factory";
-
-  static List<FieldSpec> fields(ProjectedRegularGoalDescription description) {
-    List<FieldSpec> builder = new ArrayList<>();
-    for (ProjectedParameter step : description.parameters) {
-      String name = step.name;
-      TypeName type = step.type;
+  static List<FieldSpec> fields(UpdaterGoalDescription description) {
+    List<FieldSpec> builder = new ArrayList<>(description.parameters().size());
+    for (ProjectedParameter step : description.parameters()) {
+      String name = step.name();
+      TypeName type = step.type();
       builder.add(fieldSpec(type, name, PRIVATE));
     }
     return builder;
   }
 
-  static List<MethodSpec> stepMethods(ProjectedRegularGoalDescription description) {
-    return description.parameters.stream()
+  static List<MethodSpec> stepMethods(UpdaterGoalDescription description) {
+    return description.parameters().stream()
         .map(updateMethods(description))
         .collect(toList());
   }
 
-  private static Function<ProjectedParameter, MethodSpec> updateMethods(ProjectedRegularGoalDescription description) {
+  private static Function<ProjectedParameter, MethodSpec> updateMethods(UpdaterGoalDescription description) {
     return step -> normalUpdate(description, step);
   }
 
-  private static MethodSpec normalUpdate(ProjectedRegularGoalDescription description, ProjectedParameter step) {
-    String name = step.name;
-    TypeName type = step.type;
+  private static MethodSpec normalUpdate(UpdaterGoalDescription description, ProjectedParameter step) {
+    String name = step.name();
+    TypeName type = step.type();
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
         .returns(implType(description))
         .addParameter(parameter)
-        .addStatement("this.$N = $N", fieldSpec(step.type, step.name), parameter)
+        .addStatement("this.$N = $N", fieldSpec(step.type(), step.name()), parameter)
         .addStatement("return this")
         .addModifiers(PUBLIC)
         .build();

@@ -3,12 +3,9 @@ package net.zerobuilder.modules.builder;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-
-import java.util.Collections;
 import java.util.List;
-import java.util.function.IntFunction;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.interfaceBuilder;
@@ -20,20 +17,20 @@ import static net.zerobuilder.modules.builder.Builder.nextType;
 
 final class Step {
 
-  static IntFunction<TypeSpec> stepInterface(SimpleRegularGoalDescription description) {
-    return i -> interfaceBuilder(upcase(description.parameters.get(i).name))
+  static TypeSpec stepInterface(BuilderGoalDescription description, int i) {
+    return interfaceBuilder(upcase(description.parameters().get(i).name()))
         .addMethod(stepMethod(i, description))
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static MethodSpec stepMethod(int i, SimpleRegularGoalDescription description) {
-    SimpleParameter parameter = description.parameters.get(i);
-    String name = parameter.name;
-    TypeName type = parameter.type;
-    List<TypeName> thrownTypes = i == description.parameters.size() - 1 ?
-        description.thrownTypes :
-        Collections.emptyList();
+  private static MethodSpec stepMethod(int i, BuilderGoalDescription description) {
+    SimpleParameter parameter = description.parameters().get(i);
+    String name = parameter.name();
+    TypeName type = parameter.type();
+    List<TypeName> thrownTypes = i == description.parameters().size() - 1 ?
+        description.thrownTypes() :
+        List.of();
     return methodBuilder(name)
         .returns(nextType(i, description))
         .addParameter(parameterSpec(type, name))

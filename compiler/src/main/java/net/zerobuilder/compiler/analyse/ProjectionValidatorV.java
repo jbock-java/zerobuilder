@@ -8,13 +8,13 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularProjectableGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.BuilderGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.UpdaterGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpSimpleParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.ABSTRACT;
@@ -32,6 +32,8 @@ import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.common.LessTypes.isDeclaredType;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createFieldAccess;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createGetterMethod;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalDescription.createBuilderGoalDescription;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalDescription.createUpdaterGoalDescription;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
@@ -46,7 +48,7 @@ final class ProjectionValidatorV {
         && !"clone".equals(method.getSimpleName().toString());
   }
 
-  static ProjectedRegularGoalDescription validateUpdater(RegularProjectableGoalElement goal) {
+  static UpdaterGoalDescription validateUpdater(UpdaterGoalElement goal) {
     TypeMirror mirror = goal.executableElement().getKind() == CONSTRUCTOR ?
         goal.executableElement().getEnclosingElement().asType() :
         goal.executableElement().getReturnType();
@@ -89,7 +91,7 @@ final class ProjectionValidatorV {
   }
 
   private static void validateType(
-      RegularProjectableGoalElement goal,
+      UpdaterGoalElement goal,
       TypeElement type) {
     if (goal.executableElement().getKind() == CONSTRUCTOR
         && type.getModifiers().contains(ABSTRACT)) {
@@ -97,24 +99,24 @@ final class ProjectionValidatorV {
     }
   }
 
-  static SimpleRegularGoalDescription validateBuilder(
-      RegularGoalElement goal) {
+  static BuilderGoalDescription validateBuilder(
+      BuilderGoalElement goal) {
     List<TmpSimpleParameter> parameters = transform(executableElement(goal).getParameters(),
         TmpSimpleParameter::create);
     List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
     List<TypeName> thrownTypes = thrownTypes(executableElement(goal));
-    return SimpleRegularGoalDescription.create(
+    return createBuilderGoalDescription(
         goal.details(),
         thrownTypes,
         transform(shuffled, parameter -> parameter.parameter),
         goal.context());
   }
 
-  private static ProjectedRegularGoalDescription createGoalDescription(
-      RegularProjectableGoalElement goal,
+  private static UpdaterGoalDescription createGoalDescription(
+      UpdaterGoalElement goal,
       List<TmpProjectedParameter> parameters) {
     List<TmpProjectedParameter> shuffled = shuffledParameters(parameters);
-    return ProjectedRegularGoalDescription.create(
+    return createUpdaterGoalDescription(
         goal.details(), thrownTypes(goal.executableElement()),
         transform(shuffled, toValidParameter), goal.context());
   }

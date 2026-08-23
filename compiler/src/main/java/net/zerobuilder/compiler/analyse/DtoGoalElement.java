@@ -8,33 +8,31 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Name;
-import net.zerobuilder.compiler.generate.DtoContext;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
+import net.zerobuilder.compiler.generate.GoalContext;
+import net.zerobuilder.compiler.generate.GoalDetails;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
+import static net.zerobuilder.compiler.generate.GoalDetails.createGoalDetails;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 final class DtoGoalElement {
 
-  sealed interface AbstractGoalElement permits RegularGoalElement, RegularProjectableGoalElement {
+  sealed interface AbstractGoalElement permits BuilderGoalElement, UpdaterGoalElement {
   }
 
-  sealed interface AbstractRegularGoalElement permits RegularGoalElement, RegularProjectableGoalElement {
-  }
-
-  static ExecutableElement executableElement(AbstractRegularGoalElement element) {
+  static ExecutableElement executableElement(AbstractGoalElement element) {
     return switch (element) {
-      case RegularGoalElement regular -> regular.executableElement;
-      case RegularProjectableGoalElement projected -> projected.executableElement;
+      case BuilderGoalElement regular -> regular.executableElement;
+      case UpdaterGoalElement projected -> projected.executableElement;
     };
   }
 
   static String goalName(AbstractGoalElement element) {
     return switch (element) {
-      case RegularGoalElement regular -> regular.details.name();
-      case RegularProjectableGoalElement projected -> projected.details.name();
+      case BuilderGoalElement regular -> regular.details.name();
+      case UpdaterGoalElement projected -> projected.details.name();
     };
   }
 
@@ -43,39 +41,39 @@ final class DtoGoalElement {
       return null;
     }
     return switch (element) {
-      case RegularGoalElement regular -> regular.executableElement;
-      case RegularProjectableGoalElement projected -> projected.executableElement;
+      case BuilderGoalElement regular -> regular.executableElement;
+      case UpdaterGoalElement projected -> projected.executableElement;
     };
   }
 
-  private static RegularGoalElement createRegularGoalElement(
+  private static BuilderGoalElement createBuilderGoalElement(
       ExecutableElement element,
-      AbstractRegularDetails details,
-      DtoContext.GoalContext context) {
-    return new RegularGoalElement(details, element, GoalModifiers.create(element), context);
+      GoalDetails details,
+      GoalContext context) {
+    return new BuilderGoalElement(details, element, GoalModifiers.create(element), context);
   }
 
-  record RegularGoalElement(
-      AbstractRegularDetails details,
+  record BuilderGoalElement(
+      GoalDetails details,
       ExecutableElement executableElement,
       GoalModifiers goalAnnotation,
-      DtoContext.GoalContext context
-  ) implements AbstractGoalElement, AbstractRegularGoalElement {
+      GoalContext context
+  ) implements AbstractGoalElement {
   }
 
-  private static RegularProjectableGoalElement createRegularProjectableGoalElement(
+  private static UpdaterGoalElement createUpdaterGoalElement(
       ExecutableElement element,
-      AbstractRegularDetails details,
-      DtoContext.GoalContext context) {
-    return new RegularProjectableGoalElement(details, element, GoalModifiers.create(element), context);
+      GoalDetails details,
+      GoalContext context) {
+    return new UpdaterGoalElement(details, element, GoalModifiers.create(element), context);
   }
 
-  record RegularProjectableGoalElement(
-      AbstractRegularDetails details,
+  record UpdaterGoalElement(
+      GoalDetails details,
       ExecutableElement executableElement,
       GoalModifiers goalAnnotation,
-      DtoContext.GoalContext context
-  ) implements AbstractGoalElement, AbstractRegularGoalElement {
+      GoalContext context
+  ) implements AbstractGoalElement {
   }
 
   private static List<String> parameterNames(ExecutableElement element) {
@@ -98,7 +96,7 @@ final class DtoGoalElement {
   }
 
   static List<? extends AbstractGoalElement> createRegular(
-      DtoContext.GoalContext context,
+      GoalContext context,
       ExecutableElement element,
       List<ModuleChoice> goalOptions) {
     GoalModifiers modifiers = GoalModifiers.create(element);
@@ -115,8 +113,8 @@ final class DtoGoalElement {
       ExecutableElement element,
       GoalModifiers goalModifiers,
       List<String> parameterNames,
-      DtoContext.GoalContext context) {
-    return createRegularProjectableGoalElement(element, AbstractRegularDetails.create(
+      GoalContext context) {
+    return createUpdaterGoalElement(element, createGoalDetails(
         ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
         goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element)), context);
   }
@@ -130,11 +128,11 @@ final class DtoGoalElement {
       ExecutableElement element,
       GoalModifiers goalModifiers,
       List<String> parameterNames,
-      DtoContext.GoalContext context) {
-    AbstractRegularDetails details = AbstractRegularDetails.create(
+      GoalContext context) {
+    GoalDetails details = createGoalDetails(
         ClassName.get(asTypeElement(element.getEnclosingElement().asType())),
         goalModifiers.goalName, parameterNames, goalModifiers.access, instanceTypevars(element));
-    return createRegularGoalElement(element, details, context);
+    return createBuilderGoalElement(element, details, context);
   }
 
   private DtoGoalElement() {

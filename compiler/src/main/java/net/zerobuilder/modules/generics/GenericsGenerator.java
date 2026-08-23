@@ -3,12 +3,11 @@ package net.zerobuilder.modules.generics;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.FieldSpec;
 import com.palantir.javapoet.MethodSpec;
-import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeSpec;
 import com.palantir.javapoet.TypeVariableName;
 import java.util.List;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.SimpleRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
@@ -18,7 +17,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -28,10 +26,10 @@ final class GenericsGenerator {
 
   private final ClassName contractType;
   private final List<TypeSpec> stepImpls;
-  private final SimpleRegularGoalDescription description;
+  private final BuilderGoalDescription description;
 
   private GenericsGenerator(
-      SimpleRegularGoalDescription description,
+      BuilderGoalDescription description,
       ClassName contractType,
       List<TypeSpec> stepImpls) {
     this.contractType = contractType;
@@ -59,22 +57,22 @@ final class GenericsGenerator {
   }
 
   DtoGeneratorOutput.BuilderMethod builderMethod(
-      SimpleRegularGoalDescription description,
+      BuilderGoalDescription description,
       VarLife life) {
     List<List<TypeVariableName>> typeParams = life.typeParams();
-    MethodSpec.Builder builder = methodBuilder(description.details.name() + "Builder")
-        .addModifiers(description.details.access(STATIC))
+    MethodSpec.Builder builder = methodBuilder(description.details().name() + "Builder")
+        .addModifiers(description.details().access(STATIC))
         .returns(parameterizedTypeName(
-            contractType.nestedClass(upcase(description.parameters.getFirst().name)),
+            contractType.nestedClass(upcase(description.parameters().getFirst().name())),
             typeParams.getFirst()));
     builder.addTypeVariables(typeParams.getFirst());
     builder.addCode(statement("return $T.$L", contractType, downcase(stepImpls.getFirst().name())));
     return new DtoGeneratorOutput.BuilderMethod(
-        description.details.name(),
+        description.details().name(),
         builder.build());
   }
 
-  static GenericsGenerator create(SimpleRegularGoalDescription description, VarLife lifes) {
+  static GenericsGenerator create(BuilderGoalDescription description, VarLife lifes) {
     List<List<TypeVariableName>> typeParams = lifes.typeParams();
     List<List<TypeVariableName>> methodParams = lifes.methodParams();
     ClassName contractType = implType(description);

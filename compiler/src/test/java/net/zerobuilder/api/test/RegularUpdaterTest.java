@@ -5,20 +5,21 @@ import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
 import java.util.List;
 import javax.lang.model.element.Modifier;
-import net.zerobuilder.compiler.generate.DtoContext;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.UpdaterGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.ProjectedRegularGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.Generator;
+import net.zerobuilder.compiler.generate.GoalContext;
+import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.modules.updater.RegularUpdater;
 import org.junit.jupiter.api.Test;
 
 import static net.zerobuilder.compiler.generate.Access.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createGetterMethod;
+import static net.zerobuilder.compiler.generate.DtoRegularGoalDescription.createUpdaterGoalDescription;
+import static net.zerobuilder.compiler.generate.GoalDetails.createGoalDetails;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,10 +52,10 @@ public class RegularUpdaterTest {
   @Test
   public void test() {
 
-    DtoContext.GoalContext goalContext = createContext(TYPE, GENERATED_TYPE);
+    GoalContext goalContext = new GoalContext(TYPE, GENERATED_TYPE);
 
     String goalName = "myGoal";
-    AbstractRegularDetails details = AbstractRegularDetails.create(
+    GoalDetails details = createGoalDetails(
         TYPE, goalName, List.of("foo"),
         PUBLIC,
         List.of());
@@ -62,7 +63,7 @@ public class RegularUpdaterTest {
     // use ProjectedParameter because the updater module requires projections
     ProjectedParameter fooParameter = DtoRegularParameter.create("foo", STRING,
         createGetterMethod("getFoo", List.of(IO_EXCEPTION)));
-    ProjectedRegularGoalDescription description = ProjectedRegularGoalDescription.create(
+    UpdaterGoalDescription description = createUpdaterGoalDescription(
         details,
         List.of(),
         List.of(fooParameter),
@@ -70,7 +71,7 @@ public class RegularUpdaterTest {
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(
-        List.of(new ProjectedGoalInput(REGULAR_UPDATER_MODULE, description)));
+        List.of(new UpdaterGoalInput(REGULAR_UPDATER_MODULE, description)));
 
     assertEquals(1, generatorOutput.methods().size());
     assertEquals(goalName, generatorOutput.methods().getFirst().name());
