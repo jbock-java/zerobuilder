@@ -3,6 +3,7 @@ package net.zerobuilder.modules.builder;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
+import io.jbock.simple.Inject;
 import java.util.List;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
@@ -12,35 +13,33 @@ import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.RegularBuilder.implType;
+import static net.zerobuilder.modules.builder.RegularBuilder.stepInterfaceName;
 
 final class BuilderMethod {
+  private final BuilderGoalDescription description;
 
-  static String stepInterfaceName(SimpleParameter parameter) {
-    return upcase(parameter.name()) + "Step";
+  @Inject
+  BuilderMethod(BuilderGoalDescription description) {
+    this.description = description;
   }
 
-  static MethodSpec builderMethod(BuilderGoalDescription description) {
+  MethodSpec builderMethod() {
     GoalDetails goalDetails = description.details();
     List<SimpleParameter> steps = description.parameters();
     return methodBuilder(RegularBuilder.methodName(description))
         .returns(description.context().generatedType().nestedClass(stepInterfaceName(steps.getFirst())))
         .addModifiers(goalDetails.access(STATIC))
-        .addCode(returnRegular(description))
+        .addCode(returnRegular())
         .build();
   }
 
-  private static CodeBlock returnRegular(BuilderGoalDescription description) {
-    ParameterSpec varBuilder = builderInstance(description);
+  private CodeBlock returnRegular() {
+    ParameterSpec varBuilder = builderInstance();
     return statement("return new $T()", varBuilder.type());
   }
 
-  private static ParameterSpec builderInstance(BuilderGoalDescription description) {
+  private ParameterSpec builderInstance() {
     return parameterSpec(implType(description), "_builder");
-  }
-
-  private BuilderMethod() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

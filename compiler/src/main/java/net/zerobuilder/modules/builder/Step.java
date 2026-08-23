@@ -3,6 +3,7 @@ package net.zerobuilder.modules.builder;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
+import io.jbock.simple.Inject;
 import java.util.List;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
@@ -12,23 +13,27 @@ import static com.palantir.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.modules.builder.Builder.nextType;
-import static net.zerobuilder.modules.builder.BuilderMethod.stepInterfaceName;
+import static net.zerobuilder.modules.builder.RegularBuilder.stepInterfaceName;
 
 final class Step {
 
-  static TypeSpec stepInterface(
-      BuilderGoalDescription description,
-      int i) {
+  private final BuilderGoalDescription description;
+  private final Builder builder;
+
+  @Inject
+  Step(BuilderGoalDescription description, Builder builder) {
+    this.description = description;
+    this.builder = builder;
+  }
+
+  TypeSpec stepInterface(int i) {
     return interfaceBuilder(stepInterfaceName(description.parameters().get(i)))
-        .addMethod(stepMethod(i, description))
+        .addMethod(stepMethod(i))
         .addModifiers(PUBLIC)
         .build();
   }
 
-  private static MethodSpec stepMethod(
-      int i,
-      BuilderGoalDescription description) {
+  private MethodSpec stepMethod(int i) {
     SimpleParameter parameter = description.parameters().get(i);
     String name = parameter.name();
     TypeName type = parameter.type();
@@ -36,14 +41,10 @@ final class Step {
         description.thrownTypes() :
         List.of();
     return methodBuilder(name)
-        .returns(nextType(i, description))
+        .returns(builder.nextType(i))
         .addParameter(parameterSpec(type, name))
         .addExceptions(thrownTypes)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
-  }
-
-  private Step() {
-    throw new UnsupportedOperationException("no instances");
   }
 }
