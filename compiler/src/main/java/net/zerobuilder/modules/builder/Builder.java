@@ -16,14 +16,15 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.modules.builder.RegularBuilder.stepInterfaceName;
 
 final class Builder {
   private final BuilderGoalDescription description;
+  private final BuilderUtil util;
 
   @Inject
-  Builder(BuilderGoalDescription description) {
+  Builder(BuilderGoalDescription description, BuilderUtil util) {
     this.description = description;
+    this.util = util;
   }
 
   TypeName nextType(int i) {
@@ -31,7 +32,7 @@ final class Builder {
       return description.details().goalType();
     }
     return description.context().generatedType()
-        .nestedClass(stepInterfaceName(description.parameters().get(i + 1)));
+        .nestedClass(util.stepInterfaceName(i + 1));
   }
 
   List<FieldSpec> fields() {

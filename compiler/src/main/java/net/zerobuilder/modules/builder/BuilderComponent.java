@@ -5,7 +5,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDe
 
 @Component
 public interface BuilderComponent {
-  BuilderFactory createBuilderFactory();
+  BuilderFactory createFactory();
 
   @Component.Factory
   interface Factory {

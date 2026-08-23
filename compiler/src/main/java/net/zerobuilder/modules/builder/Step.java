@@ -13,21 +13,22 @@ import static com.palantir.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.modules.builder.RegularBuilder.stepInterfaceName;
 
 final class Step {
 
   private final BuilderGoalDescription description;
   private final Builder builder;
+  private final BuilderUtil util;
 
   @Inject
-  Step(BuilderGoalDescription description, Builder builder) {
+  Step(BuilderGoalDescription description, Builder builder, BuilderUtil util) {
     this.description = description;
     this.builder = builder;
+    this.util = util;
   }
 
   TypeSpec stepInterface(int i) {
-    return interfaceBuilder(stepInterfaceName(description.parameters().get(i)))
+    return interfaceBuilder(util.stepInterfaceName(i))
         .addMethod(stepMethod(i))
         .addModifiers(PUBLIC)
         .build();

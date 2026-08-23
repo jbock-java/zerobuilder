@@ -17,14 +17,11 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
-import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
-import static net.zerobuilder.modules.builder.RegularBuilder.contractType;
-import static net.zerobuilder.modules.builder.RegularBuilder.implType;
-import static net.zerobuilder.modules.builder.RegularBuilder.stepInterfaceName;
 
 public class BuilderFactory {
   private final BuilderGoalDescription description;
   private final Builder builder;
+  private final BuilderUtil util;
   private final Step step;
   private final BuilderMethod builderMethod;
 
@@ -32,10 +29,12 @@ public class BuilderFactory {
   BuilderFactory(
       Builder builder,
       BuilderGoalDescription description,
+      BuilderUtil util,
       Step step,
       BuilderMethod builderMethod) {
     this.builder = builder;
     this.description = description;
+    this.util = util;
     this.step = step;
     this.builderMethod = builderMethod;
   }
@@ -53,7 +52,7 @@ public class BuilderFactory {
   }
 
   private TypeSpec defineBuilderImpl() {
-    return classBuilder(implType(description))
+    return classBuilder(util.implType())
         .addSuperinterfaces(stepInterfaceTypes())
         .addFields(builder.fields())
         .addMethod(constructor())
@@ -63,7 +62,7 @@ public class BuilderFactory {
   }
 
   private TypeSpec defineContract() {
-    return classBuilder(contractType(description))
+    return classBuilder(util.contractType())
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder()
             .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
@@ -72,8 +71,13 @@ public class BuilderFactory {
   }
 
   private List<ClassName> stepInterfaceTypes() {
-    return transform(description.parameters(),
-        step -> description.context().generatedType().nestedClass(stepInterfaceName(step)));
+    List<ClassName> result = new ArrayList<>();
+    for (int i = 0; i < description.parameters().size(); i++) {
+      result.add(description.context()
+          .generatedType()
+          .nestedClass(util.stepInterfaceName(i)));
+    }
+    return result;
   }
 
   ModuleOutput process() {
