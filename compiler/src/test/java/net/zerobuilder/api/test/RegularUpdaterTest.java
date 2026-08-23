@@ -74,13 +74,12 @@ public class RegularUpdaterTest {
         List.of(new UpdaterGoalInput(REGULAR_UPDATER_MODULE, description)));
 
     assertEquals(1, generatorOutput.methods().size());
-    assertEquals(goalName, generatorOutput.methods().getFirst().name());
-    assertEquals("myGoalUpdater", generatorOutput.methods().getFirst().method().name());
-    assertEquals(1, generatorOutput.methods().getFirst().method().parameters().size());
-    assertEquals(List.of(IO_EXCEPTION), generatorOutput.methods().getFirst().method().exceptions());
-    assertTrue(generatorOutput.methods().getFirst().method().modifiers().contains(Modifier.STATIC));
+    assertEquals("myGoalUpdater", generatorOutput.methods().getFirst().name());
+    assertEquals(1, generatorOutput.methods().getFirst().parameters().size());
+    assertEquals(List.of(IO_EXCEPTION), generatorOutput.methods().getFirst().exceptions());
+    assertTrue(generatorOutput.methods().getFirst().modifiers().contains(Modifier.STATIC));
     assertEquals(GENERATED_TYPE.nestedClass("MyGoalUpdater"),
-        generatorOutput.methods().getFirst().method().returnType());
+        generatorOutput.methods().getFirst().returnType());
 
     // Get the definition of the generated type
     TypeSpec typeSpec = generatorOutput.typeSpec();

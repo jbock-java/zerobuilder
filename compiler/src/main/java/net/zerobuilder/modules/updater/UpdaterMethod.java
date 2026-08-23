@@ -6,7 +6,6 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import java.util.List;
 import java.util.Set;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.BuilderMethod;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.GetterMethod;
@@ -24,12 +23,12 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 
-final class Generator {
+final class UpdaterMethod {
 
-  static BuilderMethod goalMethod(
+  static MethodSpec updaterMethod(
       UpdaterGoalDescription description) {
     ParameterSpec updater = varUpdater(description);
-    MethodSpec method = methodBuilder(RegularUpdater.methodName(description))
+    return methodBuilder(RegularUpdater.methodName(description))
         .addExceptions(thrownByProjections(description))
         .addParameter(toBuilderParameter(description))
         .addTypeVariables(description.details().instanceTypeParameters())
@@ -39,10 +38,9 @@ final class Generator {
         .addStatement("return $N", updater)
         .addModifiers(description.details().access(STATIC))
         .build();
-    return new BuilderMethod(description.details().name(), method);
   }
 
-  static CodeBlock copyBlock(
+  private static CodeBlock copyBlock(
       UpdaterGoalDescription description) {
     return description.parameters().stream()
         .map(step -> copyFromProjection(step, description))
@@ -105,7 +103,7 @@ final class Generator {
         .collect(toSet());
   }
 
-  private Generator() {
+  private UpdaterMethod() {
     throw new UnsupportedOperationException("no instances");
   }
 }

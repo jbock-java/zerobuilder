@@ -6,7 +6,6 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeSpec;
 import com.palantir.javapoet.TypeVariableName;
 import java.util.List;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
@@ -26,14 +25,11 @@ final class GenericsGenerator {
 
   private final ClassName contractType;
   private final List<TypeSpec> stepImpls;
-  private final BuilderGoalDescription description;
 
   private GenericsGenerator(
-      BuilderGoalDescription description,
       ClassName contractType,
       List<TypeSpec> stepImpls) {
     this.contractType = contractType;
-    this.description = description;
     this.stepImpls = stepImpls;
   }
 
@@ -56,7 +52,7 @@ final class GenericsGenerator {
         .initializer("new $T()", firstImplType).build());
   }
 
-  DtoGeneratorOutput.BuilderMethod builderMethod(
+  MethodSpec builderMethod(
       BuilderGoalDescription description,
       VarLife life) {
     List<List<TypeVariableName>> typeParams = life.typeParams();
@@ -67,9 +63,7 @@ final class GenericsGenerator {
             typeParams.getFirst()));
     builder.addTypeVariables(typeParams.getFirst());
     builder.addCode(statement("return $T.$L", contractType, downcase(stepImpls.getFirst().name())));
-    return new DtoGeneratorOutput.BuilderMethod(
-        description.details().name(),
-        builder.build());
+    return builder.build();
   }
 
   static GenericsGenerator create(BuilderGoalDescription description, VarLife lifes) {
@@ -78,6 +72,6 @@ final class GenericsGenerator {
     ClassName contractType = implType(description);
     GenericsImpl genericsImpl = new GenericsImpl(contractType, description);
     List<TypeSpec> stepImpls = genericsImpl.stepImpls(methodParams, typeParams);
-    return new GenericsGenerator(description, contractType, stepImpls);
+    return new GenericsGenerator(contractType, stepImpls);
   }
 }

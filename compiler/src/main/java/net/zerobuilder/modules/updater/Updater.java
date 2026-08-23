@@ -6,7 +6,6 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 
@@ -32,15 +31,13 @@ final class Updater {
 
   static List<MethodSpec> stepMethods(UpdaterGoalDescription description) {
     return description.parameters().stream()
-        .map(updateMethods(description))
+        .map(step -> normalUpdate(description, step))
         .collect(toList());
   }
 
-  private static Function<ProjectedParameter, MethodSpec> updateMethods(UpdaterGoalDescription description) {
-    return step -> normalUpdate(description, step);
-  }
-
-  private static MethodSpec normalUpdate(UpdaterGoalDescription description, ProjectedParameter step) {
+  private static MethodSpec normalUpdate(
+      UpdaterGoalDescription description,
+      ProjectedParameter step) {
     String name = step.name();
     TypeName type = step.type();
     ParameterSpec parameter = parameterSpec(type, name);

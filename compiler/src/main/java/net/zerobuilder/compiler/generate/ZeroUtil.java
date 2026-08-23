@@ -9,13 +9,10 @@ import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.function.BiConsumer;
@@ -26,47 +23,40 @@ import java.util.stream.Collector;
 import javax.lang.model.element.Modifier;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
+import static java.lang.Character.isLowerCase;
 import static java.lang.Character.isUpperCase;
+import static java.lang.Character.toLowerCase;
+import static java.lang.Character.toUpperCase;
 import static java.util.Arrays.copyOf;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
 public final class ZeroUtil {
 
-  static final class ClassNames {
-
-    static final ClassName THREAD_LOCAL = ClassName.get(ThreadLocal.class);
-
-    private ClassNames() {
-      throw new UnsupportedOperationException("no instances");
-    }
-  }
-
-  private static final Set<String> reservedWords = new HashSet<>(Arrays.asList(
+  private static final Set<String> RESERVED_WORDS = Set.of(
       "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class",
       "const", "continue", "default", "do", "double", "else", "enum", "extends", "final",
       "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int",
       "interface", "long", "native", "new", "package", "private", "protected", "public",
       "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this",
-      "throw", "throws", "transient", "try", "void", "volatile", "while"));
-
-  public static final CodeBlock emptyCodeBlock = CodeBlock.of("");
+      "throw", "throws", "transient", "try", "void", "volatile", "while");
 
   public static String upcase(String s) {
-    if (s.isEmpty() || Character.isUpperCase(s.charAt(0))) {
+    if (s.isEmpty() || isUpperCase(s.charAt(0))) {
       return s;
     }
-    return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    return toUpperCase(s.charAt(0)) + s.substring(1);
   }
 
   public static String downcase(String s) {
+    if (s.isEmpty() || isLowerCase(s.charAt(0))) {
+      return s;
+    }
     if (s.length() >= 2 && isUpperCase(s.charAt(1))) {
       return s;
     }
-    String lowered = Character.toLowerCase(s.charAt(0)) + s.substring(1);
-    if (reservedWords.contains(lowered)) {
+    String lowered = toLowerCase(s.charAt(0)) + s.substring(1);
+    if (RESERVED_WORDS.contains(lowered)) {
       return s;
     }
     return lowered;
@@ -84,13 +74,6 @@ public final class ZeroUtil {
     return FieldSpec.builder(type, name, modifiers).build();
   }
 
-  static String distinctFrom(String string, String other) {
-    if (string.equals(other)) {
-      return 'a' + upcase(string);
-    }
-    return string;
-  }
-
   public static ClassName rawClassName(TypeName typeName) {
     if (typeName instanceof ClassName) {
       return (ClassName) typeName;
@@ -101,27 +84,6 @@ public final class ZeroUtil {
     throw new IllegalArgumentException("not a declared type: " + typeName);
   }
 
-  private static List<TypeName> typeArguments(TypeName typeName) {
-    if (typeName instanceof ParameterizedTypeName) {
-      return ((ParameterizedTypeName) typeName).typeArguments();
-    }
-    return emptyList();
-  }
-
-  /**
-   * @param typeName type
-   * @return first type argument, if any
-   * @throws IllegalArgumentException if type has multiple type arguments
-   */
-  static Optional<TypeName> onlyTypeArgument(TypeName typeName) {
-    List<TypeName> types = typeArguments(typeName);
-    return switch (types.size()) {
-      case 0 -> Optional.empty();
-      case 1 -> Optional.of(types.getFirst());
-      default -> throw new IllegalArgumentException("multiple type arguments");
-    };
-  }
-
   public static <X, E> List<E> transform(Collection<? extends X> input, Function<X, E> function) {
     return input.stream().map(function).collect(toList());
   }
@@ -130,19 +92,6 @@ public final class ZeroUtil {
     List<P> builder = new ArrayList<>(list.size() + 1);
     builder.add(first);
     builder.addAll(list);
-    return builder;
-  }
-
-  public static <P> List<P> concat(List<? extends P> left, List<? extends P> right) {
-    if (left.isEmpty()) {
-      return unmodifiableList(right);
-    }
-    if (right.isEmpty()) {
-      return unmodifiableList(left);
-    }
-    List<P> builder = new ArrayList<>(left.size() + right.size());
-    builder.addAll(left);
-    builder.addAll(right);
     return builder;
   }
 
@@ -173,7 +122,7 @@ public final class ZeroUtil {
       public Function<List<CodeBlock>, CodeBlock> finisher() {
         return blocks -> {
           if (blocks.isEmpty()) {
-            return emptyCodeBlock;
+            return CodeBlock.of("");
           }
           CodeBlock.Builder builder = CodeBlock.builder();
           for (int i = 0; i < blocks.size() - 1; i++) {
@@ -189,7 +138,7 @@ public final class ZeroUtil {
 
       @Override
       public Set<Characteristics> characteristics() {
-        return emptySet();
+        return Set.of();
       }
     };
   }

@@ -24,7 +24,9 @@ final class Step {
         .build();
   }
 
-  private static MethodSpec stepMethod(int i, BuilderGoalDescription description) {
+  private static MethodSpec stepMethod(
+      int i,
+      BuilderGoalDescription description) {
     SimpleParameter parameter = description.parameters().get(i);
     String name = parameter.name();
     TypeName type = parameter.type();

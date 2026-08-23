@@ -6,10 +6,10 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.util.List;
-import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.DtoModule.UpdaterModule;
-import net.zerobuilder.compiler.generate.ModuleOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
+import net.zerobuilder.compiler.generate.GoalDetails;
+import net.zerobuilder.compiler.generate.ModuleOutput;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -23,11 +23,11 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.updater.Generator.goalMethod;
+import static net.zerobuilder.modules.updater.UpdaterMethod.updaterMethod;
 
 public final class RegularUpdater implements UpdaterModule {
 
-  private static final String MODULE_NAME = "updater";
+  private static final String MODULE_NAME = "Updater";
 
   private MethodSpec doneMethod(UpdaterGoalDescription description) {
     return methodBuilder("build")
@@ -56,7 +56,7 @@ public final class RegularUpdater implements UpdaterModule {
   }
 
   private static String implTypeName(UpdaterGoalDescription description) {
-    return upcase(description.details().name()) + upcase(MODULE_NAME);
+    return upcase(description.details().name()) + MODULE_NAME;
   }
 
   private CodeBlock constructorCall(
@@ -72,14 +72,13 @@ public final class RegularUpdater implements UpdaterModule {
   }
 
   static String methodName(UpdaterGoalDescription description) {
-    return description.details().name() + upcase(MODULE_NAME);
+    return description.details().name() + MODULE_NAME;
   }
 
   @Override
   public ModuleOutput process(UpdaterGoalDescription description) {
     return new ModuleOutput(
-        goalMethod(description),
-        List.of(defineUpdater(description)),
-        List.of());
+        updaterMethod(description),
+        List.of(defineUpdater(description)));
   }
 }

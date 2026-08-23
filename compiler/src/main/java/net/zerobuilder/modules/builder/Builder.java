@@ -7,12 +7,10 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
-import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
@@ -23,33 +21,34 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class Builder {
 
-  static TypeName nextType(int i, BuilderGoalDescription description) {
-    if (i < description.parameters().size() - 1) {
-      return description.context().generatedType()
-          .nestedClass(upcase(description.details().name() + "Builder"))
-          .nestedClass(upcase(description.parameters().get(i + 1).name()));
+  static TypeName nextType(
+      int i,
+      BuilderGoalDescription description) {
+    if (i == description.parameters().size() - 1) {
+      return description.details().goalType();
     }
-    return description.details().goalType();
+    return description.context().generatedType()
+        .nestedClass(upcase(description.details().name() + "Builder"))
+        .nestedClass(upcase(description.parameters().get(i + 1).name()));
   }
 
-  static final Function<BuilderGoalDescription, List<FieldSpec>> fields
-      = description -> {
+  static List<FieldSpec> fields(BuilderGoalDescription description) {
     List<SimpleParameter> steps = description.parameters();
-    ArrayList<FieldSpec> builder = new ArrayList<>(steps.size() + 2);
+    List<FieldSpec> builder = new ArrayList<>(steps.size() + 2);
     steps.stream()
         .limit(steps.size() - 1)
-        .map(parameter -> fieldSpec(parameter.type(), parameter.name(), PRIVATE))
+        .map(parameter -> FieldSpec.builder(parameter.type(), parameter.name(), PRIVATE).build())
         .forEach(builder::add);
     return builder;
-  };
+  }
 
-  static MethodSpec steps(BuilderGoalDescription description, int i) {
+  static MethodSpec steps(
+      BuilderGoalDescription description,
+      int i) {
     SimpleParameter step = description.parameters().get(i);
-    TypeName type = step.type();
-    String name = step.name();
-    ParameterSpec parameter = parameterSpec(type, name);
+    ParameterSpec parameter = parameterSpec(step.type(), step.name());
     List<TypeName> thrownTypes = i < description.parameters().size() - 1 ?
-        emptyList() :
+        List.of() :
         description.thrownTypes();
     TypeName nextType = nextType(i, description);
     return methodBuilder(step.name())
@@ -60,22 +59,20 @@ final class Builder {
         .addModifiers(PUBLIC)
         .addExceptions(thrownTypes)
         .build();
-
   }
 
-  private static CodeBlock normalAssignment(int i, BuilderGoalDescription description) {
+  private static CodeBlock normalAssignment(
+      int i,
+      BuilderGoalDescription description) {
     SimpleParameter step = description.parameters().get(i);
-    TypeName type = step.type();
-    String name = step.name();
-    ParameterSpec parameter = parameterSpec(type, name);
+    ParameterSpec parameter = parameterSpec(step.type(), step.name());
     if (i == description.parameters().size() - 1) {
       return constructorCall(description);
-    } else {
-      return CodeBlock.builder()
-          .addStatement("this.$N = $N", fieldSpec(step.type(), step.name()), parameter)
-          .addStatement("return this")
-          .build();
     }
+    return CodeBlock.builder()
+        .addStatement("this.$N = $N", fieldSpec(step.type(), step.name()), parameter)
+        .addStatement("return this")
+        .build();
   }
 
   private static CodeBlock constructorCall(

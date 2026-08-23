@@ -37,7 +37,10 @@ public final class DtoRegularGoalDescription {
 
     public CodeBlock invocationParameters() {
       List<SimpleParameter> unshuffled = unshuffle(parameters);
-      return unshuffled.stream().map(AbstractParameter::name).map(CodeBlock::of).collect(joinCodeBlocks(", "));
+      return unshuffled.stream()
+          .map(AbstractParameter::name)
+          .map(CodeBlock::of)
+          .collect(joinCodeBlocks(", "));
     }
   }
 

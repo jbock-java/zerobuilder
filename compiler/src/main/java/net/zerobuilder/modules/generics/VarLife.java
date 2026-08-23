@@ -4,8 +4,6 @@ import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.cons;
 import static net.zerobuilder.compiler.generate.ZeroUtil.references;
@@ -21,11 +19,11 @@ final class VarLife {
     this.typeParameters = typeParameters;
   }
 
-  private static final Supplier<Stream<List<TypeVariableName>>> emptyLists = () -> Stream.generate(ArrayList::new);
-
   private static List<List<TypeVariableName>> emptyLists(int n) {
     List<List<TypeVariableName>> builder = new ArrayList<>(n);
-    emptyLists.get().limit(n).forEach(builder::add);
+    for (int i = 0; i < n; i++) {
+      builder.add(new ArrayList<>());
+    }
     return builder;
   }
 
