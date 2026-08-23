@@ -1,28 +1,16 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
-import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
 
-import static java.lang.Character.isUpperCase;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 
 final class Utilities {

@@ -117,14 +117,11 @@ public final class ZeroUtil {
    */
   static Optional<TypeName> onlyTypeArgument(TypeName typeName) {
     List<TypeName> types = typeArguments(typeName);
-    switch (types.size()) {
-      case 0:
-        return Optional.empty();
-      case 1:
-        return Optional.of(types.get(0));
-      default:
-        throw new IllegalArgumentException("multiple type arguments");
-    }
+    return switch (types.size()) {
+      case 0 -> Optional.empty();
+      case 1 -> Optional.of(types.get(0));
+      default -> throw new IllegalArgumentException("multiple type arguments");
+    };
   }
 
   public static <X, E> List<E> transform(Collection<? extends X> input, Function<X, E> function) {
@@ -333,7 +330,7 @@ public final class ZeroUtil {
     if (typeVars.isEmpty()) {
       return raw;
     }
-    return ParameterizedTypeName.get(raw, typeVars.toArray(new TypeVariableName[typeVars.size()]));
+    return ParameterizedTypeName.get(raw, typeVars.toArray(new TypeVariableName[0]));
   }
 
   private static Modifier[] addModifier(Modifier modifier, Modifier[] modifiers) {

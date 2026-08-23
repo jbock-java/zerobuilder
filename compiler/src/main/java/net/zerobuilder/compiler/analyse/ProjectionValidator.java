@@ -89,8 +89,8 @@ final class ProjectionValidator {
     }
 
     static TmpSimpleParameter create(VariableElement parameter) {
-      int value = parameter.getAnnotation(Step.class) == null ?
-          -1 : parameter.getAnnotation(Step.class).value();
+      Step step = parameter.getAnnotation(Step.class);
+      int value = step == null ? -1 : step.value();
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
       DtoRegularParameter.SimpleParameter regularParameter =
@@ -111,8 +111,8 @@ final class ProjectionValidator {
         parameter -> parameter.parameter;
 
     static TmpProjectedParameter create(VariableElement parameter, ProjectionInfo projectionInfo) {
-      int value = parameter.getAnnotation(Step.class) == null ?
-          -1 : parameter.getAnnotation(Step.class).value();
+      Step step = parameter.getAnnotation(Step.class);
+      int value = step == null ? -1 : step.value();
       String name = parameter.getSimpleName().toString();
       TypeName type = TypeName.get(parameter.asType());
       ProjectedParameter regularParameter =
@@ -132,8 +132,8 @@ final class ProjectionValidator {
     static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = parameter -> parameter.parameter;
 
     static TmpAccessorPair accessorPair(ExecutableElement getter, ExecutableElement setter) {
-      int value = getter.getAnnotation(Getter.class) == null ?
-          -1 : getter.getAnnotation(Getter.class).value();
+      Getter annotation = getter.getAnnotation(Getter.class);
+      int value = annotation == null ? -1 : annotation.value();
       TypeName type = TypeName.get(getter.getReturnType());
       AbstractBeanParameter accessorPair = DtoBeanParameter.accessorPair(type, getter.getSimpleName().toString(),
           thrownTypes(getter), thrownTypes(setter));
@@ -141,8 +141,8 @@ final class ProjectionValidator {
     }
 
     static TmpAccessorPair createLoneGetter(ExecutableElement getter, AbstractBeanParameter loneGetter) {
-      int value = getter.getAnnotation(Getter.class) == null ?
-          -1 : getter.getAnnotation(Getter.class).value();
+      Getter annotation = getter.getAnnotation(Getter.class);
+      int value = annotation == null ? -1 : annotation.value();
       return new TmpAccessorPair(getter, value, loneGetter);
     }
   }

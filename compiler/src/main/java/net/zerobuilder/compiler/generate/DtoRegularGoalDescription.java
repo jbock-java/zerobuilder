@@ -21,7 +21,7 @@ public final class DtoRegularGoalDescription {
     for (int i = 0; i < parameters.size(); i++) {
       a[i] = parameters.get(i).name;
     }
-    String[] b = parameterNames.toArray(new String[parameterNames.size()]);
+    String[] b = parameterNames.toArray(new String[0]);
     return createRanking(a, b);
   }
 
@@ -34,11 +34,11 @@ public final class DtoRegularGoalDescription {
     public final AbstractRegularDetails details;
     public final List<TypeName> thrownTypes;
 
-    public final <E> List<E> unshuffle(List<E> shuffled) {
+    public <E> List<E> unshuffle(List<E> shuffled) {
       return applyRanking(ranking, shuffled);
     }
 
-    public final CodeBlock invocationParameters() {
+    public CodeBlock invocationParameters() {
       List<SimpleParameter> unshuffled = unshuffle(parameters);
       return unshuffled.stream()
           .map(parameter -> parameter.name)

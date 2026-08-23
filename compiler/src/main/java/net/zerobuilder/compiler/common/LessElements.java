@@ -10,7 +10,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleElementVisitor6;
+import javax.lang.model.util.SimpleElementVisitor14;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -26,7 +26,7 @@ import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 public final class LessElements {
 
   private static final ElementVisitor<TypeElement, Void> TYPE_ELEMENT_VISITOR =
-      new SimpleElementVisitor6<TypeElement, Void>() {
+      new SimpleElementVisitor14<>() {
         @Override
         protected TypeElement defaultAction(Element e, Void p) {
           throw new IllegalArgumentException();
@@ -39,7 +39,7 @@ public final class LessElements {
       };
 
   private static final ElementVisitor<ExecutableElement, Void> EXECUTABLE_ELEMENT_VISITOR =
-      new SimpleElementVisitor6<ExecutableElement, Void>() {
+      new SimpleElementVisitor14<>() {
         @Override
         protected ExecutableElement defaultAction(Element e, Void p) {
           throw new IllegalArgumentException();
@@ -130,7 +130,6 @@ public final class LessElements {
 
   private static void addEnclosedFields(PackageElement pkg, TypeElement type, Map<String, VariableElement> fields) {
     fieldsIn(type.getEnclosedElements())
-        .stream()
         .forEach(field -> {
           if (field.getKind() == ElementKind.FIELD
               && !field.getModifiers().contains(Modifier.STATIC)
@@ -142,14 +141,11 @@ public final class LessElements {
 
   private static boolean methodVisibleFromPackage(Element method, PackageElement pkg) {
     Visibility visibility = Visibility.ofElement(method);
-    switch (visibility) {
-      case PRIVATE:
-        return false;
-      case DEFAULT:
-        return getPackage(method).equals(pkg);
-      default:
-        return true;
-    }
+    return switch (visibility) {
+      case PRIVATE -> false;
+      case DEFAULT -> getPackage(method).equals(pkg);
+      default -> true;
+    };
   }
 
   private static PackageElement getPackage(Element element) {

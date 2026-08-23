@@ -8,30 +8,7 @@ import java.util.List;
 
 public final class DtoModuleOutput {
 
-  public static final class ModuleOutput {
-    private final BuilderMethod method;
-    private final List<TypeSpec> typeSpecs;
-    private final List<FieldSpec> cacheFields;
-
-    final BuilderMethod method() {
-      return method;
-    }
-
-    final List<TypeSpec> typeSpecs() {
-      return typeSpecs;
-    }
-
-    final List<FieldSpec> cacheFields() {
-      return cacheFields;
-    }
-
-    public ModuleOutput(BuilderMethod method,
-                        List<TypeSpec> typeSpecs,
-                        List<FieldSpec> cacheFields) {
-      this.method = method;
-      this.typeSpecs = typeSpecs;
-      this.cacheFields = cacheFields;
-    }
+  public record ModuleOutput(BuilderMethod method, List<TypeSpec> typeSpecs, List<FieldSpec> cacheFields) {
   }
 
   private DtoModuleOutput() {
