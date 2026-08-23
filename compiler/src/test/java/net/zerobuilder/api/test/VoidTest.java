@@ -19,11 +19,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -56,32 +53,32 @@ public class VoidTest {
     // create goal details
     String goalName = "Void";
     StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
-        TypeName.VOID, goalName, singletonList("message"),
-        "doUpdate", PRIVATE, emptyList(), NEW_INSTANCE);
+        TypeName.VOID, goalName, List.of("message"),
+        "doUpdate", PRIVATE, List.of());
 
     SimpleParameter parameter = DtoRegularParameter.create("message", STRING);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
-        details, singletonList(IO_EXCEPTION),
-        singletonList(parameter),
+        details, List.of(IO_EXCEPTION),
+        List.of(parameter),
         goalContext);
 
     // Invoke the generator
     GeneratorOutput output = Generator.generate(
-        singletonList(new RegularSimpleGoalInput(MODULE_BUILDER, description)));
+        List.of(new RegularSimpleGoalInput(MODULE_BUILDER, description)));
 
     assertEquals(1, output.methods().size());
-    assertEquals(goalName, output.methods().get(0).name());
-    MethodSpec method = output.methods().get(0).method();
+    assertEquals(goalName, output.methods().getFirst().name());
+    MethodSpec method = output.methods().getFirst().method();
     assertEquals("VoidBuilder", method.name());
     assertEquals(0, method.parameters().size());
     assertEquals(0, method.exceptions().size());
     assertEquals(2, output.nestedTypes().size());
-    Map<String, List<TypeSpec>> specs = output.nestedTypes().stream().collect(groupingBy(type -> type.name()));
+    Map<String, List<TypeSpec>> specs = output.nestedTypes().stream().collect(groupingBy(TypeSpec::name));
     assertEquals(1, specs.get("VoidBuilderImpl").size());
-    assertEquals(2, specs.get("VoidBuilderImpl").get(0).methodSpecs().size());
-    MethodSpec messageMethod = specs.get("VoidBuilderImpl").get(0).methodSpecs().get(1);
+    assertEquals(2, specs.get("VoidBuilderImpl").getFirst().methodSpecs().size());
+    MethodSpec messageMethod = specs.get("VoidBuilderImpl").getFirst().methodSpecs().get(1);
     assertEquals("message", messageMethod.name());
     assertEquals(1, messageMethod.exceptions().size());
-    assertEquals(IO_EXCEPTION, messageMethod.exceptions().get(0));
+    assertEquals(IO_EXCEPTION, messageMethod.exceptions().getFirst());
   }
 }

@@ -8,13 +8,11 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -29,10 +27,9 @@ public class GenericsImplTest {
         typeSpecs.stream().map(p -> p.name).collect(toList()),
         "multiKey",
         PRIVATE,
-        Collections.emptyList(),
-        NEW_INSTANCE);
+        List.of());
     GenericsImpl impl = new GenericsImpl(contract, DtoRegularGoalDescription.SimpleRegularGoalDescription.create(
-        details, Collections.emptyList(), typeSpecs, null));
+        details, List.of(), typeSpecs, null));
     return impl.basicInvoke().stream().collect(joinCodeBlocks(", "));
   }
 

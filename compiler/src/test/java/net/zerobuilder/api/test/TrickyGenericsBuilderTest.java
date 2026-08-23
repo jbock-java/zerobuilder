@@ -18,16 +18,12 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import javax.lang.model.element.Modifier;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -78,11 +74,10 @@ public class TrickyGenericsBuilderTest {
     StaticMethodGoalDetails details = StaticMethodGoalDetails.create(
         LIST_OF_V, // return type of the goal method
         goalName,
-        asList("source", "key", "defaultValue"),
+        List.of("source", "key", "defaultValue"),
         "getList",
         PRIVATE,
-        asList(K, V),
-        NEW_INSTANCE);
+        List.of(K, V));
 
     // use SimpleParameter because the generics module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("source", MAP_K_LIST_V);
@@ -90,24 +85,24 @@ public class TrickyGenericsBuilderTest {
     SimpleParameter tarParameter = DtoRegularParameter.create("defaultValue", V);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
         details,
-        Collections.emptyList(), // the goal method declares no exceptions
+        List.of(), // the goal method declares no exceptions
         // step order; not necessarily the order of the goal parameters
-        asList(fooParameter, barParameter, tarParameter),
+        List.of(fooParameter, barParameter, tarParameter),
         goalContext);
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(
-        singletonList(new RegularSimpleGoalInput(new GenericsBuilder(), description)));
+        List.of(new RegularSimpleGoalInput(new GenericsBuilder(), description)));
 
     assertEquals(1, generatorOutput.methods().size());
-    assertEquals(goalName, generatorOutput.methods().get(0).name());
-    assertEquals("multiKeyBuilder", generatorOutput.methods().get(0).method().name());
-    assertEquals(0, generatorOutput.methods().get(0).method().parameters().size());
-    assertTrue(generatorOutput.methods().get(0).method().modifiers().contains(Modifier.STATIC));
-    assertTrue(generatorOutput.methods().get(0).method().modifiers().contains(Modifier.PRIVATE));
-    Map<String, TypeSpec> nested = unique(generatorOutput.nestedTypes().stream().collect(groupingBy(type -> type.name())));
+    assertEquals(goalName, generatorOutput.methods().getFirst().name());
+    assertEquals("multiKeyBuilder", generatorOutput.methods().getFirst().method().name());
+    assertEquals(0, generatorOutput.methods().getFirst().method().parameters().size());
+    assertTrue(generatorOutput.methods().getFirst().method().modifiers().contains(Modifier.STATIC));
+    assertTrue(generatorOutput.methods().getFirst().method().modifiers().contains(Modifier.PRIVATE));
+    Map<String, TypeSpec> nested = unique(generatorOutput.nestedTypes().stream().collect(groupingBy(TypeSpec::name)));
     TypeSpec contract = nested.get("MultiKeyBuilder");
-    Map<String, TypeSpec> steps = unique(contract.typeSpecs().stream().collect(groupingBy(type -> type.name())));
+    Map<String, TypeSpec> steps = unique(contract.typeSpecs().stream().collect(groupingBy(TypeSpec::name)));
     checkKeysContract(steps.get("Keys"));
     checkValueContract(steps.get("Value"));
   }
@@ -115,24 +110,24 @@ public class TrickyGenericsBuilderTest {
   private void checkKeysContract(TypeSpec keys) {
     assertEquals(1, keys.methodSpecs().size());
     assertEquals(0, keys.typeVariables().size());
-    MethodSpec stepMethod = keys.methodSpecs().get(0);
-    assertEquals(singletonList(K), stepMethod.typeVariables());
+    MethodSpec stepMethod = keys.methodSpecs().getFirst();
+    assertEquals(List.of(K), stepMethod.typeVariables());
     assertEquals(LIST_OF_K, stepMethod.returnType());
   }
 
   private void checkValueContract(TypeSpec value) {
     assertEquals(1, value.methodSpecs().size());
-    assertEquals(singletonList(K), value.typeVariables());
-    MethodSpec method = value.methodSpecs().get(0);
-    assertEquals(singletonList(V), method.typeVariables());
+    assertEquals(List.of(K), value.typeVariables());
+    MethodSpec method = value.methodSpecs().getFirst();
+    assertEquals(List.of(V), method.typeVariables());
     assertEquals(MAP_K_LIST_V, method.returnType());
   }
 
   private static <K, V> Map<K, V> unique(Map<K, List<V>> map) {
-    HashMap<K, V> m = new HashMap<>();
+    Map<K, V> m = new HashMap<>();
     for (Map.Entry<K, List<V>> entry : map.entrySet()) {
       assertEquals(1, entry.getValue().size());
-      m.put(entry.getKey(), entry.getValue().get(0));
+      m.put(entry.getKey(), entry.getValue().getFirst());
     }
     return m;
   }

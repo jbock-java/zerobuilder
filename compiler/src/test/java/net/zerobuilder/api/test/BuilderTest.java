@@ -14,13 +14,10 @@ import net.zerobuilder.modules.builder.RegularBuilder;
 import org.junit.jupiter.api.Test;
 
 import javax.lang.model.element.Modifier;
-import java.util.Collections;
+import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static net.zerobuilder.compiler.generate.Access.PRIVATE;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,20 +64,19 @@ public class BuilderTest {
         // names of generated classes and methods are based on this
         goalName,
         // parameter names in correct order
-        asList("foo", "bar"),
+        List.of("foo", "bar"),
         "create", // correct goal method name
         PRIVATE,
-        emptyList(),
-        NEW_INSTANCE);
+        List.of());
 
     // use SimpleParameter because the builder module doesn't need projections
     SimpleParameter fooParameter = DtoRegularParameter.create("foo", STRING);
     SimpleParameter barParameter = DtoRegularParameter.create("bar", INTEGER);
     SimpleRegularGoalDescription description = SimpleRegularGoalDescription.create(
         details,
-        Collections.emptyList(), // the goal method declares no exceptions
+        List.of(), // the goal method declares no exceptions
         // step order; not necessarily the order of the goal parameters
-        asList(fooParameter, barParameter),
+        List.of(fooParameter, barParameter),
         goalContext);
 
     // Invoke the generator
@@ -88,13 +84,13 @@ public class BuilderTest {
         singletonList(new RegularSimpleGoalInput(MODULE_BUILDER, description)));
 
     assertEquals(1, generatorOutput.methods().size());
-    assertEquals(goalName, generatorOutput.methods().get(0).name());
-    assertEquals("myGoalBuilder", generatorOutput.methods().get(0).method().name());
-    assertEquals(0, generatorOutput.methods().get(0).method().parameters().size());
-    assertTrue(generatorOutput.methods().get(0).method().modifiers().contains(Modifier.STATIC));
-    assertTrue(generatorOutput.methods().get(0).method().modifiers().contains(Modifier.PRIVATE));
+    assertEquals(goalName, generatorOutput.methods().getFirst().name());
+    assertEquals("myGoalBuilder", generatorOutput.methods().getFirst().method().name());
+    assertEquals(0, generatorOutput.methods().getFirst().method().parameters().size());
+    assertTrue(generatorOutput.methods().getFirst().method().modifiers().contains(Modifier.STATIC));
+    assertTrue(generatorOutput.methods().getFirst().method().modifiers().contains(Modifier.PRIVATE));
     assertEquals(GENERATED_TYPE.nestedClass("MyGoalBuilder")
-        .nestedClass("Foo"), generatorOutput.methods().get(0).method().returnType());
+        .nestedClass("Foo"), generatorOutput.methods().getFirst().method().returnType());
 
     // Prints nicely
     TypeSpec typeSpec = generatorOutput.typeSpec();

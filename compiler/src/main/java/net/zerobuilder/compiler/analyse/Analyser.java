@@ -3,9 +3,6 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-import java.util.List;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Builder;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
@@ -26,11 +23,14 @@ import net.zerobuilder.modules.generics.GenericsBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
 import net.zerobuilder.modules.updater.bean.BeanUpdater;
 
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import java.util.List;
+
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SUBGOALS;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.REUSE_GENERICS;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.createBeanGoalElements;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkAccessLevel;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkNameConflict;
@@ -40,7 +40,6 @@ import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpda
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
 import static net.zerobuilder.compiler.analyse.Utilities.peer;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
@@ -79,15 +78,9 @@ public final class Analyser {
       case BeanGoalElement bean -> bean.moduleChoice() == ModuleChoice.BUILDER ?
           new BeanGoalInput(BEAN_BUILDER, validateBean.apply(bean)) :
           new BeanGoalInput(BEAN_UPDATER, validateBean.apply(bean));
-      case DtoGoalElement.RegularGoalElement regular -> {
-        boolean hasTypevars = hasTypevars(regular.executableElement());
-        if (hasTypevars && regular.goalAnnotation().lifecycle == REUSE_INSTANCES) {
-          throw new ValidationException(REUSE_GENERICS, regular.executableElement());
-        }
-        yield hasTypevars ?
-            new RegularSimpleGoalInput(GENERICS, validateBuilder.apply(regular)) :
-            new RegularSimpleGoalInput(BUILDER, validateBuilder.apply(regular));
-      }
+      case DtoGoalElement.RegularGoalElement regular -> hasTypevars(regular.executableElement()) ?
+          new RegularSimpleGoalInput(GENERICS, validateBuilder.apply(regular)) :
+          new RegularSimpleGoalInput(BUILDER, validateBuilder.apply(regular));
       case DtoGoalElement.RegularProjectableGoalElement projected ->
           new ProjectedGoalInput(UPDATER, validateUpdater.apply(projected));
     };

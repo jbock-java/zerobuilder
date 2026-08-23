@@ -16,12 +16,9 @@ import org.junit.jupiter.api.Test;
 
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static net.zerobuilder.compiler.generate.Access.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.NEW_INSTANCE;
 import static net.zerobuilder.compiler.generate.DtoContext.createContext;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -59,29 +56,28 @@ public class RegularUpdaterTest {
 
     String goalName = "myGoal";
     ConstructorGoalDetails details = ConstructorGoalDetails.create(
-        TYPE, goalName, singletonList("foo"),
+        TYPE, goalName, List.of("foo"),
         PUBLIC,
-        emptyList(),
-        NEW_INSTANCE);
+        List.of());
 
     // use ProjectedParameter because the updater module requires projections
     ProjectedParameter fooParameter = DtoRegularParameter.create("foo", STRING,
-        ProjectionMethod.create("getFoo", singletonList(IO_EXCEPTION)));
+        ProjectionMethod.create("getFoo", List.of(IO_EXCEPTION)));
     ProjectedRegularGoalDescription description = ProjectedRegularGoalDescription.create(
         details,
-        Collections.emptyList(),
-        singletonList(fooParameter),
+        List.of(),
+        List.of(fooParameter),
         goalContext);
 
     // Invoke the generator
     GeneratorOutput generatorOutput = Generator.generate(
-        singletonList(new DtoGeneratorInput.ProjectedGoalInput(REGULAR_UPDATER_MODULE, description)));
+        List.of(new DtoGeneratorInput.ProjectedGoalInput(REGULAR_UPDATER_MODULE, description)));
 
     assertEquals(1, generatorOutput.methods().size());
     assertEquals(goalName, generatorOutput.methods().get(0).name());
     assertEquals("myGoalUpdater", generatorOutput.methods().get(0).method().name());
     assertEquals(1, generatorOutput.methods().get(0).method().parameters().size());
-    assertEquals(singletonList(IO_EXCEPTION), generatorOutput.methods().get(0).method().exceptions());
+    assertEquals(List.of(IO_EXCEPTION), generatorOutput.methods().get(0).method().exceptions());
     assertTrue(generatorOutput.methods().get(0).method().modifiers().contains(Modifier.STATIC));
     assertEquals(GENERATED_TYPE.nestedClass("MyGoalUpdater"),
         generatorOutput.methods().get(0).method().returnType());

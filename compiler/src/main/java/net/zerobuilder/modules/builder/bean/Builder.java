@@ -20,7 +20,6 @@ import static com.palantir.javapoet.WildcardTypeName.subtypeOf;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoBeanParameter.beanParameterCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -35,15 +34,14 @@ final class Builder {
 
   static final Function<BeanGoalDescription, List<MethodSpec>> steps =
       description -> IntStream.range(0, description.parameters.size())
-          .mapToObj(i -> stepToMethods(i, description)
-              .apply(description.parameters.get(i)))
+          .mapToObj(i -> stepToMethods(description.parameters.get(i), i, description))
           .collect(toList());
 
-  private static Function<AbstractBeanParameter, MethodSpec> stepToMethods(
-      int i, BeanGoalDescription description) {
-    return beanParameterCases(
-        accessorPair -> regularStep(accessorPair, i, description),
-        loneGetter -> iterateCollection(loneGetter, i, description));
+  private static MethodSpec stepToMethods(AbstractBeanParameter parameter, int i, BeanGoalDescription description) {
+    return switch (parameter) {
+      case AccessorPair accessorPair -> regularStep(accessorPair, i, description);
+      case LoneGetter loneGetter -> iterateCollection(loneGetter, i, description);
+    };
   }
 
   private static CodeBlock normalReturn(BeanGoalDescription description) {
@@ -68,7 +66,7 @@ final class Builder {
         .beginControlFlow("for ($T $N : $N)",
             iterationVar.type(), iterationVar, parameter)
         .addStatement("this.$N.$L().add($N)", description.beanField,
-            step.getter, iterationVar)
+            step.getter(), iterationVar)
         .endControlFlow()
         .addCode(i == description.parameters.size() - 1 ?
             normalReturn(description) :
@@ -78,7 +76,7 @@ final class Builder {
   }
 
   private static MethodSpec regularStep(AccessorPair step, int i, BeanGoalDescription description) {
-    ParameterSpec parameter = parameterSpec(step.type, step.name());
+    ParameterSpec parameter = parameterSpec(step.type(), step.name());
     return methodBuilder(step.name())
         .addAnnotation(Override.class)
         .addExceptions(step.setterThrownTypes)
