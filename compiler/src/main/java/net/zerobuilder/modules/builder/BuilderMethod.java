@@ -21,7 +21,7 @@ final class BuilderMethod {
     GoalDetails goalDetails = description.details();
     List<SimpleParameter> steps = description.parameters();
     return methodBuilder(RegularBuilder.methodName(description))
-        .returns(RegularBuilder.contractType(description).nestedClass(upcase(steps.getFirst().name())))
+        .returns(description.context().generatedType().nestedClass(upcase(steps.getFirst().name())))
         .addModifiers(goalDetails.access(STATIC))
         .addCode(returnRegular(description))
         .build();

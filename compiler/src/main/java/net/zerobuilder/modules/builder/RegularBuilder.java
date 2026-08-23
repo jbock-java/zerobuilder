@@ -3,6 +3,7 @@ package net.zerobuilder.modules.builder;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeSpec;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 import net.zerobuilder.compiler.generate.DtoModule.BuilderModule;
@@ -40,7 +41,7 @@ public final class RegularBuilder implements BuilderModule {
 
   static ClassName implType(BuilderGoalDescription description) {
     ClassName contract = contractType(description);
-    return contract.peerClass(contract.simpleName() + "Impl");
+    return description.context().generatedType().nestedClass(contract.simpleName() + "Impl");
   }
 
   static String methodName(BuilderGoalDescription description) {
@@ -59,7 +60,6 @@ public final class RegularBuilder implements BuilderModule {
 
   private TypeSpec defineContract(BuilderGoalDescription description) {
     return classBuilder(contractType(description))
-        .addTypes(stepInterfaces(description))
         .addModifiers(PUBLIC, STATIC, FINAL)
         .addMethod(constructorBuilder()
             .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
@@ -69,7 +69,7 @@ public final class RegularBuilder implements BuilderModule {
 
   private List<ClassName> stepInterfaceTypes(BuilderGoalDescription description) {
     return transform(description.parameters(),
-        step -> contractType(description).nestedClass(upcase(step.name())));
+        step -> description.context().generatedType().nestedClass(upcase(step.name())));
   }
 
   static ClassName contractType(BuilderGoalDescription description) {
@@ -79,8 +79,11 @@ public final class RegularBuilder implements BuilderModule {
 
   @Override
   public ModuleOutput process(BuilderGoalDescription description) {
-    return new ModuleOutput(builderMethod(description),
-        List.of(defineBuilderImpl(description),
-            defineContract(description)));
+    List<TypeSpec> steps = stepInterfaces(description);
+    List<TypeSpec> typeSpecs = new ArrayList<>(steps.size() + 2);
+    typeSpecs.add(defineBuilderImpl(description));
+    typeSpecs.add(defineContract(description));
+    typeSpecs.addAll(steps);
+    return new ModuleOutput(builderMethod(description), typeSpecs);
   }
 }

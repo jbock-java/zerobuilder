@@ -1,6 +1,5 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.examples.values.FieldAccessBuilders.FieldAccessBuilder;
 import net.zerobuilder.examples.values.FieldAccessBuilders.FieldAccessUpdater;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +11,7 @@ class FieldAccessTest {
 
   @Test
   void basicTest() {
-    FieldAccessBuilder.Length builder = fieldAccessBuilder();
+    FieldAccessBuilders.Length builder = fieldAccessBuilder();
     FieldAccess original = builder.length(12).width(10).height(11);
     FieldAccessUpdater updater = fieldAccessUpdater(original);
     FieldAccess updated = updater.length(0).build();

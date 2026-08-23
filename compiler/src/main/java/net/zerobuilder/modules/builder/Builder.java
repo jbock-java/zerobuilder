@@ -28,7 +28,6 @@ final class Builder {
       return description.details().goalType();
     }
     return description.context().generatedType()
-        .nestedClass(upcase(description.details().name() + "Builder"))
         .nestedClass(upcase(description.parameters().get(i + 1).name()));
   }
 
