@@ -64,7 +64,7 @@ class RecordTest {
         "",
         "public final class VibeCoderBuilders {",
         "",
-        "  public static Name vibeCoderBuilder() {",
+        "  public static NameStep vibeCoderBuilder() {",
         "    return new VibeCoderBuilderImpl();",
         "  }",
         "}");

@@ -1,21 +1,21 @@
 package net.zerobuilder.compiler;
 
 import io.jbock.testing.compile.Compilation;
-import org.junit.jupiter.api.Test;
-
 import javax.tools.JavaFileObject;
+import org.junit.jupiter.api.Test;
 
 import static io.jbock.testing.compile.CompilationSubject.assertThat;
 import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
 import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 
-public class StepOrderTest {
+class StepOrderTest {
 
   @Test
-  public void instance() {
+  void instance() {
     JavaFileObject cube = forSourceLines("cube.Spaghetti",
         "package cube;",
-        "import net.zerobuilder.*;",
+        "import net.zerobuilder.Builder;",
+        "import net.zerobuilder.Step;",
         "",
         "final class Spaghetti {",
         "  final String cheese;",
@@ -38,26 +38,25 @@ public class StepOrderTest {
             "    throw new UnsupportedOperationException(\"no instances\");",
             "  }",
             "",
-            "  public static Sauce spaghettiBuilder() {",
+            "  public static SauceStep spaghettiBuilder() {",
             "    return new SpaghettiBuilderImpl();",
             "  }",
             "",
-            "  private static final class SpaghettiBuilderImpl implements Sauce, Cheese {",
+            "  private static final class SpaghettiBuilderImpl implements SauceStep, CheeseStep {",
             "    private String sauce;",
             "",
             "    SpaghettiBuilderImpl() {",
             "    }",
             "",
             "    @Override",
-            "    public Cheese sauce(String sauce) {",
+            "    public CheeseStep sauce(String sauce) {",
             "      this.sauce = sauce;",
             "      return this;",
             "    }",
             "",
             "    @Override",
             "    public Spaghetti cheese(String cheese) {",
-            "      Spaghetti _spaghetti = new Spaghetti(cheese, sauce);",
-            "      return _spaghetti;",
+            "      return new Spaghetti(cheese, sauce);",
             "    }",
             "  }",
             "",
@@ -67,11 +66,11 @@ public class StepOrderTest {
             "    }",
             "  }",
             "",
-            "  public interface Sauce {",
-            "    Cheese sauce(String sauce);",
+            "  public interface SauceStep {",
+            "    CheeseStep sauce(String sauce);",
             "  }",
             "",
-            "  public interface Cheese {",
+            "  public interface CheeseStep {",
             "    Spaghetti cheese(String cheese);",
             "  }",
             "}");

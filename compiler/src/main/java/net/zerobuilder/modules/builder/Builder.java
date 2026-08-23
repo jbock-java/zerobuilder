@@ -13,11 +13,9 @@ import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
+import static net.zerobuilder.modules.builder.BuilderMethod.stepInterfaceName;
 
 final class Builder {
 
@@ -28,7 +26,7 @@ final class Builder {
       return description.details().goalType();
     }
     return description.context().generatedType()
-        .nestedClass(upcase(description.parameters().get(i + 1).name()));
+        .nestedClass(stepInterfaceName(description.parameters().get(i + 1)));
   }
 
   static List<FieldSpec> fields(BuilderGoalDescription description) {
@@ -77,12 +75,10 @@ final class Builder {
   private static CodeBlock constructorCall(
       BuilderGoalDescription description) {
     TypeName type = description.details().goalType();
-    ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
     CodeBlock args = description.invocationParameters();
-    builder.addStatement("$T $N = new $T($L)", varGoal.type(), varGoal, type, args);
-    return builder.addStatement("return $N", varGoal).build();
+    builder.addStatement("return new $T($L)", type, args);
+    return builder.build();
   }
 
   private Builder() {

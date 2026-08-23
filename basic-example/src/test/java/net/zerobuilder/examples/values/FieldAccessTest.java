@@ -11,7 +11,7 @@ class FieldAccessTest {
 
   @Test
   void basicTest() {
-    FieldAccessBuilders.Length builder = fieldAccessBuilder();
+    FieldAccessBuilders.LengthStep builder = fieldAccessBuilder();
     FieldAccess original = builder.length(12).width(10).height(11);
     FieldAccessUpdater updater = fieldAccessUpdater(original);
     FieldAccess updated = updater.length(0).build();

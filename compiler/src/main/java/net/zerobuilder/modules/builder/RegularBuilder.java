@@ -21,6 +21,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.Builder.fields;
 import static net.zerobuilder.modules.builder.BuilderMethod.builderMethod;
+import static net.zerobuilder.modules.builder.BuilderMethod.stepInterfaceName;
 import static net.zerobuilder.modules.builder.Step.stepInterface;
 
 public final class RegularBuilder implements BuilderModule {
@@ -69,7 +70,7 @@ public final class RegularBuilder implements BuilderModule {
 
   private List<ClassName> stepInterfaceTypes(BuilderGoalDescription description) {
     return transform(description.parameters(),
-        step -> description.context().generatedType().nestedClass(upcase(step.name())));
+        step -> description.context().generatedType().nestedClass(stepInterfaceName(step)));
   }
 
   static ClassName contractType(BuilderGoalDescription description) {

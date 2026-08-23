@@ -17,11 +17,15 @@ import static net.zerobuilder.modules.builder.RegularBuilder.implType;
 
 final class BuilderMethod {
 
+  static String stepInterfaceName(SimpleParameter parameter) {
+    return upcase(parameter.name()) + "Step";
+  }
+
   static MethodSpec builderMethod(BuilderGoalDescription description) {
     GoalDetails goalDetails = description.details();
     List<SimpleParameter> steps = description.parameters();
     return methodBuilder(RegularBuilder.methodName(description))
-        .returns(description.context().generatedType().nestedClass(upcase(steps.getFirst().name())))
+        .returns(description.context().generatedType().nestedClass(stepInterfaceName(steps.getFirst())))
         .addModifiers(goalDetails.access(STATIC))
         .addCode(returnRegular(description))
         .build();
