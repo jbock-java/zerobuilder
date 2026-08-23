@@ -19,7 +19,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
-import net.zerobuilder.BeanBuilder;
 import net.zerobuilder.Builder;
 import net.zerobuilder.RecordBuilder;
 import net.zerobuilder.RecordUpdater;
@@ -47,7 +46,6 @@ public final class ZeroProcessor extends AbstractProcessor {
     return Stream.of(
             Builder.class,
             Updater.class,
-            BeanBuilder.class,
             RecordBuilder.class,
             RecordUpdater.class)
         .map(Class::getName)
@@ -72,7 +70,6 @@ public final class ZeroProcessor extends AbstractProcessor {
           .map(LessTypes::asTypeElement)
           .forEach(types::add);
     }
-    types.addAll(typesIn(env.getElementsAnnotatedWith(BeanBuilder.class)));
     types.addAll(typesIn(env.getElementsAnnotatedWith(RecordBuilder.class)));
     types.addAll(typesIn(env.getElementsAnnotatedWith(RecordUpdater.class)));
     for (TypeElement enclosingElement : types) {

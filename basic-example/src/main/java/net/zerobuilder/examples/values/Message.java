@@ -1,7 +1,6 @@
 package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builder;
-import net.zerobuilder.Recycle;
 import net.zerobuilder.Updater;
 
 // direct field access

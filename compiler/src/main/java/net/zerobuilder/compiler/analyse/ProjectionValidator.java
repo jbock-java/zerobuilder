@@ -5,13 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
-import net.zerobuilder.Getter;
 import net.zerobuilder.Name;
 import net.zerobuilder.Step;
-import net.zerobuilder.compiler.generate.DtoBeanParameter;
-import net.zerobuilder.compiler.generate.DtoBeanParameter.AbstractBeanParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
@@ -21,7 +17,6 @@ import static java.util.Collections.nCopies;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_DUPLICATE;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_OUT_OF_BOUNDS;
-import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 
 final class ProjectionValidator {
 
@@ -120,32 +115,6 @@ final class ProjectionValidator {
       ProjectedParameter regularParameter =
           DtoRegularParameter.create(name, type, projectionInfo);
       return new TmpProjectedParameter(parameter, value, regularParameter);
-    }
-  }
-
-  static final class TmpAccessorPair extends TmpValidParameter {
-    final AbstractBeanParameter parameter;
-
-    private TmpAccessorPair(Element element, int annotation, AbstractBeanParameter parameter) {
-      super(element, annotation);
-      this.parameter = parameter;
-    }
-
-    static final Function<TmpAccessorPair, AbstractBeanParameter> toValidParameter = parameter -> parameter.parameter;
-
-    static TmpAccessorPair accessorPair(ExecutableElement getter, ExecutableElement setter) {
-      Getter annotation = getter.getAnnotation(Getter.class);
-      int value = annotation == null ? -1 : annotation.value();
-      TypeName type = TypeName.get(getter.getReturnType());
-      AbstractBeanParameter accessorPair = DtoBeanParameter.accessorPair(type, getter.getSimpleName().toString(),
-          thrownTypes(getter), thrownTypes(setter));
-      return new TmpAccessorPair(getter, value, accessorPair);
-    }
-
-    static TmpAccessorPair createLoneGetter(ExecutableElement getter, AbstractBeanParameter loneGetter) {
-      Getter annotation = getter.getAnnotation(Getter.class);
-      int value = annotation == null ? -1 : annotation.value();
-      return new TmpAccessorPair(getter, value, loneGetter);
     }
   }
 

@@ -7,42 +7,31 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
 import net.zerobuilder.Builder;
 import net.zerobuilder.RecordBuilder;
 import net.zerobuilder.RecordUpdater;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.BeanGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.RegularProjectableGoalElement;
 import net.zerobuilder.compiler.common.LessElements;
 import net.zerobuilder.compiler.generate.DtoContext.GoalContext;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.BeanGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.ProjectedGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.RegularSimpleGoalInput;
-import net.zerobuilder.compiler.generate.DtoModule.BeanModule;
 import net.zerobuilder.compiler.generate.DtoModule.ProjectedModule;
 import net.zerobuilder.compiler.generate.DtoModule.RegularSimpleModule;
 import net.zerobuilder.modules.builder.RegularBuilder;
-import net.zerobuilder.modules.builder.bean.BeanBuilder;
 import net.zerobuilder.modules.generics.GenericsBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
-import net.zerobuilder.modules.updater.bean.BeanUpdater;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.BEAN_SUBGOALS;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.createBeanGoalElements;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.createRegular;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkAccessLevel;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkNameConflict;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.AS_DECLARED;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.AS_TYPE_ELEMENT;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorB.validateBean;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateBuilder;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpdater;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
@@ -56,9 +45,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 public final class Analyser {
 
   private static final RegularSimpleModule BUILDER = new RegularBuilder();
-  private static final BeanModule BEAN_BUILDER = new BeanBuilder();
   private static final ProjectedModule UPDATER = new RegularUpdater();
-  private static final BeanModule BEAN_UPDATER = new BeanUpdater();
   private static final RegularSimpleModule GENERICS = new GenericsBuilder();
 
   /**
@@ -75,7 +62,7 @@ public final class Analyser {
         transform(tel.getTypeParameters(), TypeVariableName::get));
     ClassName generatedType = peer(rawClassName(type), "Builders");
     GoalContext context = createContext(type, generatedType);
-    List<? extends AbstractGoalElement> goals = goals(tel, context);
+    List<? extends AbstractGoalElement> goals = regularGoals(tel, context);
     checkNameConflict(goals);
     checkAccessLevel(goals);
     return transform(goals, Analyser::assignModule);
@@ -83,20 +70,11 @@ public final class Analyser {
 
   private static AbstractGoalInput assignModule(AbstractGoalElement element) {
     return switch (element) {
-      case BeanGoalElement bean -> bean.moduleChoice() == ModuleChoice.BUILDER ?
-          new BeanGoalInput(BEAN_BUILDER, validateBean.apply(bean)) :
-          new BeanGoalInput(BEAN_UPDATER, validateBean.apply(bean));
       case RegularGoalElement regular -> hasTypevars(regular.executableElement()) ?
           new RegularSimpleGoalInput(GENERICS, validateBuilder(regular)) :
           new RegularSimpleGoalInput(BUILDER, validateBuilder(regular));
       case RegularProjectableGoalElement projected -> new ProjectedGoalInput(UPDATER, validateUpdater(projected));
     };
-  }
-
-  private static List<? extends AbstractGoalElement> goals(TypeElement tel, GoalContext context) {
-    return tel.getAnnotation(net.zerobuilder.BeanBuilder.class) != null ?
-        beanGoals(tel, context) :
-        regularGoals(tel, context);
   }
 
   private static boolean hasTypevars(ExecutableElement element) {
@@ -109,11 +87,8 @@ public final class Analyser {
     RecordBuilder recordBuilderAnnotation = tel.getAnnotation(RecordBuilder.class);
     RecordUpdater recordUpdaterAnnotation = tel.getAnnotation(RecordUpdater.class);
     if (recordBuilderAnnotation != null || recordUpdaterAnnotation != null) {
-      TypeElement typeElement = AS_DECLARED.visit(tel.getSuperclass())
-          .map(DeclaredType::asElement)
-          .flatMap(AS_TYPE_ELEMENT::visit)
-          .orElseThrow(() -> new ValidationException("", tel));
-      if (!typeElement.getQualifiedName().contentEquals("java.lang.Record")) {
+      TypeElement superclass = asTypeElement(tel.getSuperclass());
+      if (!superclass.getQualifiedName().contentEquals("java.lang.Record")) {
         throw new ValidationException("Not a record type", tel);
       }
       List<ModuleChoice> options = new ArrayList<>(2);
@@ -148,16 +123,6 @@ public final class Analyser {
       options.add(ModuleChoice.UPDATER);
     }
     return options;
-  }
-
-  private static List<BeanGoalElement> beanGoals(TypeElement buildElement, GoalContext context) {
-    buildElement.getEnclosedElements().stream()
-        .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
-        .findAny()
-        .ifPresent(el -> {
-          throw new ValidationException(BEAN_SUBGOALS, el);
-        });
-    return createBeanGoalElements(buildElement, context);
   }
 
   private Analyser() {

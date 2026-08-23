@@ -8,22 +8,17 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Name;
-import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.DtoContext;
 import net.zerobuilder.compiler.generate.DtoGoalDetails.AbstractRegularDetails;
-import net.zerobuilder.compiler.generate.DtoGoalDetails.BeanGoalDetails;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.UPDATER;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
-import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 final class DtoGoalElement {
 
-  sealed interface AbstractGoalElement permits BeanGoalElement, RegularGoalElement, RegularProjectableGoalElement {
+  sealed interface AbstractGoalElement permits RegularGoalElement, RegularProjectableGoalElement {
   }
 
   sealed interface AbstractRegularGoalElement permits RegularGoalElement, RegularProjectableGoalElement {
@@ -38,15 +33,16 @@ final class DtoGoalElement {
 
   static String goalName(AbstractGoalElement element) {
     return switch (element) {
-      case BeanGoalElement bean -> bean.details.name;
       case RegularGoalElement regular -> regular.details.name();
       case RegularProjectableGoalElement projected -> projected.details.name();
     };
   }
 
   static Element element(AbstractGoalElement element) {
+    if (element == null) {
+      return null;
+    }
     return switch (element) {
-      case BeanGoalElement bean -> bean.beanType;
       case RegularGoalElement regular -> regular.executableElement;
       case RegularProjectableGoalElement projected -> projected.executableElement;
     };
@@ -90,33 +86,6 @@ final class DtoGoalElement {
         });
   }
 
-  static BeanGoalElement createBeanGoalElement(
-      ClassName goalType,
-      String name,
-      TypeElement beanType,
-      ModuleChoice moduleChoice,
-      DtoContext.GoalContext context
-  ) {
-    return new BeanGoalElement(new BeanGoalDetails(goalType, name, Access.PUBLIC, context), beanType, moduleChoice);
-  }
-
-  static List<BeanGoalElement> createBeanGoalElements(
-      TypeElement beanType,
-      DtoContext.GoalContext context) {
-    ClassName goalType = ClassName.get(beanType);
-    String name = downcase(simpleName(goalType));
-    List<ModuleChoice> goalOptions = List.of(BUILDER, UPDATER);
-    return transform(goalOptions,
-        goalOption -> createBeanGoalElement(goalType, name, beanType, goalOption, context));
-  }
-
-  record BeanGoalElement(
-      BeanGoalDetails details,
-      TypeElement beanType,
-      ModuleChoice moduleChoice
-  ) implements AbstractGoalElement {
-  }
-
   enum ModuleChoice {
     UPDATER, BUILDER
   }
@@ -132,23 +101,19 @@ final class DtoGoalElement {
       DtoContext.GoalContext context,
       ExecutableElement element,
       List<ModuleChoice> goalOptions) {
-    TypeName goalType = goalType(element);
     GoalModifiers modifiers = GoalModifiers.create(element);
-    String methodName = element.getSimpleName().toString();
     return transform(goalOptions,
         goalOption ->
             goalOption == BUILDER ?
-                createBuilderGoal(element, goalType, modifiers, methodName,
+                createBuilderGoal(element, modifiers,
                     parameterNames(element), context) :
-                createUpdaterGoal(element, goalType, modifiers, methodName,
+                createUpdaterGoal(element, modifiers,
                     parameterNames(element), context));
   }
 
   private static AbstractGoalElement createUpdaterGoal(
       ExecutableElement element,
-      TypeName goalType,
       GoalModifiers goalModifiers,
-      String methodName,
       List<String> parameterNames,
       DtoContext.GoalContext context) {
     return createRegularProjectableGoalElement(element, AbstractRegularDetails.create(
@@ -163,9 +128,7 @@ final class DtoGoalElement {
 
   private static AbstractGoalElement createBuilderGoal(
       ExecutableElement element,
-      TypeName goalType,
       GoalModifiers goalModifiers,
-      String methodName,
       List<String> parameterNames,
       DtoContext.GoalContext context) {
     AbstractRegularDetails details = AbstractRegularDetails.create(
