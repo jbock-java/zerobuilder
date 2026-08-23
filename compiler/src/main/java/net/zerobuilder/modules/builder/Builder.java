@@ -17,21 +17,17 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
-import static com.palantir.javapoet.TypeName.BOOLEAN;
 import static com.palantir.javapoet.TypeName.VOID;
 import static java.util.Collections.emptyList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.isInstance;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.builder.Generator.instanceField;
 
@@ -54,9 +50,6 @@ final class Builder {
     ArrayList<FieldSpec> builder = new ArrayList<>(steps.size() + 2);
     if (isInstance.apply(description.details)) {
       builder.add(instanceField(description));
-    }
-    if (description.details.lifecycle == REUSE_INSTANCES) {
-      builder.add(fieldSpec(BOOLEAN, IN_USE, PRIVATE));
     }
     steps.stream()
         .limit(steps.size() - 1)
@@ -113,14 +106,8 @@ final class Builder {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (details.lifecycle == REUSE_INSTANCES) {
-      builder.addStatement("this.$L = $L", IN_USE, false);
-    }
     CodeBlock args = description.invocationParameters();
     builder.addStatement("$T $N = new $T($L)", varGoal.type(), varGoal, type, args);
-    if (details.lifecycle == REUSE_INSTANCES) {
-      builder.add(free(description.parameters));
-    }
     return builder.addStatement("return $N", varGoal).build();
   }
 
@@ -131,19 +118,12 @@ final class Builder {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (details.lifecycle == REUSE_INSTANCES) {
-      builder.addStatement("this.$L = $L", IN_USE, false);
-    }
     if (VOID.equals(type)) {
       builder.addStatement("this.$N.$N($L)", instanceField(description),
           method, description.invocationParameters());
     } else {
       builder.addStatement("$T $N = this.$N.$N($L)", varGoal.type(), varGoal, instanceField(description),
           method, description.invocationParameters());
-    }
-    if (details.lifecycle == REUSE_INSTANCES) {
-      builder.addStatement("this.$N = null", instanceField(description));
-      builder.add(free(description.parameters));
     }
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);
@@ -158,9 +138,6 @@ final class Builder {
     ParameterSpec varGoal = parameterSpec(type,
         '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    if (details.lifecycle == REUSE_INSTANCES) {
-      builder.addStatement("this.$L = $L", IN_USE, false);
-    }
     if (VOID.equals(type)) {
       builder.addStatement("$T.$N($L)", rawClassName(description.context.type),
           method, description.invocationParameters());
@@ -169,21 +146,10 @@ final class Builder {
           rawClassName(description.context.type),
           method, description.invocationParameters());
     }
-    if (details.lifecycle == REUSE_INSTANCES) {
-      builder.add(free(description.parameters));
-    }
     if (!VOID.equals(type)) {
       builder.addStatement("return $N", varGoal);
     }
     return builder.build();
-  }
-
-  private static CodeBlock free(List<SimpleParameter> steps) {
-    return steps.stream()
-        .limit(steps.size() - 1)
-        .filter(parameter -> !parameter.type.isPrimitive())
-        .map(parameter -> statement("this.$N = null", parameter.name))
-        .collect(joinCodeBlocks);
   }
 
   private Builder() {

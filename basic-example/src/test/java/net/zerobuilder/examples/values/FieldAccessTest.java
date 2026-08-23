@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessBuilder;
 import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessUpdater;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FieldAccessTest {
 
@@ -23,8 +22,5 @@ public class FieldAccessTest {
     assertEquals(updated.length, 0d);
     assertEquals(updated.width, 10d);
     assertEquals(updated.height, 11d);
-    // check that caching works
-    assertTrue(builder == fieldAccessBuilder());
-    assertTrue(updater == fieldAccessUpdater(original));
   }
 }

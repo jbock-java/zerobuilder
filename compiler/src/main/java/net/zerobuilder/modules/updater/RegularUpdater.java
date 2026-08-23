@@ -29,7 +29,6 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.DtoContext.ContextLifecycle.REUSE_INSTANCES;
 import static net.zerobuilder.compiler.generate.DtoGoalDetails.regularDetailsCases;
 import static net.zerobuilder.compiler.generate.ZeroUtil.concat;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
@@ -103,7 +102,7 @@ public final class RegularUpdater implements ProjectedModule {
       builder.addStatement("this.$L = $L", IN_USE, false);
     }
     return builder.addStatement("$T $N = $T.$N($L)", varGoal.type(), varGoal, description.context.type,
-        method, details.invocationParameters())
+            method, details.invocationParameters())
         .add(free(description))
         .addStatement("return $N", varGoal)
         .build();
@@ -136,7 +135,7 @@ public final class RegularUpdater implements ProjectedModule {
       builder.addStatement("this.$L = $L", IN_USE, false);
     }
     return builder.addStatement("$T $N = new $T($L)", varGoal.type(), varGoal, type,
-        details.invocationParameters())
+            details.invocationParameters())
         .add(free(description))
         .addStatement("return $N", varGoal)
         .build();
@@ -163,20 +162,15 @@ public final class RegularUpdater implements ProjectedModule {
           RegularUpdater::isInstanceMethodReusable);
 
   private static boolean isInstanceMethodReusable(InstanceMethodGoalDetails details) {
-    return details.lifecycle == REUSE_INSTANCES &&
-        details.typeParameters.isEmpty() &&
-        details.instanceTypeParameters.isEmpty() &&
-        details.returnTypeParameters.isEmpty();
+    return false;
   }
 
   private static boolean isStaticMethodReusable(StaticMethodGoalDetails details) {
-    return details.lifecycle == REUSE_INSTANCES &&
-        details.typeParameters.isEmpty();
+    return false;
   }
 
   private static boolean isConstructorReusable(ConstructorGoalDetails details) {
-    return details.lifecycle == REUSE_INSTANCES &&
-        details.instanceTypeParameters.isEmpty();
+    return false;
   }
 
   private final BiFunction<AbstractRegularDetails, ProjectedRegularGoalDescription, List<TypeSpec>> types =

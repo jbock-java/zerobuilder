@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import static net.zerobuilder.examples.instaup.SimpleFactoryBuilders.simpleUpdaterFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class SimpleFactoryTest {
 
@@ -21,7 +20,5 @@ public class SimpleFactoryTest {
         .done();
     assertEquals(simple.concat(), "ab");
     assertEquals(updatedSimple.concat(), "ac");
-    // updater is recycled
-    assertSame(updaterFactory.updater(factory.simple("x")), updater);
   }
 }
