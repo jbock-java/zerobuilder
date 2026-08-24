@@ -40,7 +40,7 @@ final class MessageBuilders {
   // from @RecordUpdater annotation
   static MessageUpdater builder(Message message)
 
-  private static class MessageUpdater {
+  static class MessageUpdater {
     MessageUpdater sender(String sender)
     MessageUpdater body(String body)
     MessageUpdater recipient(String recipient)
@@ -48,3 +48,7 @@ final class MessageBuilders {
   }
 }
 ```
+
+# see also
+
+similar project: https://github.com/DanielLiu1123/recordbuilder

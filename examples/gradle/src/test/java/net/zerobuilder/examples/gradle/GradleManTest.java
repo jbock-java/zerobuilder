@@ -8,7 +8,7 @@ public class GradleManTest {
 
   @Test
   public void test() {
-    GradleMan gradleMan = GradleManBuilders.gradleManBuilder().message("Hello gradle!");
+    GradleMan gradleMan = GradleManBuilders.builder().message("Hello gradle!");
     assertEquals("Hello gradle!", gradleMan.message);
   }
 }

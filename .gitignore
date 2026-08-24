@@ -1,11 +1,7 @@
-target
-.idea
-*.iml
-*~
-/compiler/dependency-reduced-pom.xml
-/deploy
-
-/dot/*.png
-
+/.idea
 /.gradle
-build
+/build
+/compiler/build
+/zerobuilder/build
+/basic-example/build
+*.swp
