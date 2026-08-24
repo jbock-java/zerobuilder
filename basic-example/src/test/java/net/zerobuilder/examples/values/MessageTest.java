@@ -9,17 +9,15 @@ class MessageTest {
   @Test
   void message() {
     Message message = MessageBuilders.builder()
-        .sender("Alice")
-        .body("Hi")
-        .recipient("Bob")
-        .subject("test");
-    assertEquals("Alice", message.sender);
-    assertEquals("Hi", message.body);
-    assertEquals("Bob", message.recipient);
-    assertEquals("test", message.subject);
+            .sender("Alice")
+            .body("Hi")
+            .recipient("Bob");
+    assertEquals("Alice", message.sender());
+    assertEquals("Hi", message.body());
+    assertEquals("Bob", message.recipient());
     message = MessageBuilders.builder(message)
         .body("Goodbye")
         .build();
-    assertEquals("Goodbye", message.body);
+    assertEquals("Goodbye", message.body());
   }
 }

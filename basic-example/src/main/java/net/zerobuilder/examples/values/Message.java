@@ -1,26 +1,13 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Builder;
-import net.zerobuilder.Updater;
+import net.zerobuilder.RecordBuilder;
+import net.zerobuilder.RecordUpdater;
 
-// direct field access
-// see MessageTest
-final class Message {
-
-  final String sender;
-  final String body;
-  final String recipient;
-  final String subject;
-
-  @Builder
-  @Updater
-  Message(String sender,
-          String body,
-          String recipient,
-          String subject) {
-    this.sender = sender;
-    this.body = body;
-    this.recipient = recipient;
-    this.subject = subject;
-  }
+@RecordBuilder
+@RecordUpdater
+record Message(
+        String sender,
+        String body,
+        String recipient
+) {
 }
