@@ -4,6 +4,24 @@ import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.TypeSpec;
+import net.zerobuilder.Builder;
+import net.zerobuilder.RecordBuilder;
+import net.zerobuilder.RecordUpdater;
+import net.zerobuilder.Updater;
+import net.zerobuilder.compiler.analyse.Analyser;
+import net.zerobuilder.compiler.analyse.ValidationException;
+import net.zerobuilder.compiler.common.LessTypes;
+import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractGoalDescription;
+import net.zerobuilder.compiler.generate.Generator;
+
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
@@ -12,23 +30,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.tools.JavaFileObject;
-import net.zerobuilder.Builder;
-import net.zerobuilder.RecordBuilder;
-import net.zerobuilder.RecordUpdater;
-import net.zerobuilder.Updater;
-import net.zerobuilder.compiler.analyse.Analyser;
-import net.zerobuilder.compiler.analyse.ValidationException;
-import net.zerobuilder.compiler.common.LessTypes;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.compiler.generate.Generator;
 
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
@@ -77,7 +78,7 @@ public final class ZeroProcessor extends AbstractProcessor {
         if (!done.add(enclosingElement)) {
           continue;
         }
-        List<AbstractGoalInput> generatorInput = Analyser.analyse(enclosingElement);
+        List<AbstractGoalDescription> generatorInput = Analyser.analyse(enclosingElement);
         GeneratorOutput generatorOutput = Generator.generate(generatorInput);
         TypeSpec typeSpec = generatorOutput.typeSpec(generatedAnnotations);
         try {

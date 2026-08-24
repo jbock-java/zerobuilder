@@ -12,14 +12,8 @@ import net.zerobuilder.compiler.analyse.DtoGoalElement.BuilderGoalElement;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.UpdaterGoalElement;
 import net.zerobuilder.compiler.common.LessElements;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.BuilderGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.UpdaterGoalInput;
-import net.zerobuilder.compiler.generate.DtoModule.BuilderModule;
-import net.zerobuilder.compiler.generate.DtoModule.UpdaterModule;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractGoalDescription;
 import net.zerobuilder.compiler.generate.GoalContext;
-import net.zerobuilder.modules.builder.RegularBuilder;
-import net.zerobuilder.modules.updater.RegularUpdater;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -42,9 +36,6 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class Analyser {
 
-  private static final BuilderModule BUILDER = new RegularBuilder();
-  private static final UpdaterModule UPDATER = new RegularUpdater();
-
   /**
    * Extract all goals from the given type, by inspecting annotations.
    * Perform validations and bundle each goal with the appropriate module.
@@ -53,7 +44,7 @@ public final class Analyser {
    * @return list of goal inputs
    * @throws ValidationException if validation fails
    */
-  public static List<AbstractGoalInput> analyse(TypeElement tel) throws ValidationException {
+  public static List<AbstractGoalDescription> analyse(TypeElement tel) throws ValidationException {
     validateContextClass(tel);
     TypeName type = parameterizedTypeName(ClassName.get(tel),
         transform(tel.getTypeParameters(), TypeVariableName::get));
@@ -65,10 +56,10 @@ public final class Analyser {
     return transform(goals, Analyser::assignModule);
   }
 
-  private static AbstractGoalInput assignModule(AbstractGoalElement element) {
+  private static AbstractGoalDescription assignModule(AbstractGoalElement element) {
     return switch (element) {
-      case BuilderGoalElement regular -> new BuilderGoalInput(BUILDER, validateBuilder(regular));
-      case UpdaterGoalElement projected -> new UpdaterGoalInput(UPDATER, validateUpdater(projected));
+      case BuilderGoalElement regular -> validateBuilder(regular);
+      case UpdaterGoalElement projected -> validateUpdater(projected);
     };
   }
 

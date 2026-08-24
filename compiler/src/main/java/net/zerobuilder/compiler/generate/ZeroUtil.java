@@ -8,27 +8,24 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
+
+import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import javax.lang.model.element.Modifier;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isLowerCase;
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
 import static java.lang.Character.toUpperCase;
-import static java.util.Arrays.copyOf;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 public final class ZeroUtil {
@@ -88,15 +85,9 @@ public final class ZeroUtil {
     return input.stream().map(function).collect(toList());
   }
 
-  public static <P> List<P> cons(P first, List<? extends P> list) {
-    List<P> builder = new ArrayList<>(list.size() + 1);
-    builder.add(first);
-    builder.addAll(list);
-    return builder;
+  public static Collector<CodeBlock, List<CodeBlock>, CodeBlock> joinCodeBlocks() {
+    return joinCodeBlocks("");
   }
-
-  public static final Collector<CodeBlock, List<CodeBlock>, CodeBlock> joinCodeBlocks
-      = joinCodeBlocks("");
 
   public static Collector<CodeBlock, List<CodeBlock>, CodeBlock> joinCodeBlocks(String delimiter) {
     return new Collector<>() {
@@ -209,7 +200,7 @@ public final class ZeroUtil {
         return modifiers;
       }
     }
-    Modifier[] copy = copyOf(modifiers, modifiers.length + 1);
+    Modifier[] copy = Arrays.copyOf(modifiers, modifiers.length + 1);
     copy[modifiers.length] = modifier;
     return copy;
   }
@@ -222,91 +213,6 @@ public final class ZeroUtil {
             new Modifier[]{modifiers};
   }
 
-  private static final class TypeWalk implements Iterator<TypeName> {
-
-    private final Stack<TypeName> stack;
-
-    TypeWalk(TypeName type) {
-      stack = new Stack<>();
-      stack.push(type);
-    }
-
-    @Override
-    public boolean hasNext() {
-      return !stack.isEmpty();
-    }
-
-    @Override
-    public TypeName next() {
-      TypeName type = stack.pop();
-      if (type instanceof ParameterizedTypeName) {
-        ((ParameterizedTypeName) type).typeArguments().forEach(stack::push);
-      }
-      if (type instanceof TypeVariableName) {
-        ((TypeVariableName) type).bounds().forEach(stack::push);
-      }
-      return type;
-    }
-  }
-
-  private static boolean maybeTypevars(TypeName type) {
-    if (!(type instanceof ParameterizedTypeName
-        || type instanceof TypeVariableName)) {
-      return false;
-    }
-    if (type instanceof ParameterizedTypeName) {
-      for (TypeName targ : ((ParameterizedTypeName) type).typeArguments()) {
-        if (targ instanceof ParameterizedTypeName
-            || targ instanceof TypeVariableName) {
-          return true;
-        }
-      }
-      return false;
-    }
-    return true;
-  }
-
-  public static boolean references(TypeName type, TypeVariableName test) {
-    if (!maybeTypevars(type)) {
-      return false;
-    }
-    if (type instanceof TypeVariableName
-        && ((TypeVariableName) type).bounds().isEmpty()) {
-      return type.equals(test);
-    }
-    TypeWalk walk = new TypeWalk(type);
-    while (walk.hasNext()) {
-      if (walk.next().equals(test)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public static List<TypeVariableName> extractTypeVars(TypeName type) {
-    if (!maybeTypevars(type)) {
-      return emptyList();
-    }
-    List<TypeVariableName> builder = new ArrayList<>();
-    TypeWalk walk = new TypeWalk(type);
-    while (walk.hasNext()) {
-      TypeName next = walk.next();
-      if (next instanceof TypeVariableName) {
-        if (!builder.contains(next)) {
-          builder.add((TypeVariableName) next);
-        }
-      }
-    }
-    return builder;
-  }
-
-  public static <E> List<E> reverse(List<E> in) {
-    List<E> builder = new ArrayList<>(in);
-    Collections.reverse(builder);
-    return builder;
-  }
-
   private ZeroUtil() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

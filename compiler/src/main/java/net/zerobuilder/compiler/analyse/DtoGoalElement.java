@@ -3,13 +3,14 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-import java.util.List;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Name;
 import net.zerobuilder.compiler.generate.GoalContext;
 import net.zerobuilder.compiler.generate.GoalDetails;
+
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import java.util.List;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice.BUILDER;
@@ -17,22 +18,22 @@ import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.generate.GoalDetails.createGoalDetails;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
-final class DtoGoalElement {
+public final class DtoGoalElement {
 
-  sealed interface AbstractGoalElement permits BuilderGoalElement, UpdaterGoalElement {
+  public sealed interface AbstractGoalElement permits BuilderGoalElement, UpdaterGoalElement {
   }
 
   static ExecutableElement executableElement(AbstractGoalElement element) {
     return switch (element) {
-      case BuilderGoalElement regular -> regular.executableElement;
-      case UpdaterGoalElement projected -> projected.executableElement;
+      case BuilderGoalElement builder -> builder.executableElement;
+      case UpdaterGoalElement updater -> updater.executableElement;
     };
   }
 
   static String goalName(AbstractGoalElement element) {
     return switch (element) {
-      case BuilderGoalElement regular -> regular.details.name();
-      case UpdaterGoalElement projected -> projected.details.name();
+      case BuilderGoalElement builder -> builder.details.name();
+      case UpdaterGoalElement updater -> updater.details.name();
     };
   }
 
@@ -41,8 +42,8 @@ final class DtoGoalElement {
       return null;
     }
     return switch (element) {
-      case BuilderGoalElement regular -> regular.executableElement;
-      case UpdaterGoalElement projected -> projected.executableElement;
+      case BuilderGoalElement builder -> builder.executableElement;
+      case UpdaterGoalElement updater -> updater.executableElement;
     };
   }
 
@@ -53,7 +54,7 @@ final class DtoGoalElement {
     return new BuilderGoalElement(details, element, GoalModifiers.create(element), context);
   }
 
-  record BuilderGoalElement(
+  public record BuilderGoalElement(
       GoalDetails details,
       ExecutableElement executableElement,
       GoalModifiers goalAnnotation,
@@ -68,7 +69,7 @@ final class DtoGoalElement {
     return new UpdaterGoalElement(details, element, GoalModifiers.create(element), context);
   }
 
-  record UpdaterGoalElement(
+  public record UpdaterGoalElement(
       GoalDetails details,
       ExecutableElement executableElement,
       GoalModifiers goalAnnotation,
@@ -136,6 +137,5 @@ final class DtoGoalElement {
   }
 
   private DtoGoalElement() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

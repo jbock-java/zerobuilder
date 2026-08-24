@@ -45,7 +45,7 @@ final class UpdaterMethod {
       UpdaterGoalDescription description) {
     return description.parameters().stream()
         .map(step -> copyFromProjection(step, description))
-        .collect(ZeroUtil.joinCodeBlocks);
+        .collect(ZeroUtil.joinCodeBlocks());
   }
 
   private static CodeBlock copyFromProjection(

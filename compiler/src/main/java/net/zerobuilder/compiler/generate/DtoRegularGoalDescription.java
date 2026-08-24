@@ -2,16 +2,20 @@ package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.TypeName;
-import java.util.List;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+
+import java.util.List;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 
 public final class DtoRegularGoalDescription {
+
+  public sealed interface AbstractGoalDescription permits BuilderGoalDescription, UpdaterGoalDescription {
+  }
 
   private static int[] createUnshuffle(
       List<? extends AbstractParameter> parameters,
@@ -29,7 +33,7 @@ public final class DtoRegularGoalDescription {
       List<TypeName> thrownTypes,
       List<SimpleParameter> parameters,
       GoalContext context,
-      int[] ranking) {
+      int[] ranking) implements AbstractGoalDescription {
 
     public <E> List<E> unshuffle(List<E> shuffled) {
       return applyRanking(ranking, shuffled);
@@ -44,11 +48,18 @@ public final class DtoRegularGoalDescription {
     }
   }
 
+  static GoalContext getContext(AbstractGoalDescription description) {
+    return switch (description) {
+      case BuilderGoalDescription builder -> builder.context;
+      case UpdaterGoalDescription updater -> updater.context;
+    };
+  }
+
   public record UpdaterGoalDescription(
       GoalDetails details,
       List<TypeName> thrownTypes,
       List<ProjectedParameter> parameters,
-      GoalContext context) {
+      GoalContext context) implements AbstractGoalDescription {
   }
 
   public static BuilderGoalDescription createBuilderGoalDescription(
@@ -89,6 +100,5 @@ public final class DtoRegularGoalDescription {
   }
 
   private DtoRegularGoalDescription() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

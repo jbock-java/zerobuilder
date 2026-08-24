@@ -2,10 +2,6 @@ package net.zerobuilder.api.test;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeSpec;
-import java.io.IOException;
-import java.util.List;
-import javax.lang.model.element.Modifier;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.UpdaterGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter;
@@ -15,6 +11,10 @@ import net.zerobuilder.compiler.generate.GoalContext;
 import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.modules.updater.RegularUpdater;
 import org.junit.jupiter.api.Test;
+
+import javax.lang.model.element.Modifier;
+import java.io.IOException;
+import java.util.List;
 
 import static net.zerobuilder.compiler.generate.Access.PUBLIC;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createGetterMethod;
@@ -70,8 +70,7 @@ public class RegularUpdaterTest {
         goalContext);
 
     // Invoke the generator
-    GeneratorOutput generatorOutput = Generator.generate(
-        List.of(new UpdaterGoalInput(REGULAR_UPDATER_MODULE, description)));
+    GeneratorOutput generatorOutput = Generator.generate(List.of(description));
 
     assertEquals(1, generatorOutput.methods().size());
     assertEquals("builder", generatorOutput.methods().getFirst().name());
