@@ -16,17 +16,13 @@ final class BuilderUtil {
     this.description = description;
   }
 
-  String stepInterfaceName(int i) {
+  ClassName stepType(int i) {
     DtoRegularParameter.SimpleParameter parameter = description.parameters().get(i);
-    return upcase(parameter.name()) + "Step";
+    return description.context().generatedType()
+        .nestedClass(upcase(parameter.name()) + "Step");
   }
 
   ClassName implType() {
-    ClassName contract = contractType();
-    return description.context().generatedType().nestedClass(contract.simpleName() + "Impl");
-  }
-
-  ClassName contractType() {
     String contractName = upcase(description.details().name()) + MODULE_NAME;
     return description.context().generatedType().nestedClass(contractName);
   }

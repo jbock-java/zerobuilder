@@ -28,7 +28,7 @@ final class BuilderMethod {
   MethodSpec builderMethod() {
     GoalDetails goalDetails = description.details();
     return methodBuilder(methodName())
-        .returns(description.context().generatedType().nestedClass(util.stepInterfaceName(0)))
+        .returns(util.stepType(0))
         .addModifiers(goalDetails.access(STATIC))
         .addCode(returnRegular())
         .build();

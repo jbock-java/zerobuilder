@@ -6,10 +6,11 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import io.jbock.simple.Inject;
-import java.util.ArrayList;
-import java.util.List;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -31,8 +32,7 @@ final class Builder {
     if (i == description.parameters().size() - 1) {
       return description.details().goalType();
     }
-    return description.context().generatedType()
-        .nestedClass(util.stepInterfaceName(i + 1));
+    return util.stepType(i + 1);
   }
 
   List<FieldSpec> fields() {

@@ -1,8 +1,9 @@
 package net.zerobuilder.compiler;
 
 import io.jbock.testing.compile.Compilation;
-import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.Test;
+
+import javax.tools.JavaFileObject;
 
 import static io.jbock.testing.compile.CompilationSubject.assertThat;
 import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
@@ -39,13 +40,13 @@ class StepOrderTest {
             "  }",
             "",
             "  public static SauceStep spaghettiBuilder() {",
-            "    return new SpaghettiBuilderImpl();",
+            "    return new SpaghettiBuilder();",
             "  }",
             "",
-            "  private static final class SpaghettiBuilderImpl implements SauceStep, CheeseStep {",
+            "  private static final class SpaghettiBuilder implements SauceStep, CheeseStep {",
             "    private String sauce;",
             "",
-            "    SpaghettiBuilderImpl() {",
+            "    SpaghettiBuilder() {",
             "    }",
             "",
             "    @Override",
@@ -57,12 +58,6 @@ class StepOrderTest {
             "    @Override",
             "    public Spaghetti cheese(String cheese) {",
             "      return new Spaghetti(cheese, sauce);",
-            "    }",
-            "  }",
-            "",
-            "  public static final class SpaghettiBuilder {",
-            "    private SpaghettiBuilder() {",
-            "      throw new UnsupportedOperationException(\"no instances\");",
             "    }",
             "  }",
             "",

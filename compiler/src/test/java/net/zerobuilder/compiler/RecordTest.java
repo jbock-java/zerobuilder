@@ -1,8 +1,9 @@
 package net.zerobuilder.compiler;
 
 import io.jbock.testing.compile.Compilation;
-import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.Test;
+
+import javax.tools.JavaFileObject;
 
 import static io.jbock.testing.compile.CompilationSubject.assertThat;
 import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
@@ -65,7 +66,7 @@ class RecordTest {
         "public final class VibeCoderBuilders {",
         "",
         "  public static NameStep vibeCoderBuilder() {",
-        "    return new VibeCoderBuilderImpl();",
+        "    return new VibeCoderBuilder();",
         "  }",
         "}");
   }

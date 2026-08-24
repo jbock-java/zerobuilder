@@ -28,7 +28,7 @@ final class Step {
   }
 
   TypeSpec stepInterface(int i) {
-    return interfaceBuilder(util.stepInterfaceName(i))
+    return interfaceBuilder(util.stepType(i))
         .addMethod(stepMethod(i))
         .addModifiers(PUBLIC)
         .build();
