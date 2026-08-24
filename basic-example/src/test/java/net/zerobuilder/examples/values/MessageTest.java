@@ -2,15 +2,13 @@ package net.zerobuilder.examples.values;
 
 import org.junit.jupiter.api.Test;
 
-import static net.zerobuilder.examples.values.MessageBuilders.messageBuilder;
-import static net.zerobuilder.examples.values.MessageBuilders.messageUpdater;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MessageTest {
 
   @Test
   void message() {
-    Message message = messageBuilder()
+    Message message = MessageBuilders.builder()
         .sender("Alice")
         .body("Hi")
         .recipient("Bob")
@@ -19,7 +17,7 @@ class MessageTest {
     assertEquals("Hi", message.body);
     assertEquals("Bob", message.recipient);
     assertEquals("test", message.subject);
-    message = messageUpdater(message)
+    message = MessageBuilders.builder(message)
         .body("Goodbye")
         .build();
     assertEquals("Goodbye", message.body);

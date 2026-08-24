@@ -42,7 +42,6 @@ public final class DtoGeneratorOutput {
 
     private MethodSpec constructor() {
       return constructorBuilder()
-          .addStatement("throw new $T($S)", UnsupportedOperationException.class, "no instances")
           .addModifiers(PRIVATE)
           .build();
     }

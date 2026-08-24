@@ -1,11 +1,11 @@
 package net.zerobuilder.examples.values;
 
-import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.emptyListConvenienceBuilder;
-import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.emptyListConvenienceUpdater;
+import java.util.List;
+import java.util.Set;
+
+import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.builder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -13,13 +13,13 @@ class EmptyListConvenienceTest {
 
   @Test
   void emptyTest() {
-    EmptyListConvenience empty = emptyListConvenienceBuilder()
+    EmptyListConvenience empty = builder()
         .things(List.of())
         .strings(List.of())
         .collection(List.of())
         .iterables(List.of())
         .sets(Set.of());
-    EmptyListConvenience notEmpty = emptyListConvenienceUpdater(empty)
+    EmptyListConvenience notEmpty = builder(empty)
         .strings(List.of(""))
         .things(List.of(""))
         .collection(List.of(List.of("")))

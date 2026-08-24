@@ -5,11 +5,12 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
-import java.util.List;
 import net.zerobuilder.compiler.generate.DtoModule.UpdaterModule;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
 import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.ModuleOutput;
+
+import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -69,10 +70,6 @@ public final class RegularUpdater implements UpdaterModule {
             details.invocationParameters())
         .addStatement("return $N", varGoal)
         .build();
-  }
-
-  static String methodName(UpdaterGoalDescription description) {
-    return description.details().name() + MODULE_NAME;
   }
 
   @Override

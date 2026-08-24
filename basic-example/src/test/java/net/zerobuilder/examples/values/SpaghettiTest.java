@@ -2,7 +2,8 @@ package net.zerobuilder.examples.values;
 
 import org.junit.jupiter.api.Test;
 
-import static net.zerobuilder.examples.values.SpaghettiBuilders.spaghettiUpdater;
+import static net.zerobuilder.examples.values.Spaghetti.napoliBuilder;
+import static net.zerobuilder.examples.values.SpaghettiBuilders.builder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,14 +11,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SpaghettiTest {
 
   @Test
-  void napoliBuilder() {
-    Spaghetti spaghetti = Spaghetti.napoliBuilder()
+  void testSpaghettiBuilder() {
+    Spaghetti spaghetti = napoliBuilder()
         .cheese("reggiano")
         .alDente(true);
     assertTrue(spaghetti.alDente);
     assertEquals("reggiano", spaghetti.cheese);
     assertEquals("tomato", spaghetti.sauce);
-    spaghetti = spaghettiUpdater(spaghetti)
+    spaghetti = builder(spaghetti)
         .sauce("hot salsa")
         .cheese("cheddar")
         .alDente(false)

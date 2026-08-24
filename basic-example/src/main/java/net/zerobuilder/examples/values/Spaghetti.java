@@ -20,6 +20,6 @@ final class Spaghetti {
   }
 
   static SpaghettiBuilders.CheeseStep napoliBuilder() {
-    return SpaghettiBuilders.spaghettiBuilder().sauce("tomato");
+    return SpaghettiBuilders.builder().sauce("tomato");
   }
 }

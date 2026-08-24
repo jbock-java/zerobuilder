@@ -17,6 +17,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
 final class Builder {
   private final BuilderGoalDescription description;
@@ -32,7 +33,9 @@ final class Builder {
     if (i == description.parameters().size() - 1) {
       return description.details().goalType();
     }
-    return util.stepType(i + 1);
+    return parameterizedTypeName(
+        util.stepType(i + 1),
+        description.details().instanceTypeParameters());
   }
 
   List<FieldSpec> fields() {

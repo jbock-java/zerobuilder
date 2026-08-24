@@ -3,32 +3,31 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-import java.util.ArrayList;
-import java.util.List;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Builder;
 import net.zerobuilder.RecordBuilder;
 import net.zerobuilder.RecordUpdater;
 import net.zerobuilder.Updater;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.BuilderGoalElement;
+import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
 import net.zerobuilder.compiler.analyse.DtoGoalElement.UpdaterGoalElement;
 import net.zerobuilder.compiler.common.LessElements;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.AbstractGoalInput;
-import net.zerobuilder.compiler.generate.DtoGeneratorInput.UpdaterGoalInput;
 import net.zerobuilder.compiler.generate.DtoGeneratorInput.BuilderGoalInput;
+import net.zerobuilder.compiler.generate.DtoGeneratorInput.UpdaterGoalInput;
 import net.zerobuilder.compiler.generate.DtoModule.BuilderModule;
 import net.zerobuilder.compiler.generate.DtoModule.UpdaterModule;
 import net.zerobuilder.compiler.generate.GoalContext;
 import net.zerobuilder.modules.builder.RegularBuilder;
-import net.zerobuilder.modules.generics.GenericsBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
+
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import java.util.ArrayList;
+import java.util.List;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
-import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.createRegular;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkAccessLevel;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkNameConflict;
@@ -45,7 +44,6 @@ public final class Analyser {
 
   private static final BuilderModule BUILDER = new RegularBuilder();
   private static final UpdaterModule UPDATER = new RegularUpdater();
-  private static final BuilderModule GENERICS = new GenericsBuilder();
 
   /**
    * Extract all goals from the given type, by inspecting annotations.
@@ -69,17 +67,9 @@ public final class Analyser {
 
   private static AbstractGoalInput assignModule(AbstractGoalElement element) {
     return switch (element) {
-      case BuilderGoalElement regular -> hasTypevars(regular.executableElement()) ?
-          new BuilderGoalInput(GENERICS, validateBuilder(regular)) :
-          new BuilderGoalInput(BUILDER, validateBuilder(regular));
+      case BuilderGoalElement regular -> new BuilderGoalInput(BUILDER, validateBuilder(regular));
       case UpdaterGoalElement projected -> new UpdaterGoalInput(UPDATER, validateUpdater(projected));
     };
-  }
-
-  private static boolean hasTypevars(ExecutableElement element) {
-    return !element.getTypeParameters().isEmpty()
-        || !element.getModifiers().contains(STATIC)
-        && !asTypeElement(element.getEnclosingElement().asType()).getTypeParameters().isEmpty();
   }
 
   private static List<? extends AbstractGoalElement> regularGoals(TypeElement tel, GoalContext context) {

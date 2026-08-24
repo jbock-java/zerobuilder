@@ -2,14 +2,17 @@ package net.zerobuilder.modules.builder;
 
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeVariableName;
 import io.jbock.simple.Inject;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
-import net.zerobuilder.compiler.generate.GoalDetails;
+
+import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.modules.builder.BuilderUtil.MODULE_NAME;
 
 final class BuilderMethod {
   private final BuilderGoalDescription description;
@@ -21,20 +24,20 @@ final class BuilderMethod {
     this.util = util;
   }
 
-  private String methodName() {
-    return description.details().name() + MODULE_NAME;
-  }
-
   MethodSpec builderMethod() {
-    GoalDetails goalDetails = description.details();
-    return methodBuilder(methodName())
-        .returns(util.stepType(0))
-        .addModifiers(goalDetails.access(STATIC))
+    List<TypeVariableName> typeVars = description.details().instanceTypeParameters();
+    return methodBuilder("builder")
+        .addTypeVariables(typeVars)
+        .returns(parameterizedTypeName(util.stepType(0), typeVars))
+        .addModifiers(description.details().access(STATIC))
         .addCode(returnRegular())
         .build();
   }
 
   private CodeBlock returnRegular() {
-    return statement("return new $T()", util.implType());
+    TypeName typeName = parameterizedTypeName(
+        util.implType(),
+        description.details().instanceTypeParameters());
+    return statement("return new $T()", typeName);
   }
 }

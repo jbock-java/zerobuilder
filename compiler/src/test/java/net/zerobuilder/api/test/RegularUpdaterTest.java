@@ -74,7 +74,7 @@ public class RegularUpdaterTest {
         List.of(new UpdaterGoalInput(REGULAR_UPDATER_MODULE, description)));
 
     assertEquals(1, generatorOutput.methods().size());
-    assertEquals("myGoalUpdater", generatorOutput.methods().getFirst().name());
+    assertEquals("builder", generatorOutput.methods().getFirst().name());
     assertEquals(1, generatorOutput.methods().getFirst().parameters().size());
     assertEquals(List.of(IO_EXCEPTION), generatorOutput.methods().getFirst().exceptions());
     assertTrue(generatorOutput.methods().getFirst().modifiers().contains(Modifier.STATIC));

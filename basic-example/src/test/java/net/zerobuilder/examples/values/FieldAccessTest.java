@@ -3,17 +3,16 @@ package net.zerobuilder.examples.values;
 import net.zerobuilder.examples.values.FieldAccessBuilders.FieldAccessUpdater;
 import org.junit.jupiter.api.Test;
 
-import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessBuilder;
-import static net.zerobuilder.examples.values.FieldAccessBuilders.fieldAccessUpdater;
+import static net.zerobuilder.examples.values.FieldAccessBuilders.builder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class FieldAccessTest {
 
   @Test
   void basicTest() {
-    FieldAccessBuilders.LengthStep builder = fieldAccessBuilder();
+    FieldAccessBuilders.LengthStep builder = builder();
     FieldAccess original = builder.length(12).width(10).height(11);
-    FieldAccessUpdater updater = fieldAccessUpdater(original);
+    FieldAccessUpdater updater = builder(original);
     FieldAccess updated = updater.length(0).build();
     assertEquals(12d, original.length);
     assertEquals(10d, original.width);

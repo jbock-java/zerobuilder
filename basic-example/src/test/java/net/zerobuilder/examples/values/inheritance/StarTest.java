@@ -1,19 +1,19 @@
 package net.zerobuilder.examples.values.inheritance;
 
-import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 
-import static net.zerobuilder.examples.values.inheritance.StarBuilders.starBuilder;
-import static net.zerobuilder.examples.values.inheritance.StarBuilders.starUpdater;
+import java.math.BigInteger;
+
+import static net.zerobuilder.examples.values.inheritance.StarBuilders.builder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class StarTest {
 
   @Test
   void test() {
-    Star sirius = starBuilder()
+    Star sirius = builder()
         .mass(BigInteger.valueOf(202));
-    Star rigel = starUpdater(sirius)
+    Star rigel = builder(sirius)
         .mass(BigInteger.valueOf(2300))
         .build();
     assertEquals(BigInteger.valueOf(202), sirius.mass);
