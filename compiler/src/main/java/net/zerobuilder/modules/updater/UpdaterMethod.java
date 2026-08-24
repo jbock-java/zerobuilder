@@ -4,6 +4,8 @@ import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
+import java.util.List;
+import java.util.Set;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.GetterMethod;
@@ -11,9 +13,6 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDe
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.ZeroUtil;
-
-import java.util.List;
-import java.util.Set;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static java.util.stream.Collectors.toSet;
@@ -37,7 +36,7 @@ final class UpdaterMethod {
         .addCode(initVarUpdater(updater))
         .addCode(copyBlock(description))
         .addStatement("return $N", updater)
-        .addModifiers(description.details().access(STATIC))
+        .addModifiers(description.details().getAccess(STATIC))
         .build();
   }
 
@@ -92,8 +91,7 @@ final class UpdaterMethod {
   }
 
   static ParameterSpec varUpdater(UpdaterGoalDescription description) {
-    TypeName updaterType = implType(description);
-    return parameterSpec(updaterType, "_updater");
+    return parameterSpec(implType(description), "updater");
   }
 
   static Set<TypeName> thrownByProjections(UpdaterGoalDescription description) {

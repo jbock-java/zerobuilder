@@ -6,11 +6,10 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import io.jbock.simple.Inject;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
+import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;

@@ -2,11 +2,10 @@ package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.TypeName;
+import java.util.List;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.AbstractParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
-
-import java.util.List;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;
 import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
@@ -46,6 +45,13 @@ public final class DtoRegularGoalDescription {
           .map(CodeBlock::of)
           .collect(joinCodeBlocks(", "));
     }
+  }
+
+  static GoalDetails getDetails(AbstractGoalDescription description) {
+    return switch (description) {
+      case BuilderGoalDescription builder -> builder.details;
+      case UpdaterGoalDescription updater -> updater.details;
+    };
   }
 
   static GoalContext getContext(AbstractGoalDescription description) {

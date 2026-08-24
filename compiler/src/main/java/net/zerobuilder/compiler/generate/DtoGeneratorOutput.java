@@ -10,7 +10,6 @@ import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PUBLIC;
 
 public final class DtoGeneratorOutput {
 
@@ -21,6 +20,7 @@ public final class DtoGeneratorOutput {
    * @param generatedType Class name of the type returned by {@link #typeSpec(List)}.
    */
   public record GeneratorOutput(
+      GoalDetails detail,
       List<MethodSpec> methods,
       List<TypeSpec> nestedTypes,
       ClassName generatedType) {
@@ -36,7 +36,7 @@ public final class DtoGeneratorOutput {
           .addMethod(constructor())
           .addMethods(methods())
           .addAnnotations(generatedAnnotations)
-          .addModifiers(PUBLIC, FINAL)
+          .addModifiers(detail.getAccess(FINAL))
           .addTypes(nestedTypes()).build();
     }
 

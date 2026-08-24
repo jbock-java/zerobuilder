@@ -5,9 +5,8 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
 import io.jbock.simple.Inject;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
-
 import java.util.List;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -29,7 +28,7 @@ final class BuilderMethod {
     return methodBuilder("builder")
         .addTypeVariables(typeVars)
         .returns(parameterizedTypeName(util.stepType(0), typeVars))
-        .addModifiers(description.details().access(STATIC))
+        .addModifiers(description.details().getAccess(STATIC))
         .addCode(returnRegular())
         .build();
   }

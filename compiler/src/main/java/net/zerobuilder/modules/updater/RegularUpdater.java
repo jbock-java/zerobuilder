@@ -2,25 +2,20 @@ package net.zerobuilder.modules.updater;
 
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.MethodSpec;
-import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
+import java.util.List;
 import net.zerobuilder.compiler.generate.DtoModule.UpdaterModule;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
 import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.ModuleOutput;
 
-import java.util.List;
-
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
-import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -32,7 +27,7 @@ public final class RegularUpdater implements UpdaterModule {
 
   private MethodSpec doneMethod(UpdaterGoalDescription description) {
     return methodBuilder("build")
-        .addModifiers(PUBLIC)
+        .addModifiers(description.details().getAccess())
         .addExceptions(description.thrownTypes())
         .returns(description.details().goalType())
         .addCode(constructorCall(description.details()))
@@ -45,7 +40,7 @@ public final class RegularUpdater implements UpdaterModule {
         .addMethods(Updater.stepMethods(description))
         .addTypeVariables(description.details().instanceTypeParameters())
         .addMethod(doneMethod(description))
-        .addModifiers(PUBLIC, STATIC, FINAL)
+        .addModifiers(description.details().getAccess(STATIC, FINAL))
         .addMethod(constructor(PRIVATE))
         .build();
   }
@@ -63,12 +58,9 @@ public final class RegularUpdater implements UpdaterModule {
   private CodeBlock constructorCall(
       GoalDetails details) {
     TypeName type = details.goalType();
-    ParameterSpec varGoal = parameterSpec(type,
-        '_' + downcase(simpleName(type)));
     CodeBlock.Builder builder = CodeBlock.builder();
-    return builder.addStatement("$T $N = new $T($L)", varGoal.type(), varGoal, type,
+    return builder.addStatement("return new $T($L)", type,
             details.invocationParameters())
-        .addStatement("return $N", varGoal)
         .build();
   }
 

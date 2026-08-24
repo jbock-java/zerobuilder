@@ -3,15 +3,14 @@ package net.zerobuilder.compiler.generate;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeSpec;
+import java.util.List;
+import java.util.Set;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
 import net.zerobuilder.modules.builder.RegularBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
-
-import java.util.List;
-import java.util.Set;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -31,6 +30,7 @@ public final class Generator {
     if (goals.isEmpty()) {
       throw new IllegalArgumentException("no input");
     }
+    GoalDetails details = DtoRegularGoalDescription.getDetails(goals.getFirst());
     Set<ClassName> generatedType = goals.stream()
         .map(DtoRegularGoalDescription::getContext)
         .map(GoalContext::generatedType)
@@ -43,6 +43,7 @@ public final class Generator {
         .map(Generator::process)
         .toList();
     return new GeneratorOutput(
+        details,
         methods(tmpOutputs),
         types(tmpOutputs),
         generatedType.iterator().next());

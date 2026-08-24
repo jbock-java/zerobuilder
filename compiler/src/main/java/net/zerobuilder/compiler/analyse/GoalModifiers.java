@@ -1,11 +1,11 @@
 package net.zerobuilder.compiler.analyse;
 
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import net.zerobuilder.AccessLevel;
 import net.zerobuilder.GoalName;
 import net.zerobuilder.Level;
 import net.zerobuilder.compiler.generate.Access;
-
-import javax.lang.model.element.ExecutableElement;
 
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalType;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
@@ -23,11 +23,18 @@ final class GoalModifiers {
 
   private static Access getAccess(ExecutableElement element) {
     AccessLevel accessLevel = element.getAnnotation(AccessLevel.class);
-    if (accessLevel != null &&
-        accessLevel.value() == Level.PACKAGE) {
+    if (accessLevel != null) {
+      if (accessLevel.value() == Level.PACKAGE) {
+        return Access.PACKAGE;
+      } else if (accessLevel.value() == Level.PUBLIC) {
+        return Access.PUBLIC;
+      }
+    }
+    if (element.getModifiers().contains(Modifier.PUBLIC)) {
+      return Access.PUBLIC;
+    } else {
       return Access.PACKAGE;
     }
-    return Access.PUBLIC;
   }
 
   static GoalModifiers create(ExecutableElement element) {

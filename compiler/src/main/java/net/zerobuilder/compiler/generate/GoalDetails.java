@@ -35,8 +35,12 @@ public record GoalDetails(
         instanceTypeParameters);
   }
 
-  public Modifier[] access(Modifier modifiers) {
-    return ZeroUtil.modifiers(access, modifiers);
+  public Modifier[] getAccess(Modifier... modifiers) {
+    return access == Access.PUBLIC ?
+        ZeroUtil.addModifier(Modifier.PUBLIC, modifiers) :
+        access == Access.PRIVATE ?
+            ZeroUtil.addModifier(Modifier.PRIVATE, modifiers) :
+            modifiers;
   }
 
   public CodeBlock invocationParameters() {

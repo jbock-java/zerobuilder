@@ -5,15 +5,13 @@ import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 import com.palantir.javapoet.TypeVariableName;
 import io.jbock.simple.Inject;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
-import net.zerobuilder.compiler.generate.ModuleOutput;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
+import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
+import net.zerobuilder.compiler.generate.ModuleOutput;
 
 import static com.palantir.javapoet.TypeSpec.classBuilder;
-import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
@@ -59,7 +57,7 @@ public class BuilderFactory {
         .addFields(builder.fields())
         .addMethod(constructor())
         .addMethods(steps())
-        .addModifiers(PRIVATE, STATIC, FINAL)
+        .addModifiers(PRIVATE, STATIC)
         .build();
   }
 

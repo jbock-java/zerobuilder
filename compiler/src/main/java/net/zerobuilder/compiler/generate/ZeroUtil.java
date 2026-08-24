@@ -194,7 +194,7 @@ public final class ZeroUtil {
     return ParameterizedTypeName.get(raw, typeVars.toArray(new TypeVariableName[0]));
   }
 
-  private static Modifier[] addModifier(Modifier modifier, Modifier[] modifiers) {
+  public static Modifier[] addModifier(Modifier modifier, Modifier[] modifiers) {
     for (Modifier m : modifiers) {
       if (m == modifier) {
         return modifiers;
@@ -203,14 +203,6 @@ public final class ZeroUtil {
     Modifier[] copy = Arrays.copyOf(modifiers, modifiers.length + 1);
     copy[modifiers.length] = modifier;
     return copy;
-  }
-
-  public static Modifier[] modifiers(Access access, Modifier modifiers) {
-    return access == Access.PUBLIC ?
-        addModifier(Modifier.PUBLIC, new Modifier[]{modifiers}) :
-        access == Access.PRIVATE ?
-            addModifier(Modifier.PRIVATE, new Modifier[]{modifiers}) :
-            new Modifier[]{modifiers};
   }
 
   private ZeroUtil() {
