@@ -3,8 +3,6 @@ package net.zerobuilder.compiler.generate;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeSpec;
-import java.util.List;
-import java.util.Set;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractGoalDescription;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
@@ -12,7 +10,7 @@ import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDe
 import net.zerobuilder.modules.builder.RegularBuilder;
 import net.zerobuilder.modules.updater.RegularUpdater;
 
-import static java.util.stream.Collectors.toSet;
+import java.util.List;
 
 public final class Generator {
 
@@ -26,27 +24,15 @@ public final class Generator {
    * @return a GeneratorOutput
    * @throws IllegalArgumentException if input is invalid
    */
-  public static GeneratorOutput generate(List<AbstractGoalDescription> goals) {
-    if (goals.isEmpty()) {
-      throw new IllegalArgumentException("no input");
-    }
-    GoalDetails details = DtoRegularGoalDescription.getDetails(goals.getFirst());
-    Set<ClassName> generatedType = goals.stream()
-        .map(DtoRegularGoalDescription::getContext)
-        .map(GoalContext::generatedType)
-        .collect(toSet());
-    if (generatedType.size() != 1) {
-      throw new IllegalArgumentException("generated type is ambiguous");
-    }
-    List<ModuleOutput> tmpOutputs = goals.stream()
-        .filter(Generator::hasParameters)
-        .map(Generator::process)
-        .toList();
+  public static GeneratorOutput generate(AbstractGoalDescription goals) {
+    GoalDetails details = DtoRegularGoalDescription.getDetails(goals);
+    ClassName generatedType = DtoRegularGoalDescription.getContext(goals).generatedType();
+    ModuleOutput tmpOutput = Generator.process(goals);
     return new GeneratorOutput(
         details,
-        methods(tmpOutputs),
-        types(tmpOutputs),
-        generatedType.iterator().next());
+        List.of(tmpOutput.method()),
+        tmpOutput.typeSpecs(),
+        generatedType);
   }
 
   static boolean hasParameters(AbstractGoalDescription description) {

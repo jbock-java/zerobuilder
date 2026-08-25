@@ -14,21 +14,6 @@ import static net.zerobuilder.compiler.Compilers.simpleCompiler;
 public class FailTest {
 
   @Test
-  public void twoUnnamedConstructors() {
-    List<String> sourceLines = Arrays.asList(
-        "package test;",
-        "import net.zerobuilder.*;",
-        "class Centipede {",
-        "  @Builder Centipede(int a, int b) {}",
-        "  @Builder Centipede(int a) {}",
-        "}");
-    JavaFileObject javaFile = forSourceLines("test.Centipede", sourceLines);
-    Compilation compilation = simpleCompiler().compile(javaFile);
-    assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("another goal with this name");
-  }
-
-  @Test
   public void missingProjection() {
     List<String> sourceLines = Arrays.asList(
         "package test;",

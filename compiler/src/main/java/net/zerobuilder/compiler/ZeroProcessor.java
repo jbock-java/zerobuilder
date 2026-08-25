@@ -78,7 +78,7 @@ public final class ZeroProcessor extends AbstractProcessor {
         if (!done.add(enclosingElement)) {
           continue;
         }
-        List<AbstractGoalDescription> generatorInput = Analyser.analyse(enclosingElement);
+        AbstractGoalDescription generatorInput = Analyser.analyse(enclosingElement);
         GeneratorOutput generatorOutput = Generator.generate(generatorInput);
         TypeSpec typeSpec = generatorOutput.typeSpec(generatedAnnotations);
         try {

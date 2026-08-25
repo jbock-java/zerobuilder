@@ -4,24 +4,19 @@ import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
-import java.util.List;
-import net.zerobuilder.compiler.generate.DtoModule.UpdaterModule;
 import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
 import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.ModuleOutput;
 
+import java.util.List;
+
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
-import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
+import static javax.lang.model.element.Modifier.*;
+import static net.zerobuilder.compiler.generate.ZeroUtil.*;
 import static net.zerobuilder.modules.updater.UpdaterMethod.updaterMethod;
 
-public final class RegularUpdater implements UpdaterModule {
+public final class RegularUpdater {
 
   private static final String MODULE_NAME = "Updater";
 
@@ -64,7 +59,6 @@ public final class RegularUpdater implements UpdaterModule {
         .build();
   }
 
-  @Override
   public ModuleOutput process(UpdaterGoalDescription description) {
     return new ModuleOutput(
         updaterMethod(description),

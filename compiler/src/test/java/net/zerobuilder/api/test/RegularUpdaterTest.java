@@ -70,7 +70,7 @@ public class RegularUpdaterTest {
         goalContext);
 
     // Invoke the generator
-    GeneratorOutput generatorOutput = Generator.generate(List.of(description));
+    GeneratorOutput generatorOutput = Generator.generate(description);
 
     assertEquals(1, generatorOutput.methods().size());
     assertEquals("builder", generatorOutput.methods().getFirst().name());

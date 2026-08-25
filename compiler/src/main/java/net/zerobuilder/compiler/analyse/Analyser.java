@@ -24,15 +24,12 @@ import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static net.zerobuilder.compiler.analyse.DtoGoalElement.createRegular;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkAccessLevel;
-import static net.zerobuilder.compiler.analyse.MoreValidations.checkNameConflict;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateBuilder;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpdater;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
 import static net.zerobuilder.compiler.analyse.Utilities.peer;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
+import static net.zerobuilder.compiler.generate.ZeroUtil.*;
 
 public final class Analyser {
 
@@ -44,16 +41,15 @@ public final class Analyser {
    * @return list of goal inputs
    * @throws ValidationException if validation fails
    */
-  public static List<AbstractGoalDescription> analyse(TypeElement tel) throws ValidationException {
+  public static AbstractGoalDescription analyse(TypeElement tel) throws ValidationException {
     validateContextClass(tel);
     TypeName type = parameterizedTypeName(ClassName.get(tel),
         transform(tel.getTypeParameters(), TypeVariableName::get));
     ClassName generatedType = peer(rawClassName(type), "Builders");
     GoalContext context = new GoalContext(type, generatedType);
-    List<? extends AbstractGoalElement> goals = regularGoals(tel, context);
-    checkNameConflict(goals);
-    checkAccessLevel(goals);
-    return transform(goals, Analyser::assignModule);
+    AbstractGoalElement goal = createGoalElement(tel, context);
+    checkAccessLevel(goal);
+    return Analyser.assignModule(goal);
   }
 
   private static AbstractGoalDescription assignModule(AbstractGoalElement element) {
@@ -63,7 +59,9 @@ public final class Analyser {
     };
   }
 
-  private static List<? extends AbstractGoalElement> regularGoals(TypeElement tel, GoalContext context) {
+  private static AbstractGoalElement createGoalElement(
+      TypeElement tel,
+      GoalContext context) {
     RecordBuilder recordBuilderAnnotation = tel.getAnnotation(RecordBuilder.class);
     RecordUpdater recordUpdaterAnnotation = tel.getAnnotation(RecordUpdater.class);
     if (recordBuilderAnnotation != null || recordUpdaterAnnotation != null) {
@@ -83,7 +81,7 @@ public final class Analyser {
           .map(LessElements::asExecutable)
           .map(element -> createRegular(context, element, options))
           .flatMap(List::stream)
-          .toList();
+          .findFirst().orElseThrow();
     }
     return tel.getEnclosedElements().stream()
         .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
@@ -91,7 +89,7 @@ public final class Analyser {
         .map(LessElements::asExecutable)
         .map(element -> createRegular(context, element, goalOptions(element)))
         .flatMap(List::stream)
-        .toList();
+        .findFirst().orElseThrow();
   }
 
   private static List<ModuleChoice> goalOptions(ExecutableElement element) {
