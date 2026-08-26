@@ -4,14 +4,15 @@ import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
+import io.jbock.simple.Inject;
 import java.util.List;
 import java.util.Set;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.GetterMethod;
 import net.zerobuilder.compiler.generate.GoalDescription;
-import net.zerobuilder.compiler.generate.ProjectedParameter;
 import net.zerobuilder.compiler.generate.GoalDetails;
+import net.zerobuilder.compiler.generate.ProjectedParameter;
 import net.zerobuilder.compiler.generate.ZeroUtil;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
@@ -24,63 +25,61 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 
 final class UpdaterMethod {
+  private final GoalDescription description;
 
-  static MethodSpec updaterMethod(
-      GoalDescription description) {
-    ParameterSpec updater = varUpdater(description);
+  @Inject
+  UpdaterMethod(GoalDescription description) {
+    this.description = description;
+  }
+
+  MethodSpec updaterMethod() {
+    ParameterSpec updater = varUpdater();
     return methodBuilder("builder")
-        .addExceptions(thrownByProjections(description))
-        .addParameter(toBuilderParameter(description))
+        .addExceptions(thrownByProjections())
+        .addParameter(toBuilderParameter())
         .addTypeVariables(description.details().instanceTypeParameters())
         .returns(updater.type())
         .addCode(initVarUpdater(updater))
-        .addCode(copyBlock(description))
+        .addCode(copyBlock())
         .addStatement("return $N", updater)
         .addModifiers(description.details().getAccess(STATIC))
         .build();
   }
 
-  private static CodeBlock copyBlock(
-      GoalDescription description) {
+  private CodeBlock copyBlock() {
     return description.parameters().stream()
-        .map(step -> copyFromProjection(step, description))
+        .map(this::copyFromProjection)
         .collect(ZeroUtil.joinCodeBlocks());
   }
 
-  private static CodeBlock copyFromProjection(
-      ProjectedParameter step,
-      GoalDescription description) {
+  private CodeBlock copyFromProjection(ProjectedParameter step) {
     return switch (step.projectionInfo()) {
-      case GetterMethod getterMethod -> copyFromMethod(description, getterMethod, step);
-      case FieldAccess fieldAccess -> copyFromField(description, fieldAccess);
+      case GetterMethod getterMethod -> copyFromMethod(getterMethod, step);
+      case FieldAccess fieldAccess -> copyFromField(fieldAccess);
     };
   }
 
-  private static CodeBlock copyFromField(
-      GoalDescription description,
-      FieldAccess projection) {
+  private CodeBlock copyFromField(FieldAccess projection) {
     String field = projection.fieldName;
-    ParameterSpec parameter = toBuilderParameter(description);
-    ParameterSpec updater = varUpdater(description);
+    ParameterSpec parameter = toBuilderParameter();
+    ParameterSpec updater = varUpdater();
     CodeBlock.Builder builder = CodeBlock.builder();
     return builder.addStatement("$N.$N = $N.$N",
         updater, field, parameter, field).build();
   }
 
-  private static CodeBlock copyFromMethod(
-      GoalDescription description,
+  private CodeBlock copyFromMethod(
       GetterMethod projection,
       ProjectedParameter step) {
-    ParameterSpec parameter = toBuilderParameter(description);
-    ParameterSpec updater = varUpdater(description);
+    ParameterSpec parameter = toBuilderParameter();
+    ParameterSpec updater = varUpdater();
     String field = step.name();
     CodeBlock.Builder builder = CodeBlock.builder();
     return builder.addStatement("$N.$N = $N.$N()",
         updater, field, parameter, projection.methodName).build();
   }
 
-  static ParameterSpec toBuilderParameter(
-      GoalDescription description) {
+  ParameterSpec toBuilderParameter() {
     GoalDetails details = description.details();
     TypeName goalType = details.goalType();
     return parameterSpec(goalType, downcase(simpleName(goalType)));
@@ -90,19 +89,15 @@ final class UpdaterMethod {
     return statement("$T $N = new $T()", varUpdater.type(), varUpdater, varUpdater.type());
   }
 
-  static ParameterSpec varUpdater(GoalDescription description) {
+  ParameterSpec varUpdater() {
     return parameterSpec(implType(description), "updater");
   }
 
-  static Set<TypeName> thrownByProjections(GoalDescription description) {
+  Set<TypeName> thrownByProjections() {
     return description.parameters().stream()
         .map(ProjectedParameter::projectionInfo)
         .map(DtoProjectionInfo::thrownTypes)
         .flatMap(List::stream)
         .collect(toSet());
-  }
-
-  private UpdaterMethod() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

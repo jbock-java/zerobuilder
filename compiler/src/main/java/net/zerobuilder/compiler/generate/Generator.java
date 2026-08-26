@@ -3,13 +3,10 @@ package net.zerobuilder.compiler.generate;
 import com.palantir.javapoet.ClassName;
 import java.util.stream.Stream;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
-import net.zerobuilder.modules.builder.RegularBuilder;
-import net.zerobuilder.modules.updater.RegularUpdater;
+import net.zerobuilder.modules.builder.BuilderComponent;
+import net.zerobuilder.modules.updater.UpdaterComponent;
 
 public final class Generator {
-
-  private static final RegularBuilder BUILDER = new RegularBuilder();
-  private static final RegularUpdater UPDATER = new RegularUpdater();
 
   /**
    * Entry point for code generation.
@@ -25,8 +22,8 @@ public final class Generator {
   }
 
   private static ModuleOutput process(GoalDescription description) {
-    ModuleOutput builderOutput = BUILDER.process(description);
-    ModuleOutput updaterOutput = UPDATER.process(description);
+    ModuleOutput builderOutput = BuilderComponent.process(description);
+    ModuleOutput updaterOutput = UpdaterComponent.process(description);
     return new ModuleOutput(Stream.concat(builderOutput.method().stream(), updaterOutput.method().stream()).toList(), Stream.concat(builderOutput.typeSpecs().stream(), updaterOutput.typeSpecs().stream()).toList());
   }
 

@@ -8,7 +8,9 @@ import net.zerobuilder.compiler.generate.ProjectedParameter;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class BuilderUtil {
+
   static final String MODULE_NAME = "Builder";
+
   private final GoalDescription description;
 
   @Inject

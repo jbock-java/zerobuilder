@@ -4,6 +4,7 @@ import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
+import io.jbock.simple.Inject;
 import java.util.List;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.GoalDetails;
@@ -12,19 +13,24 @@ import net.zerobuilder.compiler.generate.ModuleOutput;
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
-import static net.zerobuilder.modules.updater.UpdaterMethod.updaterMethod;
 
 public final class RegularUpdater {
-
   private static final String MODULE_NAME = "Updater";
 
-  private MethodSpec doneMethod(GoalDescription description) {
+  private final GoalDescription description;
+  private final UpdaterMethod updaterMethod;
+
+  @Inject
+  RegularUpdater(GoalDescription description, UpdaterMethod updaterMethod) {
+    this.description = description;
+    this.updaterMethod = updaterMethod;
+  }
+
+  private MethodSpec doneMethod() {
     return methodBuilder("build")
         .addModifiers(description.details().getAccess())
         .addExceptions(description.thrownTypes())
@@ -33,14 +39,13 @@ public final class RegularUpdater {
         .build();
   }
 
-  private TypeSpec defineUpdater(GoalDescription description) {
+  private TypeSpec defineUpdater() {
     return classBuilder(simpleName(implType(description)))
         .addFields(Updater.fields(description))
         .addMethods(Updater.stepMethods(description))
         .addTypeVariables(description.details().instanceTypeParameters())
-        .addMethod(doneMethod(description))
+        .addMethod(doneMethod())
         .addModifiers(description.details().getAccess(STATIC, FINAL))
-        .addMethod(constructor(PRIVATE))
         .build();
   }
 
@@ -63,9 +68,9 @@ public final class RegularUpdater {
         .build();
   }
 
-  public ModuleOutput process(GoalDescription description) {
+  public ModuleOutput process() {
     return new ModuleOutput(
-        List.of(updaterMethod(description)),
-        List.of(defineUpdater(description)));
+        List.of(updaterMethod.updaterMethod()),
+        List.of(defineUpdater()));
   }
 }
