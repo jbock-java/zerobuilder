@@ -3,8 +3,9 @@ package net.zerobuilder.examples.values;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import net.zerobuilder.Builder;
+import net.zerobuilder.RecordBuilder;
 
+@RecordBuilder
 final class EmptyListConvenience {
 
   final List things;
@@ -13,7 +14,6 @@ final class EmptyListConvenience {
   final Iterable<Collection<List<String>>> iterables;
   final Set<Iterable<Collection<List<String>>>> sets;
 
-  @Builder
   EmptyListConvenience(List things,
                        List<String> strings,
                        Collection<List<String>> collection,

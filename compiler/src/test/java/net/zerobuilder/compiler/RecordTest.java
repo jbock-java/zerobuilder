@@ -16,27 +16,24 @@ class RecordTest {
     JavaFileObject businessAnalyst = forSourceLines("beans.VibeCoder",
         "package beans;",
         "",
-        "import net.zerobuilder.Builder;",
+        "import net.zerobuilder.RecordBuilder;",
         "import net.zerobuilder.StepName;",
         "import java.util.List;",
         "",
+        "@RecordBuilder",
         "record VibeCoder (",
         "  String name,",
         "  int age,",
         "  List<String> notes,",
         "  @StepName(\"executive\")",
         "  boolean isExecutive) {",
-        "",
-        "  @Builder",
-        "  VibeCoder {",
-        "  }",
         "}");
     Compilation compilation = simpleCompiler().compile(businessAnalyst);
     assertThat(compilation).succeeded();
   }
 
   @Test
-  void recordBuilderTest() {
+  void extraMethodIgnored() {
     JavaFileObject businessAnalyst = forSourceLines("beans.VibeCoder",
         "package beans;",
         "",
@@ -138,7 +135,7 @@ class RecordTest {
   }
 
   @Test
-  void notRecord() {
+  void notRecordButItStillWorks() {
     JavaFileObject businessAnalyst = forSourceLines("beans.VibeCoder",
         "package beans;",
         "",
@@ -152,7 +149,9 @@ class RecordTest {
         "  }",
         "}");
     Compilation compilation = simpleCompiler().compile(businessAnalyst);
-    assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("Not a record type");
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("beans.VibeCoderBuilders").containsLines(
+        "  static NameStep builder() {",
+        "}");
   }
 }

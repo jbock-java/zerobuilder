@@ -1,44 +1,27 @@
 package net.zerobuilder.compiler.analyse;
 
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import net.zerobuilder.AccessLevel;
-import net.zerobuilder.Level;
+import javax.lang.model.element.TypeElement;
+import net.zerobuilder.RecordBuilder;
+import net.zerobuilder.Visibility;
 import net.zerobuilder.compiler.generate.Access;
-
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.goalType;
-import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 
 final class GoalModifiers {
 
-  final Access access;
-  final String goalName;
-
-  private GoalModifiers(Access access, String goalName) {
-    this.access = access;
-    this.goalName = goalName;
-  }
-
-  private static Access getAccess(ExecutableElement element) {
-    AccessLevel accessLevel = element.getAnnotation(AccessLevel.class);
-    if (accessLevel != null) {
-      if (accessLevel.value() == Level.PACKAGE) {
-        return Access.PACKAGE;
-      } else if (accessLevel.value() == Level.PUBLIC) {
-        return Access.PUBLIC;
-      }
-    }
-    if (element.getModifiers().contains(Modifier.PUBLIC)) {
-      return Access.PUBLIC;
-    } else {
+  static Access getAccess(TypeElement tel) {
+    RecordBuilder recordBuilder = tel.getAnnotation(RecordBuilder.class);
+    Visibility visibility = recordBuilder.visibility();
+    if (visibility == Visibility.PACKAGE) {
       return Access.PACKAGE;
+    } else if (visibility == Visibility.PUBLIC) {
+      return Access.PUBLIC;
     }
+    if (tel.getModifiers().contains(Modifier.PUBLIC)) {
+      return Access.PUBLIC;
+    }
+    return Access.PACKAGE;
   }
 
-  static GoalModifiers create(ExecutableElement element) {
-    Access access = getAccess(element);
-    String goalName = downcase(simpleName(goalType(element)));
-    return new GoalModifiers(access, goalName);
+  private GoalModifiers() {
   }
 }

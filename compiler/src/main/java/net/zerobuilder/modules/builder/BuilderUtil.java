@@ -9,8 +9,6 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class BuilderUtil {
 
-  static final String MODULE_NAME = "Builder";
-
   private final GoalDescription description;
 
   @Inject
@@ -20,12 +18,12 @@ final class BuilderUtil {
 
   ClassName stepType(int i) {
     ProjectedParameter parameter = description.parameters().get(i);
-    return description.context().generatedType()
+    return description.generatedType()
         .nestedClass(upcase(parameter.name()) + "Step");
   }
 
   ClassName implType() {
-    String contractName = upcase(description.details().name()) + MODULE_NAME;
-    return description.context().generatedType().nestedClass(contractName);
+    String contractName = description.details().tel().getSimpleName() + "Builder";
+    return description.generatedType().nestedClass(contractName);
   }
 }

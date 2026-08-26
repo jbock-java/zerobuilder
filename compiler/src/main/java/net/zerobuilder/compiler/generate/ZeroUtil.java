@@ -8,8 +8,6 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-
-import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,6 +18,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import javax.lang.model.element.Modifier;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isLowerCase;
@@ -69,16 +68,6 @@ public final class ZeroUtil {
 
   public static FieldSpec fieldSpec(TypeName type, String name, Modifier... modifiers) {
     return FieldSpec.builder(type, name, modifiers).build();
-  }
-
-  public static ClassName rawClassName(TypeName typeName) {
-    if (typeName instanceof ClassName) {
-      return (ClassName) typeName;
-    }
-    if (typeName instanceof ParameterizedTypeName) {
-      return ((ParameterizedTypeName) typeName).rawType();
-    }
-    throw new IllegalArgumentException("not a declared type: " + typeName);
   }
 
   public static <X, E> List<E> transform(Collection<? extends X> input, Function<X, E> function) {

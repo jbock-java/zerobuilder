@@ -30,7 +30,7 @@ final class ProjectionValidator {
    */
   static <E extends TmpValidParameter> List<E> shuffledParameters(List<E> parameters)
       throws ValidationException {
-    List<E> builder = new ArrayList<>(nCopies(parameters.size(), (E) null));
+    List<E> builder = new ArrayList<>(nCopies(parameters.size(), null));
     List<E> noAnnotation = new ArrayList<>();
     for (E parameter : parameters) {
       int value = parameter.annotation;

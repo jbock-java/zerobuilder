@@ -8,12 +8,10 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * Controls the visibility of the generated builder.
- *
- * @see Builder
  */
 @Retention(SOURCE)
 @Target({CONSTRUCTOR})
 public @interface AccessLevel {
 
-  Level value();
+  Visibility value();
 }

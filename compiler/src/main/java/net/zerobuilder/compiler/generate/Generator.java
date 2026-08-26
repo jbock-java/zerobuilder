@@ -16,7 +16,7 @@ public final class Generator {
    * @throws IllegalArgumentException if input is invalid
    */
   public static GeneratorOutput generate(GoalDescription goal) {
-    ClassName generatedType = goal.context().generatedType();
+    ClassName generatedType = goal.generatedType();
     ModuleOutput tmpOutput = Generator.process(goal);
     return new GeneratorOutput(goal.details(), tmpOutput.method(), tmpOutput.typeSpecs(), generatedType);
   }

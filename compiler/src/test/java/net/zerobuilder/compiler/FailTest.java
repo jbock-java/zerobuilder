@@ -17,10 +17,11 @@ public class FailTest {
   public void missingProjection() {
     List<String> sourceLines = Arrays.asList(
         "package test;",
-        "import net.zerobuilder.*;",
+        "import net.zerobuilder.RecordBuilder;",
+        "@RecordBuilder",
         "class Bu {",
         "  final int foo = 5;",
-        "  @Builder Bu(int foo, int nah) {}",
+        "  Bu(int foo, int nah) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
     Compilation compilation = simpleCompiler().compile(javaFile);
@@ -33,9 +34,10 @@ public class FailTest {
     List<String> sourceLines = Arrays.asList(
         "package test;",
         "import net.zerobuilder.*;",
+        "@RecordBuilder",
         "class Bu {",
         "  String getFoo() { return null; }",
-        "  @Builder Bu(int foo) {}",
+        "  Bu(int foo) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
     Compilation compilation = simpleCompiler().compile(javaFile);

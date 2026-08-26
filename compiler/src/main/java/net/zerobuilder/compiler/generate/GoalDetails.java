@@ -1,38 +1,29 @@
 package net.zerobuilder.compiler.generate;
 
-import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
 import java.util.List;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 /**
- * @param name           goal name
  * @param parameterNames parameter names in original order
  * @param access         goal options
  */
 public record GoalDetails(
-    TypeName goalType,
-    String name,
+    TypeElement tel,
     List<String> parameterNames,
-    Access access,
-    List<TypeVariableName> instanceTypeParameters) {
+    Access access) {
 
-  public static GoalDetails createGoalDetails(
-      ClassName goalType,
-      String name,
-      List<String> parameterNames,
-      Access access,
-      List<TypeVariableName> instanceTypeParameters) {
-    return new GoalDetails(
-        parameterizedTypeName(goalType, instanceTypeParameters),
-        name,
-        parameterNames,
-        access,
-        instanceTypeParameters);
+  public List<TypeVariableName> instanceTypeParameters() {
+    return transform(tel.getTypeParameters(), TypeVariableName::get);
+  }
+
+  public TypeName goalType() {
+    return TypeName.get(tel.asType());
   }
 
   public Modifier[] getAccess(Modifier... modifiers) {

@@ -1,12 +1,12 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Builder;
+import net.zerobuilder.RecordBuilder;
 
+@RecordBuilder
 final class Rabbit {
 
   final String name;
 
-  @Builder
   Rabbit(String name) {
     this.name = name;
   }

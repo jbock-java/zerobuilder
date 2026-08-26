@@ -22,14 +22,17 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
-import static net.zerobuilder.modules.updater.RegularUpdater.implType;
 
 final class UpdaterMethod {
   private final GoalDescription description;
+  private final Updater updater;
 
   @Inject
-  UpdaterMethod(GoalDescription description) {
+  UpdaterMethod(
+      GoalDescription description,
+      Updater updater) {
     this.description = description;
+    this.updater = updater;
   }
 
   MethodSpec updaterMethod() {
@@ -90,7 +93,7 @@ final class UpdaterMethod {
   }
 
   ParameterSpec varUpdater() {
-    return parameterSpec(implType(description), "updater");
+    return parameterSpec(updater.implType(), "updater");
   }
 
   Set<TypeName> thrownByProjections() {

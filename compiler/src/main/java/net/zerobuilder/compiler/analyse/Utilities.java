@@ -13,12 +13,12 @@ final class Utilities {
    * <p>If {@code type} is a top level class, this returns a class in the same package,
    * with class name {@code type + suffix}.
    * </p><p>
-   * If {@code type} is nested, a top level class
-   * name derived from its name and nested parents is used instead.</p>
+   * If {@code type} is nested, the name of the peer class also reflects
+   * the parent class/es.</p>
    *
    * @param type   A type name
-   * @param suffix A string that usually starts with an uppercase character
-   * @return A top level type in the same package.
+   * @param suffix A suffix; should be upper case
+   * @return       A top level type in the same package.
    */
   static ClassName peer(ClassName type, String suffix) {
     String name = String.join("_", type.simpleNames()) + suffix;

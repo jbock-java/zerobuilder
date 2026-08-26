@@ -5,6 +5,8 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeSpec;
 import java.util.List;
+import javax.annotation.processing.Generated;
+import net.zerobuilder.compiler.ZeroProcessor;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -14,10 +16,10 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 public final class DtoGeneratorOutput {
 
   /**
-   * @param methods       All methods in the type returned by {@link #typeSpec(List)}.
+   * @param methods       All methods in the type returned by {@link #typeSpec()}.
    *                      Includes static methods. Excludes constructors.
    * @param nestedTypes
-   * @param generatedType Class name of the type returned by {@link #typeSpec(List)}.
+   * @param generatedType Class name of the type returned by {@link #typeSpec()}.
    */
   public record GeneratorOutput(
       GoalDetails detail,
@@ -28,14 +30,16 @@ public final class DtoGeneratorOutput {
     /**
      * Create the definition of the generated class.
      *
-     * @param generatedAnnotations annotations to add to the generated type, if any
      * @return type definition
      */
-    public TypeSpec typeSpec(List<AnnotationSpec> generatedAnnotations) {
+    public TypeSpec typeSpec() {
       return classBuilder(generatedType())
           .addMethod(constructor())
           .addMethods(methods())
-          .addAnnotations(generatedAnnotations)
+          .addAnnotation(AnnotationSpec.builder(Generated.class)
+              .addMember("value", "$S", ZeroProcessor.class.getName())
+              .addMember("comments", "$S", "https://github.com/jbock-java/zerobuilder")
+              .build())
           .addModifiers(detail.getAccess(FINAL))
           .addTypes(nestedTypes()).build();
     }
@@ -45,16 +49,6 @@ public final class DtoGeneratorOutput {
           .addModifiers(PRIVATE)
           .build();
     }
-
-    /**
-     * Create the definition of the generated class.
-     *
-     * @return type definition
-     */
-    public TypeSpec typeSpec() {
-      return typeSpec(List.of());
-    }
-
   }
 
   private DtoGeneratorOutput() {

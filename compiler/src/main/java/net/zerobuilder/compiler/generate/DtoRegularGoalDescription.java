@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
+import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import java.util.List;
 
@@ -22,10 +23,10 @@ public final class DtoRegularGoalDescription {
       GoalDetails details,
       List<TypeName> thrownTypes,
       List<ProjectedParameter> parameters,
-      GoalContext context) {
+      ClassName generatedType) {
     checkParameterNames(details.parameterNames(), parameters);
     int[] ranking = createUnshuffle(parameters, details.parameterNames());
-    return new GoalDescription(details, thrownTypes, parameters, context, ranking);
+    return new GoalDescription(details, thrownTypes, parameters, generatedType, ranking);
   }
 
   private static void checkParameterNames(

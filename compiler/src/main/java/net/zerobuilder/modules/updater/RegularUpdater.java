@@ -14,23 +14,25 @@ import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 public final class RegularUpdater {
-  private static final String MODULE_NAME = "Updater";
 
   private final GoalDescription description;
   private final UpdaterMethod updaterMethod;
+  private final Updater updater;
 
   @Inject
-  RegularUpdater(GoalDescription description, UpdaterMethod updaterMethod) {
+  RegularUpdater(
+      GoalDescription description,
+      UpdaterMethod updaterMethod,
+      Updater updater) {
     this.description = description;
     this.updaterMethod = updaterMethod;
+    this.updater = updater;
   }
 
-  private MethodSpec doneMethod() {
+  private MethodSpec buildMethod() {
     return methodBuilder("build")
         .addModifiers(description.details().getAccess())
         .addExceptions(description.thrownTypes())
@@ -40,23 +42,13 @@ public final class RegularUpdater {
   }
 
   private TypeSpec defineUpdater() {
-    return classBuilder(simpleName(implType(description)))
-        .addFields(Updater.fields(description))
-        .addMethods(Updater.stepMethods(description))
+    return classBuilder(simpleName(updater.implType()))
+        .addFields(updater.fields())
+        .addMethods(updater.stepMethods())
         .addTypeVariables(description.details().instanceTypeParameters())
-        .addMethod(doneMethod())
+        .addMethod(buildMethod())
         .addModifiers(description.details().getAccess(STATIC, FINAL))
         .build();
-  }
-
-  static TypeName implType(GoalDescription description) {
-    return parameterizedTypeName(
-        description.context().generatedType().nestedClass(implTypeName(description)),
-        description.details().instanceTypeParameters());
-  }
-
-  private static String implTypeName(GoalDescription description) {
-    return upcase(description.details().name()) + MODULE_NAME;
   }
 
   private CodeBlock constructorCall(

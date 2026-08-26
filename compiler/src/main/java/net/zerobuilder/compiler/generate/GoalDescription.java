@@ -1,5 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
+import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.TypeName;
 import java.util.List;
@@ -11,7 +12,7 @@ public record GoalDescription(
     GoalDetails details,
     List<TypeName> thrownTypes,
     List<ProjectedParameter> parameters,
-    GoalContext context,
+    ClassName generatedType,
     int[] ranking) {
 
   public CodeBlock invocationParameters() {

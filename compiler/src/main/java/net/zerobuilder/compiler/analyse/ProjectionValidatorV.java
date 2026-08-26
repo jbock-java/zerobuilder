@@ -86,8 +86,9 @@ final class ProjectionValidatorV {
       List<TmpProjectedParameter> parameters) {
     List<TmpProjectedParameter> shuffled = shuffledParameters(parameters);
     return createUpdaterGoalDescription(
-        goal.details(), thrownTypes(goal.executableElement()),
-        transform(shuffled, toValidParameter), goal.context());
+        goal.details(),
+        thrownTypes(goal.executableElement()),
+        transform(shuffled, toValidParameter), goal.generatedType());
   }
 
   private ProjectionValidatorV() {

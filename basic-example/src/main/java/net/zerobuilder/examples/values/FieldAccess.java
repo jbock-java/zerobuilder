@@ -1,17 +1,17 @@
 package net.zerobuilder.examples.values;
 
 
-import net.zerobuilder.Builder;
+import net.zerobuilder.RecordBuilder;
 
 // projections: field access
 // see FieldAccessTest
+@RecordBuilder
 final class FieldAccess {
 
   final double length;
   final double width;
   final double height;
 
-  @Builder
   FieldAccess(double length, double width, double height) {
     this.length = length;
     this.width = width;
