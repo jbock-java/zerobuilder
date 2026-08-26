@@ -1,6 +1,6 @@
 package net.zerobuilder.examples.values;
 
-import net.zerobuilder.Updater;
+import net.zerobuilder.Builder;
 
 final class ProjectionPrecedence {
 
@@ -14,7 +14,7 @@ final class ProjectionPrecedence {
 
   static final class InheritedField extends Base {
 
-    @Updater
+    @Builder
     InheritedField(String foo) {
       super(foo);
     }
@@ -36,7 +36,7 @@ final class ProjectionPrecedence {
 
     private final String foo;
 
-    @Updater
+    @Builder
     Getter(String foo) {
       this.foo = foo;
     }
@@ -58,7 +58,7 @@ final class ProjectionPrecedence {
 
     private final String foo;
 
-    @Updater
+    @Builder
     AutoGetter(String foo) {
       this.foo = foo;
     }
@@ -80,7 +80,7 @@ final class ProjectionPrecedence {
 
     private final boolean foo;
 
-    @Updater
+    @Builder
     BoolGetter(boolean foo) {
       this.foo = foo;
     }

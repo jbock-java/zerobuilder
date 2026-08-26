@@ -1,7 +1,7 @@
 package net.zerobuilder.modules.builder;
 
 import io.jbock.simple.Component;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
+import net.zerobuilder.compiler.generate.GoalDescription;
 
 @Component
 public interface BuilderComponent {
@@ -9,6 +9,6 @@ public interface BuilderComponent {
 
   @Component.Factory
   interface Factory {
-    BuilderComponent create(BuilderGoalDescription description);
+    BuilderComponent create(GoalDescription description);
   }
 }

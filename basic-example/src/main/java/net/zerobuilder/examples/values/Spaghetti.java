@@ -1,8 +1,7 @@
 package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builder;
-import net.zerobuilder.Step;
-import net.zerobuilder.Updater;
+import net.zerobuilder.StepOrder;
 
 // changing step order
 final class Spaghetti {
@@ -12,8 +11,7 @@ final class Spaghetti {
   final boolean alDente;
 
   @Builder
-  @Updater
-  Spaghetti(String cheese, @Step(0) String sauce, boolean alDente) {
+  Spaghetti(String cheese, @StepOrder(0) String sauce, boolean alDente) {
     this.cheese = cheese;
     this.sauce = sauce;
     this.alDente = alDente;

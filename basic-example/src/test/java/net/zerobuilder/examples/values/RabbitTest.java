@@ -8,10 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class RabbitTest {
 
   @Test
-  void testHare() {
-    Rabbit hare = builder().name("Roger");
-    assertEquals("Roger", hare.name);
-    hare = builder(hare).name("Ralph").build();
-    assertEquals("Ralph", hare.name);
+  void testRabbit() {
+    Rabbit wabbit = builder().name("Roger");
+    assertEquals("Roger", wabbit.name);
+    wabbit = builder(wabbit).name("Ralph").build();
+    assertEquals("Ralph", wabbit.name);
   }
 }

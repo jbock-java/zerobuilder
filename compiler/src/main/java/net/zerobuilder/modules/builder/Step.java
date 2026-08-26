@@ -5,8 +5,8 @@ import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 import io.jbock.simple.Inject;
 import java.util.List;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+import net.zerobuilder.compiler.generate.GoalDescription;
+import net.zerobuilder.compiler.generate.ProjectedParameter;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.interfaceBuilder;
@@ -16,12 +16,12 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 
 final class Step {
 
-  private final BuilderGoalDescription description;
+  private final GoalDescription description;
   private final Builder builder;
   private final BuilderUtil util;
 
   @Inject
-  Step(BuilderGoalDescription description, Builder builder, BuilderUtil util) {
+  Step(GoalDescription description, Builder builder, BuilderUtil util) {
     this.description = description;
     this.builder = builder;
     this.util = util;
@@ -36,7 +36,7 @@ final class Step {
   }
 
   private MethodSpec stepMethod(int i) {
-    SimpleParameter parameter = description.parameters().get(i);
+    ProjectedParameter parameter = description.parameters().get(i);
     String name = parameter.name();
     TypeName type = parameter.type();
     List<TypeName> thrownTypes = i == description.parameters().size() - 1 ?

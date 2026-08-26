@@ -3,33 +3,25 @@ package net.zerobuilder.compiler.analyse;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
+import java.util.List;
+import javax.lang.model.element.TypeElement;
 import net.zerobuilder.Builder;
 import net.zerobuilder.RecordBuilder;
-import net.zerobuilder.RecordUpdater;
-import net.zerobuilder.Updater;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.AbstractGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.BuilderGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.ModuleChoice;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.UpdaterGoalElement;
 import net.zerobuilder.compiler.common.LessElements;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.AbstractGoalDescription;
+import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.GoalContext;
 
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import java.util.ArrayList;
-import java.util.List;
-
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
-import static javax.lang.model.element.ElementKind.METHOD;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.createRegular;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.createBuilderGoal;
+import static net.zerobuilder.compiler.analyse.DtoGoalElement.parameterNames;
 import static net.zerobuilder.compiler.analyse.MoreValidations.checkAccessLevel;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateBuilder;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.validateUpdater;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
 import static net.zerobuilder.compiler.analyse.Utilities.peer;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
-import static net.zerobuilder.compiler.generate.ZeroUtil.*;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.rawClassName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 public final class Analyser {
 
@@ -41,69 +33,43 @@ public final class Analyser {
    * @return list of goal inputs
    * @throws ValidationException if validation fails
    */
-  public static AbstractGoalDescription analyse(TypeElement tel) throws ValidationException {
+  public static GoalDescription analyse(TypeElement tel) throws ValidationException {
     validateContextClass(tel);
     TypeName type = parameterizedTypeName(ClassName.get(tel),
         transform(tel.getTypeParameters(), TypeVariableName::get));
     ClassName generatedType = peer(rawClassName(type), "Builders");
     GoalContext context = new GoalContext(type, generatedType);
-    AbstractGoalElement goal = createGoalElement(tel, context);
+    GoalElement goal = createGoalElement(tel, context);
     checkAccessLevel(goal);
-    return Analyser.assignModule(goal);
+    return validateUpdater(goal);
   }
 
-  private static AbstractGoalDescription assignModule(AbstractGoalElement element) {
-    return switch (element) {
-      case BuilderGoalElement regular -> validateBuilder(regular);
-      case UpdaterGoalElement projected -> validateUpdater(projected);
-    };
-  }
-
-  private static AbstractGoalElement createGoalElement(
+  private static GoalElement createGoalElement(
       TypeElement tel,
       GoalContext context) {
     RecordBuilder recordBuilderAnnotation = tel.getAnnotation(RecordBuilder.class);
-    RecordUpdater recordUpdaterAnnotation = tel.getAnnotation(RecordUpdater.class);
-    if (recordBuilderAnnotation != null || recordUpdaterAnnotation != null) {
+    if (recordBuilderAnnotation != null) {
       TypeElement superclass = asTypeElement(tel.getSuperclass());
       if (!superclass.getQualifiedName().contentEquals("java.lang.Record")) {
         throw new ValidationException("Not a record type", tel);
       }
-      List<ModuleChoice> options = new ArrayList<>(2);
-      if (recordBuilderAnnotation != null) {
-        options.add(ModuleChoice.BUILDER);
-      }
-      if (recordUpdaterAnnotation != null) {
-        options.add(ModuleChoice.UPDATER);
-      }
       return tel.getEnclosedElements().stream()
           .filter(el -> el.getKind() == CONSTRUCTOR)
           .map(LessElements::asExecutable)
-          .map(element -> createRegular(context, element, options))
-          .flatMap(List::stream)
-          .findFirst().orElseThrow();
+          .map(element -> createBuilderGoal(element, GoalModifiers.create(element), parameterNames(element), context))
+          .findFirst().orElseThrow(() -> new ValidationException("constructor not found", tel));
     }
-    return tel.getEnclosedElements().stream()
-        .filter(el -> el.getAnnotation(Builder.class) != null || el.getAnnotation(Updater.class) != null)
-        .filter(el -> el.getKind() == CONSTRUCTOR || el.getKind() == METHOD)
+    List<GoalElement> result = tel.getEnclosedElements().stream()
+        .filter(el -> el.getAnnotation(Builder.class) != null)
         .map(LessElements::asExecutable)
-        .map(element -> createRegular(context, element, goalOptions(element)))
-        .flatMap(List::stream)
-        .findFirst().orElseThrow();
-  }
-
-  private static List<ModuleChoice> goalOptions(ExecutableElement element) {
-    List<ModuleChoice> options = new ArrayList<>(2);
-    if (element.getAnnotation(Builder.class) != null) {
-      options.add(ModuleChoice.BUILDER);
+        .map(element -> createBuilderGoal(element, GoalModifiers.create(element), parameterNames(element), context))
+        .toList();
+    if (result.size() >= 2) {
+      throw new ValidationException("Found more than one annotated constructor", tel);
     }
-    if (element.getAnnotation(Updater.class) != null) {
-      options.add(ModuleChoice.UPDATER);
-    }
-    return options;
+    return result.stream().findFirst().orElseThrow(() -> new ValidationException("annotated constructor not found", tel));
   }
 
   private Analyser() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

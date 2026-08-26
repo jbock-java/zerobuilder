@@ -6,12 +6,10 @@ import java.util.List;
 import java.util.function.Function;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.VariableElement;
-import net.zerobuilder.Name;
-import net.zerobuilder.Step;
+import net.zerobuilder.StepName;
+import net.zerobuilder.StepOrder;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
-import net.zerobuilder.compiler.generate.DtoRegularParameter;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.ProjectedParameter;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+import net.zerobuilder.compiler.generate.ProjectedParameter;
 
 import static java.util.Collections.nCopies;
 import static javax.tools.Diagnostic.Kind.ERROR;
@@ -21,8 +19,8 @@ import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_OUT_OF_BOUNDS
 final class ProjectionValidator {
 
   /**
-   * Modifies the parameter order, depending on {@link Step} annotations.
-   * If none of the parameters has a {@link Step} annotation, the
+   * Modifies the parameter order, depending on {@link StepOrder} annotations.
+   * If none of the parameters has a {@link StepOrder} annotation, the
    * order of the input parameters is not changed.
    *
    * @param parameters parameters in original order
@@ -75,26 +73,6 @@ final class ProjectionValidator {
     }
   }
 
-  static final class TmpSimpleParameter extends TmpValidParameter {
-    final SimpleParameter parameter;
-
-    private TmpSimpleParameter(Element element, int annotation, SimpleParameter parameter) {
-      super(element, annotation);
-      this.parameter = parameter;
-    }
-
-    static TmpSimpleParameter create(VariableElement parameter) {
-      Step step = parameter.getAnnotation(Step.class);
-      Name nameAnnotation = parameter.getAnnotation(Name.class);
-      int value = step == null ? -1 : step.value();
-      String name = nameAnnotation == null ? parameter.getSimpleName().toString() : nameAnnotation.value();
-      TypeName type = TypeName.get(parameter.asType());
-      DtoRegularParameter.SimpleParameter regularParameter =
-          DtoRegularParameter.create(name, type);
-      return new TmpSimpleParameter(parameter, value, regularParameter);
-    }
-  }
-
   static final class TmpProjectedParameter extends TmpValidParameter {
     private final ProjectedParameter parameter;
 
@@ -107,18 +85,16 @@ final class ProjectionValidator {
         parameter -> parameter.parameter;
 
     static TmpProjectedParameter create(VariableElement parameter, ProjectionInfo projectionInfo) {
-      Step step = parameter.getAnnotation(Step.class);
-      int value = step == null ? -1 : step.value();
-      Name nameAnnotation = parameter.getAnnotation(Name.class);
-      String name = nameAnnotation == null ? parameter.getSimpleName().toString() : nameAnnotation.value();
+      StepOrder stepOrder = parameter.getAnnotation(StepOrder.class);
+      int value = stepOrder == null ? -1 : stepOrder.value();
+      StepName stepNameAnnotation = parameter.getAnnotation(StepName.class);
+      String name = stepNameAnnotation == null ? parameter.getSimpleName().toString() : stepNameAnnotation.value();
       TypeName type = TypeName.get(parameter.asType());
-      ProjectedParameter regularParameter =
-          DtoRegularParameter.create(name, type, projectionInfo);
+      ProjectedParameter regularParameter = new ProjectedParameter(name, type, projectionInfo);
       return new TmpProjectedParameter(parameter, value, regularParameter);
     }
   }
 
   private ProjectionValidator() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

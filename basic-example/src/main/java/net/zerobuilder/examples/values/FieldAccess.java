@@ -2,7 +2,6 @@ package net.zerobuilder.examples.values;
 
 
 import net.zerobuilder.Builder;
-import net.zerobuilder.Updater;
 
 // projections: field access
 // see FieldAccessTest
@@ -13,7 +12,6 @@ final class FieldAccess {
   final double height;
 
   @Builder
-  @Updater
   FieldAccess(double length, double width, double height) {
     this.length = length;
     this.width = width;

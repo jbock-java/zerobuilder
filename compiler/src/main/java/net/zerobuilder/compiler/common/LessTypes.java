@@ -62,6 +62,5 @@ public final class LessTypes {
 
 
   private LessTypes() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

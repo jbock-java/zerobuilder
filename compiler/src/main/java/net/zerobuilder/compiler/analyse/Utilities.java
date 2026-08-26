@@ -32,6 +32,5 @@ final class Utilities {
   }
 
   private Utilities() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

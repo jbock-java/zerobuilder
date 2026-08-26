@@ -58,6 +58,5 @@ public final class DtoGeneratorOutput {
   }
 
   private DtoGeneratorOutput() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

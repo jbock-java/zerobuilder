@@ -31,6 +31,5 @@ final class TypeValidator {
   }
 
   private TypeValidator() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

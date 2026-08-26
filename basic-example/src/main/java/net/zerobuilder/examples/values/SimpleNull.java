@@ -1,7 +1,6 @@
 package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builder;
-import net.zerobuilder.Updater;
 
 // null checking
 public class SimpleNull {
@@ -10,7 +9,6 @@ public class SimpleNull {
     final String string;
 
     @Builder
-    @Updater
     BasicNull(String string) {
       this.string = string;
     }

@@ -1,7 +1,6 @@
 package net.zerobuilder.examples.values;
 
 import net.zerobuilder.Builder;
-import net.zerobuilder.GoalName;
 
 class MoreValues {
 
@@ -11,7 +10,6 @@ class MoreValues {
     final String foo;
 
     @Builder
-    @GoalName("interface")
     Interface(String foo) {
       this.foo = foo;
     }

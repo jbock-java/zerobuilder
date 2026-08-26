@@ -1,9 +1,8 @@
 package net.zerobuilder.compiler;
 
 import io.jbock.testing.compile.Compilation;
-import org.junit.jupiter.api.Test;
-
 import javax.tools.JavaFileObject;
+import org.junit.jupiter.api.Test;
 
 import static io.jbock.testing.compile.CompilationSubject.assertThat;
 import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
@@ -15,15 +14,15 @@ class GenericsTest {
   void genericsTest() {
     JavaFileObject cube = forSourceLines("cube.Fuchur",
         "package cube;",
-        "import net.zerobuilder.*;",
+        "import net.zerobuilder.RecordBuilder;",
         "import java.util.Map;",
         "import java.util.List;",
         "import java.util.HashMap;",
         "",
-        "final class Fuchur<K, V> {",
-        "  @Builder",
-        "  Fuchur(List<K> keys, V value) {",
-        "  }",
+        "@RecordBuilder",
+        "record Fuchur<K, V>(",
+        "  List<K> keys,",
+        "  V value) {",
         "}");
     Compilation compilation = simpleCompiler().compile(cube);
     assertThat(compilation).succeeded();

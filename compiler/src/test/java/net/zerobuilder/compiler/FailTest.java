@@ -20,7 +20,7 @@ public class FailTest {
         "import net.zerobuilder.*;",
         "class Bu {",
         "  final int foo = 5;",
-        "  @Updater Bu(int foo, int nah) {}",
+        "  @Builder Bu(int foo, int nah) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
     Compilation compilation = simpleCompiler().compile(javaFile);
@@ -35,7 +35,7 @@ public class FailTest {
         "import net.zerobuilder.*;",
         "class Bu {",
         "  String getFoo() { return null; }",
-        "  @Updater Bu(int foo) {}",
+        "  @Builder Bu(int foo) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
     Compilation compilation = simpleCompiler().compile(javaFile);

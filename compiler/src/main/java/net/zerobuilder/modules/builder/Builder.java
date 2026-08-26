@@ -8,8 +8,8 @@ import com.palantir.javapoet.TypeName;
 import io.jbock.simple.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter.SimpleParameter;
+import net.zerobuilder.compiler.generate.GoalDescription;
+import net.zerobuilder.compiler.generate.ProjectedParameter;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -19,11 +19,11 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
 final class Builder {
-  private final BuilderGoalDescription description;
+  private final GoalDescription description;
   private final BuilderUtil util;
 
   @Inject
-  Builder(BuilderGoalDescription description, BuilderUtil util) {
+  Builder(GoalDescription description, BuilderUtil util) {
     this.description = description;
     this.util = util;
   }
@@ -38,7 +38,7 @@ final class Builder {
   }
 
   List<FieldSpec> fields() {
-    List<SimpleParameter> steps = description.parameters();
+    List<ProjectedParameter> steps = description.parameters();
     List<FieldSpec> builder = new ArrayList<>(steps.size() + 2);
     steps.stream()
         .limit(steps.size() - 1)
@@ -48,7 +48,7 @@ final class Builder {
   }
 
   MethodSpec steps(int i) {
-    SimpleParameter step = description.parameters().get(i);
+    ProjectedParameter step = description.parameters().get(i);
     ParameterSpec parameter = parameterSpec(step.type(), step.name());
     List<TypeName> thrownTypes = i < description.parameters().size() - 1 ?
         List.of() :
@@ -65,7 +65,7 @@ final class Builder {
   }
 
   private CodeBlock normalAssignment(int i) {
-    SimpleParameter step = description.parameters().get(i);
+    ProjectedParameter step = description.parameters().get(i);
     ParameterSpec parameter = parameterSpec(step.type(), step.name());
     if (i == description.parameters().size() - 1) {
       return constructorCall();

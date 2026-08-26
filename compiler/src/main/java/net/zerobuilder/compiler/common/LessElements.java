@@ -164,6 +164,5 @@ public final class LessElements {
   }
 
   private LessElements() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

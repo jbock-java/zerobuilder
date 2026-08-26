@@ -3,7 +3,6 @@ package net.zerobuilder.compiler.analyse;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import net.zerobuilder.AccessLevel;
-import net.zerobuilder.GoalName;
 import net.zerobuilder.Level;
 import net.zerobuilder.compiler.generate.Access;
 
@@ -39,10 +38,7 @@ final class GoalModifiers {
 
   static GoalModifiers create(ExecutableElement element) {
     Access access = getAccess(element);
-    GoalName annotation = element.getAnnotation(GoalName.class);
-    String goalName = annotation == null ?
-        downcase(simpleName(goalType(element))) :
-        annotation.value();
+    String goalName = downcase(simpleName(goalType(element)));
     return new GoalModifiers(access, goalName);
   }
 }

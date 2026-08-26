@@ -47,6 +47,5 @@ public final class DtoProjectionInfo {
   }
 
   private DtoProjectionInfo() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

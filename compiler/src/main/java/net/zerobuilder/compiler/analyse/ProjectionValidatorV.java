@@ -8,21 +8,14 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.BuilderGoalElement;
-import net.zerobuilder.compiler.analyse.DtoGoalElement.UpdaterGoalElement;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpSimpleParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
+import net.zerobuilder.compiler.generate.GoalDescription;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
-import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.ABSTRACT_CONSTRUCTOR;
 import static net.zerobuilder.compiler.Messages.ErrorMessages.MISSING_PROJECTION;
-import static net.zerobuilder.compiler.analyse.DtoGoalElement.executableElement;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
@@ -32,7 +25,6 @@ import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.common.LessTypes.isDeclaredType;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createFieldAccess;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createGetterMethod;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalDescription.createBuilderGoalDescription;
 import static net.zerobuilder.compiler.generate.DtoRegularGoalDescription.createUpdaterGoalDescription;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
@@ -48,7 +40,7 @@ final class ProjectionValidatorV {
         && !"clone".equals(method.getSimpleName().toString());
   }
 
-  static UpdaterGoalDescription validateUpdater(UpdaterGoalElement goal) {
+  static GoalDescription validateUpdater(GoalElement goal) {
     TypeMirror mirror = goal.executableElement().getKind() == CONSTRUCTOR ?
         goal.executableElement().getEnclosingElement().asType() :
         goal.executableElement().getReturnType();
@@ -56,7 +48,6 @@ final class ProjectionValidatorV {
       return createGoalDescription(goal, List.of());
     }
     TypeElement type = asTypeElement(mirror);
-    validateType(goal, type);
     Map<String, ExecutableElement> methods = getLocalAndInheritedMethods(type, ProjectionValidatorV::looksLikeGetter);
     Map<String, VariableElement> fields = getLocalAndInheritedFields(type);
     List<TmpProjectedParameter> parameters = transform(goal.executableElement().getParameters(),
@@ -90,30 +81,8 @@ final class ProjectionValidatorV {
     throw new ValidationException(MISSING_PROJECTION + name, parameter);
   }
 
-  private static void validateType(
-      UpdaterGoalElement goal,
-      TypeElement type) {
-    if (goal.executableElement().getKind() == CONSTRUCTOR
-        && type.getModifiers().contains(ABSTRACT)) {
-      throw new ValidationException(ABSTRACT_CONSTRUCTOR, goal.executableElement());
-    }
-  }
-
-  static BuilderGoalDescription validateBuilder(
-      BuilderGoalElement goal) {
-    List<TmpSimpleParameter> parameters = transform(executableElement(goal).getParameters(),
-        TmpSimpleParameter::create);
-    List<TmpSimpleParameter> shuffled = shuffledParameters(parameters);
-    List<TypeName> thrownTypes = thrownTypes(executableElement(goal));
-    return createBuilderGoalDescription(
-        goal.details(),
-        thrownTypes,
-        transform(shuffled, parameter -> parameter.parameter),
-        goal.context());
-  }
-
-  private static UpdaterGoalDescription createGoalDescription(
-      UpdaterGoalElement goal,
+  private static GoalDescription createGoalDescription(
+      GoalElement goal,
       List<TmpProjectedParameter> parameters) {
     List<TmpProjectedParameter> shuffled = shuffledParameters(parameters);
     return createUpdaterGoalDescription(
@@ -122,6 +91,5 @@ final class ProjectionValidatorV {
   }
 
   private ProjectionValidatorV() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

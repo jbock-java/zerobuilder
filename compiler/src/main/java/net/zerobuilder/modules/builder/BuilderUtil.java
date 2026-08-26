@@ -2,22 +2,22 @@ package net.zerobuilder.modules.builder;
 
 import com.palantir.javapoet.ClassName;
 import io.jbock.simple.Inject;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
-import net.zerobuilder.compiler.generate.DtoRegularParameter;
+import net.zerobuilder.compiler.generate.GoalDescription;
+import net.zerobuilder.compiler.generate.ProjectedParameter;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class BuilderUtil {
   static final String MODULE_NAME = "Builder";
-  private final BuilderGoalDescription description;
+  private final GoalDescription description;
 
   @Inject
-  BuilderUtil(BuilderGoalDescription description) {
+  BuilderUtil(GoalDescription description) {
     this.description = description;
   }
 
   ClassName stepType(int i) {
-    DtoRegularParameter.SimpleParameter parameter = description.parameters().get(i);
+    ProjectedParameter parameter = description.parameters().get(i);
     return description.context().generatedType()
         .nestedClass(upcase(parameter.name()) + "Step");
   }

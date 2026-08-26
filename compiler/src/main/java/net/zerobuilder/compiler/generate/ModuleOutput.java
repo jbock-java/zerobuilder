@@ -5,6 +5,6 @@ import com.palantir.javapoet.TypeSpec;
 import java.util.List;
 
 public record ModuleOutput(
-    MethodSpec method,
+    List<MethodSpec> method,
     List<TypeSpec> typeSpecs) {
 }

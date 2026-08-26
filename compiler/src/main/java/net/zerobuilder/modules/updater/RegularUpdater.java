@@ -4,23 +4,27 @@ import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.UpdaterGoalDescription;
+import java.util.List;
+import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.ModuleOutput;
 
-import java.util.List;
-
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
-import static javax.lang.model.element.Modifier.*;
-import static net.zerobuilder.compiler.generate.ZeroUtil.*;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.STATIC;
+import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
+import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
+import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 import static net.zerobuilder.modules.updater.UpdaterMethod.updaterMethod;
 
 public final class RegularUpdater {
 
   private static final String MODULE_NAME = "Updater";
 
-  private MethodSpec doneMethod(UpdaterGoalDescription description) {
+  private MethodSpec doneMethod(GoalDescription description) {
     return methodBuilder("build")
         .addModifiers(description.details().getAccess())
         .addExceptions(description.thrownTypes())
@@ -29,7 +33,7 @@ public final class RegularUpdater {
         .build();
   }
 
-  private TypeSpec defineUpdater(UpdaterGoalDescription description) {
+  private TypeSpec defineUpdater(GoalDescription description) {
     return classBuilder(simpleName(implType(description)))
         .addFields(Updater.fields(description))
         .addMethods(Updater.stepMethods(description))
@@ -40,13 +44,13 @@ public final class RegularUpdater {
         .build();
   }
 
-  static TypeName implType(UpdaterGoalDescription description) {
+  static TypeName implType(GoalDescription description) {
     return parameterizedTypeName(
         description.context().generatedType().nestedClass(implTypeName(description)),
         description.details().instanceTypeParameters());
   }
 
-  private static String implTypeName(UpdaterGoalDescription description) {
+  private static String implTypeName(GoalDescription description) {
     return upcase(description.details().name()) + MODULE_NAME;
   }
 
@@ -59,9 +63,9 @@ public final class RegularUpdater {
         .build();
   }
 
-  public ModuleOutput process(UpdaterGoalDescription description) {
+  public ModuleOutput process(GoalDescription description) {
     return new ModuleOutput(
-        updaterMethod(description),
+        List.of(updaterMethod(description)),
         List.of(defineUpdater(description)));
   }
 }

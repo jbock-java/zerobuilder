@@ -8,7 +8,7 @@ import io.jbock.simple.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
-import net.zerobuilder.compiler.generate.DtoRegularGoalDescription.BuilderGoalDescription;
+import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.ModuleOutput;
 
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -18,7 +18,7 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.constructor;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
 public class BuilderFactory {
-  private final BuilderGoalDescription description;
+  private final GoalDescription description;
   private final Builder builder;
   private final BuilderUtil util;
   private final Step step;
@@ -27,7 +27,7 @@ public class BuilderFactory {
   @Inject
   BuilderFactory(
       Builder builder,
-      BuilderGoalDescription description,
+      GoalDescription description,
       BuilderUtil util,
       Step step,
       BuilderMethod builderMethod) {
@@ -73,6 +73,6 @@ public class BuilderFactory {
     List<TypeSpec> typeSpecs = new ArrayList<>(steps.size() + 2);
     typeSpecs.add(defineBuilderImpl());
     typeSpecs.addAll(steps);
-    return new ModuleOutput(builderMethod.builderMethod(), typeSpecs);
+    return new ModuleOutput(List.of(builderMethod.builderMethod()), typeSpecs);
   }
 }
