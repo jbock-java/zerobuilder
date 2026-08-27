@@ -9,7 +9,6 @@ To generate the builder, annotate a record class with `@RecordBuilder` and / or 
 
 ```java
 @RecordBuilder
-@RecordUpdater
 record Message(
   String sender,
   String body,
@@ -24,8 +23,13 @@ The generated class will be called `MessageBuilders`.
 @Generated
 final class MessageBuilders {
 
-  // from @RecordBuilder annotation
   static SenderStep builder()
+
+  static MessageUpdater builder(Message message)
+
+  interface SenderStep { BodyStep sender(String sender) }
+  interface BodyStep { RecipientStep body(String body) }
+  interface RecipientStep { Message recipient(String recipient) }
 
   private static class MessageBuilder implements SenderStep, BodyStep, RecipientStep {
     @Override BodyStep sender(String sender)
@@ -33,14 +37,7 @@ final class MessageBuilders {
     @Override Message recipient(String recipient)
   }
 
-  interface SenderStep { BodyStep sender(String sender) }
-  interface BodyStep { RecipientStep body(String body) }
-  interface RecipientStep { Message recipient(String recipient) }
-
-  // from @RecordUpdater annotation
-  static MessageUpdater builder(Message message)
-
-  static class MessageUpdater {
+  static final class MessageUpdater {
     MessageUpdater sender(String sender)
     MessageUpdater body(String body)
     MessageUpdater recipient(String recipient)
