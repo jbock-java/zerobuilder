@@ -1,20 +1,21 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.TypeName;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.VariableElement;
 import net.zerobuilder.StepName;
 import net.zerobuilder.StepOrder;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.VariableElement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+
 import static java.util.Collections.nCopies;
 import static javax.tools.Diagnostic.Kind.ERROR;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_DUPLICATE;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.STEP_OUT_OF_BOUNDS;
+import static net.zerobuilder.compiler.Messages.STEP_DUPLICATE;
+import static net.zerobuilder.compiler.Messages.STEP_OUT_OF_BOUNDS;
 
 final class ProjectionValidator {
 

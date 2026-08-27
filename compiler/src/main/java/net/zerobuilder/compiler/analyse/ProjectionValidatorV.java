@@ -1,21 +1,22 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.TypeName;
-import java.util.List;
-import java.util.Map;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
+import net.zerobuilder.compiler.generate.GoalDescription;
+
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
-import net.zerobuilder.compiler.generate.GoalDescription;
+import java.util.List;
+import java.util.Map;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.Messages.ErrorMessages.MISSING_PROJECTION;
+import static net.zerobuilder.compiler.Messages.MISSING_PROJECTION;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;

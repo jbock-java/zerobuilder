@@ -3,9 +3,10 @@ package net.zerobuilder.compiler.generate;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
-import java.util.List;
+
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import java.util.List;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
@@ -29,9 +30,7 @@ public record GoalDetails(
   public Modifier[] getAccess(Modifier... modifiers) {
     return access == Access.PUBLIC ?
         ZeroUtil.addModifier(Modifier.PUBLIC, modifiers) :
-        access == Access.PRIVATE ?
-            ZeroUtil.addModifier(Modifier.PRIVATE, modifiers) :
-            modifiers;
+        modifiers;
   }
 
   public CodeBlock invocationParameters() {

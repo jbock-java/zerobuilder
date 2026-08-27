@@ -1,9 +1,11 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
+
 import java.util.List;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+
 import net.zerobuilder.StepName;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.GoalDetails;
@@ -24,12 +26,12 @@ public final class DtoGoalElement {
       TypeElement tel,
       ExecutableElement element,
       ClassName generatedType) {
-    Access goalModifiers = GoalModifiers.getAccess(tel);
+    Access access = Access.getAccess(tel);
     List<String> parameterNames = parameterNames(element);
     GoalDetails details = new GoalDetails(
         tel,
         parameterNames,
-        goalModifiers);
+        access);
     return new GoalElement(details, element, generatedType);
   }
 

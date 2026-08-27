@@ -1,10 +1,11 @@
 package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.ClassName;
-import java.util.stream.Stream;
 import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.modules.builder.BuilderComponent;
 import net.zerobuilder.modules.updater.UpdaterComponent;
+
+import java.util.stream.Stream;
 
 public final class Generator {
 
@@ -28,6 +29,5 @@ public final class Generator {
   }
 
   private Generator() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

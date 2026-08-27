@@ -2,7 +2,6 @@ package net.zerobuilder.compiler.common;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
-import java.util.Objects;
 import java.util.Set;
 
 import static javax.lang.model.element.ElementKind.PACKAGE;
@@ -14,10 +13,10 @@ enum Visibility {
   PRIVATE,
   DEFAULT,
   PROTECTED,
-  PUBLIC;
+  PUBLIC,
+  ;
 
   static Visibility ofElement(Element element) {
-    Objects.requireNonNull(element);
     if (element.getKind().equals(PACKAGE)) {
       return PUBLIC;
     }
