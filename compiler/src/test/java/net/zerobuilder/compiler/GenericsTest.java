@@ -1,8 +1,9 @@
 package net.zerobuilder.compiler;
 
 import io.jbock.testing.compile.Compilation;
-import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.Test;
+
+import javax.tools.JavaFileObject;
 
 import static io.jbock.testing.compile.CompilationSubject.assertThat;
 import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
@@ -39,9 +40,6 @@ class GenericsTest {
         "",
         "  private static class FuchurBuilder<K, V> implements KeysStep<K, V>, ValueStep<K, V> {",
         "    private List<K> keys;",
-        "",
-        "    FuchurBuilder() {",
-        "    }",
         "",
         "    @Override",
         "    public ValueStep<K, V> keys(List<K> keys) {",

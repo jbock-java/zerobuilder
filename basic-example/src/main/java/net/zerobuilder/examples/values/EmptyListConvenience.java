@@ -1,9 +1,10 @@
 package net.zerobuilder.examples.values;
 
+import net.zerobuilder.RecordBuilder;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import net.zerobuilder.RecordBuilder;
 
 @RecordBuilder
 final class EmptyListConvenience {

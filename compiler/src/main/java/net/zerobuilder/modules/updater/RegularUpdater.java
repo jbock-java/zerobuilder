@@ -5,10 +5,11 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 import io.jbock.simple.Inject;
-import java.util.List;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.ModuleOutput;
+
+import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -16,20 +17,13 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 
-public final class RegularUpdater {
-
-  private final GoalDescription description;
-  private final UpdaterMethod updaterMethod;
-  private final Updater updater;
+public record RegularUpdater(
+    GoalDescription description,
+    UpdaterMethod updaterMethod,
+    Updater updater) {
 
   @Inject
-  RegularUpdater(
-      GoalDescription description,
-      UpdaterMethod updaterMethod,
-      Updater updater) {
-    this.description = description;
-    this.updaterMethod = updaterMethod;
-    this.updater = updater;
+  public RegularUpdater {
   }
 
   private MethodSpec buildMethod() {

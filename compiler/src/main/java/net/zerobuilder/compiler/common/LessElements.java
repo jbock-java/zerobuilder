@@ -1,6 +1,10 @@
 package net.zerobuilder.compiler.common;
 
-import javax.lang.model.element.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementVisitor;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.SimpleElementVisitor14;
 import java.util.LinkedHashMap;
 import java.util.Map;

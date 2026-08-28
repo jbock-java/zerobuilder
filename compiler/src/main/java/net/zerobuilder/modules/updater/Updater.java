@@ -5,9 +5,10 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import io.jbock.simple.Inject;
-import java.util.List;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
+
+import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -15,13 +16,10 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
-final class Updater {
-
-  private final GoalDescription description;
+record Updater(GoalDescription description) {
 
   @Inject
-  Updater(GoalDescription description) {
-    this.description = description;
+  Updater {
   }
 
   List<FieldSpec> fields() {

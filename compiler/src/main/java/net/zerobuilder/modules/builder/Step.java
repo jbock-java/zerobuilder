@@ -4,9 +4,10 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 import io.jbock.simple.Inject;
-import java.util.List;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
+
+import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.interfaceBuilder;
@@ -14,17 +15,13 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 
-final class Step {
-
-  private final GoalDescription description;
-  private final Builder builder;
-  private final BuilderUtil util;
+record Step(
+    GoalDescription description,
+    Builder builder,
+    BuilderUtil util) {
 
   @Inject
-  Step(GoalDescription description, Builder builder, BuilderUtil util) {
-    this.description = description;
-    this.builder = builder;
-    this.util = util;
+  Step {
   }
 
   TypeSpec stepInterface(int i) {

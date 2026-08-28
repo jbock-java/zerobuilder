@@ -5,22 +5,20 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
 import io.jbock.simple.Inject;
-import java.util.List;
 import net.zerobuilder.compiler.generate.GoalDescription;
+
+import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
-final class BuilderMethod {
-  private final GoalDescription description;
-  private final BuilderUtil util;
-
+record BuilderMethod(
+    GoalDescription description,
+    BuilderUtil util) {
   @Inject
-  BuilderMethod(GoalDescription description, BuilderUtil util) {
-    this.description = description;
-    this.util = util;
+  BuilderMethod {
   }
 
   MethodSpec builderMethod() {

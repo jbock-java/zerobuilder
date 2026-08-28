@@ -3,11 +3,12 @@ package net.zerobuilder.compiler.generate;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.FieldSpec;
-import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
+
+import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,9 +19,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import javax.lang.model.element.Modifier;
 
-import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static java.lang.Character.isLowerCase;
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
@@ -121,10 +120,6 @@ public final class ZeroUtil {
         return Set.of();
       }
     };
-  }
-
-  public static MethodSpec constructor(Modifier... modifiers) {
-    return constructorBuilder().addModifiers(modifiers).build();
   }
 
   public static String simpleName(TypeName type) {

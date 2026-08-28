@@ -1,7 +1,7 @@
 package net.zerobuilder.examples.beans.more;
 
-import net.zerobuilder.StepName;
 import net.zerobuilder.RecordBuilder;
+import net.zerobuilder.StepName;
 
 import java.util.List;
 

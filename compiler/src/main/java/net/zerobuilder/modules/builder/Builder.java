@@ -6,10 +6,10 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import io.jbock.simple.Inject;
-import java.util.ArrayList;
-import java.util.List;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
+
+import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -18,14 +18,12 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
-final class Builder {
-  private final GoalDescription description;
-  private final BuilderUtil util;
+record Builder(
+    GoalDescription description,
+    BuilderUtil util) {
 
   @Inject
-  Builder(GoalDescription description, BuilderUtil util) {
-    this.description = description;
-    this.util = util;
+  Builder {
   }
 
   TypeName nextType(int i) {
@@ -39,12 +37,9 @@ final class Builder {
 
   List<FieldSpec> fields() {
     List<ProjectedParameter> steps = description.parameters();
-    List<FieldSpec> builder = new ArrayList<>(steps.size() + 2);
-    steps.stream()
-        .limit(steps.size() - 1)
+    return steps.stream().limit(steps.size() - 1)
         .map(parameter -> FieldSpec.builder(parameter.type(), parameter.name(), PRIVATE).build())
-        .forEach(builder::add);
-    return builder;
+        .toList();
   }
 
   MethodSpec steps(int i) {
@@ -78,9 +73,9 @@ final class Builder {
 
   private CodeBlock constructorCall() {
     TypeName type = description.details().goalType();
-    CodeBlock.Builder builder = CodeBlock.builder();
     CodeBlock args = description.invocationParameters();
-    builder.addStatement("return new $T($L)", type, args);
-    return builder.build();
+    return CodeBlock.builder()
+        .addStatement("return new $T($L)", type, args)
+        .build();
   }
 }

@@ -6,8 +6,8 @@ import com.palantir.javapoet.TypeSpec;
 import net.zerobuilder.RecordBuilder;
 import net.zerobuilder.compiler.analyse.Analyser;
 import net.zerobuilder.compiler.analyse.ValidationException;
-import net.zerobuilder.compiler.generate.GeneratorOutput;
 import net.zerobuilder.compiler.generate.Generator;
+import net.zerobuilder.compiler.generate.GeneratorOutput;
 import net.zerobuilder.compiler.generate.GoalDescription;
 
 import javax.annotation.processing.AbstractProcessor;

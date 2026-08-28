@@ -7,13 +7,10 @@ import net.zerobuilder.compiler.generate.ProjectedParameter;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
-final class BuilderUtil {
-
-  private final GoalDescription description;
+record BuilderUtil(GoalDescription description) {
 
   @Inject
-  BuilderUtil(GoalDescription description) {
-    this.description = description;
+  BuilderUtil {
   }
 
   ClassName stepType(int i) {

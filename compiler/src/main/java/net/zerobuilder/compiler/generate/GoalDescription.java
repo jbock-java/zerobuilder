@@ -3,6 +3,7 @@ package net.zerobuilder.compiler.generate;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.TypeName;
+
 import java.util.List;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;

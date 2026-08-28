@@ -9,12 +9,10 @@ public final class DtoProjectionInfo {
   public sealed interface ProjectionInfo permits FieldAccess, GetterMethod {
   }
 
-  public static GetterMethod createGetterMethod(String methodName, List<TypeName> thrownTypes) {
+  public static GetterMethod createGetterMethod(
+      String methodName,
+      List<TypeName> thrownTypes) {
     return new GetterMethod(methodName, thrownTypes);
-  }
-
-  public static GetterMethod createGetterMethod(String methodName) {
-    return new GetterMethod(methodName, List.of());
   }
 
   public static FieldAccess createFieldAccess(String fieldName) {
