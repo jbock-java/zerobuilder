@@ -9,24 +9,21 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 import java.util.List;
 import java.util.Map;
 
-import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.MISSING_PROJECTION;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
-import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedFields;
-import static net.zerobuilder.compiler.common.LessElements.getLocalAndInheritedMethods;
+import static net.zerobuilder.compiler.common.LessElements.getLocalFields;
+import static net.zerobuilder.compiler.common.LessElements.getLocalMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
-import static net.zerobuilder.compiler.common.LessTypes.isDeclaredType;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createFieldAccess;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createGetterMethod;
-import static net.zerobuilder.compiler.generate.DtoRegularGoalDescription.createUpdaterGoalDescription;
+import static net.zerobuilder.compiler.generate.GoalDescriptionFactory.createTheGoalDescription;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
@@ -42,15 +39,9 @@ final class ProjectionValidatorV {
   }
 
   static GoalDescription validateUpdater(GoalElement goal) {
-    TypeMirror mirror = goal.executableElement().getKind() == CONSTRUCTOR ?
-        goal.executableElement().getEnclosingElement().asType() :
-        goal.executableElement().getReturnType();
-    if (!isDeclaredType(mirror)) {
-      return createGoalDescription(goal, List.of());
-    }
-    TypeElement type = asTypeElement(mirror);
-    Map<String, ExecutableElement> methods = getLocalAndInheritedMethods(type, ProjectionValidatorV::looksLikeGetter);
-    Map<String, VariableElement> fields = getLocalAndInheritedFields(type);
+    TypeElement tel = goal.details().tel();
+    Map<String, ExecutableElement> methods = getLocalMethods(tel, ProjectionValidatorV::looksLikeGetter);
+    Map<String, VariableElement> fields = getLocalFields(tel);
     List<TmpProjectedParameter> parameters = transform(goal.executableElement().getParameters(),
         parameter -> TmpProjectedParameter.create(parameter,
             projectionInfo(methods, fields, parameter)));
@@ -86,10 +77,27 @@ final class ProjectionValidatorV {
       GoalElement goal,
       List<TmpProjectedParameter> parameters) {
     List<TmpProjectedParameter> shuffled = shuffledParameters(parameters);
-    return createUpdaterGoalDescription(
+    return createTheGoalDescription(
         goal.details(),
         thrownTypes(goal.executableElement()),
         transform(shuffled, toValidParameter), goal.generatedType());
+  }
+
+  static void checkInheritance(TypeElement tel) {
+    if (!tel.getInterfaces().isEmpty()) {
+      throw new ValidationException("Interfaces are not allowed", tel);
+    }
+    TypeElement superclass = asTypeElement(tel.getSuperclass());
+    if (superclass == null) {
+      return;
+    }
+    if (superclass.getSuperclass().getKind() == TypeKind.NONE) {
+      return;
+    }
+    if (superclass.getQualifiedName().contentEquals("java.lang.Record")) {
+      return;
+    }
+    throw new ValidationException("Inheritance is not allowed", tel);
   }
 
   private ProjectionValidatorV() {

@@ -2,11 +2,12 @@ package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
+
 import java.util.List;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
 
-public final class DtoRegularGoalDescription {
+public final class GoalDescriptionFactory {
 
   private static int[] createUnshuffle(
       List<ProjectedParameter> parameters,
@@ -19,7 +20,7 @@ public final class DtoRegularGoalDescription {
     return createRanking(a, b);
   }
 
-  public static GoalDescription createUpdaterGoalDescription(
+  public static GoalDescription createTheGoalDescription(
       GoalDetails details,
       List<TypeName> thrownTypes,
       List<ProjectedParameter> parameters,
@@ -47,6 +48,6 @@ public final class DtoRegularGoalDescription {
     }
   }
 
-  private DtoRegularGoalDescription() {
+  private GoalDescriptionFactory() {
   }
 }

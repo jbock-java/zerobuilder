@@ -4,19 +4,12 @@ import net.zerobuilder.RecordBuilder;
 
 final class ProjectionPrecedence {
 
-  private static abstract class Base {
+  @RecordBuilder
+  static final class InheritedField {
     final String foo;
 
-    private Base(String foo) {
-      this.foo = foo;
-    }
-  }
-
-  @RecordBuilder
-  static final class InheritedField extends Base {
-
     InheritedField(String foo) {
-      super(foo);
+      this.foo = foo;
     }
 
     String getFoo() {
@@ -95,6 +88,5 @@ final class ProjectionPrecedence {
   }
 
   private ProjectionPrecedence() {
-    throw new UnsupportedOperationException("no instances");
   }
 }

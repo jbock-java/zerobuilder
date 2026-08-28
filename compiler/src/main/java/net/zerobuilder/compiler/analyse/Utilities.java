@@ -2,10 +2,9 @@ package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
-import java.util.List;
-import javax.lang.model.element.ExecutableElement;
 
-import static java.util.stream.Collectors.toList;
+import javax.lang.model.element.ExecutableElement;
+import java.util.List;
 
 final class Utilities {
 
@@ -28,7 +27,7 @@ final class Utilities {
   static List<TypeName> thrownTypes(ExecutableElement executableElement) {
     return executableElement.getThrownTypes().stream()
         .map(TypeName::get)
-        .collect(toList());
+        .toList();
   }
 
   private Utilities() {

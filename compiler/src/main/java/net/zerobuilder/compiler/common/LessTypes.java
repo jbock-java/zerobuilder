@@ -1,20 +1,26 @@
 package net.zerobuilder.compiler.common;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.ErrorType;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
-import javax.lang.model.type.TypeVisitor;
+import javax.lang.model.type.*;
+import javax.lang.model.util.SimpleElementVisitor14;
 import javax.lang.model.util.SimpleTypeVisitor14;
 
-import static net.zerobuilder.compiler.common.LessElements.asType;
-
-/**
- * Guava-free versions of some helpers from auto-common.
- */
 public final class LessTypes {
+
+  private static final ElementVisitor<TypeElement, Void> TYPE_ELEMENT_VISITOR =
+      new SimpleElementVisitor14<>() {
+        @Override
+        protected TypeElement defaultAction(Element e, Void p) {
+          throw new IllegalArgumentException();
+        }
+
+        @Override
+        public TypeElement visitType(TypeElement e, Void p) {
+          return e;
+        }
+      };
 
   private static final TypeVisitor<Element, Void> AS_ELEMENT_VISITOR =
       new SimpleTypeVisitor14<>() {
@@ -40,26 +46,12 @@ public final class LessTypes {
       };
 
   public static TypeElement asTypeElement(TypeMirror mirror) {
-    Element element = asElement(mirror);
+    Element element = mirror.accept(AS_ELEMENT_VISITOR, null);
     if (element == null) {
-      throw new IllegalArgumentException("not an element: " + mirror);
+      return null;
     }
-    return asType(element);
+    return element.accept(TYPE_ELEMENT_VISITOR, null);
   }
-
-  private static Element asElement(TypeMirror typeMirror) {
-    return typeMirror.accept(AS_ELEMENT_VISITOR, null);
-  }
-
-  public static boolean isDeclaredType(TypeMirror mirror) {
-    Element returnType = asElement(mirror);
-    if (returnType == null) {
-      return false;
-    }
-    return returnType.getKind().isClass() ||
-        returnType.getKind().isInterface();
-  }
-
 
   private LessTypes() {
   }

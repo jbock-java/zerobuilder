@@ -5,23 +5,17 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import io.jbock.simple.Inject;
-import java.util.List;
-import java.util.Set;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo;
+import net.zerobuilder.compiler.generate.*;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.GetterMethod;
-import net.zerobuilder.compiler.generate.GoalDescription;
-import net.zerobuilder.compiler.generate.GoalDetails;
-import net.zerobuilder.compiler.generate.ProjectedParameter;
-import net.zerobuilder.compiler.generate.ZeroUtil;
+
+import java.util.List;
+import java.util.Set;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
-import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
-import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
-import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
+import static net.zerobuilder.compiler.generate.ZeroUtil.*;
 
 final class UpdaterMethod {
   private final GoalDescription description;
@@ -63,7 +57,7 @@ final class UpdaterMethod {
   }
 
   private CodeBlock copyFromField(FieldAccess projection) {
-    String field = projection.fieldName;
+    String field = projection.fieldName();
     ParameterSpec parameter = toBuilderParameter();
     ParameterSpec updater = varUpdater();
     CodeBlock.Builder builder = CodeBlock.builder();
@@ -79,7 +73,7 @@ final class UpdaterMethod {
     String field = step.name();
     CodeBlock.Builder builder = CodeBlock.builder();
     return builder.addStatement("$N.$N = $N.$N()",
-        updater, field, parameter, projection.methodName).build();
+        updater, field, parameter, projection.methodName()).build();
   }
 
   ParameterSpec toBuilderParameter() {

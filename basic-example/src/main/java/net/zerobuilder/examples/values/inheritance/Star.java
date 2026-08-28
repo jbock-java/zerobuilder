@@ -1,13 +1,15 @@
 package net.zerobuilder.examples.values.inheritance;
 
-import java.math.BigInteger;
 import net.zerobuilder.RecordBuilder;
 
-// inheritance + direct field access
+import java.math.BigInteger;
+
 @RecordBuilder
-final class Star extends CelestialBody {
+final class Star {
+
+  final BigInteger mass;
 
   Star(BigInteger mass) {
-    super(mass);
+    this.mass = mass;
   }
 }

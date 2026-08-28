@@ -1,27 +1,26 @@
 package net.zerobuilder.examples.values.inheritance;
 
-import java.math.BigInteger;
 import net.zerobuilder.RecordBuilder;
 
-// inheritance + overrides
-@RecordBuilder
-final class Planet extends CelestialBody implements IMoons {
+import java.math.BigInteger;
 
+@RecordBuilder
+final class Planet {
+
+  final BigInteger mass;
   private final int numberOfMoons;
   private final boolean habitable;
 
   Planet(BigInteger mass, int numberOfMoons, boolean habitable) {
-    super(mass);
+    this.mass = mass;
     this.numberOfMoons = numberOfMoons;
     this.habitable = habitable;
   }
 
-  @Override
   BigInteger getMass() {
-    return super.mass;
+    return mass;
   }
 
-  @Override
   public int getNumberOfMoons() {
     return numberOfMoons;
   }

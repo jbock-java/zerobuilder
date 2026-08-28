@@ -1,6 +1,7 @@
 package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.TypeName;
+
 import java.util.List;
 
 public final class DtoProjectionInfo {
@@ -20,23 +21,13 @@ public final class DtoProjectionInfo {
     return new FieldAccess(fieldName);
   }
 
-  public static final class GetterMethod implements ProjectionInfo {
-    public final String methodName;
-    final List<TypeName> thrownTypes;
-
-    private GetterMethod(String methodName, List<TypeName> thrownTypes) {
-      this.methodName = methodName;
-      this.thrownTypes = thrownTypes;
-    }
+  public record GetterMethod(
+      String methodName,
+      List<TypeName> thrownTypes) implements ProjectionInfo {
   }
 
-  public static final class FieldAccess implements ProjectionInfo {
-    public final String fieldName;
-
-    private FieldAccess(String fieldName) {
-      this.fieldName = fieldName;
-    }
-
+  public record FieldAccess(
+      String fieldName) implements ProjectionInfo {
   }
 
   public static List<TypeName> thrownTypes(ProjectionInfo projectionInfo) {

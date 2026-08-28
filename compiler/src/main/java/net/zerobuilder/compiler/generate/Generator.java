@@ -1,7 +1,6 @@
 package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.ClassName;
-import net.zerobuilder.compiler.generate.DtoGeneratorOutput.GeneratorOutput;
 import net.zerobuilder.modules.builder.BuilderComponent;
 import net.zerobuilder.modules.updater.UpdaterComponent;
 
