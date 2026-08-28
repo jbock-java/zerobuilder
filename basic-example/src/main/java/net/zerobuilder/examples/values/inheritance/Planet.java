@@ -1,8 +1,7 @@
 package net.zerobuilder.examples.values.inheritance;
 
-import net.zerobuilder.RecordBuilder;
-
 import java.math.BigInteger;
+import net.zerobuilder.RecordBuilder;
 
 @RecordBuilder
 final class Planet {
@@ -21,11 +20,11 @@ final class Planet {
     return mass;
   }
 
-  public int getNumberOfMoons() {
+  public int numberOfMoons() {
     return numberOfMoons;
   }
 
-  boolean isHabitable() {
+  boolean habitable() {
     return habitable;
   }
 }

@@ -1,12 +1,11 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
-import net.zerobuilder.compiler.common.LessElements;
-import net.zerobuilder.compiler.generate.GoalDescription;
-
+import java.util.List;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import java.util.List;
+import net.zerobuilder.compiler.common.LessElements;
+import net.zerobuilder.compiler.generate.GoalDescription;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -19,11 +18,10 @@ import static net.zerobuilder.compiler.analyse.Utilities.peer;
 public final class Analyser {
 
   /**
-   * Extract all goals from the given type, by inspecting annotations.
-   * Perform validations and bundle each goal with the appropriate module.
+   * Determine goal from the given type by inspecting its annotations.
    *
    * @param tel a type element
-   * @return list of goal inputs
+   * @return goal description
    * @throws ValidationException if validation fails
    */
   public static GoalDescription analyse(TypeElement tel) throws ValidationException {

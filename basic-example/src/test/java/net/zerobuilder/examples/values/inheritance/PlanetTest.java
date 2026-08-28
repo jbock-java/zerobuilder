@@ -1,8 +1,7 @@
 package net.zerobuilder.examples.values.inheritance;
 
-import org.junit.jupiter.api.Test;
-
 import java.math.BigInteger;
+import org.junit.jupiter.api.Test;
 
 import static java.math.BigInteger.TEN;
 import static net.zerobuilder.examples.values.inheritance.PlanetBuilders.builder;
@@ -19,8 +18,8 @@ class PlanetTest {
         .numberOfMoons(1)
         .habitable(true);
     planet = builder(planet).mass(mass.multiply(TEN)).build();
-    assertEquals(1, planet.getNumberOfMoons());
-    assertTrue(planet.isHabitable());
+    assertEquals(1, planet.numberOfMoons());
+    assertTrue(planet.habitable());
     assertEquals(mass.multiply(TEN), planet.getMass());
   }
 }

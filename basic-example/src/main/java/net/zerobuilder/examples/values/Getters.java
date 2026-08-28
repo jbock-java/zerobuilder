@@ -2,8 +2,6 @@ package net.zerobuilder.examples.values;
 
 import net.zerobuilder.RecordBuilder;
 
-// projections: getters
-// see GettersTest
 @RecordBuilder
 final class Getters {
 
@@ -17,15 +15,15 @@ final class Getters {
     this.height = height;
   }
 
-  double getLength() {
+  double length() {
     return length;
   }
 
-  double getWidth() {
+  double width() {
     return width;
   }
 
-  double getHeight() {
+  double height() {
     return height;
   }
 }

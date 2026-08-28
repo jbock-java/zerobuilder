@@ -10,12 +10,12 @@ class GettersTest {
   @Test
   void basicTest() {
     Getters getters = builder().length(12).width(10).height(11);
-    assertEquals(12d, getters.getLength());
-    assertEquals(10d, getters.getWidth());
-    assertEquals(11d, getters.getHeight());
+    assertEquals(12d, getters.length());
+    assertEquals(10d, getters.width());
+    assertEquals(11d, getters.height());
     getters = builder(getters).length(0).build();
-    assertEquals(0d, getters.getLength());
-    assertEquals(10d, getters.getWidth());
-    assertEquals(11d, getters.getHeight());
+    assertEquals(0d, getters.length());
+    assertEquals(10d, getters.width());
+    assertEquals(11d, getters.height());
   }
 }

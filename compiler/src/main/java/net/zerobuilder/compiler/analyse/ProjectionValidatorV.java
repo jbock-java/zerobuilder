@@ -1,21 +1,19 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.TypeName;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
-import net.zerobuilder.compiler.generate.GoalDescription;
-
+import java.util.List;
+import java.util.Map;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
-import java.util.List;
-import java.util.Map;
+import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
+import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
+import net.zerobuilder.compiler.generate.GoalDescription;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.MISSING_PROJECTION;
-import static net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter.toValidParameter;
 import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 import static net.zerobuilder.compiler.common.LessElements.getLocalFields;
@@ -25,7 +23,6 @@ import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createFieldAcc
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createGetterMethod;
 import static net.zerobuilder.compiler.generate.GoalDescriptionFactory.createTheGoalDescription;
 import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
-import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
 final class ProjectionValidatorV {
 
@@ -53,22 +50,14 @@ final class ProjectionValidatorV {
       Map<String, VariableElement> fields,
       VariableElement parameter) {
     String name = parameter.getSimpleName().toString();
-    VariableElement field = fields.get(name);
     TypeName parameterType = TypeName.get(parameter.asType());
+    if (methods.containsKey(name) &&
+        TypeName.get(methods.get(name).getReturnType()).equals(parameterType)) {
+      return createGetterMethod(name, thrownTypes(methods.get(name)));
+    }
+    VariableElement field = fields.get(name);
     if (field != null && TypeName.get(field.asType()).equals(parameterType)) {
       return createFieldAccess(field.getSimpleName().toString());
-    }
-    List<String> possibleNames;
-    if (parameter.asType().getKind() == TypeKind.BOOLEAN) {
-      possibleNames = List.of(name, "is" + upcase(name), "get" + upcase(name));
-    } else {
-      possibleNames = List.of(name, "get" + upcase(name));
-    }
-    for (String possibleName : possibleNames) {
-      if (methods.containsKey(possibleName) &&
-          TypeName.get(methods.get(possibleName).getReturnType()).equals(parameterType)) {
-        return createGetterMethod(possibleName, thrownTypes(methods.get(possibleName)));
-      }
     }
     throw new ValidationException(MISSING_PROJECTION + name, parameter);
   }
@@ -80,7 +69,7 @@ final class ProjectionValidatorV {
     return createTheGoalDescription(
         goal.details(),
         thrownTypes(goal.executableElement()),
-        transform(shuffled, toValidParameter), goal.generatedType());
+        transform(shuffled, TmpProjectedParameter::parameter), goal.generatedType());
   }
 
   static void checkInheritance(TypeElement tel) {

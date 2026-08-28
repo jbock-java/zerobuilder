@@ -17,7 +17,7 @@ final class ProjectionPrecedence {
     }
 
     String foo() {
-      throw new AssertionError();
+      return foo;
     }
 
     String isFoo() {
@@ -56,16 +56,8 @@ final class ProjectionPrecedence {
       this.foo = foo;
     }
 
-    String getFoo() {
+    String foo() {
       return foo;
-    }
-
-    private String foo() {
-      throw new AssertionError();
-    }
-
-    String isFoo() {
-      throw new AssertionError();
     }
   }
 
@@ -78,11 +70,7 @@ final class ProjectionPrecedence {
       this.foo = foo;
     }
 
-    boolean getFoo() {
-      throw new AssertionError();
-    }
-
-    boolean isFoo() {
+    boolean foo() {
       return foo;
     }
   }

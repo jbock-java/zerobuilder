@@ -29,13 +29,13 @@ class ProjectionPrecedenceTest {
   void testAutoGetter() {
     AutoGetter foo = new AutoGetter("foo");
     AutoGetter bar = ProjectionPrecedence_AutoGetterBuilders.builder(foo).foo("bar").build();
-    assertEquals("bar", bar.getFoo());
+    assertEquals("bar", bar.foo());
   }
 
   @Test
   void testBooleanGetter() {
     BoolGetter foo = new BoolGetter(false);
     BoolGetter bar = ProjectionPrecedence_BoolGetterBuilders.builder(foo).foo(true).build();
-    assertTrue(bar.isFoo());
+    assertTrue(bar.foo());
   }
 }

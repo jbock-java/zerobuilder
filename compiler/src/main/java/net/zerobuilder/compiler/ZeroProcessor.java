@@ -3,23 +3,22 @@ package net.zerobuilder.compiler;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.TypeSpec;
-import net.zerobuilder.RecordBuilder;
-import net.zerobuilder.compiler.analyse.Analyser;
-import net.zerobuilder.compiler.analyse.ValidationException;
-import net.zerobuilder.compiler.generate.Generator;
-import net.zerobuilder.compiler.generate.GeneratorOutput;
-import net.zerobuilder.compiler.generate.GoalDescription;
-
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.HashSet;
-import java.util.Set;
+import net.zerobuilder.RecordBuilder;
+import net.zerobuilder.compiler.analyse.Analyser;
+import net.zerobuilder.compiler.analyse.ValidationException;
+import net.zerobuilder.compiler.generate.Generator;
+import net.zerobuilder.compiler.generate.GeneratorOutput;
+import net.zerobuilder.compiler.generate.GoalDescription;
 
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
@@ -49,7 +48,7 @@ public final class ZeroProcessor extends AbstractProcessor {
         GeneratorOutput generatorOutput = Generator.generate(description);
         TypeSpec typeSpec = generatorOutput.typeSpec();
         try {
-          write(generatorOutput.generatedType(), typeSpec);
+          write(generatorOutput.description().generatedType(), typeSpec);
         } catch (IOException e) {
           String message = "Error processing "
               + ClassName.get(tel) + ": " + e.getMessage();

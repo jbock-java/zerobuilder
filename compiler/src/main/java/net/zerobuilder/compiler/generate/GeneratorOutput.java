@@ -1,31 +1,20 @@
 package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.AnnotationSpec;
-import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeSpec;
-import net.zerobuilder.compiler.ZeroProcessor;
-
-import javax.annotation.processing.Generated;
-import java.util.List;
 import java.util.Objects;
+import javax.annotation.processing.Generated;
+import net.zerobuilder.compiler.ZeroProcessor;
 
 import static com.palantir.javapoet.MethodSpec.constructorBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 
-/**
- * @param methods       All methods in the type returned by {@link #typeSpec()}.
- *                      Includes static methods. Excludes constructors.
- * @param nestedTypes
- * @param generatedType Class name of the type returned by {@link #typeSpec()}.
- */
 public record GeneratorOutput(
-    GoalDetails detail,
-    List<MethodSpec> methods,
-    List<TypeSpec> nestedTypes,
-    ClassName generatedType) {
+    GoalDescription description,
+    ModuleOutput moduleOutput) {
 
   /**
    * Create the definition of the generated class.
@@ -33,12 +22,12 @@ public record GeneratorOutput(
    * @return type definition
    */
   public TypeSpec typeSpec() {
-    return classBuilder(generatedType())
+    return classBuilder(description.generatedType())
         .addMethod(constructor())
-        .addMethods(methods())
+        .addMethods(moduleOutput.method())
         .addAnnotation(generatedAnnotation())
-        .addModifiers(detail.getAccess(FINAL))
-        .addTypes(nestedTypes()).build();
+        .addModifiers(description.details().getAccess(FINAL))
+        .addTypes(moduleOutput.typeSpecs()).build();
   }
 
   private MethodSpec constructor() {

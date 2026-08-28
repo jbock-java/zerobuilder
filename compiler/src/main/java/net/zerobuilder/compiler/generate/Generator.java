@@ -1,10 +1,8 @@
 package net.zerobuilder.compiler.generate;
 
-import com.palantir.javapoet.ClassName;
+import java.util.stream.Stream;
 import net.zerobuilder.modules.builder.BuilderComponent;
 import net.zerobuilder.modules.updater.UpdaterComponent;
-
-import java.util.stream.Stream;
 
 public final class Generator {
 
@@ -16,15 +14,18 @@ public final class Generator {
    * @throws IllegalArgumentException if input is invalid
    */
   public static GeneratorOutput generate(GoalDescription goal) {
-    ClassName generatedType = goal.generatedType();
-    ModuleOutput tmpOutput = Generator.process(goal);
-    return new GeneratorOutput(goal.details(), tmpOutput.method(), tmpOutput.typeSpecs(), generatedType);
+    ModuleOutput moduleOutput = Generator.process(goal);
+    return new GeneratorOutput(goal, moduleOutput);
   }
 
   private static ModuleOutput process(GoalDescription description) {
     ModuleOutput builderOutput = BuilderComponent.process(description);
     ModuleOutput updaterOutput = UpdaterComponent.process(description);
-    return new ModuleOutput(Stream.concat(builderOutput.method().stream(), updaterOutput.method().stream()).toList(), Stream.concat(builderOutput.typeSpecs().stream(), updaterOutput.typeSpecs().stream()).toList());
+    return new ModuleOutput(
+        Stream.concat(builderOutput.method().stream(), updaterOutput.method().stream())
+            .toList(),
+        Stream.concat(builderOutput.typeSpecs().stream(), updaterOutput.typeSpecs().stream())
+            .toList());
   }
 
   private Generator() {
