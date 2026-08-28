@@ -16,8 +16,8 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.jbock-java:zerobuilder:1.646")
-    annotationProcessor("io.github.jbock-java:zerobuilder-compiler:1.646")
+    implementation("io.github.jbock-java:zerobuilder:1.648")
+    annotationProcessor("io.github.jbock-java:zerobuilder-compiler:1.648")
     testImplementation(platform("org.junit:junit-bom:6.1.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
