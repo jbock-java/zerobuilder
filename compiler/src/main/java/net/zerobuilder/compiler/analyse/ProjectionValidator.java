@@ -1,13 +1,10 @@
 package net.zerobuilder.compiler.analyse;
 
-import com.palantir.javapoet.TypeName;
 import java.util.ArrayList;
 import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.VariableElement;
-import net.zerobuilder.StepName;
 import net.zerobuilder.StepOrder;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
 
 import static java.util.Collections.nCopies;
@@ -55,14 +52,11 @@ final class ProjectionValidator {
       int stepOrder,
       ProjectedParameter parameter) {
 
-    static TmpProjectedParameter create(VariableElement parameter, ProjectionInfo projectionInfo) {
-      StepOrder stepOrder = parameter.getAnnotation(StepOrder.class);
-      int value = stepOrder == null ? -1 : stepOrder.value();
-      StepName stepNameAnnotation = parameter.getAnnotation(StepName.class);
-      String name = stepNameAnnotation == null ? parameter.getSimpleName().toString() : stepNameAnnotation.value();
-      TypeName type = TypeName.get(parameter.asType());
-      ProjectedParameter regularParameter = new ProjectedParameter(name, type, projectionInfo);
-      return new TmpProjectedParameter(parameter, value, regularParameter);
+    static TmpProjectedParameter create(ProjectedParameter projectedParameter) {
+      VariableElement parameter = projectedParameter.parameter();
+      StepOrder stepOrderAnnotation = parameter.getAnnotation(StepOrder.class);
+      int stepOrder = stepOrderAnnotation == null ? -1 : stepOrderAnnotation.value();
+      return new TmpProjectedParameter(parameter, stepOrder, projectedParameter);
     }
 
     void checkState(boolean condition, String message) {

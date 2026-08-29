@@ -5,6 +5,8 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import io.jbock.simple.Inject;
+import java.util.List;
+import java.util.Set;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.GetterMethod;
@@ -12,14 +14,10 @@ import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
 
-import java.util.List;
-import java.util.Set;
-
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
-import static net.zerobuilder.compiler.generate.ZeroUtil.joinCodeBlocks;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
@@ -49,7 +47,7 @@ record UpdaterMethod(
   private CodeBlock copyBlock() {
     return description.parameters().stream()
         .map(this::copyFromProjection)
-        .collect(joinCodeBlocks());
+        .collect(CodeBlock.joining(""));
   }
 
   private CodeBlock copyFromProjection(ProjectedParameter step) {

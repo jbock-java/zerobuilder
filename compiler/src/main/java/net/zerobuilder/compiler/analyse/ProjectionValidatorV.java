@@ -10,6 +10,7 @@ import javax.lang.model.type.TypeKind;
 import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.GoalDescription;
+import net.zerobuilder.compiler.generate.ProjectedParameter;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -22,11 +23,10 @@ import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createFieldAccess;
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createGetterMethod;
 import static net.zerobuilder.compiler.generate.GoalDescriptionFactory.createTheGoalDescription;
-import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 final class ProjectionValidatorV {
 
-  private static boolean looksLikeGetter(ExecutableElement method) {
+  private static boolean looksLikeAccessor(ExecutableElement method) {
     return method.getParameters().isEmpty()
         && !method.getModifiers().contains(PRIVATE)
         && !method.getModifiers().contains(STATIC)
@@ -37,11 +37,12 @@ final class ProjectionValidatorV {
 
   static GoalDescription validateUpdater(GoalElement goal) {
     TypeElement tel = goal.details().tel();
-    Map<String, ExecutableElement> methods = getLocalMethods(tel, ProjectionValidatorV::looksLikeGetter);
+    Map<String, ExecutableElement> methods = getLocalMethods(tel, ProjectionValidatorV::looksLikeAccessor);
     Map<String, VariableElement> fields = getLocalFields(tel);
-    List<TmpProjectedParameter> parameters = transform(goal.executableElement().getParameters(),
-        parameter -> TmpProjectedParameter.create(parameter,
-            projectionInfo(methods, fields, parameter)));
+    List<TmpProjectedParameter> parameters = goal.executableElement().getParameters().stream()
+        .map(parameter -> ProjectedParameter.create(parameter, projectionInfo(methods, fields, parameter)))
+        .map(TmpProjectedParameter::create)
+        .toList();
     return createGoalDescription(goal, parameters);
   }
 
@@ -69,7 +70,8 @@ final class ProjectionValidatorV {
     return createTheGoalDescription(
         goal.details(),
         thrownTypes(goal.executableElement()),
-        transform(shuffled, TmpProjectedParameter::parameter), goal.generatedType());
+        shuffled.stream().map(TmpProjectedParameter::parameter).toList(),
+        goal.generatedType());
   }
 
   static void checkInheritance(TypeElement tel) {

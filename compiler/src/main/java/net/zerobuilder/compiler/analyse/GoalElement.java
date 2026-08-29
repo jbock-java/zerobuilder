@@ -1,15 +1,12 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
+import java.util.List;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import net.zerobuilder.StepName;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.GoalDetails;
-
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import java.util.List;
-
-import static net.zerobuilder.compiler.generate.ZeroUtil.transform;
 
 record GoalElement(
     GoalDetails details,
@@ -18,11 +15,11 @@ record GoalElement(
 ) {
 
   static List<String> parameterNames(ExecutableElement element) {
-    return transform(element.getParameters(),
-        parameter -> {
+    return element.getParameters().stream()
+        .map(parameter -> {
           StepName stepNameAnnotation = parameter.getAnnotation(StepName.class);
           return stepNameAnnotation == null ? parameter.getSimpleName().toString() : stepNameAnnotation.value();
-        });
+        }).toList();
   }
 
   static GoalElement create(

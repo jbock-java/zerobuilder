@@ -1,9 +1,8 @@
 package net.zerobuilder.compiler;
 
 import io.jbock.testing.compile.Compilation;
-import org.junit.jupiter.api.Test;
-
 import javax.tools.JavaFileObject;
+import org.junit.jupiter.api.Test;
 
 import static io.jbock.testing.compile.CompilationSubject.assertThat;
 import static io.jbock.testing.compile.JavaFileObjects.forSourceLines;
@@ -19,51 +18,20 @@ class StepOrderTest {
         "import net.zerobuilder.StepOrder;",
         "",
         "@RecordBuilder",
-        "final class Spaghetti {",
-        "  final String cheese;",
-        "  final String sauce;",
-        "  Spaghetti(String cheese, @StepOrder(0) String sauce) {",
-        "    this.cheese = cheese;",
-        "    this.sauce = sauce;",
-        "  }",
+        "record Spaghetti(",
+        "  String cheese,",
+        "  @StepOrder(0)",
+        "  String sauce,",
+        "  @StepOrder(1)",
+        "  String pasta) {",
         "}");
     Compilation compilation = simpleCompiler().compile(cube);
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("cube.SpaghettiBuilders")
         .containsLines(
-            "package cube;",
-            "import javax.annotation.processing.Generated;",
-            "",
-            "final class SpaghettiBuilders {",
-            "  private SpaghettiBuilders() {",
-            "  }",
-            "",
-            "  static SauceStep builder() {",
-            "    return new SpaghettiBuilder();",
-            "  }",
-            "",
-            "  private static class SpaghettiBuilder implements SauceStep, CheeseStep {",
-            "    private String sauce;",
-            "",
-            "    @Override",
-            "    public CheeseStep sauce(String sauce) {",
-            "      this.sauce = sauce;",
-            "      return this;",
-            "    }",
-            "",
-            "    @Override",
+            "    public PastaStep sauce(String sauce) {",
+            "    public CheeseStep pasta(String pasta) {",
             "    public Spaghetti cheese(String cheese) {",
-            "      return new Spaghetti(cheese, sauce);",
-            "    }",
-            "  }",
-            "",
-            "  public interface SauceStep {",
-            "    CheeseStep sauce(String sauce);",
-            "  }",
-            "",
-            "  public interface CheeseStep {",
-            "    Spaghetti cheese(String cheese);",
-            "  }",
             "}");
   }
 }

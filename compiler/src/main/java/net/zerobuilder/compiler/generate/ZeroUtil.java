@@ -9,20 +9,15 @@ import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeVariableName;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
 import javax.lang.model.element.Modifier;
 
 import static java.lang.Character.isLowerCase;
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
 import static java.lang.Character.toUpperCase;
+import static java.util.Collections.nCopies;
 
 public final class ZeroUtil {
 
@@ -67,59 +62,6 @@ public final class ZeroUtil {
     return FieldSpec.builder(type, name, modifiers).build();
   }
 
-  public static <X, E> List<E> transform(Collection<? extends X> input, Function<X, E> function) {
-    return input.stream().map(function).toList();
-  }
-
-  public static Collector<CodeBlock, List<CodeBlock>, CodeBlock> joinCodeBlocks() {
-    return joinCodeBlocks("");
-  }
-
-  public static Collector<CodeBlock, List<CodeBlock>, CodeBlock> joinCodeBlocks(String delimiter) {
-    return new Collector<>() {
-      @Override
-      public Supplier<List<CodeBlock>> supplier() {
-        return ArrayList::new;
-      }
-
-      @Override
-      public BiConsumer<List<CodeBlock>, CodeBlock> accumulator() {
-        return List::add;
-      }
-
-      @Override
-      public BinaryOperator<List<CodeBlock>> combiner() {
-        return (left, right) -> {
-          left.addAll(right);
-          return left;
-        };
-      }
-
-      @Override
-      public Function<List<CodeBlock>, CodeBlock> finisher() {
-        return blocks -> {
-          if (blocks.isEmpty()) {
-            return CodeBlock.of("");
-          }
-          CodeBlock.Builder builder = CodeBlock.builder();
-          for (int i = 0; i < blocks.size() - 1; i++) {
-            builder.add(blocks.get(i));
-            if (!delimiter.isEmpty()) {
-              builder.add(delimiter);
-            }
-          }
-          builder.add(blocks.getLast());
-          return builder.build();
-        };
-      }
-
-      @Override
-      public Set<Characteristics> characteristics() {
-        return Set.of();
-      }
-    };
-  }
-
   public static String simpleName(TypeName type) {
     if (type.isPrimitive() || type == TypeName.VOID) {
       return ((ClassName) type.box()).simpleName();
@@ -158,14 +100,10 @@ public final class ZeroUtil {
   }
 
   static <E> List<E> applyRanking(int[] ranking, List<E> input) {
-    if (input.size() != ranking.length) {
-      throw new IllegalArgumentException("input.size() != ranking.length");
-    }
-    List<E> result = new ArrayList<>(input.size());
-    for (int i = 0; i < input.size(); i++)
-      result.add(null);
-    for (int i = 0; i < input.size(); i++)
+    List<E> result = new ArrayList<>(nCopies(input.size(), null));
+    for (int i = 0; i < input.size(); i++) {
       result.set(ranking[i], input.get(i));
+    }
     return result;
   }
 

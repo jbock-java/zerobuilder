@@ -26,8 +26,8 @@ public final class GoalDescriptionFactory {
       List<ProjectedParameter> parameters,
       ClassName generatedType) {
     checkParameterNames(details.parameterNames(), parameters);
-    int[] ranking = createUnshuffle(parameters, details.parameterNames());
-    return new GoalDescription(details, thrownTypes, parameters, generatedType, ranking);
+    int[] parameterRanking = createUnshuffle(parameters, details.parameterNames());
+    return new GoalDescription(details, thrownTypes, parameters, generatedType, parameterRanking);
   }
 
   private static void checkParameterNames(
