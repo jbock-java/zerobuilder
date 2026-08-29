@@ -36,7 +36,7 @@ mavenPublishing {
       name = "zerobuilder"
       packaging = "jar"
       description = "zerobuilder annotations"
-      url = "https://github.com/h908714124/zerobuilder"
+      url = "https://github.com/jbock-java/zerobuilder"
 
       licenses {
           license {
@@ -52,9 +52,9 @@ mavenPublishing {
           }
       }
       scm {
-          connection = "scm:git:https://github.com/h908714124/zerobuilder.git"
-          developerConnection = "scm:git:https://github.com/h908714124/zerobuilder.git"
-          url = "https://github.com/h908714124/zerobuilder"
+          connection = "scm:git:https://github.com/jbock-java/zerobuilder.git"
+          developerConnection = "scm:git:https://github.com/jbock-java/zerobuilder.git"
+          url = "https://github.com/jbock-java/zerobuilder"
       }
   }
   publishToMavenCentral()
