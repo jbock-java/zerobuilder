@@ -38,18 +38,18 @@ record Builder(
   List<FieldSpec> fields() {
     List<ProjectedParameter> steps = description.parameters();
     return steps.stream().limit(steps.size() - 1)
-        .map(parameter -> FieldSpec.builder(parameter.type(), parameter.name(), PRIVATE).build())
+        .map(parameter -> FieldSpec.builder(parameter.type(), parameter.stepName(), PRIVATE).build())
         .toList();
   }
 
   MethodSpec steps(int i) {
     ProjectedParameter step = description.parameters().get(i);
-    ParameterSpec parameter = parameterSpec(step.type(), step.name());
+    ParameterSpec parameter = parameterSpec(step.type(), step.stepName());
     List<TypeName> thrownTypes = i < description.parameters().size() - 1 ?
         List.of() :
         description.thrownTypes();
     TypeName nextType = nextType(i);
-    return methodBuilder(step.name())
+    return methodBuilder(step.stepName())
         .addAnnotation(Override.class)
         .addParameter(parameter)
         .returns(nextType)
@@ -61,12 +61,12 @@ record Builder(
 
   private CodeBlock normalAssignment(int i) {
     ProjectedParameter step = description.parameters().get(i);
-    ParameterSpec parameter = parameterSpec(step.type(), step.name());
+    ParameterSpec parameter = parameterSpec(step.type(), step.stepName());
     if (i == description.parameters().size() - 1) {
       return constructorCall();
     }
     return CodeBlock.builder()
-        .addStatement("this.$N = $N", fieldSpec(step.type(), step.name()), parameter)
+        .addStatement("this.$N = $N", fieldSpec(step.type(), step.stepName()), parameter)
         .addStatement("return this")
         .build();
   }

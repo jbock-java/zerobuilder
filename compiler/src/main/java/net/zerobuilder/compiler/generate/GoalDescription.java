@@ -16,7 +16,7 @@ public record GoalDescription(
 
   public CodeBlock invocationParameters() {
     return originalParameters.stream()
-        .map(ProjectedParameter::name)
+        .map(ProjectedParameter::stepName)
         .map(CodeBlock::of)
         .collect(CodeBlock.joining(", "));
   }

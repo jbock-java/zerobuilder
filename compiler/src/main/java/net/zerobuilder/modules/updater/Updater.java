@@ -24,7 +24,7 @@ record Updater(GoalDescription description) {
 
   List<FieldSpec> fields() {
     return description.parameters().stream()
-        .map(step -> fieldSpec(step.type(), step.name(), PRIVATE))
+        .map(step -> fieldSpec(step.type(), step.stepName(), PRIVATE))
         .toList();
   }
 
@@ -46,13 +46,13 @@ record Updater(GoalDescription description) {
 
   private MethodSpec normalUpdate(
       ProjectedParameter step) {
-    String name = step.name();
+    String name = step.stepName();
     TypeName type = step.type();
     ParameterSpec parameter = parameterSpec(type, name);
     return methodBuilder(name)
         .returns(implType())
         .addParameter(parameter)
-        .addStatement("this.$N = $N", fieldSpec(step.type(), step.name()), parameter)
+        .addStatement("this.$N = $N", fieldSpec(step.type(), step.stepName()), parameter)
         .addStatement("return this")
         .addModifiers(description.details().getAccess())
         .build();

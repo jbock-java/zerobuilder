@@ -11,7 +11,6 @@ import net.zerobuilder.StepOrder;
 import net.zerobuilder.compiler.generate.Access;
 import net.zerobuilder.compiler.generate.GoalDetails;
 
-import static java.util.Collections.nCopies;
 import static net.zerobuilder.compiler.Messages.STEP_DUPLICATE;
 import static net.zerobuilder.compiler.Messages.STEP_OUT_OF_BOUNDS;
 
@@ -24,7 +23,7 @@ record GoalElement(
   private static List<String> parameterNames(ExecutableElement element)
       throws ValidationException {
     List<? extends VariableElement> parameters = element.getParameters();
-    List<String> builder = new ArrayList<>(nCopies(parameters.size(), null));
+    String[] result = new String[parameters.size()];
     List<String> noOrder = new ArrayList<>(parameters.size());
     for (VariableElement parameter : parameters) {
       StepOrder stepOrderAnnotation = parameter.getAnnotation(StepOrder.class);
@@ -35,22 +34,22 @@ record GoalElement(
         if (stepOrder >= parameters.size()) {
           throw new ValidationException(STEP_OUT_OF_BOUNDS, element);
         }
-        if (builder.get(stepOrder) != null) {
+        if (result[stepOrder] != null) {
           throw new ValidationException(STEP_DUPLICATE, element);
         }
-        builder.set(stepOrder, paramName);
+        result[stepOrder] = paramName;
       } else {
         noOrder.add(paramName);
       }
     }
     int pos = 0;
     for (String parameter : noOrder) {
-      while (builder.get(pos) != null) {
+      while (result[pos] != null) {
         pos++;
       }
-      builder.set(pos++, parameter);
+      result[pos++] = parameter;
     }
-    return builder;
+    return List.of(result);
   }
 
   static GoalElement create(

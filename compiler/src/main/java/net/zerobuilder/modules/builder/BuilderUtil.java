@@ -16,7 +16,7 @@ record BuilderUtil(GoalDescription description) {
   ClassName stepType(int i) {
     ProjectedParameter parameter = description.parameters().get(i);
     return description.generatedType()
-        .nestedClass(upcase(parameter.name()) + "Step");
+        .nestedClass(upcase(parameter.stepName()) + "Step");
   }
 
   ClassName implType() {

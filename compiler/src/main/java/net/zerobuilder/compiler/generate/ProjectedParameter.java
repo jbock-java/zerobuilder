@@ -6,7 +6,7 @@ import net.zerobuilder.StepName;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 
 public record ProjectedParameter(
-    String name,
+    String stepName,
     VariableElement parameter,
     ProjectionInfo projectionInfo
 ) {

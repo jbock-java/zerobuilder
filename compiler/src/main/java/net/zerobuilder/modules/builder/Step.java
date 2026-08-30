@@ -34,7 +34,7 @@ record Step(
 
   private MethodSpec stepMethod(int i) {
     ProjectedParameter parameter = description.parameters().get(i);
-    String name = parameter.name();
+    String name = parameter.stepName();
     TypeName type = parameter.type();
     List<TypeName> thrownTypes = i == description.parameters().size() - 1 ?
         description.thrownTypes() :

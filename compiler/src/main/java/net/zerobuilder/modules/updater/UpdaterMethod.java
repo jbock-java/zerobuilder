@@ -71,7 +71,7 @@ record UpdaterMethod(
       ProjectedParameter step) {
     ParameterSpec parameter = toBuilderParameter();
     ParameterSpec updater = varUpdater();
-    String field = step.name();
+    String field = step.stepName();
     CodeBlock.Builder builder = CodeBlock.builder();
     return builder.addStatement("$N.$N = $N.$N()",
         updater, field, parameter, projection.methodName()).build();

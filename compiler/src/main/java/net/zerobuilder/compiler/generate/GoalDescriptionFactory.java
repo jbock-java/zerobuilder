@@ -13,7 +13,7 @@ public final class GoalDescriptionFactory {
       List<String> parameterNames) {
     String[] a = new String[parameters.size()];
     for (int i = 0; i < parameters.size(); i++) {
-      a[i] = parameters.get(i).name();
+      a[i] = parameters.get(i).stepName();
     }
     String[] b = parameterNames.toArray(new String[0]);
     return createRanking(a, b);
