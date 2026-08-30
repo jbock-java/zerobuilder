@@ -10,15 +10,18 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.applyRanking;
 public record GoalDescription(
     GoalDetails details,
     List<TypeName> thrownTypes,
-    List<ProjectedParameter> parameters,
+    List<ProjectedParameter> originalParameters,
     ClassName generatedType,
     int[] parameterRanking) {
 
   public CodeBlock invocationParameters() {
-    List<ProjectedParameter> unshuffled = applyRanking(parameterRanking, parameters);
-    return unshuffled.stream()
+    return originalParameters.stream()
         .map(ProjectedParameter::name)
         .map(CodeBlock::of)
         .collect(CodeBlock.joining(", "));
+  }
+
+  public List<ProjectedParameter> parameters() {
+    return applyRanking(parameterRanking, originalParameters);
   }
 }

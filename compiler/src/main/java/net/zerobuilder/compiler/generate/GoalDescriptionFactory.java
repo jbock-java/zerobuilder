@@ -2,14 +2,13 @@ package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
-
 import java.util.List;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.createRanking;
 
 public final class GoalDescriptionFactory {
 
-  private static int[] createUnshuffle(
+  private static int[] createShuffle(
       List<ProjectedParameter> parameters,
       List<String> parameterNames) {
     String[] a = new String[parameters.size()];
@@ -25,8 +24,8 @@ public final class GoalDescriptionFactory {
       List<TypeName> thrownTypes,
       List<ProjectedParameter> parameters,
       ClassName generatedType) {
-    checkParameterNames(details.parameterNames(), parameters);
-    int[] parameterRanking = createUnshuffle(parameters, details.parameterNames());
+    checkParameterNames(details.shuffledParameterNames(), parameters);
+    int[] parameterRanking = createShuffle(parameters, details.shuffledParameterNames());
     return new GoalDescription(details, thrownTypes, parameters, generatedType, parameterRanking);
   }
 
@@ -38,13 +37,6 @@ public final class GoalDescriptionFactory {
     }
     if (parameterNames.size() != parameters.size()) {
       throw new IllegalArgumentException("parameter names mismatch");
-    }
-    int[] positions = new int[parameterNames.size()];
-    for (ProjectedParameter parameter : parameters) {
-      int i = parameterNames.indexOf(parameter.name());
-      if (i < 0 || positions[i]++ != 0) {
-        throw new IllegalArgumentException("parameter names mismatch: " + parameter.name());
-      }
     }
   }
 

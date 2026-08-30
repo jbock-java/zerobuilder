@@ -5,11 +5,10 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 import io.jbock.simple.Inject;
+import java.util.List;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.ModuleOutput;
-
-import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.classBuilder;
@@ -50,7 +49,7 @@ public record RegularUpdater(
     TypeName type = details.goalType();
     CodeBlock.Builder builder = CodeBlock.builder();
     return builder.addStatement("return new $T($L)", type,
-            details.invocationParameters())
+            description.invocationParameters())
         .build();
   }
 

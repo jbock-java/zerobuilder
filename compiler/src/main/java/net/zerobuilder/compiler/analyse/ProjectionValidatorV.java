@@ -7,7 +7,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
-import net.zerobuilder.compiler.analyse.ProjectionValidator.TmpProjectedParameter;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.ProjectionInfo;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
@@ -15,7 +14,6 @@ import net.zerobuilder.compiler.generate.ProjectedParameter;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.MISSING_PROJECTION;
-import static net.zerobuilder.compiler.analyse.ProjectionValidator.shuffledParameters;
 import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
 import static net.zerobuilder.compiler.common.LessElements.getLocalFields;
 import static net.zerobuilder.compiler.common.LessElements.getLocalMethods;
@@ -39,9 +37,8 @@ final class ProjectionValidatorV {
     TypeElement tel = goal.details().tel();
     Map<String, ExecutableElement> methods = getLocalMethods(tel, ProjectionValidatorV::looksLikeAccessor);
     Map<String, VariableElement> fields = getLocalFields(tel);
-    List<TmpProjectedParameter> parameters = goal.executableElement().getParameters().stream()
+    List<ProjectedParameter> parameters = goal.executableElement().getParameters().stream()
         .map(parameter -> ProjectedParameter.create(parameter, projectionInfo(methods, fields, parameter)))
-        .map(TmpProjectedParameter::create)
         .toList();
     return createGoalDescription(goal, parameters);
   }
@@ -65,12 +62,11 @@ final class ProjectionValidatorV {
 
   private static GoalDescription createGoalDescription(
       GoalElement goal,
-      List<TmpProjectedParameter> parameters) {
-    List<TmpProjectedParameter> shuffled = shuffledParameters(parameters);
+      List<ProjectedParameter> parameters) {
     return createTheGoalDescription(
         goal.details(),
         thrownTypes(goal.executableElement()),
-        shuffled.stream().map(TmpProjectedParameter::parameter).toList(),
+        parameters,
         goal.generatedType());
   }
 
