@@ -5,7 +5,7 @@
 
 This generates a "telescoping" builder where every field must be filled, otherwise it's a compiler error.
 
-To generate the builder, annotate a record class with `@RecordBuilder` and / or `@RecordUpdater`.
+To generate the builder, annotate a record class with `@RecordBuilder`
 
 ```java
 @RecordBuilder
