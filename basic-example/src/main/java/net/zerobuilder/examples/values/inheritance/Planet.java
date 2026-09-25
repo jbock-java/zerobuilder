@@ -1,9 +1,10 @@
 package net.zerobuilder.examples.values.inheritance;
 
-import java.math.BigInteger;
 import net.zerobuilder.RecordBuilder;
 
-@RecordBuilder
+import java.math.BigInteger;
+
+@RecordBuilder(updateOnly = true)
 final class Planet {
 
   final BigInteger mass;

@@ -15,7 +15,7 @@ public final class TrickyGenericsBuilders {
 
     @Override
     public <K, V> GetListBuilder.Key<K, V> source(Map<K, List<V>> source) {
-      return new KeyImpl(source);
+      return new KeyImpl<>(source);
     }
 
     private static final class KeyImpl<K, V> implements GetListBuilder.Key<K, V> {
@@ -28,7 +28,7 @@ public final class TrickyGenericsBuilders {
 
       @Override
       public GetListBuilder.DefaultValue<V> key(K key) {
-        return new DefaultValueImpl(this, key);
+        return new DefaultValueImpl<>(this, key);
       }
     }
 

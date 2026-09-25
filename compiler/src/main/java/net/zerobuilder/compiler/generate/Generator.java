@@ -1,8 +1,15 @@
 package net.zerobuilder.compiler.generate;
 
-import java.util.stream.Stream;
+import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeSpec;
+import net.zerobuilder.RecordBuilder;
 import net.zerobuilder.modules.builder.BuilderComponent;
 import net.zerobuilder.modules.updater.UpdaterComponent;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 public final class Generator {
 
@@ -19,13 +26,20 @@ public final class Generator {
   }
 
   private static ModuleOutput process(GoalDescription description) {
-    ModuleOutput builderOutput = BuilderComponent.process(description);
-    ModuleOutput updaterOutput = UpdaterComponent.process(description);
-    return new ModuleOutput(
-        Stream.concat(builderOutput.method().stream(), updaterOutput.method().stream())
-            .toList(),
-        Stream.concat(builderOutput.typeSpecs().stream(), updaterOutput.typeSpecs().stream())
-            .toList());
+    RecordBuilder annotation = requireNonNull(description.details().tel().getAnnotation(RecordBuilder.class));
+    List<MethodSpec> methods = new ArrayList<>();
+    List<TypeSpec> typeSpecs = new ArrayList<>();
+    if (!annotation.updateOnly()) {
+      ModuleOutput builderOutput = BuilderComponent.process(description);
+      methods.addAll(builderOutput.method());
+      typeSpecs.addAll(builderOutput.typeSpecs());
+    }
+    if (!annotation.createOnly()) {
+      ModuleOutput updaterOutput = UpdaterComponent.process(description);
+      methods.addAll(updaterOutput.method());
+      typeSpecs.addAll(updaterOutput.typeSpecs());
+    }
+    return new ModuleOutput(methods, typeSpecs);
   }
 
   private Generator() {

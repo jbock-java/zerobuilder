@@ -18,7 +18,7 @@ class StepOrderTest {
         "import net.zerobuilder.StepOrder;",
         "import net.zerobuilder.StepName;",
         "",
-        "@RecordBuilder",
+        "@RecordBuilder(createOnly = true)",
         "record Spaghetti(",
         "  String cheese,",
         "  @StepOrder(0)",

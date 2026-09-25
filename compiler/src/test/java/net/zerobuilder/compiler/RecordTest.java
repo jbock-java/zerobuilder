@@ -74,7 +74,7 @@ class RecordTest {
         "import net.zerobuilder.StepName;",
         "import java.util.List;",
         "",
-        "@RecordBuilder",
+        "@RecordBuilder(createOnly = true)",
         "record SnailCat<E>(",
         "  E name,",
         "  List<String> notes,",
