@@ -29,12 +29,13 @@ final class MessageBuilders {
 
   interface SenderStep { BodyStep sender(String sender) }
   interface BodyStep { RecipientStep body(String body) }
-  interface RecipientStep { Message recipient(String recipient) }
+  interface RecipientStep { HasBuildMethod<Message> recipient(String recipient) }
 
-  private static class MessageBuilder implements SenderStep, BodyStep, RecipientStep {
+  private static class MessageBuilder implements SenderStep, BodyStep, RecipientStep, HasBuildMethod<Message> {
     @Override BodyStep sender(String sender)
     @Override RecipientStep body(String body)
-    @Override Message recipient(String recipient)
+    @Override HasBuildMethod<Message> recipient(String recipient)
+    @Override Message build()
   }
 
   static final class MessageUpdater {
