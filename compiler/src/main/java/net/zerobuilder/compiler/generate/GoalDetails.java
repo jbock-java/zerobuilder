@@ -5,6 +5,9 @@ import com.palantir.javapoet.TypeVariableName;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import net.zerobuilder.RecordBuilder;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * @param shuffledParameterNames shuffled parameter names
@@ -29,5 +32,9 @@ public record GoalDetails(
     return access == Access.PUBLIC ?
         ZeroUtil.addModifier(Modifier.PUBLIC, modifiers) :
         modifiers;
+  }
+
+  RecordBuilder annotation() {
+    return requireNonNull(tel.getAnnotation(RecordBuilder.class));
   }
 }

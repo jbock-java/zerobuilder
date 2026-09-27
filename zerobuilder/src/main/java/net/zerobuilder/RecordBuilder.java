@@ -33,15 +33,14 @@ public @interface RecordBuilder {
 
   /**
    * If this is {@code true}, the updater class
-   * and the single-argument {@code builder(X)} method
+   * and the unary {@code builder(X)} method
    * are <em>not</em> created.
    */
   boolean createOnly() default false;
 
   /**
-   * If this is {@code true}, the telescoping builder
-   * class and interfaces, and the no-argument
-   * {@code builder()} method are <em>not</em> created.
+   * If this is {@code true}, the nullary {@code builder()}
+   * method returns a new updater instance.
    */
   boolean updateOnly() default false;
 

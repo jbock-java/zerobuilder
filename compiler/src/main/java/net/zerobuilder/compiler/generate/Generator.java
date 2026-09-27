@@ -2,14 +2,10 @@ package net.zerobuilder.compiler.generate;
 
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeSpec;
-import net.zerobuilder.RecordBuilder;
-import net.zerobuilder.modules.builder.BuilderComponent;
-import net.zerobuilder.modules.updater.UpdaterComponent;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.util.Objects.requireNonNull;
+import net.zerobuilder.modules.builder.BuilderComponent;
+import net.zerobuilder.modules.updater.UpdaterComponent;
 
 public final class Generator {
 
@@ -26,15 +22,14 @@ public final class Generator {
   }
 
   private static ModuleOutput process(GoalDescription description) {
-    RecordBuilder annotation = requireNonNull(description.details().tel().getAnnotation(RecordBuilder.class));
     List<MethodSpec> methods = new ArrayList<>();
     List<TypeSpec> typeSpecs = new ArrayList<>();
-    if (!annotation.updateOnly()) {
+    if (!description.updateOnly()) {
       ModuleOutput builderOutput = BuilderComponent.process(description);
       methods.addAll(builderOutput.method());
       typeSpecs.addAll(builderOutput.typeSpecs());
     }
-    if (!annotation.createOnly()) {
+    if (!description.createOnly()) {
       ModuleOutput updaterOutput = UpdaterComponent.process(description);
       methods.addAll(updaterOutput.method());
       typeSpecs.addAll(updaterOutput.typeSpecs());

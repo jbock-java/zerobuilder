@@ -30,16 +30,25 @@ record UpdaterMethod(
   UpdaterMethod {
   }
 
-  MethodSpec updaterMethod() {
-    ParameterSpec updater = varUpdater();
+  MethodSpec nullaryMethod() {
+    return methodBuilder("builder")
+        .addTypeVariables(description.details().instanceTypeParameters())
+        .returns(updater.implType())
+        .addStatement("return new $T()", updater.implType())
+        .addModifiers(description.details().getAccess(STATIC))
+        .build();
+  }
+
+  MethodSpec unaryMethod() {
+    ParameterSpec varUpdater = varUpdater();
     return methodBuilder("builder")
         .addExceptions(thrownByProjections())
         .addParameter(toBuilderParameter())
         .addTypeVariables(description.details().instanceTypeParameters())
-        .returns(updater.type())
-        .addCode(initVarUpdater(updater))
+        .returns(updater.implType())
+        .addCode(initVarUpdater(varUpdater))
         .addCode(copyBlock())
-        .addStatement("return $N", updater)
+        .addStatement("return $N", varUpdater)
         .addModifiers(description.details().getAccess(STATIC))
         .build();
   }

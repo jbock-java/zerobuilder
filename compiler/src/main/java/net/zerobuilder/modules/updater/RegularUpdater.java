@@ -5,6 +5,7 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 import io.jbock.simple.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.GoalDetails;
@@ -54,8 +55,13 @@ public record RegularUpdater(
   }
 
   public ModuleOutput process() {
+    List<MethodSpec> methods = new ArrayList<>(2);
+    if (description.updateOnly()) {
+      methods.add(updaterMethod.nullaryMethod());
+    }
+    methods.add(updaterMethod.unaryMethod());
     return new ModuleOutput(
-        List.of(updaterMethod.updaterMethod()),
+        methods,
         List.of(defineUpdater()));
   }
 }
