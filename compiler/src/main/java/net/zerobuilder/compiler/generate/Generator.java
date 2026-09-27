@@ -24,7 +24,7 @@ public final class Generator {
   private static ModuleOutput process(GoalDescription description) {
     List<MethodSpec> methods = new ArrayList<>();
     List<TypeSpec> typeSpecs = new ArrayList<>();
-    if (!description.updateOnly()) {
+    if (!description.classicMode()) {
       ModuleOutput builderOutput = BuilderComponent.process(description);
       methods.addAll(builderOutput.method());
       typeSpecs.addAll(builderOutput.typeSpecs());

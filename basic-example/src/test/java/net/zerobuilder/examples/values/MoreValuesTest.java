@@ -10,7 +10,7 @@ class MoreValuesTest {
 
   @Test
   void testDefault() {
-    Interface foo = builder().foo("foo");
+    Interface foo = builder().foo("foo").build();
     assertEquals("foo", foo.foo);
   }
 }

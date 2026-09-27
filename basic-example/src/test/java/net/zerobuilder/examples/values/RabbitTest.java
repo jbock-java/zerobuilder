@@ -9,9 +9,9 @@ class RabbitTest {
 
   @Test
   void testRabbit() {
-    Rabbit wabbit = builder().name("Roger");
+    Rabbit wabbit = builder().name("Roger").build();
     assertEquals("Roger", wabbit.name);
-    wabbit = builder(wabbit).name("Ralph").build();
-    assertEquals("Ralph", wabbit.name);
+    wabbit = builder(wabbit).name("Lenin").build();
+    assertEquals("Lenin", wabbit.name);
   }
 }

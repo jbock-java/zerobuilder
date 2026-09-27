@@ -9,9 +9,10 @@ class MessageTest {
   @Test
   void message() {
     Message message = MessageBuilders.builder()
-            .sender("Alice")
-            .body("Hi")
-            .recipient("Bob");
+        .sender("Alice")
+        .body("Hi")
+        .recipient("Bob")
+        .build();
     assertEquals("Alice", message.sender());
     assertEquals("Hi", message.body());
     assertEquals("Bob", message.recipient());

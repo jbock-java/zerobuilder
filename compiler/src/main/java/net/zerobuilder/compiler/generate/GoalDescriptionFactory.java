@@ -21,12 +21,11 @@ public final class GoalDescriptionFactory {
 
   public static GoalDescription createTheGoalDescription(
       GoalDetails details,
-      List<TypeName> thrownTypes,
       List<ProjectedParameter> parameters,
       ClassName generatedType) {
     checkParameterNames(details.shuffledParameterNames(), parameters);
     int[] parameterRanking = createShuffle(parameters, details.shuffledParameterNames());
-    return new GoalDescription(details, thrownTypes, parameters, generatedType, parameterRanking);
+    return new GoalDescription(details, parameters, generatedType, parameterRanking);
   }
 
   private static void checkParameterNames(

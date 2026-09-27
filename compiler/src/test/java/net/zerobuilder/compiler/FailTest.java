@@ -36,12 +36,44 @@ public class FailTest {
         "import net.zerobuilder.*;",
         "@RecordBuilder",
         "class Bu {",
-        "  String getFoo() { return null; }",
+        "  String foo() { return null; }",
         "  Bu(int foo) {}",
         "}");
     JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
     Compilation compilation = simpleCompiler().compile(javaFile);
     assertThat(compilation).failed();
     assertThat(compilation).hadErrorContaining("Missing projection: foo");
+  }
+
+  @Test
+  public void checkedExceptionConstructor() {
+    List<String> sourceLines = Arrays.asList(
+        "package test;",
+        "import net.zerobuilder.RecordBuilder;",
+        "@RecordBuilder",
+        "class Bu {",
+        "  String foo() { return null; }",
+        "  Bu(String foo) throws java.io.IOException {}",
+        "}");
+    JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
+    Compilation compilation = simpleCompiler().compile(javaFile);
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Checked exception is not allowed here.");
+  }
+
+  @Test
+  public void checkedExceptionAccessor() {
+    List<String> sourceLines = Arrays.asList(
+        "package test;",
+        "import net.zerobuilder.RecordBuilder;",
+        "@RecordBuilder",
+        "class Bu {",
+        "  String foo() throws java.io.IOException { return null; }",
+        "  Bu(String foo) {}",
+        "}");
+    JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
+    Compilation compilation = simpleCompiler().compile(javaFile);
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Checked exception is not allowed here.");
   }
 }

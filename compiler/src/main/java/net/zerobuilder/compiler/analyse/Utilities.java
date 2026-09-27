@@ -1,10 +1,6 @@
 package net.zerobuilder.compiler.analyse;
 
 import com.palantir.javapoet.ClassName;
-import com.palantir.javapoet.TypeName;
-
-import javax.lang.model.element.ExecutableElement;
-import java.util.List;
 
 final class Utilities {
 
@@ -17,17 +13,11 @@ final class Utilities {
    *
    * @param type   A type name
    * @param suffix A suffix; should be upper case
-   * @return       A top level type in the same package.
+   * @return A top level type in the same package.
    */
   static ClassName peer(ClassName type, String suffix) {
     String name = String.join("_", type.simpleNames()) + suffix;
     return type.topLevelClassName().peerClass(name);
-  }
-
-  static List<TypeName> thrownTypes(ExecutableElement executableElement) {
-    return executableElement.getThrownTypes().stream()
-        .map(TypeName::get)
-        .toList();
   }
 
   private Utilities() {

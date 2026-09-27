@@ -29,7 +29,6 @@ public record RegularUpdater(
   private MethodSpec buildMethod() {
     return methodBuilder("build")
         .addModifiers(description.details().getAccess())
-        .addExceptions(description.thrownTypes())
         .returns(description.details().goalType())
         .addCode(constructorCall(description.details()))
         .build();
@@ -56,7 +55,7 @@ public record RegularUpdater(
 
   public ModuleOutput process() {
     List<MethodSpec> methods = new ArrayList<>(2);
-    if (description.updateOnly()) {
+    if (description.classicMode()) {
       methods.add(updaterMethod.nullaryMethod());
     }
     methods.add(updaterMethod.unaryMethod());

@@ -7,8 +7,6 @@ import io.jbock.simple.Inject;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
 
-import java.util.List;
-
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static com.palantir.javapoet.TypeSpec.interfaceBuilder;
 import static javax.lang.model.element.Modifier.ABSTRACT;
@@ -36,13 +34,9 @@ record Step(
     ProjectedParameter parameter = description.parameters().get(i);
     String name = parameter.stepName();
     TypeName type = parameter.type();
-    List<TypeName> thrownTypes = i == description.parameters().size() - 1 ?
-        description.thrownTypes() :
-        List.of();
     return methodBuilder(name)
         .returns(builder.nextType(i))
         .addParameter(parameterSpec(type, name))
-        .addExceptions(thrownTypes)
         .addModifiers(PUBLIC, ABSTRACT)
         .build();
   }

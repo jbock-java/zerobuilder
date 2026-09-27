@@ -1,9 +1,8 @@
 package net.zerobuilder.examples.values;
 
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.Set;
+import org.junit.jupiter.api.Test;
 
 import static net.zerobuilder.examples.values.EmptyListConvenienceBuilders.builder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,7 +17,8 @@ class EmptyListConvenienceTest {
         .strings(List.of())
         .collection(List.of())
         .iterables(List.of())
-        .sets(Set.of());
+        .sets(Set.of())
+        .build();
     EmptyListConvenience notEmpty = builder(empty)
         .strings(List.of(""))
         .things(List.of(""))

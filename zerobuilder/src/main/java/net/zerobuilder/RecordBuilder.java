@@ -24,24 +24,24 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 public @interface RecordBuilder {
 
   /**
-   * This property determines the class visibility
-   * of the generated builder class.
-   * If {@code visibility == AUTO}, the builder class
+   * Visibility control for the generated builder class.
+   *
+   * <p>If {@code visibility == AUTO}, the builder class
    * inherits the visibility from the annotated class.
    */
   Visibility visibility() default Visibility.AUTO;
 
   /**
-   * If this is {@code true}, the updater class
-   * and the unary {@code builder(X)} method
-   * are <em>not</em> created.
+   * If this is {@code true}, only the nullary
+   * {@code static builder()} method is generated.
    */
   boolean createOnly() default false;
 
   /**
-   * If this is {@code true}, the nullary {@code builder()}
-   * method returns a new updater instance.
+   * If this is {@code true}, the nullary
+   * {@code static builder()} method returns a classic,
+   * non-telescoping builder.
    */
-  boolean updateOnly() default false;
+  boolean classicMode() default false;
 
 }

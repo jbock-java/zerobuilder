@@ -1,15 +1,17 @@
 package net.zerobuilder.modules.builder;
 
+import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.FieldSpec;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
+import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import io.jbock.simple.Inject;
+import java.util.List;
+import net.zerobuilder.HasBuildMethod;
 import net.zerobuilder.compiler.generate.GoalDescription;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
-
-import java.util.List;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -28,7 +30,8 @@ record Builder(
 
   TypeName nextType(int i) {
     if (i == description.parameters().size() - 1) {
-      return description.details().goalType();
+      return ParameterizedTypeName.get(ClassName.get(HasBuildMethod.class),
+          description.details().goalType());
     }
     return parameterizedTypeName(
         util.stepType(i + 1),
@@ -37,17 +40,14 @@ record Builder(
 
   List<FieldSpec> fields() {
     List<ProjectedParameter> steps = description.parameters();
-    return steps.stream().limit(steps.size() - 1)
+    return steps.stream()
         .map(parameter -> FieldSpec.builder(parameter.type(), parameter.stepName(), PRIVATE).build())
         .toList();
   }
 
-  MethodSpec steps(int i) {
+  MethodSpec createStepMethod(int i) {
     ProjectedParameter step = description.parameters().get(i);
     ParameterSpec parameter = parameterSpec(step.type(), step.stepName());
-    List<TypeName> thrownTypes = i < description.parameters().size() - 1 ?
-        List.of() :
-        description.thrownTypes();
     TypeName nextType = nextType(i);
     return methodBuilder(step.stepName())
         .addAnnotation(Override.class)
@@ -55,23 +55,19 @@ record Builder(
         .returns(nextType)
         .addCode(normalAssignment(i))
         .addModifiers(PUBLIC)
-        .addExceptions(thrownTypes)
         .build();
   }
 
   private CodeBlock normalAssignment(int i) {
     ProjectedParameter step = description.parameters().get(i);
     ParameterSpec parameter = parameterSpec(step.type(), step.stepName());
-    if (i == description.parameters().size() - 1) {
-      return constructorCall();
-    }
     return CodeBlock.builder()
         .addStatement("this.$N = $N", fieldSpec(step.type(), step.stepName()), parameter)
         .addStatement("return this")
         .build();
   }
 
-  private CodeBlock constructorCall() {
+  CodeBlock constructorCall() {
     TypeName type = description.details().goalType();
     CodeBlock args = description.invocationParameters();
     return CodeBlock.builder()

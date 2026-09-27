@@ -5,9 +5,6 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import io.jbock.simple.Inject;
-import java.util.List;
-import java.util.Set;
-import net.zerobuilder.compiler.generate.DtoProjectionInfo;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.FieldAccess;
 import net.zerobuilder.compiler.generate.DtoProjectionInfo.GetterMethod;
 import net.zerobuilder.compiler.generate.GoalDescription;
@@ -15,7 +12,6 @@ import net.zerobuilder.compiler.generate.GoalDetails;
 import net.zerobuilder.compiler.generate.ProjectedParameter;
 
 import static com.palantir.javapoet.MethodSpec.methodBuilder;
-import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.downcase;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
@@ -42,7 +38,6 @@ record UpdaterMethod(
   MethodSpec unaryMethod() {
     ParameterSpec varUpdater = varUpdater();
     return methodBuilder("builder")
-        .addExceptions(thrownByProjections())
         .addParameter(toBuilderParameter())
         .addTypeVariables(description.details().instanceTypeParameters())
         .returns(updater.implType())
@@ -98,13 +93,5 @@ record UpdaterMethod(
 
   ParameterSpec varUpdater() {
     return parameterSpec(updater.implType(), "updater");
-  }
-
-  Set<TypeName> thrownByProjections() {
-    return description.parameters().stream()
-        .map(ProjectedParameter::projectionInfo)
-        .map(DtoProjectionInfo::thrownTypes)
-        .flatMap(List::stream)
-        .collect(toSet());
   }
 }

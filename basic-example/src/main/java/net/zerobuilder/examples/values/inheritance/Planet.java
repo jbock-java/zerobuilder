@@ -4,7 +4,7 @@ import net.zerobuilder.RecordBuilder;
 
 import java.math.BigInteger;
 
-@RecordBuilder(updateOnly = true)
+@RecordBuilder(classicMode = true)
 final class Planet {
 
   final BigInteger mass;

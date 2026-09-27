@@ -8,6 +8,9 @@ public final class Messages {
   public static final String NESTING_KIND =
       "This inner class must be static and not private.";
 
+  public static final String CHECKED =
+      "Checked exception is not allowed here.";
+
   public static final String STEP_OUT_OF_BOUNDS =
       "The step position must be less than the number of arguments.";
 

@@ -33,7 +33,7 @@ class StepOrderTest {
         .containsLines(
             "    public PastaStep sauce(String sauce) {",
             "    public CheeseStep pasta(String pasta) {",
-            "    public Spaghetti cheese(String cheese) {",
+            "    public HasBuildMethod<Spaghetti> cheese(String cheese) {",
             "}");
   }
 }

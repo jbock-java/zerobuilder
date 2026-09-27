@@ -1,8 +1,7 @@
 package net.zerobuilder.examples.values.inheritance;
 
-import org.junit.jupiter.api.Test;
-
 import java.math.BigInteger;
+import org.junit.jupiter.api.Test;
 
 import static net.zerobuilder.examples.values.inheritance.StarBuilders.builder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,7 +11,8 @@ class StarTest {
   @Test
   void test() {
     Star sirius = builder()
-        .mass(BigInteger.valueOf(202));
+        .mass(BigInteger.valueOf(202))
+        .build();
     Star rigel = builder(sirius)
         .mass(BigInteger.valueOf(2300))
         .build();

@@ -14,7 +14,7 @@ import net.zerobuilder.compiler.generate.ProjectedParameter;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.Messages.MISSING_PROJECTION;
-import static net.zerobuilder.compiler.analyse.Utilities.thrownTypes;
+import static net.zerobuilder.compiler.analyse.Analyser.checkNoChecked;
 import static net.zerobuilder.compiler.common.LessElements.getLocalFields;
 import static net.zerobuilder.compiler.common.LessElements.getLocalMethods;
 import static net.zerobuilder.compiler.common.LessTypes.asTypeElement;
@@ -28,9 +28,7 @@ final class ProjectionValidatorV {
     return method.getParameters().isEmpty()
         && !method.getModifiers().contains(PRIVATE)
         && !method.getModifiers().contains(STATIC)
-        && method.getReturnType().getKind() != TypeKind.VOID
-        && !"getClass".equals(method.getSimpleName().toString())
-        && !"clone".equals(method.getSimpleName().toString());
+        && method.getReturnType().getKind() != TypeKind.VOID;
   }
 
   static GoalDescription validateUpdater(GoalElement goal) {
@@ -49,9 +47,11 @@ final class ProjectionValidatorV {
       VariableElement parameter) {
     String name = parameter.getSimpleName().toString();
     TypeName parameterType = TypeName.get(parameter.asType());
+    ExecutableElement method = methods.get(name);
     if (methods.containsKey(name) &&
-        TypeName.get(methods.get(name).getReturnType()).equals(parameterType)) {
-      return createGetterMethod(name, thrownTypes(methods.get(name)));
+        TypeName.get(method.getReturnType()).equals(parameterType)) {
+      checkNoChecked(method);
+      return createGetterMethod(name);
     }
     VariableElement field = fields.get(name);
     if (field != null && TypeName.get(field.asType()).equals(parameterType)) {
@@ -65,7 +65,6 @@ final class ProjectionValidatorV {
       List<ProjectedParameter> parameters) {
     return createTheGoalDescription(
         goal.details(),
-        thrownTypes(goal.executableElement()),
         parameters,
         goal.generatedType());
   }

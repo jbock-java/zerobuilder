@@ -1,8 +1,7 @@
 package net.zerobuilder.examples.beans.more;
 
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -16,7 +15,8 @@ class SnailCatTest {
         .name("Peter")
         .age(36)
         .notes(List.of("entry"))
-        .executive(false);
+        .executive(false)
+        .build();
     SnailCat<String> updated = SnailCatBuilders.builder(peter)
         .executive(true)
         .age(37)

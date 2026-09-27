@@ -14,7 +14,8 @@ class SpaghettiTest {
   void testSpaghettiBuilder() {
     Spaghetti spaghetti = napoliBuilder()
         .cheese("reggiano")
-        .alDente(true);
+        .alDente(true)
+        .build();
     assertTrue(spaghetti.alDente);
     assertEquals("reggiano", spaghetti.cheese);
     assertEquals("tomato", spaghetti.sauce);
