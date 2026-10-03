@@ -13,7 +13,6 @@ import net.zerobuilder.compiler.generate.GoalDescription;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.Messages.CHECKED;
-import static net.zerobuilder.compiler.Messages.NESTING_KIND;
 import static net.zerobuilder.compiler.Messages.PRIVATE_METHOD;
 import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.checkInheritance;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;

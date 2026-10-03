@@ -46,6 +46,23 @@ public class FailTest {
   }
 
   @Test
+  public void twoConstructors() {
+    List<String> sourceLines = Arrays.asList(
+        "package test;",
+        "import net.zerobuilder.RecordBuilder;",
+        "@RecordBuilder",
+        "class Bu {",
+        "  String foo() { return null; }",
+        "  Bu(String foo) {}",
+        "  Bu() {}",
+        "}");
+    JavaFileObject javaFile = forSourceLines("test.Bu", sourceLines);
+    Compilation compilation = simpleCompiler().compile(javaFile);
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("more than one constructor found");
+  }
+
+  @Test
   public void checkedExceptionConstructor() {
     List<String> sourceLines = Arrays.asList(
         "package test;",
