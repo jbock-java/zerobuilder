@@ -25,10 +25,9 @@ repositories {
 
 dependencies {
     var zerobuilder = project(":zerobuilder")
-    var sc_version = "1.026"
-    var simple_component = "io.github.jbock-java:simple-component:$sc_version"
+    var simple_component = "io.github.jbock-java:simple-component:2.0"
     compileOnly(simple_component)
-    annotationProcessor("io.github.jbock-java:simple-component-compiler:$sc_version")
+    annotationProcessor("io.github.jbock-java:simple-component-compiler:2.0.2")
     implementation(zerobuilder)
     implementation("com.palantir.javapoet:javapoet:0.18.0")
     testImplementation("io.github.jbock-java:compile-testing:0.19.12")
