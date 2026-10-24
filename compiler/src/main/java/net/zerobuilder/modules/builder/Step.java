@@ -13,14 +13,11 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 
+@Inject
 record Step(
     GoalDescription description,
     Builder builder,
     BuilderUtil util) {
-
-  @Inject
-  Step {
-  }
 
   TypeSpec stepInterface(int i) {
     return interfaceBuilder(util.stepType(i))

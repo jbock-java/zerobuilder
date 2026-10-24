@@ -20,13 +20,10 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
+@Inject
 record Builder(
     GoalDescription description,
     BuilderUtil util) {
-
-  @Inject
-  Builder {
-  }
 
   TypeName nextType(int i) {
     if (i == description.parameters().size() - 1) {

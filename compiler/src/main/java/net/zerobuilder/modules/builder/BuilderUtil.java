@@ -7,11 +7,8 @@ import net.zerobuilder.compiler.generate.ProjectedParameter;
 
 import static net.zerobuilder.compiler.generate.ZeroUtil.upcase;
 
+@Inject
 record BuilderUtil(GoalDescription description) {
-
-  @Inject
-  BuilderUtil {
-  }
 
   ClassName stepType(int i) {
     ProjectedParameter parameter = description.parameters().get(i);

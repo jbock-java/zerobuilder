@@ -14,7 +14,7 @@ import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static net.zerobuilder.compiler.Messages.CHECKED;
 import static net.zerobuilder.compiler.Messages.PRIVATE_METHOD;
-import static net.zerobuilder.compiler.analyse.ProjectionValidatorV.checkInheritance;
+import static net.zerobuilder.compiler.analyse.ProjectionValidator.checkInheritance;
 import static net.zerobuilder.compiler.analyse.TypeValidator.validateContextClass;
 import static net.zerobuilder.compiler.analyse.Utilities.peer;
 
@@ -35,7 +35,7 @@ public final class Analyser {
     checkAccessLevel(constructor);
     checkNoChecked(constructor);
     GoalElement goal = GoalElement.create(tel, constructor, generatedType);
-    return ProjectionValidatorV.validateUpdater(goal);
+    return ProjectionValidator.validateUpdater(goal);
   }
 
   public static void checkNoChecked(ExecutableElement el) throws ValidationException {

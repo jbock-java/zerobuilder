@@ -18,13 +18,10 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
+@Inject
 record UpdaterMethod(
     GoalDescription description,
     Updater updater) {
-
-  @Inject
-  UpdaterMethod {
-  }
 
   MethodSpec nullaryMethod() {
     return methodBuilder("builder")

@@ -14,12 +14,10 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 import static net.zerobuilder.compiler.generate.ZeroUtil.statement;
 
+@Inject
 record BuilderMethod(
     GoalDescription description,
     BuilderUtil util) {
-  @Inject
-  BuilderMethod {
-  }
 
   MethodSpec builderMethod() {
     List<TypeVariableName> typeVars = description.details().instanceTypeParameters();

@@ -17,14 +17,11 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.simpleName;
 
+@Inject
 public record RegularUpdater(
     GoalDescription description,
     UpdaterMethod updaterMethod,
     Updater updater) {
-
-  @Inject
-  public RegularUpdater {
-  }
 
   private MethodSpec buildMethod() {
     return methodBuilder("build")

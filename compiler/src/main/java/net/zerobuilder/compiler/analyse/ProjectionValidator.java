@@ -22,7 +22,7 @@ import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createFieldAcc
 import static net.zerobuilder.compiler.generate.DtoProjectionInfo.createGetterMethod;
 import static net.zerobuilder.compiler.generate.GoalDescriptionFactory.createTheGoalDescription;
 
-final class ProjectionValidatorV {
+final class ProjectionValidator {
 
   private static boolean looksLikeAccessor(ExecutableElement method) {
     return method.getParameters().isEmpty()
@@ -33,7 +33,7 @@ final class ProjectionValidatorV {
 
   static GoalDescription validateUpdater(GoalElement goal) {
     TypeElement tel = goal.details().tel();
-    Map<String, ExecutableElement> methods = getLocalMethods(tel, ProjectionValidatorV::looksLikeAccessor);
+    Map<String, ExecutableElement> methods = getLocalMethods(tel, ProjectionValidator::looksLikeAccessor);
     Map<String, VariableElement> fields = getLocalFields(tel);
     List<ProjectedParameter> parameters = goal.executableElement().getParameters().stream()
         .map(parameter -> ProjectedParameter.create(parameter, projectionInfo(methods, fields, parameter)))
@@ -86,6 +86,6 @@ final class ProjectionValidatorV {
     throw new ValidationException("Inheritance is not allowed", tel);
   }
 
-  private ProjectionValidatorV() {
+  private ProjectionValidator() {
   }
 }

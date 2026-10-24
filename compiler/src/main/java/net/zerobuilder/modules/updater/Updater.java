@@ -16,11 +16,8 @@ import static net.zerobuilder.compiler.generate.ZeroUtil.fieldSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterSpec;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
+@Inject
 record Updater(GoalDescription description) {
-
-  @Inject
-  Updater {
-  }
 
   List<FieldSpec> fields() {
     return description.parameters().stream()

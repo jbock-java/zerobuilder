@@ -20,16 +20,13 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static net.zerobuilder.compiler.generate.ZeroUtil.parameterizedTypeName;
 
+@Inject
 public record RegularBuilder(
     Builder builder,
     GoalDescription description,
     BuilderUtil util,
     Step step,
     BuilderMethod builderMethod) {
-
-  @Inject
-  public RegularBuilder {
-  }
 
   private List<TypeSpec> stepInterfaces() {
     return IntStream.range(0, description.parameters().size())
